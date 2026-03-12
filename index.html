@@ -194,10 +194,7 @@
         <div id="lottie-global-loader" class="w-20 h-20 mb-4 drop-shadow-md"></div>
         <p id="loader-text" class="text-kama-800 font-bold tracking-widest text-xs uppercase opacity-80">MEMUAT...</p>
     </div>
-
-    <!-- Alert Mode Simulasi -->
-    <div id="preview-alert" class="bg-amber-50 text-amber-800 px-4 py-2 text-center text-xs font-medium hidden">
-        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Mode Preview - Data Dummy Aktif
+    
     </div>
 
     <!-- VIEW 1: LOGIN & REGISTER -->
@@ -225,12 +222,6 @@
                         </div>
 
                         <button type="submit" id="btnLogin" class="w-full bg-kama-800 text-white py-3 rounded-xl hover:bg-kama-900 font-semibold text-sm shadow-md transition-colors relative flex items-center justify-center">Sign In</button>
-                        
-                        <!-- Helper Default Login Text -->
-                        <div id="default-login-helper" class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-800 text-left hidden">
-                            <p class="font-bold mb-1"><i class="fa-solid fa-info-circle mr-1"></i> Akun Demo Preview:</p>
-                            <p>Admin: <code>admin</code> / <code>Demo2026!</code></p>
-                        </div>
 
                         <div class="mt-4 text-center">
                             <button type="button" onclick="toggleAuth('register')" class="text-xs text-gray-500 hover:text-kama-800 font-medium">Belum punya akun? <span class="text-blue-600 underline">Daftar disini</span></button>
@@ -1267,7 +1258,7 @@
             }
         }
 
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
             var uName = document.getElementById('username');
             var uPass = document.getElementById('password');
@@ -1275,44 +1266,50 @@
                 username: uName ? uName.value.trim() : '', 
                 password: uPass ? uPass.value.trim() : '' 
             };
+            
             setButtonState('btnLogin', true, 'Authenticating...');
             startLoading("Authenticating...");
 
-            if (typeof google === 'undefined') {
-                setTimeout(function() {
-                    endLoading();
-                    setButtonState('btnLogin', false, 'Sign In');
-                    if (formData.username === 'admin' && formData.password === 'Demo2026!') {
-                        localStorage.setItem('ps_user', JSON.stringify({username: 'admin', nama: 'Admin Super', role: 'Admin', brandName: 'Admin Brand', brandLogo: '', expiredAt: 'Lifetime'}));
-                        checkLoginState();
-                    } else if (formData.username === 'foto' && formData.password === '123') {
-                        localStorage.setItem('ps_user', JSON.stringify({username: 'foto', nama: 'Fotografer 1', role: 'Photographer', brandName: 'Studio Satu', brandLogo: '', expiredAt: '2027-01-01'}));
-                        checkLoginState();
-                    } else if (formData.username === 'expired' && formData.password === '123') {
-                        Swal.fire('Akses Terkunci', 'Masa aktif akun Anda telah habis (2025-01-01). Silakan hubungi Admin.', 'error');
-                    } else { Swal.fire('Error', 'Invalid credentials.', 'error'); }
-                }, 300); 
-            } else {
-                google.script.run
-                    .withSuccessHandler(function(res) {
-                        endLoading(); 
-                        setButtonState('btnLogin', false, 'Sign In');
-                        if (res.success) { 
-                            localStorage.setItem('ps_user', JSON.stringify(res.user)); 
-                            checkLoginState(); 
-                            if(currentUser.role === 'Admin') {
-                                loadDataUsers(); 
-                            }
-                        } 
-                        else { Swal.fire('Gagal', res.message, 'error'); }
-                    }).withFailureHandler(function(err) { 
-                        endLoading(); // WAJIB DI BARIS PERTAMA
-                        setButtonState('btnLogin', false, 'Sign In');
-                        Swal.fire('Error', err.message, 'error'); 
-                    }).loginUser(formData);
+            // Memanggil Backend Vercel Baru
+            try {
+                // Pastikan API_ENDPOINT '/api/bridge' sudah terdefinisi di atas
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'login',
+                        username: formData.username,
+                        password: formData.password
+                    })
+                });
+
+                const res = await response.json();
+                endLoading();
+                setButtonState('btnLogin', false, 'Sign In');
+
+                if (res.status === 'success') {
+                    // Simpan sesi ke browser
+                    localStorage.setItem('ps_user', JSON.stringify(res.data));
+                    checkLoginState();
+                    
+                    // Notifikasi sukses ringan
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Selamat Datang!',
+                        text: 'Berhasil login sebagai ' + res.data.role,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire('Gagal', res.message, 'error');
+                }
+            } catch (err) {
+                endLoading();
+                setButtonState('btnLogin', false, 'Sign In');
+                Swal.fire('Error', err.message || 'Gagal terhubung ke server', 'error');
             }
         }
-
+        
         function handleLogout() {
             localStorage.removeItem('ps_user');
             currentUser = null;
@@ -2293,4 +2290,5 @@
     </script>
 </body>
 </html>
+
 
