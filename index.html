@@ -1373,25 +1373,28 @@
         }
 
         // --- DASHBOARD DATA (ADMIN ONLY) ---
-        function loadDashboardStats() {
+        async function loadDashboardStats() {
             if (!currentUser || currentUser.role !== 'Admin') return;
             startLoading("Memuat Dashboard...");
-            if (typeof google === 'undefined') {
-                setTimeout(function() {
-                    renderDashboardStats({ totalProjects: 15, totalUsers: 8, activeUsers: 6, pendingUsers: 2 });
-                    endLoading();
-                }, 500);
-            } else {
-                google.script.run
-                    .withSuccessHandler(function(res) {
-                        endLoading();
-                        if(res.success) { renderDashboardStats(res.data); }
-                        else { console.error(res.message); }
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'getDashboardStats',
+                        currentUser: currentUser
                     })
-                    .withFailureHandler(function(err) {
-                        endLoading(); console.error(err);
-                    })
-                    .getDashboardStats(currentUser);
+                });
+                const res = await response.json();
+                endLoading();
+                if (res.status === 'success' && res.data.success) {
+                    renderDashboardStats(res.data.data);
+                } else {
+                    console.error(res.message || res.data.message);
+                }
+            } catch(err) {
+                endLoading();
+                console.error(err);
             }
         }
 
@@ -1408,30 +1411,30 @@
         }
 
         // --- ADMIN: KELOLA PENGGUNA ---
-        function loadDataUsers() {
+        async function loadDataUsers() {
             startLoading("Memuat Fotografer...");
-            if (typeof google === 'undefined') {
-                setTimeout(function() { 
-                    renderUsersTable([
-                        { "Username": "budi", "Nama": "Budi Studio", "Status": "Pending", "ExpiredAt": "" },
-                        { "Username": "fotografer1", "Nama": "Wira Photo", "Status": "Active", "ExpiredAt": "2027-12-31 00:00" },
-                        { "Username": "pro_foto", "Nama": "Pro Studio", "Status": "Active", "ExpiredAt": "Lifetime" },
-                        { "Username": "expired_user", "Nama": "Telat Bayar", "Status": "Active", "ExpiredAt": "2025-01-01 00:00" }
-                    ]); 
-                    endLoading(); 
-                }, 200); 
-            } else {
-                google.script.run
-                    .withSuccessHandler(function(res) {
-                        endLoading(); 
-                        if (res.success) { renderUsersTable(res.data); } else { Swal.fire('Error', res.message, 'error'); }
-                    }).withFailureHandler(function(err) { 
-                        endLoading(); 
-                        Swal.fire('Error', err.message, 'error'); 
-                    }).getUsers(currentUser);
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'getUsers',
+                        currentUser: currentUser
+                    })
+                });
+                const res = await response.json();
+                endLoading();
+                if (res.status === 'success' && res.data.success) {
+                    renderUsersTable(res.data.data);
+                } else {
+                    Swal.fire('Error', res.message || res.data.message, 'error');
+                }
+            } catch (err) {
+                endLoading();
+                Swal.fire('Error', err.message, 'error');
             }
         }
-
+        
         function renderUsersTable(data) {
             var tbody = document.getElementById('userTableBody');
             if (!tbody) return;
@@ -1573,25 +1576,28 @@
         }
 
         // --- PROJECTS LOGIC ---
-        function loadDataProjects() {
+        async function loadDataProjects() {
             startLoading("Memuat Project...");
-            if (typeof google === 'undefined') {
-                setTimeout(function() { 
-                    renderProjectsTable([
-                        { "ID": "111", "Owner": "fotografer1", "Token": "SIM-TOKEN1", "Nama Client": "John & Jane Wedding", "Drive Link": "#", "Nomor WA": "628123456789", "Password Client": "", "Max Foto": 3, "Dibuat Pada": "2026-03-01 10:30", "Short Link": "https://is.gd/Simulasi_A1B2" }
-                    ]); 
-                    endLoading(); 
-                }, 200); 
-            } else {
-                google.script.run
-                    .withSuccessHandler(function(res) {
-                        endLoading(); 
-                        if (res.success) { if(res.appUrl) baseAppUrl = res.appUrl; renderProjectsTable(res.data); } 
-                        else { Swal.fire('Error', res.message, 'error'); }
-                    }).withFailureHandler(function(err) { 
-                        endLoading(); 
-                        Swal.fire('Error', err.message, 'error'); 
-                    }).getProjects(currentUser);
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'getProjects',
+                        currentUser: currentUser
+                    })
+                });
+                const res = await response.json();
+                endLoading();
+                if (res.status === 'success' && res.data.success) {
+                    if(res.data.appUrl) baseAppUrl = res.data.appUrl;
+                    renderProjectsTable(res.data.data);
+                } else {
+                    Swal.fire('Error', res.message || res.data.message, 'error');
+                }
+            } catch (err) {
+                endLoading();
+                Swal.fire('Error', err.message, 'error');
             }
         }
 
@@ -1747,21 +1753,30 @@
 
         function deleteProjectPrompt(id) {
             Swal.fire({ title: 'Hapus Project?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus' })
-            .then(function(result) {
+            .then(async function(result) {
                 if (result.isConfirmed) {
                     startLoading("Deleting...");
-                    if (typeof google === 'undefined') {
-                        setTimeout(function() { endLoading(); loadDataProjects(); }, 200); 
-                    } else {
-                        google.script.run
-                            .withSuccessHandler(function(res) { 
-                                endLoading(); // WAJIB DI BARIS PERTAMA
-                                if(res.success) loadDataProjects(); else Swal.fire('Error', res.message, 'error'); 
+                    try {
+                        const response = await fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                action: 'deleteProject',
+                                id: id,
+                                currentUser: currentUser
                             })
-                            .withFailureHandler(function(err) { 
-                                endLoading(); // WAJIB DI BARIS PERTAMA
-                                Swal.fire('Error', err.message, 'error'); 
-                            }).deleteProject(id, currentUser);
+                        });
+                        const res = await response.json();
+                        endLoading();
+                        if (res.status === 'success' && res.data.success) {
+                            Swal.fire({icon: 'success', title: 'Dihapus', timer: 1500, showConfirmButton: false});
+                            loadDataProjects();
+                        } else {
+                            Swal.fire('Error', res.message || res.data.message, 'error');
+                        }
+                    } catch(err) {
+                        endLoading();
+                        Swal.fire('Error', err.message, 'error');
                     }
                 }
             });
@@ -2290,5 +2305,6 @@
     </script>
 </body>
 </html>
+
 
 
