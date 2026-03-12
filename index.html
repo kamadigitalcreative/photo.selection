@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Photo Selection</title>
+    <link rel="icon" id="dynamic-favicon" type="image/png" href="https://img.icons8.com/color/48/000000/camera.png">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SweetAlert2 -->
@@ -851,11 +852,24 @@
 
         // --- BRANDING LOGIC ---
         function applyBranding() {
+            // 1. Ubah Judul Tab Browser
+            if (appBranding.name) {
+                document.title = appBranding.name + " - Client Gallery";
+            }
+
+            // 2. Ubah Icon Tab (Favicon) otomatis sesuai logo
+            var favicon = document.getElementById('dynamic-favicon');
+            if (favicon) {
+                favicon.href = appBranding.logo ? appBranding.logo : "https://img.icons8.com/color/48/000000/camera.png";
+            }
+
+            // 3. Ubah Teks Nama Brand
             var brandTexts = document.querySelectorAll('.brand-name-text');
             for(var i=0; i<brandTexts.length; i++) {
                 if(brandTexts[i]) brandTexts[i].innerText = appBranding.name || 'Kama Creative';
             }
             
+            // 4. Ubah Gambar Logo di UI
             function renderLogo(elements, sizeClasses, isLockView) {
                 for(var j=0; j<elements.length; j++) {
                     var el = elements[j];
@@ -881,7 +895,7 @@
             renderLogo(document.querySelectorAll('.brand-logo-container-sm'), 'text-sm', false);
             renderLogo(document.querySelectorAll('.brand-logo-container-lock'), 'text-2xl', true);
         }
-
+        
         function openModalSettings() {
             var userLabelEl = document.getElementById('set_username_label');
             if (userLabelEl && currentUser) {
@@ -2277,6 +2291,7 @@
     </script>
 </body>
 </html>
+
 
 
 
