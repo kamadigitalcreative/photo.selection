@@ -5,16 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Photo Selection</title>
     <link rel="icon" id="dynamic-favicon" type="image/png" href="https://img.icons8.com/color/48/000000/camera.png">
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- JSZip & FileSaver -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Lottie Web (Bodymovin) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
     
     <script>
@@ -141,7 +136,7 @@
         #hide-checkbox:checked + .toggle .toggle-button .crater { opacity: 1; }
         #hide-checkbox:checked + .toggle .star { opacity: 1; transform: translateY(-4px); }
 
-        /* Dark Mode Overrides (Khusus untuk tampilan Fotografer & Admin) */
+        /* Dark Mode Overrides */
         html.dark body { background-color: #0f172a !important; color: #f8fafc !important; }
         html.dark .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
         html.dark .bg-kama-50, html.dark .bg-gray-50\/50 { background-color: #0f172a !important; }
@@ -178,32 +173,23 @@
             top: 50%;
             transform: translateY(-50%);
             cursor: pointer;
-            color: #9ca3af; /* text-gray-400 */
+            color: #9ca3af;
         }
-        .password-toggle-icon:hover {
-            color: #4b5563; /* hover:text-gray-600 */
-        }
-        html.dark .password-toggle-icon:hover {
-            color: #cbd5e1; /* dark mode hover */
-        }
+        .password-toggle-icon:hover { color: #4b5563; }
+        html.dark .password-toggle-icon:hover { color: #cbd5e1; }
     </style>
 </head>
 <body>
 
-    <!-- Global Loader (with Lottie) -->
     <div id="global-loader">
         <div id="lottie-global-loader" class="w-20 h-20 mb-4 drop-shadow-md"></div>
         <p id="loader-text" class="text-kama-800 font-bold tracking-widest text-xs uppercase opacity-80">MEMUAT...</p>
     </div>
-    
-    </div>
 
-    <!-- VIEW 1: LOGIN & REGISTER -->
     <div id="auth-view" class="view-section flex-col h-full w-full">
         <div class="flex-1 flex items-center justify-center p-4 w-full">
             <div class="bg-white p-8 sm:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-full max-w-[400px] border border-kama-100 relative overflow-hidden">
                 
-                <!-- LOGIN FORM -->
                 <div id="login-form-wrapper">
                     <div class="text-center mb-8">
                         <div class="brand-logo-container w-16 h-16 bg-kama-800 text-white rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg overflow-hidden">
@@ -212,7 +198,6 @@
                         <h2 class="text-2xl font-bold text-kama-800 tracking-tight brand-name-text">App Name</h2>
                         <p class="text-gray-500 text-sm mt-1">Client Area Management</p>
                     </div>
-                    <!-- Form Login dengan autocomplete standar Google -->
                     <form onsubmit="handleLogin(event)">
                         <div class="space-y-4 mb-6">
                             <input type="text" id="username" autocomplete="username" name="username" required placeholder="Username" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm">
@@ -230,20 +215,17 @@
                     </form>
                 </div>
 
-                <!-- REGISTER FORM -->
                 <div id="register-form-wrapper" class="hidden">
                     <div class="text-center mb-6">
                         <h2 class="text-xl font-bold text-kama-800 tracking-tight">Daftar Akun</h2>
                         <p class="text-gray-500 text-xs mt-1">Daftar sebagai fotografer baru</p>
                     </div>
-                    <!-- Form Register dengan autocomplete standar Google -->
                     <form onsubmit="handleRegister(event)">
                         <div class="space-y-4 mb-6">
                             <input type="text" id="reg_nama" autocomplete="name" name="name" required placeholder="Nama Lengkap / Studio" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm">
                             <input type="email" id="reg_email" autocomplete="email" name="email" required placeholder="Alamat Email" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm">
                             <input type="tel" id="reg_nohp" autocomplete="tel" name="phone" required placeholder="Nomor Handphone (WA)" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm">
                             
-                            <!-- Tambahan Pilihan Paket -->
                             <div class="relative">
                                 <select id="reg_paket" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm appearance-none text-gray-600 cursor-pointer">
                                     <option value="" disabled selected>Pilih Paket Langganan</option>
@@ -272,15 +254,12 @@
             </div>
         </div>
         
-        <!-- Porsi Footer dipaksa terpisah di bawah -->
         <footer class="py-6 text-center text-xs text-gray-400 w-full shrink-0">
             Powered by <span class="font-semibold text-gray-600">Kama Creative</span>
         </footer>
     </div>
 
-    <!-- VIEW 2: DASHBOARD (ADMIN & PHOTOGRAPHER) -->
     <div id="admin-view" class="view-section">
-        <!-- Header -->
         <header class="glass-header px-6 py-4 flex flex-col sm:flex-row justify-between items-center sticky top-0 gap-4">
             <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
                 <div class="flex items-center gap-3">
@@ -304,7 +283,6 @@
                     <button onclick="switchAdminTab('users')" id="tab-users-m" class="nav-tab admin-only-col hidden text-xs px-3">Tim</button>
                 </div>
 
-                <!-- Toggle Switch Dark Mode -->
                 <div class="wrapper ml-auto sm:ml-0" title="Dark Mode" id="theme-toggle-wrapper">
                     <input type="checkbox" id="hide-checkbox">
                     <label for="hide-checkbox" class="toggle">
@@ -344,7 +322,6 @@
         <main class="scrollable-content bg-kama-50 p-4 sm:p-8">
             <div class="max-w-6xl mx-auto h-full flex flex-col">
                 
-                <!-- TAB 0: DASHBOARD (ADMIN ONLY) -->
                 <div id="section-dashboard" class="hidden flex-1 flex-col">
                     <div class="mb-6">
                         <h2 class="text-xl font-bold text-kama-800">Dashboard Overview</h2>
@@ -352,7 +329,6 @@
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        <!-- Stat Card 1 -->
                         <div class="bg-white p-6 rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-gray-100 flex items-center gap-4">
                             <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl">
                                 <i class="fa-solid fa-folder-open"></i>
@@ -362,7 +338,6 @@
                                 <h3 class="text-2xl font-bold text-kama-800" id="stat-projects">0</h3>
                             </div>
                         </div>
-                        <!-- Stat Card 2 -->
                         <div class="bg-white p-6 rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-gray-100 flex items-center gap-4">
                             <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl">
                                 <i class="fa-solid fa-users"></i>
@@ -372,7 +347,6 @@
                                 <h3 class="text-2xl font-bold text-kama-800" id="stat-users">0</h3>
                             </div>
                         </div>
-                        <!-- Stat Card 3 -->
                         <div class="bg-white p-6 rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-gray-100 flex items-center gap-4">
                             <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center text-xl">
                                 <i class="fa-solid fa-user-check"></i>
@@ -382,7 +356,6 @@
                                 <h3 class="text-2xl font-bold text-kama-800" id="stat-active-users">0</h3>
                             </div>
                         </div>
-                        <!-- Stat Card 4 -->
                         <div class="bg-white p-6 rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-gray-100 flex items-center gap-4">
                             <div class="w-12 h-12 bg-yellow-50 text-yellow-600 rounded-xl flex items-center justify-center text-xl">
                                 <i class="fa-solid fa-user-clock"></i>
@@ -395,7 +368,6 @@
                     </div>
                 </div>
 
-                <!-- TAB 1: PROJECTS -->
                 <div id="section-projects" class="flex-1 flex flex-col">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                         <div>
@@ -435,14 +407,12 @@
                                     </tr>
                                 </thead>
                                 <tbody id="projectTableBody" class="divide-y divide-gray-50 text-sm">
-                                    <!-- Diisi oleh JS -->
-                                </tbody>
+                                    </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
 
-                <!-- TAB 2: MANAGE USERS -->
                 <div id="section-users" class="hidden flex-1 flex-col">
                     <div class="mb-6">
                         <h2 class="text-xl font-bold text-kama-800">Kelola Fotografer</h2>
@@ -462,8 +432,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="userTableBody" class="divide-y divide-gray-50 text-sm">
-                                    <!-- Diisi oleh JS -->
-                                </tbody>
+                                    </tbody>
                             </table>
                         </div>
                     </div>
@@ -477,7 +446,6 @@
         </footer>
     </div>
 
-    <!-- Modal Settings (Brand UI) -->
     <div id="modalSettings" class="fixed inset-0 bg-kama-900/40 backdrop-blur-sm flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[400px] transform transition-all duration-300 scale-95 flex flex-col" id="modalSettingsContent">
             <div class="flex justify-between items-center p-5 border-b border-gray-100">
@@ -517,7 +485,6 @@
         </div>
     </div>
 
-    <!-- Modal Create Project -->
     <div id="modalCreate" class="fixed inset-0 bg-kama-900/40 backdrop-blur-sm flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300 p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[480px] transform transition-all duration-300 scale-95 flex flex-col max-h-full" id="modalCreateContent">
             <div class="flex justify-between items-center p-5 sm:p-6 border-b border-gray-100">
@@ -527,7 +494,6 @@
                 </button>
             </div>
             <div class="overflow-y-auto p-5 sm:p-6 custom-scrollbar">
-                <!-- Form Create Project dengan autocomplete off -->
                 <form id="formCreateProject" onsubmit="handleCreateProject(event)" autocomplete="off">
                     <div class="space-y-5">
                         <div>
@@ -568,7 +534,6 @@
         </div>
     </div>
 
-    <!-- VIEW BARU: LOCAL FILE SORTER -->
     <div id="local-sorter-view" class="view-section bg-kama-50 min-h-screen">
         <header class="glass-header px-6 py-4 flex items-center sticky top-0 gap-4 shadow-sm">
             <button onclick="showView('admin-view')" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center justify-center transition-colors">
@@ -627,9 +592,7 @@
         </main>
     </div>
 
-    <!-- CLIENT AUTH & GALLERY VIEWS -->
     <div id="client-auth-view" class="view-section relative">
-        <!-- Back button untuk Fotografer/Admin saat Preview Mode -->
         <div class="absolute top-6 left-6 z-50">
             <button id="btn-back-dashboard-auth" onclick="exitClientPreview()" class="hidden text-gray-600 hover:text-kama-800 bg-white border border-gray-200 px-4 py-2 rounded-xl flex items-center justify-center transition-colors shadow-sm text-sm font-semibold">
                 <i class="fa-solid fa-house mr-2"></i> Home
@@ -659,14 +622,11 @@
     </div>
 
     <div id="client-gallery-view" class="view-section bg-white">
-        <!-- Minimalist Header Dengan Tombol Back -->
         <header class="glass-header px-4 sm:px-6 py-3 flex justify-between items-center shrink-0">
             <div class="flex-1 min-w-0 pr-4 flex items-center">
-                <!-- Tombol Kembali ke Admin Dashboard (Hanya muncul saat Admin/Fotografer Preview) -->
                 <button id="btn-back-dashboard" onclick="exitClientPreview()" class="hidden mr-3 text-white bg-kama-800 hover:bg-kama-900 w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-full sm:rounded-lg flex items-center justify-center shrink-0 transition-colors shadow-sm text-xs font-semibold" title="Home">
                     <i class="fa-solid fa-house sm:mr-1.5"></i> <span class="hidden sm:inline">Home</span>
                 </button>
-                <!-- Tombol Back Subfolder -->
                 <button id="btn-back-folder" onclick="goBackFolder()" class="hidden mr-3 text-gray-500 hover:text-kama-800 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 transition-colors shadow-sm">
                     <i class="fa-solid fa-arrow-left"></i>
                 </button>
@@ -683,7 +643,6 @@
             </div>
         </header>
 
-        <!-- Main Scrollable Gallery -->
         <div class="scrollable-content relative" id="gallery-scroll-area">
             <div id="gallery-container" class="gallery-grid max-w-[1600px] mx-auto"></div>
             <div id="gallery-empty" class="absolute inset-0 flex flex-col items-center justify-center hidden bg-gray-50">
@@ -692,7 +651,6 @@
             </div>
         </div>
 
-        <!-- Sticky Bottom Action Bar -->
         <div class="action-bar shrink-0">
             <div class="flex flex-col">
                 <span class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Status Pilihan</span>
@@ -715,42 +673,34 @@
         </div>
     </div>
 
-    <!-- Modal Image Viewer (Lightbox) -->
     <div id="imageViewerModal" class="fixed inset-0 z-[99999] hidden bg-black/95 flex flex-col items-center justify-center p-4 backdrop-blur-md opacity-0 transition-opacity duration-300" onclick="closeImageViewer()">
         <div class="absolute top-4 right-4 flex gap-3 z-50">
             <button onclick="closeImageViewer()" class="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full text-white flex items-center justify-center transition-colors border border-white/20">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
         </div>
-        <!-- Prevent click on image from closing modal -->
         <div class="relative max-w-full max-h-[85vh] flex flex-col items-center justify-center" onclick="event.stopPropagation()">
             <img id="viewerImage" src="" class="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl scale-95 transition-transform duration-300 bg-black/50">
             <p id="viewerCaption" class="text-white mt-4 font-semibold text-sm tracking-wide bg-black/50 px-4 py-1.5 rounded-full border border-white/10"></p>
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- LOGIC / JAVASCRIPT -->
-    <!-- ========================================== -->
     <script>
         console.log("App Initialized: Safe UI Elements with Lottie Loader");
 
-        // GLOBAL VARIABLES DITAMBAHKAN KEMBALI DI SINI
+        // GLOBAL VARIABLES
+        const API_ENDPOINT = '/api/bridge';
         var baseAppUrl = "";
         var clientState = { 
             token: '', namaClient: '', nomorWA: '', maxFoto: 0, driveLink: '', 
-            selectedImages: [], 
-            folderHistory: [], 
-            currentFolderId: '',
-            currentFolderName: '',
-            currentContent: { folders: [], images: [] },
-            isPreviewMode: false
+            selectedImages: [], folderHistory: [], currentFolderId: '', currentFolderName: '', currentContent: { folders: [], images: [] }, isPreviewMode: false
         };
         var appBranding = { name: 'Kama Creative', logo: '' };
         var currentUser = null;
 
         var metaAiLottieData = {"v":"5.9.6","fr":30,"ip":0,"op":121,"w":500,"h":500,"nm":"Comp 1","ddd":0,"assets":[],"layers":[{"ddd":0,"ind":1,"ty":4,"nm":"Shape Layer 2","td":1,"sr":1,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":0,"k":0,"ix":10},"p":{"a":0,"k":[250,250,0],"ix":2,"l":2},"a":{"a":0,"k":[33,21,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":1,"k":[{"i":{"x":0.833,"y":0.833},"o":{"x":0.333,"y":0},"t":20,"s":[{"i":[[-33.917,-33.917],[0.522,-45.458],[33.656,-33.656],[44.786,0],[34.171,34.171],[0.498,44.121],[-34.677,34.677],[-45.119,-0.256]],"o":[[34.685,34.685],[-0.507,44.11],[-34.171,34.171],[-44.786,0],[-33.665,-33.665],[-0.513,-45.447],[34.425,-34.425],[44.453,0.252]],"v":[[123.744,-123.744],[174.988,2.023],[123.744,123.744],[0,175],[-123.744,123.744],[-174.989,1.989],[-123.744,-123.744],[1,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":25,"s":[{"i":[[-28.689,-33.917],[-3.509,-54.023],[33.656,-33.656],[44.786,0],[34.171,34.171],[-1.416,44.101],[-39.331,38.744],[-38.164,-0.256]],"o":[[29.339,34.685],[2.859,44.02],[-34.171,34.171],[-44.786,0],[-33.665,-33.665],[1.509,-46.989],[32.122,-31.642],[37.6,0.252]],"v":[[104.67,-123.744],[167.509,2.023],[123.744,123.744],[0,175],[-123.744,123.744],[-167.509,1.989],[-104.669,-123.744],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":29,"s":[{"i":[[-31.334,-36.513],[-25.53,-55.465],[33.656,-33.656],[44.786,0],[34.171,34.171],[-20.127,43.011],[-37.354,42.975],[-19.871,0.004]],"o":[[25.063,29.206],[17.48,37.977],[-34.171,34.171],[-44.786,0],[-33.665,-33.665],[19.331,-41.31],[30.359,-34.927],[15.154,-0.003]],"v":[[45.667,-121.487],[136.52,2.023],[123.744,123.744],[0,175],[-123.744,123.744],[-135.873,1.989],[-44.646,-123.975],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":32,"s":[{"i":[[-1.224,-22.216],[-72.64,-45.023],[24.867,-39.744],[44.786,0],[24.556,37.731],[-45.778,28.011],[-4.384,76.975],[20.154,0.997]],"o":[[3.056,55.487],[42.924,26.605],[-23.878,38.163],[-44.786,0],[-25.866,-39.744],[36.326,-22.228],[1.296,-22.759],[-15.135,-0.749]],"v":[[-39.056,-121.487],[72.64,2.023],[106.133,123.744],[0,175],[-106.134,123.744],[-73.222,1.989],[46.384,-123.975],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":36,"s":[{"i":[[15.976,-35.513],[-52.76,-41.023],[0.63,-54.744],[23.722,0],[2.903,31.256],[-43.594,33.011],[26.804,45.95],[52.154,-1.003]],"o":[[-22.134,49.203],[48.694,37.861],[-0.314,27.257],[-23.846,0],[-3.842,-41.366],[43.621,-33.032],[-20.894,-35.818],[-55.945,1.076]],"v":[[-101.976,-121.487],[-33.24,2.023],[49.37,123.744],[0,175],[-49.903,123.744],[32.594,1.989],[105.196,-123.95],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":39,"s":[{"i":[[25.03,-29.831],[-31.76,-32.046],[-24.669,-48.874],[12.072,-0.71],[-18.097,34.013],[-42.405,43.322],[38.804,46.899],[52.154,-1.003]],"o":[[-31.024,36.975],[44.15,44.547],[13.13,26.013],[-8.5,0.5],[19.514,-36.676],[26.406,-26.977],[-26.434,-31.948],[-55.944,1.076]],"v":[[-119.976,-121.975],[-113.24,2.046],[0.37,123.487],[0,175],[0.097,123.487],[108.594,1.977],[119.196,-123.899],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":42,"s":[{"i":[[26.178,-28.828],[-8.322,-42.843],[-42.817,-45.975],[0,-10],[-30.43,25.849],[-13.711,73.023],[45.804,45.899],[52.154,-1.003]],"o":[[-39.024,42.975],[14.948,76.954],[20.523,22.037],[0,6],[30.548,-25.949],[8.134,-43.321],[-29.291,-29.351],[-55.944,1.076]],"v":[[-124.976,-121.975],[-161.948,2.046],[-35.183,123.975],[0,175],[38.452,123.949],[159.711,1.977],[124.196,-123.899],[0.846,-174.997]],"c":true}]},{"i":{"x":0.667,"y":1},"o":{"x":0.167,"y":0.167},"t":46,"s":[{"i":[[33.82,-33.917],[-7.384,-44.858],[-30.641,-31.662],[-27.009,0],[-37.557,33.256],[-2.497,42.511],[34.577,34.677],[44.99,-0.256]],"o":[[-34.586,34.685],[7.979,48.477],[36.539,37.756],[23.997,0],[32.995,-29.217],[2.665,-45.372],[-34.327,-34.425],[-44.325,0.252]],"v":[[-123.381,-123.744],[-173.229,3.023],[-104.539,123.744],[0.009,175],[104.557,123.744],[173.497,1.989],[123.398,-123.744],[-0.989,-174.997]],"c":true}]},{"t":50,"s":[{"i":[[33.82,-33.917],[-0.521,-45.458],[-33.56,-33.656],[-44.658,0],[-34.073,34.171],[-0.497,44.121],[34.577,34.677],[44.99,-0.256]],"o":[[-34.586,34.685],[0.505,44.11],[34.073,34.171],[44.658,0],[33.569,-33.665],[0.512,-45.447],[-34.327,-34.425],[-44.325,0.252]],"v":[[-123.381,-123.744],[-174.479,2.023],[-123.381,123.744],[0.009,175],[123.398,123.744],[174.497,1.989],[123.398,-123.744],[-0.989,-174.997]],"c":true}],"h":1},{"i":{"x":0.833,"y":0.833},"o":{"x":0.333,"y":0},"t":51,"s":[{"i":[[-33.917,-33.917],[0.522,-45.458],[33.656,-33.656],[44.786,0],[34.171,34.171],[0.498,44.121],[-34.677,34.677],[-45.119,-0.256]],"o":[[34.685,34.685],[-0.507,44.11],[-34.171,34.171],[-44.786,0],[-33.665,-33.665],[-0.513,-45.447],[34.425,-34.425],[44.453,0.252]],"v":[[123.744,-123.744],[174.988,2.023],[123.744,123.744],[0,175],[-123.744,123.744],[-174.989,1.989],[-123.744,-123.744],[1,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":54,"s":[{"i":[[-28.689,-33.917],[-3.509,-54.023],[33.656,-33.656],[44.786,0],[34.171,34.171],[-1.416,44.101],[-39.331,38.744],[-38.164,-0.256]],"o":[[29.339,34.685],[2.859,44.02],[-34.171,34.171],[-44.786,0],[-33.665,-33.665],[1.509,-46.989],[32.122,-31.642],[37.6,0.252]],"v":[[104.67,-123.744],[167.509,2.023],[123.744,123.744],[0,175],[-123.744,123.744],[-167.509,1.989],[-104.669,-123.744],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":58,"s":[{"i":[[-31.334,-36.513],[-25.53,-55.465],[33.656,-33.656],[44.786,0],[34.171,34.171],[-20.127,43.011],[-37.354,42.975],[-19.871,0.004]],"o":[[25.063,29.206],[17.48,37.977],[-34.171,34.171],[-44.786,0],[-33.665,-33.665],[19.331,-41.31],[30.359,-34.927],[15.154,-0.003]],"v":[[45.667,-121.487],[136.52,2.023],[123.744,123.744],[0,175],[-123.744,123.744],[-135.873,1.989],[-44.646,-123.975],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":61,"s":[{"i":[[-1.224,-22.216],[-72.64,-45.023],[24.867,-39.744],[44.786,0],[24.556,37.731],[-45.778,28.011],[-4.384,76.975],[20.154,0.997]],"o":[[3.056,55.487],[42.924,26.605],[-23.878,38.163],[-44.786,0],[-25.866,-39.744],[36.326,-22.228],[1.296,-22.759],[-15.135,-0.749]],"v":[[-39.056,-121.487],[72.64,2.023],[106.133,123.744],[0,175],[-106.134,123.744],[-73.222,1.989],[46.384,-123.975],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":65,"s":[{"i":[[15.976,-35.513],[-52.76,-41.023],[0.63,-54.744],[23.722,0],[2.903,31.256],[-43.594,33.011],[26.804,45.95],[52.154,-1.003]],"o":[[-22.134,49.203],[48.694,37.861],[-0.314,27.257],[-23.846,0],[-3.842,-41.366],[43.621,-33.032],[-20.893,-35.818],[-55.945,1.076]],"v":[[-101.976,-121.487],[-33.24,2.023],[49.37,123.744],[0,175],[-49.903,123.744],[32.594,1.989],[105.196,-123.95],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":68,"s":[{"i":[[25.03,-29.831],[-31.76,-32.046],[-24.669,-48.874],[12.072,-0.71],[-18.097,34.013],[-42.405,43.322],[38.804,46.899],[52.154,-1.003]],"o":[[-31.024,36.975],[44.15,44.547],[13.13,26.013],[-8.5,0.5],[19.514,-36.676],[26.406,-26.977],[-26.434,-31.948],[-55.944,1.076]],"v":[[-119.976,-121.975],[-113.24,2.046],[0.37,123.487],[0,175],[0.097,123.487],[108.594,1.977],[119.196,-123.899],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":71,"s":[{"i":[[26.178,-28.828],[-8.322,-42.843],[-42.817,-45.975],[0,-10],[-30.43,25.849],[-13.711,73.023],[45.804,45.899],[52.154,-1.003]],"o":[[-39.024,42.975],[14.948,76.954],[20.523,22.037],[0,6],[30.548,-25.949],[8.134,-43.321],[-29.291,-29.351],[-55.944,1.076]],"v":[[-124.976,-121.975],[-161.948,2.046],[-35.183,123.975],[0,175],[38.452,123.949],[159.711,1.977],[124.196,-123.899],[0.846,-174.997]],"c":true}]},{"i":{"x":0.667,"y":1},"o":{"x":0.167,"y":0.167},"t":75,"s":[{"i":[[33.82,-33.917],[-7.384,-44.858],[-30.641,-31.662],[-27.009,0],[-37.557,33.256],[-2.497,42.511],[34.577,34.677],[44.99,-0.256]],"o":[[-34.586,34.685],[7.979,48.477],[36.539,37.756],[23.997,0],[32.995,-29.217],[2.665,-45.372],[-34.327,-34.425],[-44.325,0.252]],"v":[[-123.381,-123.744],[-173.229,3.023],[-104.539,123.744],[0.009,175],[104.557,123.744],[173.497,1.989],[123.398,-123.744],[-0.989,-174.997]],"c":true}]},{"t":80,"s":[{"i":[[33.82,-33.917],[-0.521,-45.458],[-33.56,-33.656],[-44.658,0],[-34.073,34.171],[-0.497,44.121],[34.577,34.677],[44.99,-0.256]],"o":[[-34.586,34.685],[0.505,44.11],[34.073,34.171],[44.658,0],[33.569,-33.665],[0.512,-45.447],[-34.327,-34.425],[-44.325,0.252]],"v":[[-123.381,-123.744],[-174.479,2.023],[-123.381,123.744],[0.009,175],[123.398,123.744],[174.497,1.989],[123.398,-123.744],[-0.989,-174.997]],"c":true}]}],"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"st","c":{"a":0,"k":[0.396078437567,0.396078437567,0.396078437567,1],"ix":3},"o":{"a":0,"k":100,"ix":4},"w":{"a":0,"k":80,"ix":5},"lc":1,"lj":1,"ml":4,"bm":0,"nm":"Stroke 1","mn":"ADBE Vector Graphic - Stroke","hd":false},{"ty":"tr","p":{"a":0,"k":[33,21],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Ellipse 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":0,"op":211,"st":0,"ct":1,"bm":0},{"ddd":0,"ind":2,"ty":4,"nm":"Shape Layer 3","tt":1,"sr":1,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":1,"k":[{"i":{"x":[0.833],"y":[0.833]},"o":{"x":[0.167],"y":[0.167]},"t":0,"s":[0]},{"t":120,"s":[360]}],"ix":10},"p":{"a":0,"k":[250,250,0],"ix":2,"l":2},"a":{"a":0,"k":[33,21,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[-42.583,-42.583],[0.656,-57.073],[42.256,-42.256],[56.23,0],[42.902,42.902],[0.626,55.395],[-43.537,43.537],[-56.648,-0.322]],"o":[[43.548,43.548],[-0.636,55.38],[-42.902,42.902],[-56.23,0],[-42.267,-42.267],[-0.644,-57.059],[43.221,-43.221],[55.811,0.317]],"v":[[155.36,-155.329],[219.699,2.572],[155.36,155.394],[-0.001,219.747],[-155.363,155.394],[-219.701,2.529],[-155.363,-155.329],[1.254,-219.678]],"c":true},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"gf","o":{"a":0,"k":100,"ix":10},"r":1,"bm":0,"g":{"p":5,"k":{"a":0,"k":[0.013,0.98,0.065,0.97,0.176,0.528,0.117,0.918,0.517,0.075,0.168,0.867,0.849,0.059,0.488,0.933,0.988,0.043,0.809,1],"ix":9}},"s":{"a":0,"k":[-179.993,-7.325],"ix":5},"e":{"a":0,"k":[200.808,8.27],"ix":6},"t":1,"nm":"Gradient Fill 1","mn":"ADBE Vector Graphic - G-Fill","hd":false},{"ty":"tr","p":{"a":0,"k":[33,21],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Ellipse 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":0,"op":211,"st":0,"ct":1,"bm":0}]};
 
+        // --- INISIALISASI ---
         window.addEventListener('DOMContentLoaded', function() {
             var loaderContainer = document.getElementById('lottie-global-loader');
             if (loaderContainer) {
@@ -763,13 +713,11 @@
                 });
             }
 
-            // Fungsi Toggle Tema (Dark Mode) Independen
             var themeToggle = document.getElementById('hide-checkbox');
             if (themeToggle) {
                 themeToggle.addEventListener('change', function(e) {
                     if (e.target.checked) {
                         document.documentElement.classList.add('dark');
-                        // Pisahkan penyimpanan antara Admin dan Fotografer
                         if (currentUser && currentUser.role === 'Admin') {
                             localStorage.setItem('ps_admin_theme', 'dark');
                         } else {
@@ -785,6 +733,7 @@
                     }
                 });
             }
+        }); // <-- PERBAIKAN FATAL: Kurung tutup ini tadinya hilang!
 
         window.addEventListener('load', function() {
             var failsafeTimer = setTimeout(function() {
@@ -803,12 +752,11 @@
                     rawToken = urlParams.get('token');
                     rawBn = urlParams.get('bn');
                     rawBl = urlParams.get('bl');
-                    rawC = urlParams.get('c'); // Slug pendek
+                    rawC = urlParams.get('c'); 
                 } catch(e) {}
 
                 clearTimeout(failsafeTimer);
                 
-                // Hapus alert preview simulasi secara paksa
                 var previewAlert = document.getElementById('preview-alert');
                 var defaultLogin = document.getElementById('default-login-helper');
                 if (previewAlert) previewAlert.classList.add('hidden');
@@ -819,7 +767,6 @@
                 if(rawBl) appBranding.logo = rawBl;
                 applyBranding();
 
-                // DETEKSI URL: Jika klien membuka link galeri (Token atau Slug)
                 if (rawToken) { 
                     clientState.token = rawToken; 
                     initClientApp(); 
@@ -827,7 +774,6 @@
                     clientState.token = rawC; 
                     initClientApp(); 
                 } else { 
-                    // Jika halaman depan biasa
                     checkLoginState(); 
                     endLoading(); 
                 }
@@ -841,7 +787,6 @@
 
         // --- BRANDING LOGIC ---
         function applyBranding() {
-            // FUNGSI INI HANYA MENGUBAH TAMPILAN DALAM APLIKASI (UI)
             var brandTexts = document.querySelectorAll('.brand-name-text');
             for(var i=0; i<brandTexts.length; i++) {
                 if(brandTexts[i]) brandTexts[i].innerText = appBranding.name || 'Kama Creative';
@@ -1006,8 +951,6 @@
             if (!btn) return;
             if (isLoading) {
                 btn.disabled = true;
-                
-                // Embed animasi lottie kecil secara dinamis pada tombol (inline-spinner)
                 btn.innerHTML = '<span class="inline-block w-5 h-5 mr-2 align-middle" id="lottie-btn-' + btnId + '"></span> ' + (text || 'Memproses...');
                 btn.classList.add('opacity-70', 'cursor-not-allowed');
                 
@@ -1053,6 +996,22 @@
             }
         }
 
+        // PERBAIKAN: Fungsi Mata Password
+        function togglePasswordVisibility(inputId, iconEl) {
+            var input = document.getElementById(inputId);
+            if (input) {
+                if (input.type === "password") {
+                    input.type = "text";
+                    iconEl.classList.remove('fa-eye');
+                    iconEl.classList.add('fa-eye-slash');
+                } else {
+                    input.type = "password";
+                    iconEl.classList.remove('fa-eye-slash');
+                    iconEl.classList.add('fa-eye');
+                }
+            }
+        }
+
         // --- AUTH LOGIC ---
         function toggleAuth(type) {
             var loginForm = document.getElementById('login-form-wrapper');
@@ -1068,7 +1027,6 @@
             }
         }
 
-        // Fungsi baru khusus untuk mengatur Tab Browser (Eksklusif Branding Admin)
         async function fetchAdminTabBranding() {
             try {
                 const endpoint = typeof API_ENDPOINT !== 'undefined' ? API_ENDPOINT : '/api/bridge';
@@ -1088,13 +1046,11 @@
             }
         }
 
-        // Fungsi baru khusus untuk mengatur Tab Browser (Eksklusif Branding Admin)    
         function checkLoginState() {
             try { currentUser = JSON.parse(localStorage.getItem('ps_user')); } catch(e) { currentUser = null; }
             var themeToggle = document.getElementById('hide-checkbox');
             var wrapper = document.getElementById('theme-toggle-wrapper');
 
-            // 1. PANGGIL FUNGSI TAB GOOGLE AGAR SELALU MENGIKUTI ADMIN
             fetchAdminTabBranding();
 
             if (currentUser) {
@@ -1111,7 +1067,6 @@
                     }
                 }
                 
-                // Tampilan UI dalam aplikasi mengikuti user yang login
                 appBranding.name = currentUser.brandName || 'Kama Creative';
                 appBranding.logo = currentUser.brandLogo || '';
                 applyBranding();
@@ -1120,7 +1075,6 @@
                 var adminNavTabsMobile = document.getElementById('admin-nav-tabs-mobile');
                 var adminCols = document.querySelectorAll('.admin-only-col');
 
-                // 2. TERAPKAN DARK MODE SECARA INDEPENDEN
                 var savedTheme = currentUser.role === 'Admin' ? localStorage.getItem('ps_admin_theme') : localStorage.getItem('ps_theme');
                 
                 if (savedTheme === 'dark') {
@@ -1132,7 +1086,6 @@
                 }
                 if (wrapper) wrapper.title = "Toggle Dark Mode";
 
-                // Atur Tampilan Menu Berdasarkan Role
                 if(currentUser.role === 'Admin') {
                     if (adminNavTabs && adminNavTabs.classList) { adminNavTabs.classList.remove('hidden'); adminNavTabs.classList.add('sm:flex'); }
                     if (adminNavTabsMobile && adminNavTabsMobile.classList) adminNavTabsMobile.classList.remove('hidden');
@@ -1219,9 +1172,7 @@
             setButtonState('btnLogin', true, 'Authenticating...');
             startLoading("Authenticating...");
 
-            // Memanggil Backend Vercel Baru
             try {
-                // Pastikan API_ENDPOINT '/api/bridge' sudah terdefinisi di atas
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1237,11 +1188,9 @@
                 setButtonState('btnLogin', false, 'Sign In');
 
                 if (res.status === 'success') {
-                    // Simpan sesi ke browser
                     localStorage.setItem('ps_user', JSON.stringify(res.data));
                     checkLoginState();
                     
-                    // Notifikasi sukses ringan
                     Swal.fire({
                         icon: 'success',
                         title: 'Selamat Datang!',
@@ -1565,12 +1514,10 @@
                 var encodedBrand = encodeURIComponent(appBranding.name || 'Kama Creative');
                 var encodedLogo = encodeURIComponent(appBranding.logo || '');
                 
-                // PAKSA SEMUA LINK LAMA & BARU PAKAI DOMAIN KUSTOM (jika ada data slug)
                 var displayLink = row['Short Slug'] 
                     ? ("https://ps.kamacreative.my.id/?c=" + row['Short Slug']) 
                     : (baseAppUrl + "?token=" + row.Token + "&bn=" + encodedBrand + "&bl=" + encodedLogo);
                 
-                // Tampilan tulisan di tabel (di bawah nama client) agar rapi
                 var displayedTokenOrLink = row['Short Slug'] 
                     ? ("ps.kamacreative.my.id/?c=" + row['Short Slug']) 
                     : row.Token;
@@ -1584,10 +1531,8 @@
                 var ownerHtml = isUserAdmin ? '<td class="p-4 sm:px-6 admin-only-col"><span class="bg-indigo-50 text-indigo-700 text-xs px-2 py-1 rounded border border-indigo-100"><i class="fa-solid fa-user-astronaut mr-1"></i>' + (row.Owner || '-') + '</span></td>' : '<td class="admin-only-col hidden"></td>';
 
                 tr.innerHTML = 
-                    // Tambahkan overflow-hidden agar tabel tidak melar jika nama panjang
                     '<td class="p-4 sm:px-6 overflow-hidden">' +
                         '<div class="font-bold text-kama-800 truncate" title="' + (row['Nama Client'] || '-') + '">' + (row['Nama Client'] || '-') + '</div>' +
-                        // Tambahkan max-w dan truncate agar link terpotong rapi dengan titik-titik jika kepanjangan
                         '<div class="text-xs text-blue-500 font-medium mt-0.5 truncate max-w-[200px] sm:max-w-xs" title="' + displayLink + '"><i class="fa-solid fa-link mr-1 opacity-50"></i>' + displayedTokenOrLink + '</div>' +
                         '<div class="text-[10px] text-gray-400 sm:hidden mt-1"><i class="fa-regular fa-clock mr-1"></i> ' + dateFull + '</div>' +
                     '</td>' +
@@ -1874,8 +1819,6 @@
 
         function startSorterLoading() {
             isProcessingSorter = true; isCancelledSorter = false;
-            
-            // Integrasi Lottie button spinner dengan fungsi helper global
             setButtonState('btnProsesSorter', true, 'Memproses ZIP...');
             
             var btnCancelSorter = document.getElementById('btnCancelSorter');
@@ -1893,7 +1836,6 @@
 
         function endSorterLoading() {
             isProcessingSorter = false; isCancelledSorter = false;
-            
             setButtonState('btnProsesSorter', false, '<i class="fa-solid fa-file-zipper" id="iconProsesSorter"></i> <span>Proses & Download ZIP</span>');
             
             var btnCancelSorter = document.getElementById('btnCancelSorter');
@@ -2010,48 +1952,10 @@
             }
         }
 
-        function handleClientAuth(e) {
-            e.preventDefault();
-            var passEl = document.getElementById('client-password');
-            var passInput = passEl ? passEl.value.trim() : '';
-            setButtonState('btnClientAuth', true, 'Membuka...');
-            startLoading("Membuka...");
-            if (typeof google === 'undefined') { 
-                setTimeout(function() { 
-                    endLoading(); 
-                    setButtonState('btnClientAuth', false, 'Unlock Gallery');
-                    clientState.currentFolderId = clientState.driveLink;
-                    clientState.currentFolderName = clientState.namaClient;
-                    fetchClientContent(clientState.currentFolderId, clientState.currentFolderName); 
-                }, 800); 
-            } 
-            else {
-                google.script.run
-                    .withSuccessHandler(function(res) { 
-                        endLoading(); 
-                        setButtonState('btnClientAuth', false, 'Unlock Gallery');
-                        if(res.success) {
-                            clientState.currentFolderId = clientState.driveLink;
-                            clientState.currentFolderName = clientState.namaClient;
-                            fetchClientContent(clientState.currentFolderId, clientState.currentFolderName);
-                        } else { Swal.fire('Ditolak', res.message, 'error'); }
-                    })
-                    .withFailureHandler(function(err) { 
-                        endLoading(); 
-                        setButtonState('btnClientAuth', false, 'Unlock Gallery');
-                        Swal.fire('Error', err.message, 'error'); 
-                    }).verifyClientPassword(clientState.token, passInput);
-            }
-        }
-
-        // Tambahkan variabel ini di atas fungsi jika belum ada
-        const API_ENDPOINT = '/api/bridge';
-
         async function fetchClientContent(folderId, folderName) {
             showView('client-gallery-view');
             startLoading("Memuat Data...");
 
-            // Update UI Header
             var gTitle = document.getElementById('gallery-title');
             if (gTitle) gTitle.innerText = folderName || clientState.namaClient;
 
@@ -2064,7 +1968,6 @@
                 }
             }
 
-            // Memanggil Backend Vercel Baru
             try {
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
@@ -2111,7 +2014,6 @@
             }
         }
 
-        // --- MENGGUNAKAN IMAGE VIEWER MODAL (LIGHTBOX) ---
         function openImageViewer(url, name, event) {
             if (event) event.stopPropagation();
             
@@ -2158,7 +2060,6 @@
             }
             if (emptyState && emptyState.classList) emptyState.classList.add('hidden');
 
-            // Render Folders
             if (hasFolders) {
                 clientState.currentContent.folders.forEach(function(folder) {
                     var fCard = document.createElement('div'); 
@@ -2173,7 +2074,6 @@
                 });
             }
 
-            // Render Images
             if (hasImages) {
                 clientState.currentContent.images.forEach(function(imgData, index) {
                     var card = document.createElement('div'); card.className = "photo-card group"; card.dataset.filename = imgData.name;
@@ -2192,7 +2092,6 @@
                         '<img src="' + imgData.url + '" alt="' + imgData.name + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=\'https://placehold.co/400x400?text=Error\';">' +
                         '<div class="info-overlay">' +
                             '<span class="filename-text mb-2 w-full truncate" title="' + imgData.name + '">' + shortName + '</span>' +
-                            // Tampilan tombol View sekarang selalu muncul, posisinya sama persis di dalam foto
                             '<button onclick="openImageViewer(\'' + imgData.url + '\', \'' + imgData.name + '\', event)" class="w-full bg-white/20 hover:bg-white/40 backdrop-blur-sm border border-white/50 text-white rounded-lg py-1.5 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5">' +
                                 '<i class="fa-solid fa-magnifying-glass"></i> View' +
                             '</button>' +
@@ -2256,7 +2155,6 @@
             if (clientState.selectedImages.length === 0) return null;
             var text = "Halo, ini dari *" + clientState.namaClient + "*.\nBerikut daftar foto pilihan kami (" + clientState.selectedImages.length + "/" + clientState.maxFoto + "):\n\n";
             
-            // Group by folder
             var grouped = {};
             clientState.selectedImages.forEach(function(item) {
                 if (!grouped[item.folder]) grouped[item.folder] = [];
@@ -2292,10 +2190,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
