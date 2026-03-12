@@ -767,6 +767,9 @@
                 if(rawBl) appBranding.logo = rawBl;
                 applyBranding();
 
+                // PERBAIKAN: Panggil fungsi branding Admin untuk SEMUA halaman, termasuk halaman Client
+                fetchAdminTabBranding();
+
                 if (rawToken) { 
                     clientState.token = rawToken; 
                     initClientApp(); 
@@ -785,6 +788,7 @@
             }
         });
 
+        
         // --- BRANDING LOGIC ---
         function applyBranding() {
             var brandTexts = document.querySelectorAll('.brand-name-text');
@@ -1037,9 +1041,17 @@
                 });
                 const res = await response.json();
                 if (res.status === 'success' && res.data.success) {
+                    // 1. Update Tab Browser (Selalu ikut Admin)
                     document.title = (res.data.brandName || "Kama Creative") + " - Client Gallery";
                     var favicon = document.getElementById('dynamic-favicon');
                     if (favicon) favicon.href = res.data.brandLogo || "https://img.icons8.com/color/48/000000/camera.png";
+                    
+                    // 2. Jika ini halaman Client (bukan admin/fotografer yang login), update Logo UI nya juga
+                    if (!currentUser) {
+                        appBranding.name = res.data.brandName || "Kama Creative";
+                        appBranding.logo = res.data.brandLogo || "";
+                        applyBranding();
+                    }
                 }
             } catch(e) {
                 console.error("Gagal memuat branding tab admin:", e);
@@ -1051,7 +1063,7 @@
             var themeToggle = document.getElementById('hide-checkbox');
             var wrapper = document.getElementById('theme-toggle-wrapper');
 
-            fetchAdminTabBranding();
+            // fetchAdminTabBranding() dihapus dari sini karena sudah dipanggil di saat load awal
 
             if (currentUser) {
                 var adminNameEl = document.getElementById('adminName');
@@ -2190,3 +2202,4 @@
     </script>
 </body>
 </html>
+
