@@ -973,7 +973,7 @@
             setTimeout(function() { if (modal) modal.classList.add('hidden'); }, 300);
         }
 
-        function handleSaveSettings(e) {
+        async function handleSaveSettings(e) {
             e.preventDefault();
             var fileInput = document.getElementById('set_brand_file');
             var brandNameEl = document.getElementById('set_brand_name');
@@ -987,20 +987,24 @@
                 var reader = new FileReader();
                 startLoading("Mengupload Logo...");
                 
-                reader.onload = function(evt) {
+                reader.onload = async function(evt) {
                     var base64Data = evt.target.result;
-                    if (typeof google === 'undefined') {
-                        setTimeout(function() { finishSaveSettings(nameInput, base64Data); }, 300); 
-                    } else {
-                        google.script.run
-                            .withSuccessHandler(function(res) {
-                                endLoading();
-                                if (res.success) { finishSaveSettings(nameInput, res.url); } 
-                                else { Swal.fire('Upload Gagal', res.message, 'error'); }
-                            }).withFailureHandler(function(err) { 
-                                endLoading();
-                                Swal.fire('Error', err.message, 'error'); 
-                            }).uploadBrandLogo(base64Data, file.name);
+                    try {
+                        const response = await fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'uploadBrandLogo', base64Data: base64Data, filename: file.name })
+                        });
+                        const res = await response.json();
+                        endLoading();
+                        if (res.status === 'success' && res.data.success) {
+                            finishSaveSettings(nameInput, res.data.url);
+                        } else {
+                            Swal.fire('Upload Gagal', res.message || res.data.message, 'error');
+                        }
+                    } catch(err) {
+                        endLoading();
+                        Swal.fire('Error', err.message, 'error');
                     }
                 };
                 reader.readAsDataURL(file);
@@ -1009,39 +1013,34 @@
             }
         }
 
-        function finishSaveSettings(name, logo) {
+        async function finishSaveSettings(name, logo) {
             startLoading("Menyimpan Pengaturan...");
-            if (typeof google === 'undefined') {
-                setTimeout(function() {
-                    endLoading();
-                    appBranding.name = name; appBranding.logo = logo;
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'saveBrandSettings', username: currentUser.username, brandName: name, brandLogo: logo })
+                });
+                const res = await response.json();
+                endLoading();
+                if (res.status === 'success' && res.data.success) {
+                    appBranding.name = res.data.brandName; 
+                    appBranding.logo = res.data.brandLogo;
                     if (currentUser) {
-                        currentUser.brandName = name; currentUser.brandLogo = logo;
+                        currentUser.brandName = res.data.brandName; 
+                        currentUser.brandLogo = res.data.brandLogo;
                         localStorage.setItem('ps_user', JSON.stringify(currentUser));
                     }
-                    applyBranding(); closeModalSettings();
+                    applyBranding(); 
+                    closeModalSettings();
                     Swal.fire({icon: 'success', title: 'Tersimpan', timer: 1500, showConfirmButton: false});
                     loadDataProjects();
-                }, 200); 
-            } else {
-                google.script.run
-                    .withSuccessHandler(function(res) {
-                        endLoading(); 
-                        if(res.success) {
-                            appBranding.name = res.brandName; appBranding.logo = res.brandLogo;
-                            if (currentUser) {
-                                currentUser.brandName = res.brandName; currentUser.brandLogo = res.brandLogo;
-                                localStorage.setItem('ps_user', JSON.stringify(currentUser));
-                            }
-                            applyBranding(); closeModalSettings();
-                            Swal.fire({icon: 'success', title: 'Tersimpan', timer: 1500, showConfirmButton: false});
-                            loadDataProjects();
-                        } else { Swal.fire('Error', res.message, 'error'); }
-                    }).withFailureHandler(function(err) { 
-                        endLoading(); 
-                        Swal.fire('Error', err.message, 'error'); 
-                    })
-                    .saveBrandSettings(currentUser.username, name, logo);
+                } else {
+                    Swal.fire('Error', res.message || res.data.message, 'error');
+                }
+            } catch(err) {
+                endLoading();
+                Swal.fire('Error', err.message, 'error');
             }
         }
 
@@ -1202,15 +1201,13 @@
             }
         }
 
-        function handleRegister(e) {
+        async function handleRegister(e) {
             e.preventDefault();
             var regNama = document.getElementById('reg_nama');
             var regEmail = document.getElementById('reg_email');
             var regNoHP = document.getElementById('reg_nohp');
             var regUser = document.getElementById('reg_username');
             var regPass = document.getElementById('reg_password');
-            
-            // TANGKAP DATA PAKET DARI DROPDOWN
             var regPaket = document.getElementById('reg_paket');
             
             var formData = { 
@@ -1219,45 +1216,39 @@
                 nohp: regNoHP ? regNoHP.value.trim() : '', 
                 username: regUser ? regUser.value.trim() : '', 
                 password: regPass ? regPass.value.trim() : '',
-                paket: regPaket ? regPaket.value : '' // Masukkan pilihan paket ke data yang dikirim
+                paket: regPaket ? regPaket.value : '' 
             };
             
             setButtonState('btnRegister', true, 'Mendaftarkan...');
             startLoading("Mendaftarkan...");
 
-            if (typeof google === 'undefined') {
-                setTimeout(function() {
-                    endLoading();
-                    setButtonState('btnRegister', false, 'Daftar Sekarang');
-                    Swal.fire('Berhasil', 'Pendaftaran (Simulasi) berhasil! Akun Anda butuh ACC Admin.', 'success');
-                    
-                    // KOSONGKAN FORM SETELAH SUKSES
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'register',
+                        data: formData
+                    })
+                });
+                const res = await response.json();
+                endLoading();
+                setButtonState('btnRegister', false, 'Daftar Sekarang');
+
+                if (res.status === 'success' && res.data.success) {
+                    Swal.fire('Berhasil', res.data.message, 'success');
                     document.querySelector('#register-form-wrapper form').reset();
-                    
                     toggleAuth('login');
-                }, 300); 
-            } else {
-                google.script.run
-                    .withSuccessHandler(function(res) {
-                        endLoading(); 
-                        setButtonState('btnRegister', false, 'Daftar Sekarang');
-                        if (res.success) { 
-                            Swal.fire('Berhasil', res.message, 'success'); 
-                            
-                            // KOSONGKAN FORM SETELAH SUKSES (Mencegah riwayat tertinggal)
-                            document.querySelector('#register-form-wrapper form').reset();
-                            
-                            toggleAuth('login'); 
-                        } 
-                        else { Swal.fire('Gagal', res.message, 'error'); }
-                    }).withFailureHandler(function(err) { 
-                        endLoading(); 
-                        setButtonState('btnRegister', false, 'Daftar Sekarang');
-                        Swal.fire('Error', err.message, 'error'); 
-                    }).registerUser(formData);
+                } else {
+                    Swal.fire('Gagal', res.message || res.data.message, 'error');
+                }
+            } catch (err) {
+                endLoading();
+                setButtonState('btnRegister', false, 'Daftar Sekarang');
+                Swal.fire('Error', err.message || 'Gagal menghubungi server.', 'error');
             }
         }
-
+        
         async function handleLogin(e) {
             e.preventDefault();
             var uName = document.getElementById('username');
@@ -1310,37 +1301,36 @@
             }
         }
         
-        function handleLogout() {
+        async function handleLogout() {
             localStorage.removeItem('ps_user');
             currentUser = null;
             var loginForm = document.querySelector('#login-form-wrapper form');
             if (loginForm) loginForm.reset();
             
             startLoading("Keluar...");
-            if (typeof google !== 'undefined') {
-                google.script.run
-                    .withSuccessHandler(function(res) {
-                        endLoading();
-                        if (res.success) {
-                            appBranding.name = res.brandName;
-                            appBranding.logo = res.brandLogo;
-                        } else {
-                            appBranding.name = 'Kama Creative'; appBranding.logo = '';
-                        }
-                        checkLoginState();
-                    })
-                    .withFailureHandler(function() {
-                        endLoading();
-                        appBranding.name = 'Kama Creative'; appBranding.logo = '';
-                        checkLoginState();
-                    }).getGlobalBranding();
-            } else {
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'getGlobalBranding' })
+                });
+                const res = await response.json();
                 endLoading();
-                appBranding.name = 'Kama Creative'; appBranding.logo = '';
-                checkLoginState();
+                if (res.status === 'success' && res.data.success) {
+                    appBranding.name = res.data.brandName;
+                    appBranding.logo = res.data.brandLogo;
+                } else {
+                    appBranding.name = 'Kama Creative'; 
+                    appBranding.logo = '';
+                }
+            } catch(e) {
+                endLoading();
+                appBranding.name = 'Kama Creative'; 
+                appBranding.logo = '';
             }
+            checkLoginState();
         }
-
+        
         // --- DASHBOARD TABS ---
         function switchAdminTab(tabId) {
             var dTabs = document.querySelectorAll('#admin-nav-tabs .nav-tab');
@@ -1489,7 +1479,7 @@
             if (currentExpiry === 'Lifetime') {
                 isLifetime = true;
             } else if (currentExpiry) {
-                defaultDate = currentExpiry.split(' ')[0]; 
+                defaultDate = currentExpiry.split(' ')[0];
             } else {
                 var d = new Date();
                 d.setDate(d.getDate() + 30);
@@ -1525,28 +1515,28 @@
                     if (!dVal) { Swal.showValidationMessage('Silakan pilih tanggal atau centang Lifetime'); return false; }
                     return dVal;
                 }
-            }).then((result) => {
+            }).then(async (result) => {
                 if (result.isConfirmed) {
                     var expValue = result.value;
                     startLoading("Menyimpan...");
-                    if (typeof google === 'undefined') {
-                        setTimeout(() => { 
-                            endLoading(); 
-                            Swal.fire({icon:'success', title:'Berhasil (Simulasi)', timer:1500, showConfirmButton:false}); 
-                            loadDataUsers(); 
-                        }, 500);
-                    } else {
-                        if (isApproval) {
-                            google.script.run
-                                .withSuccessHandler(res => { endLoading(); if(res.success) { Swal.fire({icon:'success', title:'Di-ACC!', timer:1500, showConfirmButton:false}); loadDataUsers(); } else Swal.fire('Error', res.message, 'error'); })
-                                .withFailureHandler(err => { endLoading(); Swal.fire('Error', err.message, 'error'); })
-                                .approveUser(username, expValue, currentUser);
+                    try {
+                        let routeAction = isApproval ? 'approveUser' : 'updateExpiry';
+                        const response = await fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: routeAction, username: username, expiryValue: expValue, currentUser: currentUser })
+                        });
+                        const res = await response.json();
+                        endLoading();
+                        if (res.status === 'success' && res.data.success) {
+                            Swal.fire({icon:'success', title: isApproval ? 'Di-ACC!' : 'Diperbarui!', timer:1500, showConfirmButton:false});
+                            loadDataUsers();
                         } else {
-                            google.script.run
-                                .withSuccessHandler(res => { endLoading(); if(res.success) { Swal.fire({icon:'success', title:'Diperbarui!', timer:1500, showConfirmButton:false}); loadDataUsers(); } else Swal.fire('Error', res.message, 'error'); })
-                                .withFailureHandler(err => { endLoading(); Swal.fire('Error', err.message, 'error'); })
-                                .updateExpiry(username, expValue, currentUser);
+                            Swal.fire('Error', res.message || res.data.message, 'error');
                         }
+                    } catch(err) {
+                        endLoading();
+                        Swal.fire('Error', err.message, 'error');
                     }
                 }
             });
@@ -1554,27 +1544,30 @@
 
         function deleteUserPrompt(username) {
             Swal.fire({ title: 'Hapus Fotografer?', text: "Akun ini akan dihapus permanen.", icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Hapus', confirmButtonColor: '#ef4444' })
-            .then(function(result) {
+            .then(async function(result) {
                 if (result.isConfirmed) {
                     startLoading("Menghapus...");
-                    if(typeof google === 'undefined') { 
-                        setTimeout(function() { endLoading(); loadDataUsers(); }, 200); 
-                    } else {
-                        google.script.run
-                            .withSuccessHandler(function(res) { 
-                                endLoading(); 
-                                if(res.success) loadDataUsers(); else Swal.fire('Error', res.message, 'error'); 
-                            })
-                            .withFailureHandler(function(err) { 
-                                endLoading(); 
-                                Swal.fire('Error', err.message, 'error'); 
-                            })
-                            .deleteUser(username, currentUser);
+                    try {
+                        const response = await fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'deleteUser', username: username, currentUser: currentUser })
+                        });
+                        const res = await response.json();
+                        endLoading();
+                        if (res.status === 'success' && res.data.success) {
+                            loadDataUsers();
+                        } else {
+                            Swal.fire('Error', res.message || res.data.message, 'error');
+                        }
+                    } catch (err) {
+                        endLoading();
+                        Swal.fire('Error', err.message, 'error');
                     }
                 }
             });
         }
-
+        
         // --- PROJECTS LOGIC ---
         async function loadDataProjects() {
             startLoading("Memuat Project...");
@@ -2305,6 +2298,7 @@
     </script>
 </body>
 </html>
+
 
 
 
