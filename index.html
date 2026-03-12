@@ -816,87 +816,30 @@
                     rawC = urlParams.get('c'); // Slug pendek
                 } catch(e) {}
 
-                if (typeof google === 'undefined') {
-                    clearTimeout(failsafeTimer);
-                    var previewAlert = document.getElementById('preview-alert');
-                    var defaultLogin = document.getElementById('default-login-helper');
-                    if (previewAlert) previewAlert.classList.remove('hidden');
-                    if (defaultLogin) defaultLogin.classList.remove('hidden'); // Show dummy login info
-                    baseAppUrl = window.location.origin + window.location.pathname;
+                clearTimeout(failsafeTimer);
+                
+                // Hapus alert preview simulasi secara paksa
+                var previewAlert = document.getElementById('preview-alert');
+                var defaultLogin = document.getElementById('default-login-helper');
+                if (previewAlert) previewAlert.classList.add('hidden');
+                if (defaultLogin) defaultLogin.classList.add('hidden');
 
-                    if(rawBn) appBranding.name = rawBn;
-                    if(rawBl) appBranding.logo = rawBl;
-                    applyBranding();
+                baseAppUrl = window.location.origin + window.location.pathname;
+                if(rawBn) appBranding.name = rawBn;
+                if(rawBl) appBranding.logo = rawBl;
+                applyBranding();
 
-                    // Di mode simulasi, abaikan proses slug "c"
-                    if (rawToken) { clientState.token = rawToken; initClientApp(); } 
-                    else { checkLoginState(); endLoading(); }
-                } else {
-                    if (google && google.script && google.script.url) {
-                        google.script.url.getLocation(function(location) {
-                            clearTimeout(failsafeTimer);
-                            try {
-                                var tokenQuery = rawToken;
-                                var slugQuery = rawC;
-                                
-                                if (location.parameters && location.parameters.token) { tokenQuery = location.parameters.token[0]; }
-                                if (location.parameters && location.parameters.c) { slugQuery = location.parameters.c[0]; }
-                                if (location.parameters && location.parameters.bn) { appBranding.name = location.parameters.bn[0]; }
-                                if (location.parameters && location.parameters.bl) { appBranding.logo = location.parameters.bl[0]; }
-                                
-                                applyBranding();
-
-                                // Jika diakses pakai token langsung atau bukan mode slug "c"
-                                if (tokenQuery && !slugQuery) { 
-                                    clientState.token = tokenQuery; 
-                                    initClientApp(); 
-                                } 
-                                // Jika diakses pakai slug "c", biarkan Backend (doGet) yang render halaman redirect,
-                                // tapi kalau telanjur masuk ke sini, panggil checkLogin.
-                                else { 
-                                    // Ambil branding Admin untuk halaman login utama
-                                    google.script.run
-                                        .withSuccessHandler(function(res) {
-                                            if (res.success) {
-                                                appBranding.name = res.brandName;
-                                                appBranding.logo = res.brandLogo;
-                                                applyBranding();
-                                            }
-                                            checkLoginState(); 
-                                            endLoading();
-                                        })
-                                        .withFailureHandler(function() {
-                                            checkLoginState(); 
-                                            endLoading();
-                                        })
-                                        .getGlobalBranding();
-                                }
-                            } catch(e) { console.error(e); checkLoginState(); endLoading(); }
-                        });
-                    } else {
-                        clearTimeout(failsafeTimer);
-                        if(rawBn) appBranding.name = rawBn;
-                        if(rawBl) appBranding.logo = rawBl;
-                        applyBranding();
-                        if (rawToken) { clientState.token = rawToken; initClientApp(); } 
-                        else { 
-                            google.script.run
-                                .withSuccessHandler(function(res) {
-                                    if (res.success) {
-                                        appBranding.name = res.brandName;
-                                        appBranding.logo = res.brandLogo;
-                                        applyBranding();
-                                    }
-                                    checkLoginState(); 
-                                    endLoading();
-                                })
-                                .withFailureHandler(function() {
-                                    checkLoginState(); 
-                                    endLoading();
-                                })
-                                .getGlobalBranding();
-                        }
-                    }
+                // DETEKSI URL: Jika klien membuka link galeri (Token atau Slug)
+                if (rawToken) { 
+                    clientState.token = rawToken; 
+                    initClientApp(); 
+                } else if (rawC) { 
+                    clientState.token = rawC; 
+                    initClientApp(); 
+                } else { 
+                    // Jika halaman depan biasa
+                    checkLoginState(); 
+                    endLoading(); 
                 }
             } catch (err) {
                 clearTimeout(failsafeTimer);
@@ -1699,14 +1642,14 @@
             setTimeout(function() { if (modal && modal.classList) modal.classList.add('hidden'); }, 300);
         }
 
-        function handleCreateProject(e) {
+        async function handleCreateProject(e) {
             e.preventDefault();
             var pNama = document.getElementById('p_nama');
             var pDrive = document.getElementById('p_drive');
             var pWa = document.getElementById('p_wa');
             var pMax = document.getElementById('p_max');
             var pPass = document.getElementById('p_pass');
-
+            
             var formData = {
                 namaClient: pNama ? pNama.value.trim() : '', 
                 driveLink: pDrive ? pDrive.value.trim() : '',
@@ -1718,32 +1661,35 @@
             setButtonState('btnCreate', true, 'Membuat Link...');
             startLoading("Mempersiapkan Link...");
 
-            if (typeof google === 'undefined') {
-                setTimeout(function() {
-                    endLoading(); 
-                    closeModalCreate(); 
-                    setButtonState('btnCreate', false, 'Generate Link');
-                    Swal.fire({icon: 'success', title: 'Berhasil Dibuat', timer: 1500, showConfirmButton: false}); 
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'createProject',
+                        formData: formData,
+                        currentUser: currentUser,
+                        appConfig: { brandName: appBranding.name, baseUrl: "https://ps.kamacreative.my.id" }
+                    })
+                });
+                const res = await response.json();
+                endLoading();
+                setButtonState('btnCreate', false, 'Generate Link');
+
+                if (res.status === 'success' && res.data.success) {
+                    closeModalCreate();
+                    Swal.fire({icon: 'success', title: 'Berhasil Dibuat', timer: 1500, showConfirmButton: false});
                     loadDataProjects();
-                }, 800); 
-            } else {
-                google.script.run
-                    .withSuccessHandler(function(res) {
-                        endLoading(); 
-                        setButtonState('btnCreate', false, 'Generate Link');
-                        if (res.success) { 
-                            closeModalCreate(); 
-                            Swal.fire({icon: 'success', title: 'Berhasil Dibuat', timer: 1500, showConfirmButton: false});
-                            loadDataProjects(); 
-                        } else { Swal.fire('Error', res.message, 'error'); }
-                    }).withFailureHandler(function(err) { 
-                        endLoading(); 
-                        setButtonState('btnCreate', false, 'Generate Link');
-                        Swal.fire('Error', err.message, 'error'); 
-                    }).createProject(formData, currentUser, {brandName: appBranding.name, baseUrl: baseAppUrl});
+                } else {
+                    Swal.fire('Error', res.message || res.data.message, 'error');
+                }
+            } catch(err) {
+                endLoading();
+                setButtonState('btnCreate', false, 'Generate Link');
+                Swal.fire('Error', err.message, 'error');
             }
         }
-
+        
         function deleteProjectPrompt(id) {
             Swal.fire({ title: 'Hapus Project?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus' })
             .then(async function(result) {
@@ -1960,27 +1906,60 @@
         }
 
         // --- CLIENT (GUEST) LOGIC ---
-        function initClientApp() {
-            document.documentElement.classList.remove('dark'); // Paksa klien tetap mode terang
+        async function initClientApp() {
+            document.documentElement.classList.remove('dark');
             startLoading("Memverifikasi...");
-            if (typeof google === 'undefined') {
-                setTimeout(function() {
-                    endLoading();
-                    processClientProjectData({ namaClient: "John & Jane Wedding", nomorWA: "6281234", maxFoto: 5, needsPassword: false, driveLink: "#"}); 
-                }, 200); 
-            } else {
-                google.script.run
-                    .withSuccessHandler(function(res) {
-                        endLoading(); 
-                        if (res.success) { processClientProjectData(res.project); } 
-                        else { Swal.fire({icon: 'error', title: 'Akses Ditolak', text: res.message, allowOutsideClick: false}); }
-                    }).withFailureHandler(function(err) { 
-                        endLoading(); 
-                        Swal.fire('Error', err.message, 'error'); 
-                    }).getProjectForClient(clientState.token);
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'getProjectForClient', token: clientState.token })
+                });
+                const res = await response.json();
+                endLoading();
+                
+                if (res.status === 'success' && res.data.success) {
+                    processClientProjectData(res.data.project);
+                } else {
+                    Swal.fire({icon: 'error', title: 'Akses Ditolak', text: res.message || res.data.message, allowOutsideClick: false});
+                }
+            } catch (err) {
+                endLoading();
+                Swal.fire('Error', 'Gagal memuat galeri: ' + err.message, 'error');
             }
         }
 
+        async function handleClientAuth(e) {
+            e.preventDefault();
+            var passEl = document.getElementById('client-password');
+            var passInput = passEl ? passEl.value.trim() : '';
+            setButtonState('btnClientAuth', true, 'Membuka...');
+            startLoading("Membuka...");
+            
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'verifyClientPassword', token: clientState.token, passwordInput: passInput })
+                });
+                const res = await response.json();
+                endLoading();
+                setButtonState('btnClientAuth', false, 'Unlock Gallery');
+                
+                if (res.status === 'success' && res.data.success) {
+                    clientState.currentFolderId = clientState.driveLink;
+                    clientState.currentFolderName = clientState.namaClient;
+                    fetchClientContent(clientState.currentFolderId, clientState.currentFolderName);
+                } else {
+                    Swal.fire('Ditolak', res.message || res.data.message, 'error');
+                }
+            } catch (err) {
+                endLoading();
+                setButtonState('btnClientAuth', false, 'Unlock Gallery');
+                Swal.fire('Error', err.message, 'error');
+            }
+        }
+        
         function processClientProjectData(projectData) {
             clientState.namaClient = projectData.namaClient;
             clientState.nomorWA = projectData.nomorWA;
@@ -2298,6 +2277,7 @@
     </script>
 </body>
 </html>
+
 
 
 
