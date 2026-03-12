@@ -1,0 +1,2295 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Photo Selector</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- JSZip & FileSaver -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Lottie Web (Bodymovin) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        kama: { 50: '#f6f6f9', 100: '#ececf1', 800: '#1e1e2d', 900: '#14141f' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body { 
+            background-color: #f6f6f9; font-family: 'Inter', sans-serif; color: #1e1e2d;
+            margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .view-section { display: none; height: 100%; width: 100%; flex-direction: column; }
+        .view-section.active { display: flex; }
+
+        .scrollable-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .scrollable-content::-webkit-scrollbar { width: 6px; height: 6px; }
+        .scrollable-content::-webkit-scrollbar-track { background: transparent; }
+        .scrollable-content::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+        .scrollable-content::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+        #global-loader {
+            position: fixed; inset: 0; background: rgba(255, 255, 255, 0.95); z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px);
+        }
+
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; padding: 16px; }
+        @media (min-width: 640px) { .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; padding: 24px; } }
+        @media (min-width: 1024px) { .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); } }
+
+        .photo-card {
+            position: relative; border-radius: 12px; overflow: hidden; background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 2px solid transparent;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; aspect-ratio: 1 / 1; 
+        }
+        .photo-card:hover { transform: translateY(-3px); box-shadow: 0 8px 16px rgba(0,0,0,0.08); }
+        .photo-card img { width: 100%; height: 100%; object-fit: cover; display: block; background: #ececf1; transition: transform 0.3s ease; }
+        
+        .photo-card .info-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+            padding: 24px 12px 10px; color: white; display: flex; flex-direction: column; justify-content: flex-end;
+            transform: translateY(0); transition: transform 0.2s;
+        }
+        .filename-text { font-size: 0.75rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.9;}
+
+        .photo-card.selected { border-color: #1e1e2d; transform: scale(0.96); box-shadow: 0 0 0 4px rgba(30,30,45,0.1); }
+        .photo-card.selected img { transform: scale(1.05); filter: brightness(0.9); }
+        .photo-card.selected .info-overlay { background: linear-gradient(to top, rgba(30,30,45,0.9) 0%, transparent 100%); }
+        
+        .check-badge {
+            position: absolute; top: 12px; right: 12px; width: 28px; height: 28px;
+            background: #10b981; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px;
+            opacity: 0; transform: scale(0.5); transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 20;
+        }
+        .photo-card.selected .check-badge { opacity: 1; transform: scale(1); }
+
+        .number-badge {
+            position: absolute; top: 12px; left: 12px; background: rgba(255,255,255,0.9); z-index: 20;
+            color: #1e1e2d; font-size: 0.7rem; font-weight: 700; padding: 4px 8px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .action-bar {
+            background: #fff; border-top: 1px solid #ececf1; padding: 16px 24px;
+            display: flex; justify-content: space-between; align-items: center; box-shadow: 0 -4px 12px rgba(0,0,0,0.03); z-index: 40;
+        }
+        
+        .glass-header {
+            background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,0.05); z-index: 40;
+        }
+
+        .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid #ececf1; }
+        .file-upload-wrapper { position: relative; overflow: hidden; display: inline-block; }
+        .file-upload-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
+        
+        .nav-tab { padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.875rem; transition: all 0.2s; cursor: pointer; color: #6b7280; }
+        .nav-tab.active { background-color: #1e1e2d; color: white; }
+        .nav-tab:not(.active):hover { background-color: #f3f4f6; }
+
+        @media (max-width: 639px) {
+            .action-bar { flex-direction: column; gap: 12px; padding: 12px 16px; }
+            .action-bar .controls { width: 100%; display: flex; gap: 8px; }
+            .action-bar .controls button { flex: 1; justify-content: center; }
+            body { height: 100dvh; } 
+        }
+
+        /* Toggle Switch CSS */
+        .wrapper { display: flex; align-items: center; transform: scale(0.45); transform-origin: right center; margin-right: -8px; }
+        #hide-checkbox { display: none; }
+        .toggle { position: relative; width: 120px; height: 50px; background-color: #4facfe; border-radius: 50px; cursor: pointer; transition: background-color 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); box-shadow: inset 0 0 8px rgba(0,0,0,0.1); margin: 0; }
+        .toggle-button { position: absolute; top: 5px; left: 5px; width: 40px; height: 40px; border-radius: 50%; background-color: #f7e06a; box-shadow: inset 0 -4px 0 #dcb53e, 0 2px 6px rgba(0,0,0,0.2); transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.4s, box-shadow 0.4s; overflow: hidden; }
+        .crater { position: absolute; background-color: #e0e0e0; border-radius: 50%; opacity: 0; transition: opacity 0.4s; box-shadow: inset 0 2px 0 #c0c0c0; }
+        .crater-1 { top: 10px; left: 8px; width: 8px; height: 8px; }
+        .crater-2 { top: 20px; left: 20px; width: 12px; height: 12px; }
+        .crater-3 { top: 8px; left: 24px; width: 6px; height: 6px; }
+        .crater-4 { top: 26px; left: 8px; width: 5px; height: 5px; }
+        .crater-5 { top: 28px; left: 30px; width: 4px; height: 4px; }
+        .crater-6 { top: 16px; left: 32px; width: 4px; height: 4px; }
+        .crater-7 { top: 24px; left: 3px; width: 3px; height: 3px; }
+        .star { position: absolute; background-color: #ffffff; border-radius: 50%; opacity: 0; transition: opacity 0.4s, transform 0.4s; box-shadow: 0 0 4px #ffffff; }
+        .star-1 { top: 12px; left: 30px; width: 3px; height: 3px; }
+        .star-2 { top: 24px; left: 45px; width: 4px; height: 4px; }
+        .star-3 { top: 38px; left: 25px; width: 2px; height: 2px; }
+        .star-4 { top: 15px; left: 65px; width: 3px; height: 3px; }
+        .star-5 { top: 32px; left: 80px; width: 4px; height: 4px; }
+        .star-6 { top: 12px; left: 95px; width: 2px; height: 2px; }
+        .star-7 { top: 26px; left: 105px; width: 3px; height: 3px; }
+        .star-8 { top: 40px; left: 90px; width: 4px; height: 4px; }
+
+        #hide-checkbox:checked + .toggle { background-color: #1e1e2d; }
+        #hide-checkbox:checked + .toggle .toggle-button { transform: translateX(70px); background-color: #f5f5f5; box-shadow: inset 0 -4px 0 #e0e0e0, 0 2px 6px rgba(0,0,0,0.2); }
+        #hide-checkbox:checked + .toggle .toggle-button .crater { opacity: 1; }
+        #hide-checkbox:checked + .toggle .star { opacity: 1; transform: translateY(-4px); }
+
+        /* Dark Mode Overrides (Khusus untuk tampilan Fotografer & Admin) */
+        html.dark body { background-color: #0f172a !important; color: #f8fafc !important; }
+        html.dark .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
+        html.dark .bg-kama-50, html.dark .bg-gray-50\/50 { background-color: #0f172a !important; }
+        html.dark .text-kama-800 { color: #f8fafc !important; }
+        html.dark .text-gray-500 { color: #94a3b8 !important; }
+        html.dark .text-gray-600 { color: #cbd5e1 !important; }
+        html.dark .text-gray-700 { color: #e2e8f0 !important; }
+        html.dark .text-gray-400 { color: #64748b !important; }
+        html.dark .border-gray-100, html.dark .border-gray-200, html.dark .border-kama-100 { border-color: #334155 !important; }
+        html.dark .glass-header { background: rgba(30, 41, 59, 0.85) !important; border-bottom-color: #334155 !important; }
+        html.dark .bg-gray-50 { background-color: #334155 !important; }
+        html.dark .bg-gray-100 { background-color: #475569 !important; border-color: #475569 !important; }
+        html.dark .hover\:bg-gray-50:hover { background-color: #334155 !important; }
+        html.dark .hover\:bg-gray-100:hover { background-color: #475569 !important; }
+        html.dark .hover\:bg-gray-200:hover { background-color: #64748b !important; }
+        html.dark .hover\:bg-kama-50\/50:hover { background-color: rgba(51, 65, 85, 0.5) !important; }
+        html.dark .bg-kama-800 { background-color: #3b82f6 !important; color: #ffffff !important; }
+        html.dark .hover\:bg-kama-900:hover { background-color: #2563eb !important; }
+        html.dark th { border-bottom-color: #334155 !important; }
+        html.dark .shadow-\[0_2px_12px_rgb\(0\,0\,0\,0\.03\)\] { box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important; }
+        
+        html.dark .bg-blue-50 { background-color: rgba(59, 130, 246, 0.15) !important; border-color: rgba(59, 130, 246, 0.3) !important; }
+        html.dark .text-blue-700 { color: #93c5fd !important; }
+        html.dark .hover\:bg-blue-100:hover { background-color: rgba(59, 130, 246, 0.25) !important; }
+        html.dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.15) !important; border-color: rgba(239, 68, 68, 0.3) !important; }
+        html.dark .text-red-600 { color: #fca5a5 !important; }
+        html.dark .hover\:bg-red-100:hover { background-color: rgba(239, 68, 68, 0.25) !important; }
+        html.dark .divide-gray-50 > :not([hidden]) ~ :not([hidden]) { border-color: #334155 !important; }
+        
+        /* Mata Icon Style */
+        .password-toggle-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #9ca3af; /* text-gray-400 */
+        }
+        .password-toggle-icon:hover {
+            color: #4b5563; /* hover:text-gray-600 */
+        }
+        html.dark .password-toggle-icon:hover {
+            color: #cbd5e1; /* dark mode hover */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Global Loader (with Lottie) -->
+    <div id="global-loader">
+        <div id="lottie-global-loader" class="w-20 h-20 mb-4 drop-shadow-md"></div>
+        <p id="loader-text" class="text-kama-800 font-bold tracking-widest text-xs uppercase opacity-80">MEMUAT...</p>
+    </div>
+
+    <!-- Alert Mode Simulasi -->
+    <div id="preview-alert" class="bg-amber-50 text-amber-800 px-4 py-2 text-center text-xs font-medium hidden">
+        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Mode Preview - Data Dummy Aktif
+    </div>
+
+    <!-- VIEW 1: LOGIN & REGISTER -->
+    <div id="auth-view" class="view-section flex-col h-full w-full">
+        <div class="flex-1 flex items-center justify-center p-4 w-full">
+            <div class="bg-white p-8 sm:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-full max-w-[400px] border border-kama-100 relative overflow-hidden">
+                
+                <!-- LOGIN FORM -->
+                <div id="login-form-wrapper">
+                    <div class="text-center mb-8">
+                        <div class="brand-logo-container w-16 h-16 bg-kama-800 text-white rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg overflow-hidden">
+                            <i class="fa-solid fa-camera-retro text-2xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-kama-800 tracking-tight brand-name-text">App Name</h2>
+                        <p class="text-gray-500 text-sm mt-1">Client Area Management</p>
+                    </div>
+                    <!-- Form Login dengan autocomplete standar Google -->
+                    <form onsubmit="handleLogin(event)">
+                        <div class="space-y-4 mb-6">
+                            <input type="text" id="username" autocomplete="username" name="username" required placeholder="Username" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm">
+                            <div class="relative">
+                                <input type="password" id="password" autocomplete="current-password" name="password" required placeholder="Password" class="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm">
+                                <i class="fa-regular fa-eye password-toggle-icon" onclick="togglePasswordVisibility('password', this)"></i>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="btnLogin" class="w-full bg-kama-800 text-white py-3 rounded-xl hover:bg-kama-900 font-semibold text-sm shadow-md transition-colors relative flex items-center justify-center">Sign In</button>
+                        
+                        <!-- Helper Default Login Text -->
+                        <div id="default-login-helper" class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-800 text-left hidden">
+                            <p class="font-bold mb-1"><i class="fa-solid fa-info-circle mr-1"></i> Akun Demo Preview:</p>
+                            <p>Admin: <code>admin</code> / <code>Demo2026!</code></p>
+                        </div>
+
+                        <div class="mt-4 text-center">
+                            <button type="button" onclick="toggleAuth('register')" class="text-xs text-gray-500 hover:text-kama-800 font-medium">Belum punya akun? <span class="text-blue-600 underline">Daftar disini</span></button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- REGISTER FORM -->
+                <div id="register-form-wrapper" class="hidden">
+                    <div class="text-center mb-6">
+                        <h2 class="text-xl font-bold text-kama-800 tracking-tight">Daftar Akun</h2>
+                        <p class="text-gray-500 text-xs mt-1">Daftar sebagai fotografer baru</p>
+                    </div>
+                    <!-- Form Register dengan autocomplete standar Google -->
+                    <form onsubmit="handleRegister(event)">
+                        <div class="space-y-4 mb-6">
+                            <input type="text" id="reg_nama" autocomplete="name" name="name" required placeholder="Nama Lengkap / Studio" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm">
+                            <input type="email" id="reg_email" autocomplete="email" name="email" required placeholder="Alamat Email" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm">
+                            <input type="tel" id="reg_nohp" autocomplete="tel" name="phone" required placeholder="Nomor Handphone (WA)" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm">
+                            
+                            <!-- Tambahan Pilihan Paket -->
+                            <div class="relative">
+                                <select id="reg_paket" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm appearance-none text-gray-600 cursor-pointer">
+                                    <option value="" disabled selected>Pilih Paket Langganan</option>
+                                    <option value="Bulanan">Paket Bulanan</option>
+                                    <option value="Tahunan">Paket Tahunan</option>
+                                    <option value="Lifetime">Paket Lifetime</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+
+                            <input type="text" id="reg_username" autocomplete="username" name="username" required placeholder="Username" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm lowercase">
+                            <div class="relative">
+                                <input type="password" id="reg_password" autocomplete="new-password" name="password" required placeholder="Password" class="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm">
+                                <i class="fa-regular fa-eye password-toggle-icon" onclick="togglePasswordVisibility('reg_password', this)"></i>
+                            </div>
+                        </div>
+                        <button type="submit" id="btnRegister" class="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 font-semibold text-sm shadow-md transition-colors relative flex items-center justify-center">Daftar Sekarang</button>
+                        <div class="mt-4 text-center">
+                            <button type="button" onclick="toggleAuth('login')" class="text-xs text-gray-500 hover:text-kama-800 font-medium">Sudah punya akun? <span class="text-kama-800 underline">Sign In</span></button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+        
+        <!-- Porsi Footer dipaksa terpisah di bawah -->
+        <footer class="py-6 text-center text-xs text-gray-400 w-full shrink-0">
+            Powered by <span class="font-semibold text-gray-600">Kama Creative</span>
+        </footer>
+    </div>
+
+    <!-- VIEW 2: DASHBOARD (ADMIN & PHOTOGRAPHER) -->
+    <div id="admin-view" class="view-section">
+        <!-- Header -->
+        <header class="glass-header px-6 py-4 flex flex-col sm:flex-row justify-between items-center sticky top-0 gap-4">
+            <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                <div class="flex items-center gap-3">
+                    <div class="brand-logo-container-sm w-8 h-8 bg-kama-800 text-white rounded-lg flex items-center justify-center shadow-sm overflow-hidden">
+                        <i class="fa-solid fa-camera-retro text-sm"></i>
+                    </div>
+                    <h1 class="font-bold text-lg text-kama-800 tracking-tight brand-name-text">App Name</h1>
+                </div>
+                
+                <div id="admin-nav-tabs" class="hidden sm:flex bg-gray-100 p-1 rounded-lg ml-6">
+                    <button onclick="switchAdminTab('dashboard')" id="tab-dashboard" class="nav-tab admin-only-col hidden">Dashboard</button>
+                    <button onclick="switchAdminTab('projects')" id="tab-projects" class="nav-tab active">Projects</button>
+                    <button onclick="switchAdminTab('users')" id="tab-users" class="nav-tab admin-only-col hidden">Kelola Tim</button>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
+                <div id="admin-nav-tabs-mobile" class="flex sm:hidden bg-gray-100 p-1 rounded-lg mr-auto">
+                    <button onclick="switchAdminTab('dashboard')" id="tab-dashboard-m" class="nav-tab admin-only-col hidden text-xs px-3">Dash</button>
+                    <button onclick="switchAdminTab('projects')" id="tab-projects-m" class="nav-tab active text-xs px-3">Proj</button>
+                    <button onclick="switchAdminTab('users')" id="tab-users-m" class="nav-tab admin-only-col hidden text-xs px-3">Tim</button>
+                </div>
+
+                <!-- Toggle Switch Dark Mode -->
+                <div class="wrapper ml-auto sm:ml-0" title="Dark Mode" id="theme-toggle-wrapper">
+                    <input type="checkbox" id="hide-checkbox">
+                    <label for="hide-checkbox" class="toggle">
+                        <span class="toggle-button">
+                        <span class="crater crater-1"></span>
+                        <span class="crater crater-2"></span>
+                        <span class="crater crater-3"></span>   
+                        <span class="crater crater-4"></span>
+                        <span class="crater crater-5"></span>
+                        <span class="crater crater-6"></span>
+                        <span class="crater crater-7"></span>
+                        </span>
+                        <span class="star star-1"></span>
+                        <span class="star star-2"></span>
+                        <span class="star star-3"></span>
+                        <span class="star star-4"></span>
+                        <span class="star star-5"></span>
+                        <span class="star star-6"></span>
+                        <span class="star star-7"></span>
+                        <span class="star star-8"></span>
+                    </label>
+                </div>
+
+                <div class="text-right mr-2 hidden sm:block">
+                    <p class="text-xs font-bold text-kama-800" id="adminName">User</p>
+                    <p class="text-[10px] text-gray-500" id="adminRole">Role</p>
+                </div>
+                <button onclick="openModalSettings()" class="text-gray-500 hover:text-kama-800 w-9 h-9 rounded-lg border border-gray-200 bg-white flex items-center justify-center transition-colors shadow-sm" title="Pengaturan Brand">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+                <button onclick="handleLogout()" class="text-red-500 hover:text-red-700 w-9 h-9 rounded-lg border border-red-100 bg-red-50 flex items-center justify-center transition-colors shadow-sm" title="Logout">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="scrollable-content bg-kama-50 p-4 sm:p-8">
+            <div class="max-w-6xl mx-auto h-full flex flex-col">
+                
+                <!-- TAB 0: DASHBOARD (ADMIN ONLY) -->
+                <div id="section-dashboard" class="hidden flex-1 flex-col">
+                    <div class="mb-6">
+                        <h2 class="text-xl font-bold text-kama-800">Dashboard Overview</h2>
+                        <p class="text-sm text-gray-500">Ringkasan performa sistem Photo Selector Anda.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                        <!-- Stat Card 1 -->
+                        <div class="bg-white p-6 rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-gray-100 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-folder-open"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Projects</p>
+                                <h3 class="text-2xl font-bold text-kama-800" id="stat-projects">0</h3>
+                            </div>
+                        </div>
+                        <!-- Stat Card 2 -->
+                        <div class="bg-white p-6 rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-gray-100 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Tim</p>
+                                <h3 class="text-2xl font-bold text-kama-800" id="stat-users">0</h3>
+                            </div>
+                        </div>
+                        <!-- Stat Card 3 -->
+                        <div class="bg-white p-6 rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-gray-100 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-user-check"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tim Aktif</p>
+                                <h3 class="text-2xl font-bold text-kama-800" id="stat-active-users">0</h3>
+                            </div>
+                        </div>
+                        <!-- Stat Card 4 -->
+                        <div class="bg-white p-6 rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-gray-100 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-yellow-50 text-yellow-600 rounded-xl flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-user-clock"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Pending ACC</p>
+                                <h3 class="text-2xl font-bold text-kama-800" id="stat-pending-users">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 1: PROJECTS -->
+                <div id="section-projects" class="flex-1 flex flex-col">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <div>
+                            <h2 class="text-xl font-bold text-kama-800">Projects Overview</h2>
+                            <p class="text-sm text-gray-500">Kelola akses galeri client Anda.</p>
+                        </div>
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <button onclick="showView('local-sorter-view')" class="bg-white border border-gray-200 text-kama-800 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors shadow-sm text-sm font-semibold flex items-center justify-center gap-2 flex-1 sm:flex-none">
+                                <i class="fa-solid fa-folder-tree text-blue-500"></i> Sortir Lokal
+                            </button>
+                            <button onclick="openModalCreate()" class="bg-kama-800 text-white px-5 py-2.5 rounded-xl hover:bg-kama-900 transition-colors shadow-md text-sm font-semibold flex items-center gap-2 flex-1 sm:flex-none justify-center">
+                                <i class="fa-solid fa-plus"></i> New Project
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-kama-100 flex-1 flex flex-col overflow-hidden">
+                        <div class="table-container flex-1">
+                            <table class="w-full text-left border-collapse whitespace-nowrap">
+                                <thead class="bg-gray-50/50 sticky top-0 z-10 backdrop-blur-md">
+                                    <tr>
+                                        <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">
+                                            <i class="fa-solid fa-user-tag text-gray-400 mr-1.5"></i> Client Info
+                                        </th>
+                                        <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 admin-only-col hidden">
+                                            <i class="fa-solid fa-camera text-gray-400 mr-1.5"></i> Pemilik
+                                        </th>
+                                        <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">
+                                            <i class="fa-solid fa-chart-pie text-gray-400 mr-1.5"></i> Quota
+                                        </th>
+                                        <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 hidden sm:table-cell">
+                                            <i class="fa-regular fa-calendar-days text-gray-400 mr-1.5"></i> Date
+                                        </th>
+                                        <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 text-right">
+                                            <i class="fa-solid fa-list-check text-gray-400 mr-1.5"></i> Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="projectTableBody" class="divide-y divide-gray-50 text-sm">
+                                    <!-- Diisi oleh JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: MANAGE USERS -->
+                <div id="section-users" class="hidden flex-1 flex-col">
+                    <div class="mb-6">
+                        <h2 class="text-xl font-bold text-kama-800">Kelola Fotografer</h2>
+                        <p class="text-sm text-gray-500">ACC pendaftaran akun fotografer dan atur masa aktifnya.</p>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-kama-100 flex-1 flex flex-col overflow-hidden">
+                        <div class="table-container flex-1">
+                            <table class="w-full text-left border-collapse whitespace-nowrap">
+                                <thead class="bg-gray-50/50 sticky top-0 z-10 backdrop-blur-md">
+                                    <tr>
+                                        <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">Nama Fotografer</th>
+                                        <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">Username</th>
+                                        <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">Status</th>
+                                        <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">Masa Aktif</th>
+                                        <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="userTableBody" class="divide-y divide-gray-50 text-sm">
+                                    <!-- Diisi oleh JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+        
+        <footer class="bg-white border-t border-gray-100 py-3 text-center text-[10px] text-gray-400">
+            Generated by <span class="font-medium text-gray-500">Kama Creative</span>
+        </footer>
+    </div>
+
+    <!-- Modal Settings (Brand UI) -->
+    <div id="modalSettings" class="fixed inset-0 bg-kama-900/40 backdrop-blur-sm flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[400px] transform transition-all duration-300 scale-95 flex flex-col" id="modalSettingsContent">
+            <div class="flex justify-between items-center p-5 border-b border-gray-100">
+                <h3 class="font-bold text-lg text-kama-800"><i class="fa-solid fa-palette text-blue-500 mr-2"></i> Pengaturan Tampilan</h3>
+                <button onclick="closeModalSettings()" class="text-gray-400 hover:text-kama-800 bg-gray-50 hover:bg-gray-100 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <form id="formSettings" onsubmit="handleSaveSettings(event)" autocomplete="off" class="p-5">
+                <div class="space-y-4">
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 mb-2">
+                        <p class="text-xs text-blue-800 font-medium"><i class="fa-solid fa-circle-info mr-1"></i> Pengaturan ini tersimpan khusus untuk akun Anda (<span id="set_username_label" class="font-bold"></span>).</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Nama Studio / Brand</label>
+                        <input type="text" id="set_brand_name" required autocomplete="new-password" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Upload Logo (JPG/PNG)</label>
+                        <input type="file" id="set_brand_file" accept="image/png, image/jpeg, image/jpg, image/webp" class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-kama-800 file:text-white hover:file:bg-kama-900 cursor-pointer border border-gray-200 rounded-xl bg-gray-50 p-1">
+                        
+                        <div class="flex items-center my-3">
+                            <div class="flex-grow border-t border-gray-200"></div>
+                            <span class="mx-3 text-[10px] font-bold text-gray-400">ATAU PAKAI LINK</span>
+                            <div class="flex-grow border-t border-gray-200"></div>
+                        </div>
+
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">URL Logo</label>
+                        <input type="url" id="set_brand_logo" placeholder="https://... (kosongkan jika upload file)" autocomplete="new-password" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm">
+                    </div>
+                </div>
+                <div class="mt-6 flex gap-3 justify-end">
+                    <button type="button" onclick="closeModalSettings()" class="px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors">Batal</button>
+                    <button type="submit" id="btnSaveSettings" class="px-4 py-2 bg-kama-800 text-white text-sm font-semibold rounded-xl hover:bg-kama-900 shadow-md transition-colors relative flex items-center justify-center">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Create Project -->
+    <div id="modalCreate" class="fixed inset-0 bg-kama-900/40 backdrop-blur-sm flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[480px] transform transition-all duration-300 scale-95 flex flex-col max-h-full" id="modalCreateContent">
+            <div class="flex justify-between items-center p-5 sm:p-6 border-b border-gray-100">
+                <h3 class="font-bold text-lg text-kama-800">Create New Project</h3>
+                <button onclick="closeModalCreate()" class="text-gray-400 hover:text-kama-800 bg-gray-50 hover:bg-gray-100 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <div class="overflow-y-auto p-5 sm:p-6 custom-scrollbar">
+                <!-- Form Create Project dengan autocomplete off -->
+                <form id="formCreateProject" onsubmit="handleCreateProject(event)" autocomplete="off">
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Client Name <span class="text-red-500">*</span></label>
+                            <input type="text" id="p_nama" autocomplete="new-password" name="prevent_autofill_client" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Google Drive Link <span class="text-red-500">*</span></label>
+                            <input type="url" id="p_drive" autocomplete="new-password" name="prevent_autofill_drive" required placeholder="https://drive.google.com/..." class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-sm text-blue-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">WhatsApp Number <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-2.5 text-gray-400 text-sm"><i class="fa-brands fa-whatsapp"></i></span>
+                                <input type="number" id="p_wa" autocomplete="new-password" name="prevent_autofill_wa" required placeholder="628..." class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-sm">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Max Photos <span class="text-red-500">*</span></label>
+                                <input type="number" id="p_max" autocomplete="new-password" required min="1" value="50" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-sm text-center">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Password <span class="text-gray-400 font-normal lowercase">(Opt)</span></label>
+                                <div class="relative">
+                                    <input type="password" id="p_pass" autocomplete="new-password" name="prevent_autofill_clientpwd" placeholder="Kosong jika open" class="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-sm">
+                                    <i class="fa-regular fa-eye password-toggle-icon" onclick="togglePasswordVisibility('p_pass', this)"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="p-5 sm:p-6 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex gap-3 justify-end mt-auto">
+                <button type="button" onclick="closeModalCreate()" class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors">Cancel</button>
+                <button type="submit" form="formCreateProject" id="btnCreate" class="px-6 py-2.5 bg-kama-800 text-white text-sm font-semibold rounded-xl hover:bg-kama-900 shadow-md transition-colors relative flex items-center justify-center">Generate Link</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW BARU: LOCAL FILE SORTER -->
+    <div id="local-sorter-view" class="view-section bg-kama-50 min-h-screen">
+        <header class="glass-header px-6 py-4 flex items-center sticky top-0 gap-4 shadow-sm">
+            <button onclick="showView('admin-view')" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center justify-center transition-colors">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div>
+                <h1 class="font-bold text-lg text-kama-800 leading-tight">Sortir File Lokal (Otomatis ZIP)</h1>
+                <p class="text-xs text-gray-500">Pilih folder foto master, paste list klien, jadikan satu ZIP</p>
+            </div>
+        </header>
+
+        <main class="scrollable-content p-4 sm:p-8">
+            <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-kama-100 p-6 sm:p-8">
+                <form id="sortForm" onsubmit="handleProsesSorter(event)">
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold text-kama-800 mb-2">1. Pilih Folder Sumber (Bisa pilih lebih dari 1 folder)</label>
+                        <div class="file-upload-wrapper w-full">
+                            <button type="button" class="w-full bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-100 transition duration-200">
+                                <i class="fa-regular fa-folder-open text-3xl text-gray-400 mb-3 block"></i>
+                                <span class="text-kama-800 font-medium">Klik untuk memilih / tambah Folder Master</span>
+                                <input type="file" id="sourceDirectory" webkitdirectory directory multiple onchange="updateFolderInfo()">
+                            </button>
+                        </div>
+                        <div id="folderInfo" class="mt-3 text-sm text-kama-800 font-medium hidden bg-blue-50 p-3 rounded-lg border border-blue-100 flex justify-between items-center">
+                            <div><i class="fa-solid fa-check-circle text-blue-500 mr-1"></i> <span id="fileCount">0</span> file siap diproses.</div>
+                            <button type="button" onclick="clearUploadedFiles()" class="text-red-500 hover:text-red-700 text-xs font-bold px-3 py-1.5 bg-red-100 rounded-lg transition-colors">Reset</button>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold text-kama-800 mb-2">2. Paste Nama/Nomor Foto Klien</label>
+                        <textarea id="targetNames" rows="6" class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-kama-800 outline-none transition font-mono text-sm" placeholder="Contoh:&#10;1. DSC_0012.JPG&#10;2. DSC_0055.JPG"></textarea>
+                    </div>
+
+                    <div id="progressArea" class="mb-6 hidden bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="font-bold text-kama-800" id="progressStatus">Memproses...</span>
+                            <span class="font-bold text-gray-700" id="progressPercent">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                            <div id="progressBar" class="bg-kama-800 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-2 font-medium" id="progressDetail">Menyiapkan file...</div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-100">
+                        <button type="button" id="btnCancelSorter" onclick="handleCancelSorter()" disabled class="px-6 py-3 bg-white border border-gray-200 text-red-500 text-sm font-bold rounded-xl hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">
+                            Cancel Proses
+                        </button>
+                        <button type="submit" id="btnProsesSorter" class="flex-1 bg-kama-800 text-white font-bold py-3 px-6 rounded-xl hover:bg-kama-900 shadow-md transition-colors relative flex justify-center items-center gap-2">
+                            <i class="fa-solid fa-file-zipper" id="iconProsesSorter"></i> <span>Proses & Download ZIP</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- CLIENT AUTH & GALLERY VIEWS -->
+    <div id="client-auth-view" class="view-section relative">
+        <!-- Back button untuk Fotografer/Admin saat Preview Mode -->
+        <div class="absolute top-6 left-6 z-50">
+            <button id="btn-back-dashboard-auth" onclick="exitClientPreview()" class="hidden text-gray-600 hover:text-kama-800 bg-white border border-gray-200 px-4 py-2 rounded-xl flex items-center justify-center transition-colors shadow-sm text-sm font-semibold">
+                <i class="fa-solid fa-house mr-2"></i> Home
+            </button>
+        </div>
+
+        <div class="flex-1 flex flex-col items-center justify-center p-4">
+            <div class="brand-logo-container-lock w-16 h-16 bg-gray-100 text-gray-400 rounded-2xl flex items-center justify-center mb-6 shadow-inner overflow-hidden">
+                <i class="fa-solid fa-lock text-2xl"></i>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-full max-w-[360px] border border-gray-100 text-center">
+                <h2 class="text-xl font-bold text-kama-800 mb-2 brand-name-text">Private Gallery</h2>
+                <p class="text-gray-500 text-sm mb-6 leading-relaxed">Masukkan password untuk membuka akses galeri Anda.</p>
+                
+                <form onsubmit="handleClientAuth(event)">
+                    <div class="relative mb-4">
+                        <input type="password" id="client-password" autocomplete="new-password" required placeholder="&bull;&bull;&bull;&bull;&bull;&bull;" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-center tracking-widest text-lg">
+                        <i class="fa-regular fa-eye password-toggle-icon" onclick="togglePasswordVisibility('client-password', this)"></i>
+                    </div>
+                    <button type="submit" id="btnClientAuth" class="w-full bg-kama-800 text-white py-3 rounded-xl hover:bg-kama-900 transition-colors font-semibold shadow-md relative flex items-center justify-center">Unlock Gallery</button>
+                </form>
+            </div>
+        </div>
+        <footer class="py-6 text-center text-xs text-gray-400">
+            Powered by <span class="font-semibold text-gray-600">Kama Creative</span>
+        </footer>
+    </div>
+
+    <div id="client-gallery-view" class="view-section bg-white">
+        <!-- Minimalist Header Dengan Tombol Back -->
+        <header class="glass-header px-4 sm:px-6 py-3 flex justify-between items-center shrink-0">
+            <div class="flex-1 min-w-0 pr-4 flex items-center">
+                <!-- Tombol Kembali ke Admin Dashboard (Hanya muncul saat Admin/Fotografer Preview) -->
+                <button id="btn-back-dashboard" onclick="exitClientPreview()" class="hidden mr-3 text-white bg-kama-800 hover:bg-kama-900 w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-full sm:rounded-lg flex items-center justify-center shrink-0 transition-colors shadow-sm text-xs font-semibold" title="Home">
+                    <i class="fa-solid fa-house sm:mr-1.5"></i> <span class="hidden sm:inline">Home</span>
+                </button>
+                <!-- Tombol Back Subfolder -->
+                <button id="btn-back-folder" onclick="goBackFolder()" class="hidden mr-3 text-gray-500 hover:text-kama-800 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 transition-colors shadow-sm">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div>
+                    <h1 class="font-bold text-kama-800 truncate text-base sm:text-lg tracking-tight" id="gallery-title">Gallery</h1>
+                    <p class="text-[11px] sm:text-xs text-gray-500 truncate">Pilih maksimal <span id="gallery-max" class="font-semibold text-kama-800">0</span> foto</p>
+                </div>
+            </div>
+            <div class="shrink-0 flex items-center gap-2">
+                <div class="bg-kama-50 border border-kama-100 px-3 py-1.5 rounded-lg flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-green-500" id="status-dot"></span>
+                    <span class="text-xs font-semibold text-kama-800 whitespace-nowrap"><span id="counter-selected">0</span> / <span id="counter-max">0</span></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Scrollable Gallery -->
+        <div class="scrollable-content relative" id="gallery-scroll-area">
+            <div id="gallery-container" class="gallery-grid max-w-[1600px] mx-auto"></div>
+            <div id="gallery-empty" class="absolute inset-0 flex flex-col items-center justify-center hidden bg-gray-50">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-300 mb-4"><i class="fa-regular fa-images text-2xl"></i></div>
+                <p class="text-gray-500 text-sm font-medium">Kosong.</p>
+            </div>
+        </div>
+
+        <!-- Sticky Bottom Action Bar -->
+        <div class="action-bar shrink-0">
+            <div class="flex flex-col">
+                <span class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Status Pilihan</span>
+                <div class="flex items-baseline gap-1">
+                    <span class="font-bold text-xl sm:text-2xl text-kama-800 leading-none" id="bottom-counter">0</span>
+                    <span class="text-sm font-medium text-gray-500">terpilih</span>
+                </div>
+            </div>
+            <div class="controls flex gap-2 sm:gap-3">
+                <button onclick="resetSelection()" class="px-4 py-2 sm:py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium flex items-center shadow-sm">
+                    <i class="fa-solid fa-rotate-left sm:mr-2 text-xs"></i> <span class="hidden sm:inline">Reset</span>
+                </button>
+                <button onclick="copyOnly()" class="px-4 py-2 sm:py-2.5 bg-kama-800 text-white rounded-xl hover:bg-kama-900 transition-colors text-sm font-semibold flex items-center shadow-md">
+                    <i class="fa-regular fa-copy sm:mr-2"></i> <span class="hidden sm:inline">Copy List</span>
+                </button>
+                <button onclick="sendToWA()" class="px-5 sm:px-6 py-2 sm:py-2.5 bg-[#25D366] text-white rounded-xl hover:bg-[#128C7E] transition-colors text-sm font-semibold flex items-center shadow-md shadow-green-500/20">
+                    <i class="fa-brands fa-whatsapp sm:mr-2 text-lg"></i> <span>Kirim WA</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Image Viewer (Lightbox) -->
+    <div id="imageViewerModal" class="fixed inset-0 z-[99999] hidden bg-black/95 flex flex-col items-center justify-center p-4 backdrop-blur-md opacity-0 transition-opacity duration-300" onclick="closeImageViewer()">
+        <div class="absolute top-4 right-4 flex gap-3 z-50">
+            <button onclick="closeImageViewer()" class="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full text-white flex items-center justify-center transition-colors border border-white/20">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+        <!-- Prevent click on image from closing modal -->
+        <div class="relative max-w-full max-h-[85vh] flex flex-col items-center justify-center" onclick="event.stopPropagation()">
+            <img id="viewerImage" src="" class="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl scale-95 transition-transform duration-300 bg-black/50">
+            <p id="viewerCaption" class="text-white mt-4 font-semibold text-sm tracking-wide bg-black/50 px-4 py-1.5 rounded-full border border-white/10"></p>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- LOGIC / JAVASCRIPT -->
+    <!-- ========================================== -->
+    <script>
+        console.log("App Initialized: Safe UI Elements with Lottie Loader");
+
+        // GLOBAL VARIABLES DITAMBAHKAN KEMBALI DI SINI
+        var baseAppUrl = "";
+        var clientState = { 
+            token: '', namaClient: '', nomorWA: '', maxFoto: 0, driveLink: '', 
+            selectedImages: [], 
+            folderHistory: [], 
+            currentFolderId: '',
+            currentFolderName: '',
+            currentContent: { folders: [], images: [] },
+            isPreviewMode: false
+        };
+        var appBranding = { name: 'Kama Creative', logo: '' };
+        var currentUser = null;
+
+        var metaAiLottieData = {"v":"5.9.6","fr":30,"ip":0,"op":121,"w":500,"h":500,"nm":"Comp 1","ddd":0,"assets":[],"layers":[{"ddd":0,"ind":1,"ty":4,"nm":"Shape Layer 2","td":1,"sr":1,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":0,"k":0,"ix":10},"p":{"a":0,"k":[250,250,0],"ix":2,"l":2},"a":{"a":0,"k":[33,21,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":1,"k":[{"i":{"x":0.833,"y":0.833},"o":{"x":0.333,"y":0},"t":20,"s":[{"i":[[-33.917,-33.917],[0.522,-45.458],[33.656,-33.656],[44.786,0],[34.171,34.171],[0.498,44.121],[-34.677,34.677],[-45.119,-0.256]],"o":[[34.685,34.685],[-0.507,44.11],[-34.171,34.171],[-44.786,0],[-33.665,-33.665],[-0.513,-45.447],[34.425,-34.425],[44.453,0.252]],"v":[[123.744,-123.744],[174.988,2.023],[123.744,123.744],[0,175],[-123.744,123.744],[-174.989,1.989],[-123.744,-123.744],[1,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":25,"s":[{"i":[[-28.689,-33.917],[-3.509,-54.023],[33.656,-33.656],[44.786,0],[34.171,34.171],[-1.416,44.101],[-39.331,38.744],[-38.164,-0.256]],"o":[[29.339,34.685],[2.859,44.02],[-34.171,34.171],[-44.786,0],[-33.665,-33.665],[1.509,-46.989],[32.122,-31.642],[37.6,0.252]],"v":[[104.67,-123.744],[167.509,2.023],[123.744,123.744],[0,175],[-123.744,123.744],[-167.509,1.989],[-104.669,-123.744],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":29,"s":[{"i":[[-31.334,-36.513],[-25.53,-55.465],[33.656,-33.656],[44.786,0],[34.171,34.171],[-20.127,43.011],[-37.354,42.975],[-19.871,0.004]],"o":[[25.063,29.206],[17.48,37.977],[-34.171,34.171],[-44.786,0],[-33.665,-33.665],[19.331,-41.31],[30.359,-34.927],[15.154,-0.003]],"v":[[45.667,-121.487],[136.52,2.023],[123.744,123.744],[0,175],[-123.744,123.744],[-135.873,1.989],[-44.646,-123.975],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":32,"s":[{"i":[[-1.224,-22.216],[-72.64,-45.023],[24.867,-39.744],[44.786,0],[24.556,37.731],[-45.778,28.011],[-4.384,76.975],[20.154,0.997]],"o":[[3.056,55.487],[42.924,26.605],[-23.878,38.163],[-44.786,0],[-25.866,-39.744],[36.326,-22.228],[1.296,-22.759],[-15.135,-0.749]],"v":[[-39.056,-121.487],[72.64,2.023],[106.133,123.744],[0,175],[-106.134,123.744],[-73.222,1.989],[46.384,-123.975],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":36,"s":[{"i":[[15.976,-35.513],[-52.76,-41.023],[0.63,-54.744],[23.722,0],[2.903,31.256],[-43.594,33.011],[26.804,45.95],[52.154,-1.003]],"o":[[-22.134,49.203],[48.694,37.861],[-0.314,27.257],[-23.846,0],[-3.842,-41.366],[43.621,-33.032],[-20.894,-35.818],[-55.945,1.076]],"v":[[-101.976,-121.487],[-33.24,2.023],[49.37,123.744],[0,175],[-49.903,123.744],[32.594,1.989],[105.196,-123.95],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":39,"s":[{"i":[[25.03,-29.831],[-31.76,-32.046],[-24.669,-48.874],[12.072,-0.71],[-18.097,34.013],[-42.405,43.322],[38.804,46.899],[52.154,-1.003]],"o":[[-31.024,36.975],[44.15,44.547],[13.13,26.013],[-8.5,0.5],[19.514,-36.676],[26.406,-26.977],[-26.434,-31.948],[-55.944,1.076]],"v":[[-119.976,-121.975],[-113.24,2.046],[0.37,123.487],[0,175],[0.097,123.487],[108.594,1.977],[119.196,-123.899],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":42,"s":[{"i":[[26.178,-28.828],[-8.322,-42.843],[-42.817,-45.975],[0,-10],[-30.43,25.849],[-13.711,73.023],[45.804,45.899],[52.154,-1.003]],"o":[[-39.024,42.975],[14.948,76.954],[20.523,22.037],[0,6],[30.548,-25.949],[8.134,-43.321],[-29.291,-29.351],[-55.944,1.076]],"v":[[-124.976,-121.975],[-161.948,2.046],[-35.183,123.975],[0,175],[38.452,123.949],[159.711,1.977],[124.196,-123.899],[0.846,-174.997]],"c":true}]},{"i":{"x":0.667,"y":1},"o":{"x":0.167,"y":0.167},"t":46,"s":[{"i":[[33.82,-33.917],[-7.384,-44.858],[-30.641,-31.662],[-27.009,0],[-37.557,33.256],[-2.497,42.511],[34.577,34.677],[44.99,-0.256]],"o":[[-34.586,34.685],[7.979,48.477],[36.539,37.756],[23.997,0],[32.995,-29.217],[2.665,-45.372],[-34.327,-34.425],[-44.325,0.252]],"v":[[-123.381,-123.744],[-173.229,3.023],[-104.539,123.744],[0.009,175],[104.557,123.744],[173.497,1.989],[123.398,-123.744],[-0.989,-174.997]],"c":true}]},{"t":50,"s":[{"i":[[33.82,-33.917],[-0.521,-45.458],[-33.56,-33.656],[-44.658,0],[-34.073,34.171],[-0.497,44.121],[34.577,34.677],[44.99,-0.256]],"o":[[-34.586,34.685],[0.505,44.11],[34.073,34.171],[44.658,0],[33.569,-33.665],[0.512,-45.447],[-34.327,-34.425],[-44.325,0.252]],"v":[[-123.381,-123.744],[-174.479,2.023],[-123.381,123.744],[0.009,175],[123.398,123.744],[174.497,1.989],[123.398,-123.744],[-0.989,-174.997]],"c":true}],"h":1},{"i":{"x":0.833,"y":0.833},"o":{"x":0.333,"y":0},"t":51,"s":[{"i":[[-33.917,-33.917],[0.522,-45.458],[33.656,-33.656],[44.786,0],[34.171,34.171],[0.498,44.121],[-34.677,34.677],[-45.119,-0.256]],"o":[[34.685,34.685],[-0.507,44.11],[-34.171,34.171],[-44.786,0],[-33.665,-33.665],[-0.513,-45.447],[34.425,-34.425],[44.453,0.252]],"v":[[123.744,-123.744],[174.988,2.023],[123.744,123.744],[0,175],[-123.744,123.744],[-174.989,1.989],[-123.744,-123.744],[1,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":54,"s":[{"i":[[-28.689,-33.917],[-3.509,-54.023],[33.656,-33.656],[44.786,0],[34.171,34.171],[-1.416,44.101],[-39.331,38.744],[-38.164,-0.256]],"o":[[29.339,34.685],[2.859,44.02],[-34.171,34.171],[-44.786,0],[-33.665,-33.665],[1.509,-46.989],[32.122,-31.642],[37.6,0.252]],"v":[[104.67,-123.744],[167.509,2.023],[123.744,123.744],[0,175],[-123.744,123.744],[-167.509,1.989],[-104.669,-123.744],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":58,"s":[{"i":[[-31.334,-36.513],[-25.53,-55.465],[33.656,-33.656],[44.786,0],[34.171,34.171],[-20.127,43.011],[-37.354,42.975],[-19.871,0.004]],"o":[[25.063,29.206],[17.48,37.977],[-34.171,34.171],[-44.786,0],[-33.665,-33.665],[19.331,-41.31],[30.359,-34.927],[15.154,-0.003]],"v":[[45.667,-121.487],[136.52,2.023],[123.744,123.744],[0,175],[-123.744,123.744],[-135.873,1.989],[-44.646,-123.975],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":61,"s":[{"i":[[-1.224,-22.216],[-72.64,-45.023],[24.867,-39.744],[44.786,0],[24.556,37.731],[-45.778,28.011],[-4.384,76.975],[20.154,0.997]],"o":[[3.056,55.487],[42.924,26.605],[-23.878,38.163],[-44.786,0],[-25.866,-39.744],[36.326,-22.228],[1.296,-22.759],[-15.135,-0.749]],"v":[[-39.056,-121.487],[72.64,2.023],[106.133,123.744],[0,175],[-106.134,123.744],[-73.222,1.989],[46.384,-123.975],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":65,"s":[{"i":[[15.976,-35.513],[-52.76,-41.023],[0.63,-54.744],[23.722,0],[2.903,31.256],[-43.594,33.011],[26.804,45.95],[52.154,-1.003]],"o":[[-22.134,49.203],[48.694,37.861],[-0.314,27.257],[-23.846,0],[-3.842,-41.366],[43.621,-33.032],[-20.893,-35.818],[-55.945,1.076]],"v":[[-101.976,-121.487],[-33.24,2.023],[49.37,123.744],[0,175],[-49.903,123.744],[32.594,1.989],[105.196,-123.95],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":68,"s":[{"i":[[25.03,-29.831],[-31.76,-32.046],[-24.669,-48.874],[12.072,-0.71],[-18.097,34.013],[-42.405,43.322],[38.804,46.899],[52.154,-1.003]],"o":[[-31.024,36.975],[44.15,44.547],[13.13,26.013],[-8.5,0.5],[19.514,-36.676],[26.406,-26.977],[-26.434,-31.948],[-55.944,1.076]],"v":[[-119.976,-121.975],[-113.24,2.046],[0.37,123.487],[0,175],[0.097,123.487],[108.594,1.977],[119.196,-123.899],[0.846,-174.997]],"c":true}]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":71,"s":[{"i":[[26.178,-28.828],[-8.322,-42.843],[-42.817,-45.975],[0,-10],[-30.43,25.849],[-13.711,73.023],[45.804,45.899],[52.154,-1.003]],"o":[[-39.024,42.975],[14.948,76.954],[20.523,22.037],[0,6],[30.548,-25.949],[8.134,-43.321],[-29.291,-29.351],[-55.944,1.076]],"v":[[-124.976,-121.975],[-161.948,2.046],[-35.183,123.975],[0,175],[38.452,123.949],[159.711,1.977],[124.196,-123.899],[0.846,-174.997]],"c":true}]},{"i":{"x":0.667,"y":1},"o":{"x":0.167,"y":0.167},"t":75,"s":[{"i":[[33.82,-33.917],[-7.384,-44.858],[-30.641,-31.662],[-27.009,0],[-37.557,33.256],[-2.497,42.511],[34.577,34.677],[44.99,-0.256]],"o":[[-34.586,34.685],[7.979,48.477],[36.539,37.756],[23.997,0],[32.995,-29.217],[2.665,-45.372],[-34.327,-34.425],[-44.325,0.252]],"v":[[-123.381,-123.744],[-173.229,3.023],[-104.539,123.744],[0.009,175],[104.557,123.744],[173.497,1.989],[123.398,-123.744],[-0.989,-174.997]],"c":true}]},{"t":80,"s":[{"i":[[33.82,-33.917],[-0.521,-45.458],[-33.56,-33.656],[-44.658,0],[-34.073,34.171],[-0.497,44.121],[34.577,34.677],[44.99,-0.256]],"o":[[-34.586,34.685],[0.505,44.11],[34.073,34.171],[44.658,0],[33.569,-33.665],[0.512,-45.447],[-34.327,-34.425],[-44.325,0.252]],"v":[[-123.381,-123.744],[-174.479,2.023],[-123.381,123.744],[0.009,175],[123.398,123.744],[174.497,1.989],[123.398,-123.744],[-0.989,-174.997]],"c":true}]}],"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"st","c":{"a":0,"k":[0.396078437567,0.396078437567,0.396078437567,1],"ix":3},"o":{"a":0,"k":100,"ix":4},"w":{"a":0,"k":80,"ix":5},"lc":1,"lj":1,"ml":4,"bm":0,"nm":"Stroke 1","mn":"ADBE Vector Graphic - Stroke","hd":false},{"ty":"tr","p":{"a":0,"k":[33,21],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Ellipse 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":0,"op":211,"st":0,"ct":1,"bm":0},{"ddd":0,"ind":2,"ty":4,"nm":"Shape Layer 3","tt":1,"sr":1,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":1,"k":[{"i":{"x":[0.833],"y":[0.833]},"o":{"x":[0.167],"y":[0.167]},"t":0,"s":[0]},{"t":120,"s":[360]}],"ix":10},"p":{"a":0,"k":[250,250,0],"ix":2,"l":2},"a":{"a":0,"k":[33,21,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[-42.583,-42.583],[0.656,-57.073],[42.256,-42.256],[56.23,0],[42.902,42.902],[0.626,55.395],[-43.537,43.537],[-56.648,-0.322]],"o":[[43.548,43.548],[-0.636,55.38],[-42.902,42.902],[-56.23,0],[-42.267,-42.267],[-0.644,-57.059],[43.221,-43.221],[55.811,0.317]],"v":[[155.36,-155.329],[219.699,2.572],[155.36,155.394],[-0.001,219.747],[-155.363,155.394],[-219.701,2.529],[-155.363,-155.329],[1.254,-219.678]],"c":true},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"gf","o":{"a":0,"k":100,"ix":10},"r":1,"bm":0,"g":{"p":5,"k":{"a":0,"k":[0.013,0.98,0.065,0.97,0.176,0.528,0.117,0.918,0.517,0.075,0.168,0.867,0.849,0.059,0.488,0.933,0.988,0.043,0.809,1],"ix":9}},"s":{"a":0,"k":[-179.993,-7.325],"ix":5},"e":{"a":0,"k":[200.808,8.27],"ix":6},"t":1,"nm":"Gradient Fill 1","mn":"ADBE Vector Graphic - G-Fill","hd":false},{"ty":"tr","p":{"a":0,"k":[33,21],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Ellipse 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":0,"op":211,"st":0,"ct":1,"bm":0}]};
+
+        window.addEventListener('DOMContentLoaded', function() {
+            var loaderContainer = document.getElementById('lottie-global-loader');
+            if (loaderContainer) {
+                lottie.loadAnimation({
+                    container: loaderContainer,
+                    renderer: 'svg',
+                    loop: true,
+                    autoplay: true,
+                    animationData: metaAiLottieData
+                });
+            }
+
+            // Fungsi Toggle Tema (Dark Mode)
+            var themeToggle = document.getElementById('hide-checkbox');
+            if (themeToggle) {
+                themeToggle.addEventListener('change', function(e) {
+                    if (currentUser && currentUser.role !== 'Admin') {
+                        if (e.target.checked) {
+                            document.documentElement.classList.add('dark');
+                            localStorage.setItem('ps_theme', 'dark');
+                        } else {
+                            document.documentElement.classList.remove('dark');
+                            localStorage.setItem('ps_theme', 'light');
+                        }
+                    } else if (currentUser && currentUser.role === 'Admin') {
+                        // Admin: simpan setelan animasi toggle saja, tetapi JANGAN rubah UI
+                        localStorage.setItem('ps_admin_theme_switch', e.target.checked ? 'dark' : 'light');
+                    }
+                });
+            }
+        });
+
+        // FUNGSI UNTUK SHOW/HIDE PASSWORD
+        function togglePasswordVisibility(inputId, iconElement) {
+            var input = document.getElementById(inputId);
+            if (input.type === "password") {
+                input.type = "text";
+                iconElement.classList.remove("fa-eye");
+                iconElement.classList.add("fa-eye-slash");
+            } else {
+                input.type = "password";
+                iconElement.classList.remove("fa-eye-slash");
+                iconElement.classList.add("fa-eye");
+            }
+        }
+
+        window.addEventListener('load', function() {
+            var failsafeTimer = setTimeout(function() {
+                endLoading();
+                var loader = document.getElementById('global-loader');
+                if (loader && loader.style.display !== 'none') { checkLoginState(); }
+            }, 5000); 
+
+            try {
+                var savedBrand = localStorage.getItem('ps_branding');
+                if (savedBrand) appBranding = JSON.parse(savedBrand);
+
+                var rawToken = null, rawBn = null, rawBl = null, rawC = null;
+                try {
+                    var urlParams = new URLSearchParams(window.location.search);
+                    rawToken = urlParams.get('token');
+                    rawBn = urlParams.get('bn');
+                    rawBl = urlParams.get('bl');
+                    rawC = urlParams.get('c'); // Slug pendek
+                } catch(e) {}
+
+                if (typeof google === 'undefined') {
+                    clearTimeout(failsafeTimer);
+                    var previewAlert = document.getElementById('preview-alert');
+                    var defaultLogin = document.getElementById('default-login-helper');
+                    if (previewAlert) previewAlert.classList.remove('hidden');
+                    if (defaultLogin) defaultLogin.classList.remove('hidden'); // Show dummy login info
+                    baseAppUrl = window.location.origin + window.location.pathname;
+
+                    if(rawBn) appBranding.name = rawBn;
+                    if(rawBl) appBranding.logo = rawBl;
+                    applyBranding();
+
+                    // Di mode simulasi, abaikan proses slug "c"
+                    if (rawToken) { clientState.token = rawToken; initClientApp(); } 
+                    else { checkLoginState(); endLoading(); }
+                } else {
+                    if (google && google.script && google.script.url) {
+                        google.script.url.getLocation(function(location) {
+                            clearTimeout(failsafeTimer);
+                            try {
+                                var tokenQuery = rawToken;
+                                var slugQuery = rawC;
+                                
+                                if (location.parameters && location.parameters.token) { tokenQuery = location.parameters.token[0]; }
+                                if (location.parameters && location.parameters.c) { slugQuery = location.parameters.c[0]; }
+                                if (location.parameters && location.parameters.bn) { appBranding.name = location.parameters.bn[0]; }
+                                if (location.parameters && location.parameters.bl) { appBranding.logo = location.parameters.bl[0]; }
+                                
+                                applyBranding();
+
+                                // Jika diakses pakai token langsung atau bukan mode slug "c"
+                                if (tokenQuery && !slugQuery) { 
+                                    clientState.token = tokenQuery; 
+                                    initClientApp(); 
+                                } 
+                                // Jika diakses pakai slug "c", biarkan Backend (doGet) yang render halaman redirect,
+                                // tapi kalau telanjur masuk ke sini, panggil checkLogin.
+                                else { 
+                                    // Ambil branding Admin untuk halaman login utama
+                                    google.script.run
+                                        .withSuccessHandler(function(res) {
+                                            if (res.success) {
+                                                appBranding.name = res.brandName;
+                                                appBranding.logo = res.brandLogo;
+                                                applyBranding();
+                                            }
+                                            checkLoginState(); 
+                                            endLoading();
+                                        })
+                                        .withFailureHandler(function() {
+                                            checkLoginState(); 
+                                            endLoading();
+                                        })
+                                        .getGlobalBranding();
+                                }
+                            } catch(e) { console.error(e); checkLoginState(); endLoading(); }
+                        });
+                    } else {
+                        clearTimeout(failsafeTimer);
+                        if(rawBn) appBranding.name = rawBn;
+                        if(rawBl) appBranding.logo = rawBl;
+                        applyBranding();
+                        if (rawToken) { clientState.token = rawToken; initClientApp(); } 
+                        else { 
+                            google.script.run
+                                .withSuccessHandler(function(res) {
+                                    if (res.success) {
+                                        appBranding.name = res.brandName;
+                                        appBranding.logo = res.brandLogo;
+                                        applyBranding();
+                                    }
+                                    checkLoginState(); 
+                                    endLoading();
+                                })
+                                .withFailureHandler(function() {
+                                    checkLoginState(); 
+                                    endLoading();
+                                })
+                                .getGlobalBranding();
+                        }
+                    }
+                }
+            } catch (err) {
+                clearTimeout(failsafeTimer);
+                endLoading();
+                checkLoginState();
+                console.error("Initialization Error:", err);
+            }
+        });
+
+        // --- BRANDING LOGIC ---
+        function applyBranding() {
+            var brandTexts = document.querySelectorAll('.brand-name-text');
+            for(var i=0; i<brandTexts.length; i++) {
+                if(brandTexts[i]) brandTexts[i].innerText = appBranding.name || 'Kama Creative';
+            }
+            
+            function renderLogo(elements, sizeClasses, isLockView) {
+                for(var j=0; j<elements.length; j++) {
+                    var el = elements[j];
+                    if (!el) continue;
+                    if (appBranding.logo) {
+                        el.innerHTML = '<img src="' + appBranding.logo + '" alt="Logo" class="w-full h-full object-cover">';
+                        if(el.className) {
+                            el.className = el.className.replace(/bg-\S+/g, '').replace(/text-\S+/g, '') + " bg-transparent";
+                        }
+                    } else {
+                        var fallbackIcon = isLockView ? 'fa-lock' : 'fa-camera-retro';
+                        el.innerHTML = '<i class="fa-solid ' + fallbackIcon + ' ' + sizeClasses + '"></i>';
+                        if (isLockView) {
+                            if(el.classList) { el.classList.add('bg-gray-100', 'text-gray-400'); }
+                        } else {
+                            if(el.classList) { el.classList.add('bg-kama-800', 'text-white'); }
+                        }
+                    }
+                }
+            }
+
+            renderLogo(document.querySelectorAll('.brand-logo-container'), 'text-2xl', false);
+            renderLogo(document.querySelectorAll('.brand-logo-container-sm'), 'text-sm', false);
+            renderLogo(document.querySelectorAll('.brand-logo-container-lock'), 'text-2xl', true);
+        }
+
+        function openModalSettings() {
+            var userLabelEl = document.getElementById('set_username_label');
+            if (userLabelEl && currentUser) {
+                if (currentUser.role === 'Admin') {
+                    userLabelEl.innerHTML = currentUser.username + "</span>. <br><span class='text-red-500 font-bold text-[10px]'><i class='fa-solid fa-triangle-exclamation mr-1'></i>Perhatian: Karena Anda Admin, ini juga akan mengubah Nama & Logo di Halaman Login Utama!</span><span>";
+                } else {
+                    userLabelEl.innerText = currentUser.username;
+                }
+            }
+            
+            var brandNameEl = document.getElementById('set_brand_name');
+            if (brandNameEl) brandNameEl.value = appBranding.name;
+            
+            var brandLogoEl = document.getElementById('set_brand_logo');
+            if (brandLogoEl) brandLogoEl.value = appBranding.logo || '';
+            
+            var brandFileEl = document.getElementById('set_brand_file');
+            if (brandFileEl) brandFileEl.value = '';
+            
+            var modal = document.getElementById('modalSettings');
+            if (modal) { modal.classList.remove('hidden'); modal.classList.remove('opacity-0'); }
+            
+            var content = document.getElementById('modalSettingsContent');
+            if (content) { content.classList.remove('scale-95'); }
+        }
+
+        function closeModalSettings() {
+            var modal = document.getElementById('modalSettings');
+            var content = document.getElementById('modalSettingsContent');
+            if (modal) modal.classList.add('opacity-0'); 
+            if (content) content.classList.add('scale-95');
+            setTimeout(function() { if (modal) modal.classList.add('hidden'); }, 300);
+        }
+
+        function handleSaveSettings(e) {
+            e.preventDefault();
+            var fileInput = document.getElementById('set_brand_file');
+            var brandNameEl = document.getElementById('set_brand_name');
+            var brandLogoEl = document.getElementById('set_brand_logo');
+            
+            var nameInput = brandNameEl ? (brandNameEl.value.trim() || 'Kama Creative') : 'Kama Creative';
+            var logoUrlInput = brandLogoEl ? brandLogoEl.value.trim() : '';
+
+            if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                var file = fileInput.files[0];
+                var reader = new FileReader();
+                startLoading("Mengupload Logo...");
+                
+                reader.onload = function(evt) {
+                    var base64Data = evt.target.result;
+                    if (typeof google === 'undefined') {
+                        setTimeout(function() { finishSaveSettings(nameInput, base64Data); }, 300); 
+                    } else {
+                        google.script.run
+                            .withSuccessHandler(function(res) {
+                                endLoading();
+                                if (res.success) { finishSaveSettings(nameInput, res.url); } 
+                                else { Swal.fire('Upload Gagal', res.message, 'error'); }
+                            }).withFailureHandler(function(err) { 
+                                endLoading();
+                                Swal.fire('Error', err.message, 'error'); 
+                            }).uploadBrandLogo(base64Data, file.name);
+                    }
+                };
+                reader.readAsDataURL(file);
+            } else {
+                finishSaveSettings(nameInput, logoUrlInput);
+            }
+        }
+
+        function finishSaveSettings(name, logo) {
+            startLoading("Menyimpan Pengaturan...");
+            if (typeof google === 'undefined') {
+                setTimeout(function() {
+                    endLoading();
+                    appBranding.name = name; appBranding.logo = logo;
+                    if (currentUser) {
+                        currentUser.brandName = name; currentUser.brandLogo = logo;
+                        localStorage.setItem('ps_user', JSON.stringify(currentUser));
+                    }
+                    applyBranding(); closeModalSettings();
+                    Swal.fire({icon: 'success', title: 'Tersimpan', timer: 1500, showConfirmButton: false});
+                    loadDataProjects();
+                }, 200); 
+            } else {
+                google.script.run
+                    .withSuccessHandler(function(res) {
+                        endLoading(); 
+                        if(res.success) {
+                            appBranding.name = res.brandName; appBranding.logo = res.brandLogo;
+                            if (currentUser) {
+                                currentUser.brandName = res.brandName; currentUser.brandLogo = res.brandLogo;
+                                localStorage.setItem('ps_user', JSON.stringify(currentUser));
+                            }
+                            applyBranding(); closeModalSettings();
+                            Swal.fire({icon: 'success', title: 'Tersimpan', timer: 1500, showConfirmButton: false});
+                            loadDataProjects();
+                        } else { Swal.fire('Error', res.message, 'error'); }
+                    }).withFailureHandler(function(err) { 
+                        endLoading(); 
+                        Swal.fire('Error', err.message, 'error'); 
+                    })
+                    .saveBrandSettings(currentUser.username, name, logo);
+            }
+        }
+
+        // --- UI HELPERS ---
+        function showView(viewId) {
+            var views = document.querySelectorAll('.view-section');
+            for(var i=0; i<views.length; i++) {
+                if (views[i] && views[i].classList) views[i].classList.remove('active');
+            }
+            var targetView = document.getElementById(viewId);
+            if (targetView && targetView.classList) targetView.classList.add('active');
+        }
+
+        function startLoading(text) {
+            text = text || "Processing...";
+            var loaderText = document.getElementById('loader-text');
+            if (loaderText) loaderText.innerText = text.toUpperCase();
+            var loader = document.getElementById('global-loader');
+            if (loader) loader.style.display = 'flex';
+        }
+
+        function endLoading() {
+            var loader = document.getElementById('global-loader');
+            if (loader) loader.style.display = 'none';
+        }
+
+        function setButtonState(btnId, isLoading, text) {
+            var btn = document.getElementById(btnId);
+            if (!btn) return;
+            if (isLoading) {
+                btn.disabled = true;
+                
+                // Embed animasi lottie kecil secara dinamis pada tombol (inline-spinner)
+                btn.innerHTML = '<span class="inline-block w-5 h-5 mr-2 align-middle" id="lottie-btn-' + btnId + '"></span> ' + (text || 'Memproses...');
+                btn.classList.add('opacity-70', 'cursor-not-allowed');
+                
+                var lottieContainer = document.getElementById('lottie-btn-' + btnId);
+                if (lottieContainer) {
+                    lottie.loadAnimation({
+                        container: lottieContainer,
+                        renderer: 'svg',
+                        loop: true,
+                        autoplay: true,
+                        animationData: metaAiLottieData
+                    });
+                }
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = text;
+                btn.classList.remove('opacity-70', 'cursor-not-allowed');
+            }
+        }
+
+        function doCopyText(text, successMsg) {
+            var textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed"; textArea.style.opacity = "0";
+            document.body.appendChild(textArea);
+            
+            if (navigator.userAgent.match(/ipad|iphone/i)) {
+                var range = document.createRange(); range.selectNodeContents(textArea);
+                var selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range);
+                textArea.setSelectionRange(0, 999999);
+            } else { textArea.select(); }
+
+            var success = false;
+            try { success = document.execCommand('copy'); } catch (err) { success = false; }
+            document.body.removeChild(textArea);
+
+            if (success) { Swal.fire({icon: 'success', title: 'Berhasil', text: successMsg, timer: 1500, showConfirmButton: false}); } 
+            else {
+                Swal.fire({
+                    title: 'Copy Manual', html: '<textarea readonly class="w-full text-sm p-3 border rounded-lg bg-gray-50 outline-none" rows="6">' + text + '</textarea>',
+                    confirmButtonText: 'Tutup', confirmButtonColor: '#1e1e2d'
+                });
+            }
+        }
+
+        // --- AUTH LOGIC ---
+        function toggleAuth(type) {
+            var loginForm = document.getElementById('login-form-wrapper');
+            var regForm = document.getElementById('register-form-wrapper');
+            if (!loginForm || !regForm) return;
+
+            if (type === 'register') {
+                if(loginForm.classList) loginForm.classList.add('hidden'); 
+                if(regForm.classList) regForm.classList.remove('hidden');
+            } else {
+                if(regForm.classList) regForm.classList.add('hidden'); 
+                if(loginForm.classList) loginForm.classList.remove('hidden');
+            }
+        }
+
+        function checkLoginState() {
+            try { currentUser = JSON.parse(localStorage.getItem('ps_user')); } catch(e) { currentUser = null; }
+            var themeToggle = document.getElementById('hide-checkbox');
+            var wrapper = document.getElementById('theme-toggle-wrapper');
+
+            if (currentUser) {
+                var adminNameEl = document.getElementById('adminName');
+                if (adminNameEl) adminNameEl.innerText = currentUser.nama ? currentUser.nama.split(' ')[0] : 'User'; 
+                
+                var adminRoleEl = document.getElementById('adminRole');
+                if (adminRoleEl) {
+                    if (currentUser.role !== 'Admin') {
+                        var expText = currentUser.expiredAt === 'Lifetime' ? 'Lifetime' : (currentUser.expiredAt ? currentUser.expiredAt.substring(0,10) : 'Expired');
+                        adminRoleEl.innerHTML = currentUser.role + ' &bull; <span class="text-blue-500 font-semibold text-[10px]" title="Masa Aktif">Exp: ' + expText + '</span>';
+                    } else {
+                        adminRoleEl.innerText = currentUser.role; 
+                    }
+                }
+                
+                appBranding.name = currentUser.brandName || 'Kama Creative';
+                appBranding.logo = currentUser.brandLogo || '';
+                applyBranding();
+
+                var adminNavTabs = document.getElementById('admin-nav-tabs');
+                var adminNavTabsMobile = document.getElementById('admin-nav-tabs-mobile');
+                var adminCols = document.querySelectorAll('.admin-only-col');
+                
+                // Terapkan Dark Mode untuk semua role (Admin & Fotografer)
+                var savedTheme = localStorage.getItem('ps_theme');
+                if (savedTheme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    if (themeToggle) themeToggle.checked = true;
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    if (themeToggle) themeToggle.checked = false;
+                }
+                if (wrapper) wrapper.title = "Toggle Dark Mode";
+                
+                if(currentUser.role === 'Admin') {
+                    if (adminNavTabs && adminNavTabs.classList) { adminNavTabs.classList.remove('hidden'); adminNavTabs.classList.add('sm:flex'); }
+                    if (adminNavTabsMobile && adminNavTabsMobile.classList) adminNavTabsMobile.classList.remove('hidden');
+                    for(var i=0; i<adminCols.length; i++) { if(adminCols[i] && adminCols[i].classList) adminCols[i].classList.remove('hidden'); }
+                    
+                    showView('admin-view'); 
+                    switchAdminTab('dashboard');
+                } else {
+                    if (adminNavTabs && adminNavTabs.classList) { adminNavTabs.classList.add('hidden'); adminNavTabs.classList.remove('sm:flex'); }
+                    if (adminNavTabsMobile && adminNavTabsMobile.classList) adminNavTabsMobile.classList.add('hidden');
+                    for(var j=0; j<adminCols.length; j++) { if(adminCols[j] && adminCols[j].classList) adminCols[j].classList.add('hidden'); }
+                    
+                    showView('admin-view'); 
+                    switchAdminTab('projects');
+                }
+                
+                // Mencegah tabel fotografer kosong saat Admin baru login
+                if(currentUser.role === 'Admin') {
+                    loadDataUsers(); 
+                }
+                
+            } else { 
+                document.documentElement.classList.remove('dark');
+                if (themeToggle) themeToggle.checked = false;
+                showView('auth-view'); 
+                applyBranding(); // Jangan di-reset ke default secara kaku, gunakan global yang sudah di-fetch
+            }
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            var regNama = document.getElementById('reg_nama');
+            var regEmail = document.getElementById('reg_email');
+            var regNoHP = document.getElementById('reg_nohp');
+            var regUser = document.getElementById('reg_username');
+            var regPass = document.getElementById('reg_password');
+            
+            // TANGKAP DATA PAKET DARI DROPDOWN
+            var regPaket = document.getElementById('reg_paket');
+            
+            var formData = { 
+                nama: regNama ? regNama.value.trim() : '', 
+                email: regEmail ? regEmail.value.trim() : '', 
+                nohp: regNoHP ? regNoHP.value.trim() : '', 
+                username: regUser ? regUser.value.trim() : '', 
+                password: regPass ? regPass.value.trim() : '',
+                paket: regPaket ? regPaket.value : '' // Masukkan pilihan paket ke data yang dikirim
+            };
+            
+            setButtonState('btnRegister', true, 'Mendaftarkan...');
+            startLoading("Mendaftarkan...");
+
+            if (typeof google === 'undefined') {
+                setTimeout(function() {
+                    endLoading();
+                    setButtonState('btnRegister', false, 'Daftar Sekarang');
+                    Swal.fire('Berhasil', 'Pendaftaran (Simulasi) berhasil! Akun Anda butuh ACC Admin.', 'success');
+                    
+                    // KOSONGKAN FORM SETELAH SUKSES
+                    document.querySelector('#register-form-wrapper form').reset();
+                    
+                    toggleAuth('login');
+                }, 300); 
+            } else {
+                google.script.run
+                    .withSuccessHandler(function(res) {
+                        endLoading(); 
+                        setButtonState('btnRegister', false, 'Daftar Sekarang');
+                        if (res.success) { 
+                            Swal.fire('Berhasil', res.message, 'success'); 
+                            
+                            // KOSONGKAN FORM SETELAH SUKSES (Mencegah riwayat tertinggal)
+                            document.querySelector('#register-form-wrapper form').reset();
+                            
+                            toggleAuth('login'); 
+                        } 
+                        else { Swal.fire('Gagal', res.message, 'error'); }
+                    }).withFailureHandler(function(err) { 
+                        endLoading(); 
+                        setButtonState('btnRegister', false, 'Daftar Sekarang');
+                        Swal.fire('Error', err.message, 'error'); 
+                    }).registerUser(formData);
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            var uName = document.getElementById('username');
+            var uPass = document.getElementById('password');
+            var formData = { 
+                username: uName ? uName.value.trim() : '', 
+                password: uPass ? uPass.value.trim() : '' 
+            };
+            setButtonState('btnLogin', true, 'Authenticating...');
+            startLoading("Authenticating...");
+
+            if (typeof google === 'undefined') {
+                setTimeout(function() {
+                    endLoading();
+                    setButtonState('btnLogin', false, 'Sign In');
+                    if (formData.username === 'admin' && formData.password === 'Demo2026!') {
+                        localStorage.setItem('ps_user', JSON.stringify({username: 'admin', nama: 'Admin Super', role: 'Admin', brandName: 'Admin Brand', brandLogo: '', expiredAt: 'Lifetime'}));
+                        checkLoginState();
+                    } else if (formData.username === 'foto' && formData.password === '123') {
+                        localStorage.setItem('ps_user', JSON.stringify({username: 'foto', nama: 'Fotografer 1', role: 'Photographer', brandName: 'Studio Satu', brandLogo: '', expiredAt: '2027-01-01'}));
+                        checkLoginState();
+                    } else if (formData.username === 'expired' && formData.password === '123') {
+                        Swal.fire('Akses Terkunci', 'Masa aktif akun Anda telah habis (2025-01-01). Silakan hubungi Admin.', 'error');
+                    } else { Swal.fire('Error', 'Invalid credentials.', 'error'); }
+                }, 300); 
+            } else {
+                google.script.run
+                    .withSuccessHandler(function(res) {
+                        endLoading(); 
+                        setButtonState('btnLogin', false, 'Sign In');
+                        if (res.success) { 
+                            localStorage.setItem('ps_user', JSON.stringify(res.user)); 
+                            checkLoginState(); 
+                            if(currentUser.role === 'Admin') {
+                                loadDataUsers(); 
+                            }
+                        } 
+                        else { Swal.fire('Gagal', res.message, 'error'); }
+                    }).withFailureHandler(function(err) { 
+                        endLoading(); // WAJIB DI BARIS PERTAMA
+                        setButtonState('btnLogin', false, 'Sign In');
+                        Swal.fire('Error', err.message, 'error'); 
+                    }).loginUser(formData);
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('ps_user');
+            currentUser = null;
+            var loginForm = document.querySelector('#login-form-wrapper form');
+            if (loginForm) loginForm.reset();
+            
+            startLoading("Keluar...");
+            if (typeof google !== 'undefined') {
+                google.script.run
+                    .withSuccessHandler(function(res) {
+                        endLoading();
+                        if (res.success) {
+                            appBranding.name = res.brandName;
+                            appBranding.logo = res.brandLogo;
+                        } else {
+                            appBranding.name = 'Kama Creative'; appBranding.logo = '';
+                        }
+                        checkLoginState();
+                    })
+                    .withFailureHandler(function() {
+                        endLoading();
+                        appBranding.name = 'Kama Creative'; appBranding.logo = '';
+                        checkLoginState();
+                    }).getGlobalBranding();
+            } else {
+                endLoading();
+                appBranding.name = 'Kama Creative'; appBranding.logo = '';
+                checkLoginState();
+            }
+        }
+
+        // --- DASHBOARD TABS ---
+        function switchAdminTab(tabId) {
+            var dTabs = document.querySelectorAll('#admin-nav-tabs .nav-tab');
+            for(var i=0; i<dTabs.length; i++) { if(dTabs[i] && dTabs[i].classList) dTabs[i].classList.remove('active'); }
+            var desktopTab = document.getElementById('tab-'+tabId);
+            if (desktopTab && desktopTab.classList) desktopTab.classList.add('active');
+            
+            var mTabs = document.querySelectorAll('#admin-nav-tabs-mobile .nav-tab');
+            for(var j=0; j<mTabs.length; j++) { if(mTabs[j] && mTabs[j].classList) mTabs[j].classList.remove('active'); }
+            var mobileTab = document.getElementById('tab-'+tabId+'-m');
+            if (mobileTab && mobileTab.classList) mobileTab.classList.add('active');
+
+            var sectionDash = document.getElementById('section-dashboard');
+            var sectionProj = document.getElementById('section-projects');
+            var sectionUsers = document.getElementById('section-users');
+            if (sectionDash && sectionDash.classList) sectionDash.classList.add('hidden');
+            if (sectionProj && sectionProj.classList) sectionProj.classList.add('hidden');
+            if (sectionUsers && sectionUsers.classList) sectionUsers.classList.add('hidden');
+
+            if(tabId === 'dashboard') {
+                if (sectionDash && sectionDash.classList) { sectionDash.classList.remove('hidden'); sectionDash.classList.add('flex'); }
+                loadDashboardStats();
+            } else if(tabId === 'projects') {
+                if (sectionProj && sectionProj.classList) { sectionProj.classList.remove('hidden'); sectionProj.classList.add('flex'); }
+                loadDataProjects();
+            } else if (tabId === 'users') {
+                if (sectionUsers && sectionUsers.classList) { sectionUsers.classList.remove('hidden'); sectionUsers.classList.add('flex'); }
+                loadDataUsers();
+            }
+        }
+
+        // --- DASHBOARD DATA (ADMIN ONLY) ---
+        function loadDashboardStats() {
+            if (!currentUser || currentUser.role !== 'Admin') return;
+            startLoading("Memuat Dashboard...");
+            if (typeof google === 'undefined') {
+                setTimeout(function() {
+                    renderDashboardStats({ totalProjects: 15, totalUsers: 8, activeUsers: 6, pendingUsers: 2 });
+                    endLoading();
+                }, 500);
+            } else {
+                google.script.run
+                    .withSuccessHandler(function(res) {
+                        endLoading();
+                        if(res.success) { renderDashboardStats(res.data); }
+                        else { console.error(res.message); }
+                    })
+                    .withFailureHandler(function(err) {
+                        endLoading(); console.error(err);
+                    })
+                    .getDashboardStats(currentUser);
+            }
+        }
+
+        function renderDashboardStats(data) {
+            var elProjects = document.getElementById('stat-projects');
+            var elUsers = document.getElementById('stat-users');
+            var elActive = document.getElementById('stat-active-users');
+            var elPending = document.getElementById('stat-pending-users');
+            
+            if(elProjects) elProjects.innerText = data.totalProjects || 0;
+            if(elUsers) elUsers.innerText = data.totalUsers || 0;
+            if(elActive) elActive.innerText = data.activeUsers || 0;
+            if(elPending) elPending.innerText = data.pendingUsers || 0;
+        }
+
+        // --- ADMIN: KELOLA PENGGUNA ---
+        function loadDataUsers() {
+            startLoading("Memuat Fotografer...");
+            if (typeof google === 'undefined') {
+                setTimeout(function() { 
+                    renderUsersTable([
+                        { "Username": "budi", "Nama": "Budi Studio", "Status": "Pending", "ExpiredAt": "" },
+                        { "Username": "fotografer1", "Nama": "Wira Photo", "Status": "Active", "ExpiredAt": "2027-12-31 00:00" },
+                        { "Username": "pro_foto", "Nama": "Pro Studio", "Status": "Active", "ExpiredAt": "Lifetime" },
+                        { "Username": "expired_user", "Nama": "Telat Bayar", "Status": "Active", "ExpiredAt": "2025-01-01 00:00" }
+                    ]); 
+                    endLoading(); 
+                }, 200); 
+            } else {
+                google.script.run
+                    .withSuccessHandler(function(res) {
+                        endLoading(); 
+                        if (res.success) { renderUsersTable(res.data); } else { Swal.fire('Error', res.message, 'error'); }
+                    }).withFailureHandler(function(err) { 
+                        endLoading(); 
+                        Swal.fire('Error', err.message, 'error'); 
+                    }).getUsers(currentUser);
+            }
+        }
+
+        function renderUsersTable(data) {
+            var tbody = document.getElementById('userTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-gray-400 italic">Belum ada fotografer terdaftar.</td></tr>'; return;
+            }
+
+            data.forEach(function(row) {
+                var statusBadge = row.Status === 'Active' 
+                    ? '<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded border border-green-200"><i class="fa-solid fa-check mr-1"></i>Aktif</span>'
+                    : '<span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded border border-yellow-200"><i class="fa-solid fa-hourglass-half mr-1"></i>Pending</span>';
+                
+                var actionBtn = row.Status === 'Pending'
+                    ? '<button onclick="promptExpiry(\'' + row.Username + '\', \'\', true)" class="px-3 py-1.5 bg-kama-800 text-white text-xs font-semibold rounded hover:bg-kama-900 shadow-sm mr-2">ACC Akun</button>'
+                    : '<button onclick="promptExpiry(\'' + row.Username + '\', \'' + (row.ExpiredAt || '') + '\', false)" class="px-3 py-1.5 bg-white border border-gray-200 text-kama-800 text-xs font-semibold rounded hover:bg-gray-50 shadow-sm mr-2" title="Set Masa Aktif"><i class="fa-regular fa-calendar-plus"></i> Set Aktif</button>';
+
+                var expBadge = '-';
+                if (row.ExpiredAt === 'Lifetime') {
+                    expBadge = '<span class="text-xs font-bold text-blue-600"><i class="fa-solid fa-infinity mr-1"></i>Lifetime</span>';
+                } else if (row.ExpiredAt) {
+                    var today = new Date();
+                    today.setHours(0,0,0,0);
+                    var expDate = new Date(row.ExpiredAt);
+                    var isExpired = expDate < today;
+                    var colorClass = isExpired ? 'text-red-600 font-bold' : 'text-green-600 font-medium';
+                    var iconClass = isExpired ? 'fa-solid fa-circle-exclamation' : 'fa-regular fa-clock';
+                    expBadge = '<span class="text-xs ' + colorClass + '"><i class="' + iconClass + ' mr-1"></i>' + row.ExpiredAt.substring(0,10) + '</span>';
+                }
+
+                var tr = document.createElement('tr');
+                tr.className = "hover:bg-kama-50/50 transition-colors group";
+                tr.innerHTML = 
+                    '<td class="p-4 sm:px-6 font-semibold text-kama-800">' + (row.Nama || '-') + '</td>' +
+                    '<td class="p-4 sm:px-6 text-gray-500">@' + (row.Username || '-') + '</td>' +
+                    '<td class="p-4 sm:px-6">' + statusBadge + '</td>' +
+                    '<td class="p-4 sm:px-6">' + expBadge + '</td>' +
+                    '<td class="p-4 sm:px-6 text-right whitespace-nowrap">' +
+                        '<div class="flex items-center justify-end gap-2 min-w-max">' +
+                            actionBtn +
+                            '<button onclick="deleteUserPrompt(\'' + row.Username + '\')" class="px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 text-xs font-semibold rounded hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity" title="Hapus Permanen"><i class="fa-solid fa-trash-can"></i></button>' +
+                        '</div>' +
+                    '</td>';
+                tbody.appendChild(tr);
+            });
+        }
+
+        function promptExpiry(username, currentExpiry, isApproval) {
+            var defaultDate = '';
+            var isLifetime = false;
+            if (currentExpiry === 'Lifetime') {
+                isLifetime = true;
+            } else if (currentExpiry) {
+                defaultDate = currentExpiry.split(' ')[0]; 
+            } else {
+                var d = new Date();
+                d.setDate(d.getDate() + 30);
+                defaultDate = d.toISOString().split('T')[0];
+            }
+
+            var titleStr = isApproval ? 'Approve & Set Masa Aktif' : 'Atur Masa Aktif';
+            
+            Swal.fire({
+                title: titleStr,
+                html: `
+                    <div class="text-left mt-2">
+                        <p class="text-xs text-gray-500 mb-4">Pengguna akan terkunci otomatis dari sistem jika melewati batas tanggal yang Anda tentukan di bawah.</p>
+                        <label class="block text-xs font-semibold text-kama-800 uppercase mb-1">Pilih Tanggal Berakhir</label>
+                        <input type="date" id="swal-exp-date" value="${defaultDate}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm font-medium transition-colors">
+                        <div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center">
+                            <input type="checkbox" id="swal-exp-lifetime" ${isLifetime ? 'checked' : ''} class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer" onchange="document.getElementById('swal-exp-date').disabled = this.checked; if(this.checked) document.getElementById('swal-exp-date').classList.add('opacity-50'); else document.getElementById('swal-exp-date').classList.remove('opacity-50');">
+                            <label for="swal-exp-lifetime" class="ml-3 text-sm font-semibold text-blue-800 cursor-pointer select-none">Berikan Akses Lifetime <span class="block text-xs font-normal text-blue-600 mt-0.5">Tidak akan pernah kedaluwarsa</span></label>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Simpan Akses',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#1e1e2d',
+                didOpen: () => {
+                    if(isLifetime) document.getElementById('swal-exp-date').disabled = true;
+                },
+                preConfirm: () => {
+                    const isLt = document.getElementById('swal-exp-lifetime').checked;
+                    const dVal = document.getElementById('swal-exp-date').value;
+                    if (isLt) return 'Lifetime';
+                    if (!dVal) { Swal.showValidationMessage('Silakan pilih tanggal atau centang Lifetime'); return false; }
+                    return dVal;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var expValue = result.value;
+                    startLoading("Menyimpan...");
+                    if (typeof google === 'undefined') {
+                        setTimeout(() => { 
+                            endLoading(); 
+                            Swal.fire({icon:'success', title:'Berhasil (Simulasi)', timer:1500, showConfirmButton:false}); 
+                            loadDataUsers(); 
+                        }, 500);
+                    } else {
+                        if (isApproval) {
+                            google.script.run
+                                .withSuccessHandler(res => { endLoading(); if(res.success) { Swal.fire({icon:'success', title:'Di-ACC!', timer:1500, showConfirmButton:false}); loadDataUsers(); } else Swal.fire('Error', res.message, 'error'); })
+                                .withFailureHandler(err => { endLoading(); Swal.fire('Error', err.message, 'error'); })
+                                .approveUser(username, expValue, currentUser);
+                        } else {
+                            google.script.run
+                                .withSuccessHandler(res => { endLoading(); if(res.success) { Swal.fire({icon:'success', title:'Diperbarui!', timer:1500, showConfirmButton:false}); loadDataUsers(); } else Swal.fire('Error', res.message, 'error'); })
+                                .withFailureHandler(err => { endLoading(); Swal.fire('Error', err.message, 'error'); })
+                                .updateExpiry(username, expValue, currentUser);
+                        }
+                    }
+                }
+            });
+        }
+
+        function deleteUserPrompt(username) {
+            Swal.fire({ title: 'Hapus Fotografer?', text: "Akun ini akan dihapus permanen.", icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Hapus', confirmButtonColor: '#ef4444' })
+            .then(function(result) {
+                if (result.isConfirmed) {
+                    startLoading("Menghapus...");
+                    if(typeof google === 'undefined') { 
+                        setTimeout(function() { endLoading(); loadDataUsers(); }, 200); 
+                    } else {
+                        google.script.run
+                            .withSuccessHandler(function(res) { 
+                                endLoading(); 
+                                if(res.success) loadDataUsers(); else Swal.fire('Error', res.message, 'error'); 
+                            })
+                            .withFailureHandler(function(err) { 
+                                endLoading(); 
+                                Swal.fire('Error', err.message, 'error'); 
+                            })
+                            .deleteUser(username, currentUser);
+                    }
+                }
+            });
+        }
+
+        // --- PROJECTS LOGIC ---
+        function loadDataProjects() {
+            startLoading("Memuat Project...");
+            if (typeof google === 'undefined') {
+                setTimeout(function() { 
+                    renderProjectsTable([
+                        { "ID": "111", "Owner": "fotografer1", "Token": "SIM-TOKEN1", "Nama Client": "John & Jane Wedding", "Drive Link": "#", "Nomor WA": "628123456789", "Password Client": "", "Max Foto": 3, "Dibuat Pada": "2026-03-01 10:30", "Short Link": "https://is.gd/Simulasi_A1B2" }
+                    ]); 
+                    endLoading(); 
+                }, 200); 
+            } else {
+                google.script.run
+                    .withSuccessHandler(function(res) {
+                        endLoading(); 
+                        if (res.success) { if(res.appUrl) baseAppUrl = res.appUrl; renderProjectsTable(res.data); } 
+                        else { Swal.fire('Error', res.message, 'error'); }
+                    }).withFailureHandler(function(err) { 
+                        endLoading(); 
+                        Swal.fire('Error', err.message, 'error'); 
+                    }).getProjects(currentUser);
+            }
+        }
+
+        function renderProjectsTable(data) {
+            var tbody = document.getElementById('projectTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-gray-400 italic">Belum ada project.</td></tr>'; return;
+            }
+
+            data.forEach(function(row) {
+                var encodedBrand = encodeURIComponent(appBranding.name || 'Kama Creative');
+                var encodedLogo = encodeURIComponent(appBranding.logo || '');
+                
+                // PAKSA SEMUA LINK LAMA & BARU PAKAI DOMAIN KUSTOM (jika ada data slug)
+                var displayLink = row['Short Slug'] 
+                    ? ("https://ps.kamacreative.my.id/?c=" + row['Short Slug']) 
+                    : (baseAppUrl + "?token=" + row.Token + "&bn=" + encodedBrand + "&bl=" + encodedLogo);
+                
+                // Tampilan tulisan di tabel (di bawah nama client) agar rapi
+                var displayedTokenOrLink = row['Short Slug'] 
+                    ? ("ps.kamacreative.my.id/?c=" + row['Short Slug']) 
+                    : row.Token;
+                
+                var dateStr = row['Dibuat Pada'] ? row['Dibuat Pada'].toString() : '-';
+                var dateFull = dateStr; 
+                var tr = document.createElement('tr');
+                tr.className = "hover:bg-kama-50/50 transition-colors group";
+                
+                var isUserAdmin = currentUser && currentUser.role === 'Admin';
+                var ownerHtml = isUserAdmin ? '<td class="p-4 sm:px-6 admin-only-col"><span class="bg-indigo-50 text-indigo-700 text-xs px-2 py-1 rounded border border-indigo-100"><i class="fa-solid fa-user-astronaut mr-1"></i>' + (row.Owner || '-') + '</span></td>' : '<td class="admin-only-col hidden"></td>';
+
+                tr.innerHTML = 
+                    // Tambahkan overflow-hidden agar tabel tidak melar jika nama panjang
+                    '<td class="p-4 sm:px-6 overflow-hidden">' +
+                        '<div class="font-bold text-kama-800 truncate" title="' + (row['Nama Client'] || '-') + '">' + (row['Nama Client'] || '-') + '</div>' +
+                        // Tambahkan max-w dan truncate agar link terpotong rapi dengan titik-titik jika kepanjangan
+                        '<div class="text-xs text-blue-500 font-medium mt-0.5 truncate max-w-[200px] sm:max-w-xs" title="' + displayLink + '"><i class="fa-solid fa-link mr-1 opacity-50"></i>' + displayedTokenOrLink + '</div>' +
+                        '<div class="text-[10px] text-gray-400 sm:hidden mt-1"><i class="fa-regular fa-clock mr-1"></i> ' + dateFull + '</div>' +
+                    '</td>' +
+                    ownerHtml +
+                    '<td class="p-4 sm:px-6">' +
+                        '<span class="bg-gray-100 text-kama-800 text-xs font-bold px-2.5 py-1 rounded-md border border-gray-200">' + (row['Max Foto'] || 0) + ' pics</span>' +
+                    '</td>' +
+                    '<td class="p-4 sm:px-6 text-xs text-gray-500 font-medium hidden sm:table-cell">' + dateFull + '</td>' +
+                    '<td class="p-4 sm:px-6 text-right whitespace-nowrap">' +
+                        '<div class="flex items-center justify-end gap-2 min-w-max">' +
+                            '<button onclick="copyLink(\'' + displayLink + '\')" class="px-3 py-1.5 rounded-lg bg-gray-50 text-gray-700 hover:bg-gray-200 hover:text-kama-800 transition-colors flex items-center text-xs font-semibold border border-gray-200" title="Copy Link">' +
+                                '<i class="fa-regular fa-copy mr-1.5"></i> Copy' +
+                            '</button>' +
+                            '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 transition-colors flex items-center text-xs font-semibold border border-blue-200" title="Lihat Galeri">' +
+                                '<i class="fa-regular fa-eye mr-1.5"></i> Lihat' +
+                            '</button>' +
+                            '<button onclick="deleteProjectPrompt(\'' + row.ID + '\')" class="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-800 transition-colors flex items-center text-xs font-semibold border border-red-200 opacity-100" title="Hapus Project">' +
+                                '<i class="fa-solid fa-trash-can mr-1.5"></i> Hapus' +
+                            '</button>' +
+                        '</div>' +
+                    '</td>';
+                tbody.appendChild(tr);
+            });
+        }
+
+        function copyLink(link) { 
+            doCopyText(link, 'Link klien berhasil disalin.');
+        }
+
+        function simulateClientLink(token) { 
+            clientState.token = token; 
+            clientState.isPreviewMode = true; 
+            initClientApp(); 
+        }
+
+        function exitClientPreview() {
+            clientState.isPreviewMode = false;
+            clientState.token = '';
+            
+            var btnBackAuth = document.getElementById('btn-back-dashboard-auth');
+            var btnBackGallery = document.getElementById('btn-back-dashboard');
+            if (btnBackAuth) btnBackAuth.classList.add('hidden');
+            if (btnBackGallery) btnBackGallery.classList.add('hidden');
+            
+            var container = document.getElementById('gallery-container');
+            if (container) container.innerHTML = '';
+            clientState.selectedImages = [];
+            updateClientCounterUI();
+            
+            showView('admin-view');
+        }
+
+        function openModalCreate() {
+            var formCreate = document.getElementById('formCreateProject');
+            if (formCreate) formCreate.reset();
+            var modal = document.getElementById('modalCreate');
+            var content = document.getElementById('modalCreateContent');
+            if (modal && modal.classList) { modal.classList.remove('hidden'); modal.classList.remove('opacity-0'); }
+            if (content && content.classList) content.classList.remove('scale-95');
+        }
+
+        function closeModalCreate() {
+            var modal = document.getElementById('modalCreate');
+            var content = document.getElementById('modalCreateContent');
+            if (modal && modal.classList) modal.classList.add('opacity-0'); 
+            if (content && content.classList) content.classList.add('scale-95');
+            setTimeout(function() { if (modal && modal.classList) modal.classList.add('hidden'); }, 300);
+        }
+
+        function handleCreateProject(e) {
+            e.preventDefault();
+            var pNama = document.getElementById('p_nama');
+            var pDrive = document.getElementById('p_drive');
+            var pWa = document.getElementById('p_wa');
+            var pMax = document.getElementById('p_max');
+            var pPass = document.getElementById('p_pass');
+
+            var formData = {
+                namaClient: pNama ? pNama.value.trim() : '', 
+                driveLink: pDrive ? pDrive.value.trim() : '',
+                nomorWA: pWa ? pWa.value.trim() : '', 
+                maxFoto: pMax ? pMax.value : '',
+                passwordClient: pPass ? pPass.value.trim() : ''
+            };
+            
+            setButtonState('btnCreate', true, 'Membuat Link...');
+            startLoading("Mempersiapkan Link...");
+
+            if (typeof google === 'undefined') {
+                setTimeout(function() {
+                    endLoading(); 
+                    closeModalCreate(); 
+                    setButtonState('btnCreate', false, 'Generate Link');
+                    Swal.fire({icon: 'success', title: 'Berhasil Dibuat', timer: 1500, showConfirmButton: false}); 
+                    loadDataProjects();
+                }, 800); 
+            } else {
+                google.script.run
+                    .withSuccessHandler(function(res) {
+                        endLoading(); 
+                        setButtonState('btnCreate', false, 'Generate Link');
+                        if (res.success) { 
+                            closeModalCreate(); 
+                            Swal.fire({icon: 'success', title: 'Berhasil Dibuat', timer: 1500, showConfirmButton: false});
+                            loadDataProjects(); 
+                        } else { Swal.fire('Error', res.message, 'error'); }
+                    }).withFailureHandler(function(err) { 
+                        endLoading(); 
+                        setButtonState('btnCreate', false, 'Generate Link');
+                        Swal.fire('Error', err.message, 'error'); 
+                    }).createProject(formData, currentUser, {brandName: appBranding.name, baseUrl: baseAppUrl});
+            }
+        }
+
+        function deleteProjectPrompt(id) {
+            Swal.fire({ title: 'Hapus Project?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus' })
+            .then(function(result) {
+                if (result.isConfirmed) {
+                    startLoading("Deleting...");
+                    if (typeof google === 'undefined') {
+                        setTimeout(function() { endLoading(); loadDataProjects(); }, 200); 
+                    } else {
+                        google.script.run
+                            .withSuccessHandler(function(res) { 
+                                endLoading(); // WAJIB DI BARIS PERTAMA
+                                if(res.success) loadDataProjects(); else Swal.fire('Error', res.message, 'error'); 
+                            })
+                            .withFailureHandler(function(err) { 
+                                endLoading(); // WAJIB DI BARIS PERTAMA
+                                Swal.fire('Error', err.message, 'error'); 
+                            }).deleteProject(id, currentUser);
+                    }
+                }
+            });
+        }
+
+        // --- LOKAL SORTER SCRIPT LOGIC ---
+        var isProcessingSorter = false;
+        var isCancelledSorter = false;
+        var uploadedFilesSorter = [];
+
+        function updateFolderInfo() {
+            var fileInput = document.getElementById('sourceDirectory');
+            var folderInfo = document.getElementById('folderInfo');
+            var fileCountSpan = document.getElementById('fileCount');
+            
+            if (fileInput && fileInput.files && fileInput.files.length > 0) { 
+                var newFiles = Array.from(fileInput.files);
+                var existingNames = new Set(uploadedFilesSorter.map(function(f) { return f.webkitRelativePath || f.name; }));
+                
+                newFiles.forEach(function(f) {
+                    if (!existingNames.has(f.webkitRelativePath || f.name)) {
+                        uploadedFilesSorter.push(f);
+                    }
+                });
+                
+                if (fileCountSpan) fileCountSpan.textContent = uploadedFilesSorter.length; 
+                if (folderInfo && folderInfo.classList) folderInfo.classList.remove('hidden'); 
+            }
+            if (fileInput) fileInput.value = ""; 
+        }
+
+        function clearUploadedFiles() {
+            uploadedFilesSorter = [];
+            var folderInfo = document.getElementById('folderInfo');
+            if (folderInfo && folderInfo.classList) folderInfo.classList.add('hidden');
+            var fileCountSpan = document.getElementById('fileCount');
+            if (fileCountSpan) fileCountSpan.textContent = "0";
+        }
+
+        function handleProsesSorter(event) {
+            event.preventDefault();
+            var targetsInputEl = document.getElementById('targetNames');
+            var rawTargets = targetsInputEl ? targetsInputEl.value : '';
+            
+            if (uploadedFilesSorter.length === 0) { Swal.fire('Peringatan', 'Silakan pilih folder sumber terlebih dahulu.', 'warning'); return; }
+            if (!rawTargets.trim()) { Swal.fire('Peringatan', 'Silakan masukkan nomor/nama file.', 'warning'); return; }
+
+            var lines = rawTargets.split('\n');
+            var currentFolder = "";
+            var targets = [];
+
+            for (var j = 0; j < lines.length; j++) {
+                var line = lines[j].trim();
+                if (line === "") continue;
+
+                if (line.indexOf('📁') !== -1) {
+                    currentFolder = line.replace('📁', '').replace(/\*/g, '').trim();
+                    continue;
+                }
+                
+                if (line.toLowerCase().indexOf('halo, ini dari') !== -1 || line.toLowerCase().indexOf('berikut daftar foto') !== -1 || line.toLowerCase().indexOf('terima kasih') !== -1) {
+                    continue;
+                }
+
+                var cleanTarget = line.replace(/^\d+[\.\)]\s*/, '').trim();
+                var extRemoved = cleanTarget.replace(/\.[^/.]+$/, "").toLowerCase();
+                
+                if (extRemoved) {
+                    targets.push({ raw: line.toLowerCase(), clean: extRemoved, folder: currentFolder });
+                }
+            }
+
+            if (targets.length === 0) { Swal.fire('Peringatan', 'Format nama file tidak valid atau tidak ada file terdeteksi.', 'warning'); return; }
+
+            startSorterLoading();
+            var zip = new JSZip(); var rootFolder = zip.folder("Hasil_Sortir_Foto");
+            var matchCount = 0; var totalFiles = uploadedFilesSorter.length;
+            var currentIndex = 0;
+
+            function processNextBatch() {
+                if (isCancelledSorter) {
+                    updateProgress("Dibatalkan!", 0, "Proses dihentikan.");
+                    endSorterLoading();
+                    Swal.fire('Dibatalkan', 'Proses sortir telah dihentikan.', 'info');
+                    return;
+                }
+
+                var batchSize = 20; 
+                var end = Math.min(currentIndex + batchSize, totalFiles);
+
+                for (var i = currentIndex; i < end; i++) {
+                    var file = uploadedFilesSorter[i]; 
+                    var fileNameLower = file.name.toLowerCase();
+
+                    var matchedTarget = targets.find(function(t) {
+                        return fileNameLower.includes(t.clean) || fileNameLower.includes(t.raw);
+                    });
+
+                    if (matchedTarget) { 
+                        if (matchedTarget.folder) {
+                            rootFolder.folder(matchedTarget.folder).file(file.name, file);
+                        } else {
+                            rootFolder.file(file.name, file);
+                        }
+                        matchCount++; 
+                    }
+                }
+
+                currentIndex = end;
+                updateProgress("Menyortir...", Math.round((currentIndex / totalFiles) * 100), "Mengecek file " + currentIndex + "/" + totalFiles + ". (Cocok: " + matchCount + ")");
+
+                if (currentIndex < totalFiles) { setTimeout(processNextBatch, 0); } else { finishZip(); }
+            }
+
+            function finishZip() {
+                if (matchCount === 0) { Swal.fire('Hasil Sortir', 'Tidak ada foto yang cocok.', 'info'); endSorterLoading(); return; }
+
+                updateProgress("Membuat ZIP...", 100, "Mengkompresi " + matchCount + " file...");
+                zip.generateAsync({ type: "blob" }, function (metadata) { 
+                    updateProgress("Membuat ZIP...", metadata.percent.toFixed(0), "Kompresi: " + metadata.percent.toFixed(0) + "%"); 
+                }).then(function(blob) {
+                    saveAs(blob, "Hasil_Sortir_Foto.zip");
+                    Swal.fire('Selesai!', "Berhasil menyortir " + matchCount + " file. ZIP diunduh.", 'success');
+                    endSorterLoading();
+                }).catch(function(err) {
+                    Swal.fire('Error', err.message, 'error');
+                    endSorterLoading();
+                });
+            }
+
+            setTimeout(processNextBatch, 0);
+        }
+
+        function handleCancelSorter() {
+            if (isProcessingSorter) {
+                isCancelledSorter = true; 
+                var btnCancelSorter = document.getElementById('btnCancelSorter');
+                if (btnCancelSorter) { btnCancelSorter.textContent = "Membatalkan..."; btnCancelSorter.disabled = true; }
+            }
+        }
+
+        function startSorterLoading() {
+            isProcessingSorter = true; isCancelledSorter = false;
+            
+            // Integrasi Lottie button spinner dengan fungsi helper global
+            setButtonState('btnProsesSorter', true, 'Memproses ZIP...');
+            
+            var btnCancelSorter = document.getElementById('btnCancelSorter');
+            var progressArea = document.getElementById('progressArea');
+            var srcDir = document.getElementById('sourceDirectory');
+            var targetNames = document.getElementById('targetNames');
+            
+            if (btnCancelSorter) { btnCancelSorter.disabled = false; btnCancelSorter.textContent = "Cancel"; }
+            if (progressArea && progressArea.classList) progressArea.classList.remove('hidden'); 
+            if (srcDir) srcDir.disabled = true;
+            if (targetNames) targetNames.disabled = true;
+            
+            updateProgress("Memulai...", 0, "Menyiapkan file...");
+        }
+
+        function endSorterLoading() {
+            isProcessingSorter = false; isCancelledSorter = false;
+            
+            setButtonState('btnProsesSorter', false, '<i class="fa-solid fa-file-zipper" id="iconProsesSorter"></i> <span>Proses & Download ZIP</span>');
+            
+            var btnCancelSorter = document.getElementById('btnCancelSorter');
+            var progressArea = document.getElementById('progressArea');
+            var srcDir = document.getElementById('sourceDirectory');
+            var targetNames = document.getElementById('targetNames');
+
+            if (btnCancelSorter) { btnCancelSorter.disabled = true; btnCancelSorter.textContent = "Cancel"; }
+            if (srcDir) srcDir.disabled = false;
+            if (targetNames) targetNames.disabled = false;
+
+            setTimeout(function() { if(!isProcessingSorter && progressArea && progressArea.classList) progressArea.classList.add('hidden'); }, 2000);
+        }
+
+        function updateProgress(status, percent, detail) {
+            var pStatus = document.getElementById('progressStatus');
+            var pPercent = document.getElementById('progressPercent');
+            var pBar = document.getElementById('progressBar');
+            var pDetail = document.getElementById('progressDetail');
+
+            if (pStatus) pStatus.textContent = status;
+            if (pPercent) pPercent.textContent = percent + "%";
+            if (pBar) pBar.style.width = percent + "%";
+            if (pDetail) pDetail.textContent = detail;
+        }
+
+        // --- CLIENT (GUEST) LOGIC ---
+        function initClientApp() {
+            document.documentElement.classList.remove('dark'); // Paksa klien tetap mode terang
+            startLoading("Memverifikasi...");
+            if (typeof google === 'undefined') {
+                setTimeout(function() {
+                    endLoading();
+                    processClientProjectData({ namaClient: "John & Jane Wedding", nomorWA: "6281234", maxFoto: 5, needsPassword: false, driveLink: "#"}); 
+                }, 200); 
+            } else {
+                google.script.run
+                    .withSuccessHandler(function(res) {
+                        endLoading(); 
+                        if (res.success) { processClientProjectData(res.project); } 
+                        else { Swal.fire({icon: 'error', title: 'Akses Ditolak', text: res.message, allowOutsideClick: false}); }
+                    }).withFailureHandler(function(err) { 
+                        endLoading(); 
+                        Swal.fire('Error', err.message, 'error'); 
+                    }).getProjectForClient(clientState.token);
+            }
+        }
+
+        function processClientProjectData(projectData) {
+            clientState.namaClient = projectData.namaClient;
+            clientState.nomorWA = projectData.nomorWA;
+            clientState.maxFoto = projectData.maxFoto;
+            clientState.driveLink = projectData.driveLink;
+            clientState.selectedImages = [];
+            clientState.folderHistory = [];
+            
+            var gMax = document.getElementById('gallery-max');
+            if (gMax) gMax.innerText = clientState.maxFoto;
+            
+            var cMax = document.getElementById('counter-max');
+            if (cMax) cMax.innerText = clientState.maxFoto;
+            
+            updateClientCounterUI();
+
+            var btnBackAuth = document.getElementById('btn-back-dashboard-auth');
+            var btnBackGallery = document.getElementById('btn-back-dashboard');
+            
+            if (clientState.isPreviewMode) {
+                if (btnBackAuth) btnBackAuth.classList.remove('hidden');
+                if (btnBackGallery) btnBackGallery.classList.remove('hidden');
+            } else {
+                if (btnBackAuth) btnBackAuth.classList.add('hidden');
+                if (btnBackGallery) btnBackGallery.classList.add('hidden');
+            }
+            
+            if (projectData.needsPassword) { showView('client-auth-view'); } 
+            else { 
+                clientState.currentFolderId = clientState.driveLink;
+                clientState.currentFolderName = clientState.namaClient;
+                fetchClientContent(clientState.currentFolderId, clientState.currentFolderName); 
+            }
+        }
+
+        function handleClientAuth(e) {
+            e.preventDefault();
+            var passEl = document.getElementById('client-password');
+            var passInput = passEl ? passEl.value.trim() : '';
+            setButtonState('btnClientAuth', true, 'Membuka...');
+            startLoading("Membuka...");
+            if (typeof google === 'undefined') { 
+                setTimeout(function() { 
+                    endLoading(); 
+                    setButtonState('btnClientAuth', false, 'Unlock Gallery');
+                    clientState.currentFolderId = clientState.driveLink;
+                    clientState.currentFolderName = clientState.namaClient;
+                    fetchClientContent(clientState.currentFolderId, clientState.currentFolderName); 
+                }, 800); 
+            } 
+            else {
+                google.script.run
+                    .withSuccessHandler(function(res) { 
+                        endLoading(); 
+                        setButtonState('btnClientAuth', false, 'Unlock Gallery');
+                        if(res.success) {
+                            clientState.currentFolderId = clientState.driveLink;
+                            clientState.currentFolderName = clientState.namaClient;
+                            fetchClientContent(clientState.currentFolderId, clientState.currentFolderName);
+                        } else { Swal.fire('Ditolak', res.message, 'error'); }
+                    })
+                    .withFailureHandler(function(err) { 
+                        endLoading(); 
+                        setButtonState('btnClientAuth', false, 'Unlock Gallery');
+                        Swal.fire('Error', err.message, 'error'); 
+                    }).verifyClientPassword(clientState.token, passInput);
+            }
+        }
+
+        // Tambahkan variabel ini di atas fungsi jika belum ada
+        const API_ENDPOINT = '/api/bridge';
+
+        async function fetchClientContent(folderId, folderName) {
+            showView('client-gallery-view');
+            startLoading("Memuat Data...");
+
+            // Update UI Header
+            var gTitle = document.getElementById('gallery-title');
+            if (gTitle) gTitle.innerText = folderName || clientState.namaClient;
+
+            var btnBack = document.getElementById('btn-back-folder');
+            if (btnBack) {
+                if (clientState.folderHistory.length > 0) { 
+                    btnBack.classList.remove('hidden');
+                } else { 
+                    btnBack.classList.add('hidden');
+                }
+            }
+
+            // Memanggil Backend Vercel Baru
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'getDriveContent',
+                        folder_id: folderId
+                    })
+                });
+
+                const res = await response.json();
+                endLoading();
+
+                if (res.status === 'success') {
+                    clientState.currentContent = { folders: res.data.folders, images: res.data.images };
+                    renderClientGallery();
+                } else {
+                    Swal.fire('Error', res.message, 'error');
+                    var emptyState = document.getElementById('gallery-empty');
+                    if (emptyState) emptyState.classList.remove('hidden'); 
+                }
+
+            } catch (err) {
+                endLoading();
+                var emptyState = document.getElementById('gallery-empty');
+                if (emptyState) emptyState.classList.remove('hidden'); 
+                Swal.fire('Error', err.message || 'Gagal menghubungi server.', 'error');
+            }
+        }
+
+        function openSubFolder(fId, fName) {
+            clientState.folderHistory.push({ id: clientState.currentFolderId, name: clientState.currentFolderName });
+            clientState.currentFolderId = fId;
+            clientState.currentFolderName = fName;
+            fetchClientContent(fId, fName);
+        }
+
+        function goBackFolder() {
+            if (clientState.folderHistory.length > 0) {
+                var prev = clientState.folderHistory.pop();
+                clientState.currentFolderId = prev.id;
+                clientState.currentFolderName = prev.name;
+                fetchClientContent(prev.id, prev.name);
+            }
+        }
+
+        // --- MENGGUNAKAN IMAGE VIEWER MODAL (LIGHTBOX) ---
+        function openImageViewer(url, name, event) {
+            if (event) event.stopPropagation();
+            
+            var modal = document.getElementById('imageViewerModal');
+            var img = document.getElementById('viewerImage');
+            var cap = document.getElementById('viewerCaption');
+
+            img.src = url;
+            cap.innerText = name;
+
+            modal.classList.remove('hidden');
+            void modal.offsetWidth;
+            modal.classList.remove('opacity-0');
+            img.classList.remove('scale-95');
+            img.classList.add('scale-100');
+        }
+
+        function closeImageViewer() {
+            var modal = document.getElementById('imageViewerModal');
+            var img = document.getElementById('viewerImage');
+
+            modal.classList.add('opacity-0');
+            img.classList.remove('scale-100');
+            img.classList.add('scale-95');
+
+            setTimeout(function() {
+                modal.classList.add('hidden');
+                img.src = '';
+            }, 300);
+        }
+
+        function renderClientGallery() {
+            var container = document.getElementById('gallery-container');
+            var emptyState = document.getElementById('gallery-empty');
+            
+            if (container) container.innerHTML = '';
+            
+            var hasFolders = clientState.currentContent.folders && clientState.currentContent.folders.length > 0;
+            var hasImages = clientState.currentContent.images && clientState.currentContent.images.length > 0;
+
+            if (!hasFolders && !hasImages) { 
+                if (emptyState && emptyState.classList) emptyState.classList.remove('hidden'); 
+                return; 
+            }
+            if (emptyState && emptyState.classList) emptyState.classList.add('hidden');
+
+            // Render Folders
+            if (hasFolders) {
+                clientState.currentContent.folders.forEach(function(folder) {
+                    var fCard = document.createElement('div'); 
+                    fCard.className = "photo-card bg-white flex flex-col items-center justify-center border border-gray-100 hover:border-blue-300 transition-colors shadow-sm cursor-pointer p-4 group";
+                    fCard.onclick = function() { openSubFolder(folder.id, folder.name); };
+                    
+                    fCard.innerHTML = 
+                        '<div class="text-blue-500 mb-3 transform group-hover:scale-110 transition-transform"><i class="fa-solid fa-folder text-5xl opacity-90"></i></div>' +
+                        '<div class="font-bold text-kama-800 text-sm text-center w-full truncate px-2">' + folder.name + '</div>';
+                    
+                    if (container) container.appendChild(fCard);
+                });
+            }
+
+            // Render Images
+            if (hasImages) {
+                clientState.currentContent.images.forEach(function(imgData, index) {
+                    var card = document.createElement('div'); card.className = "photo-card group"; card.dataset.filename = imgData.name;
+                    
+                    var isSelected = clientState.selectedImages.some(function(sel) { 
+                        return sel.name === imgData.name && sel.folder === clientState.currentFolderName; 
+                    });
+                    if (isSelected) card.classList.add('selected');
+
+                    card.onclick = function() { toggleSelection(card, imgData.name); };
+                    var shortName = imgData.name.length > 20 ? imgData.name.substring(0, 17) + '...' : imgData.name;
+
+                    card.innerHTML = 
+                        '<div class="number-badge">' + (index + 1) + '</div>' +
+                        '<div class="check-badge"><i class="fa-solid fa-check"></i></div>' +
+                        '<img src="' + imgData.url + '" alt="' + imgData.name + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=\'https://placehold.co/400x400?text=Error\';">' +
+                        '<div class="info-overlay">' +
+                            '<span class="filename-text mb-2 w-full truncate" title="' + imgData.name + '">' + shortName + '</span>' +
+                            // Tampilan tombol View sekarang selalu muncul, posisinya sama persis di dalam foto
+                            '<button onclick="openImageViewer(\'' + imgData.url + '\', \'' + imgData.name + '\', event)" class="w-full bg-white/20 hover:bg-white/40 backdrop-blur-sm border border-white/50 text-white rounded-lg py-1.5 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5">' +
+                                '<i class="fa-solid fa-magnifying-glass"></i> View' +
+                            '</button>' +
+                        '</div>';
+                    
+                    if (container) container.appendChild(card);
+                });
+            }
+
+            var scrollArea = document.getElementById('gallery-scroll-area');
+            if (scrollArea) scrollArea.scrollTop = 0;
+        }
+
+        function toggleSelection(cardElement, filename) {
+            var index = clientState.selectedImages.findIndex(function(sel) { 
+                return sel.name === filename && sel.folder === clientState.currentFolderName; 
+            });
+            
+            if (index === -1) {
+                if (clientState.selectedImages.length >= clientState.maxFoto) { Swal.fire({title: 'Batas Pilihan', text: "Maksimal " + clientState.maxFoto + " foto.", icon: 'info', confirmButtonColor: '#1e1e2d'}); return; }
+                clientState.selectedImages.push({ name: filename, folder: clientState.currentFolderName }); 
+                if (cardElement && cardElement.classList) cardElement.classList.add('selected');
+            } else { 
+                clientState.selectedImages.splice(index, 1); 
+                if (cardElement && cardElement.classList) cardElement.classList.remove('selected'); 
+            }
+            updateClientCounterUI();
+        }
+
+        function updateClientCounterUI() {
+            var count = clientState.selectedImages.length;
+            var cSelected = document.getElementById('counter-selected');
+            if (cSelected) cSelected.innerText = count; 
+            
+            var bCounter = document.getElementById('bottom-counter');
+            if (bCounter) bCounter.innerText = count;
+            
+            var dot = document.getElementById('status-dot');
+            if (dot && dot.classList) {
+                if (count === clientState.maxFoto) { 
+                    dot.classList.remove('bg-green-500'); dot.classList.add('bg-red-500'); 
+                } else { 
+                    dot.classList.remove('bg-red-500'); dot.classList.add('bg-green-500'); 
+                }
+            }
+        }
+
+        function resetSelection() {
+            if (clientState.selectedImages.length === 0) return;
+            Swal.fire({ title: 'Reset Pilihan?', text: 'Semua foto yang telah Anda pilih dari seluruh folder akan dihapus.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Reset' }).then(function(result) {
+                if (result.isConfirmed) {
+                    clientState.selectedImages = []; 
+                    var cards = document.querySelectorAll('.photo-card.selected');
+                    for(var i=0; i<cards.length; i++) { if(cards[i] && cards[i].classList) cards[i].classList.remove('selected'); }
+                    updateClientCounterUI();
+                }
+            });
+        }
+
+        function formatSelectedText() {
+            if (clientState.selectedImages.length === 0) return null;
+            var text = "Halo, ini dari *" + clientState.namaClient + "*.\nBerikut daftar foto pilihan kami (" + clientState.selectedImages.length + "/" + clientState.maxFoto + "):\n\n";
+            
+            // Group by folder
+            var grouped = {};
+            clientState.selectedImages.forEach(function(item) {
+                if (!grouped[item.folder]) grouped[item.folder] = [];
+                grouped[item.folder].push(item.name);
+            });
+
+            for (var folderName in grouped) {
+                if (Object.keys(grouped).length > 1 || folderName !== clientState.namaClient) {
+                    text += "📁 *" + folderName + "*\n";
+                }
+                var sorted = grouped[folderName].slice().sort();
+                for(var i=0; i<sorted.length; i++) { text += (i+1) + ". " + sorted[i] + "\n"; }
+                text += "\n";
+            }
+            
+            text += "Terima kasih."; 
+            return text;
+        }
+
+        function copyOnly() {
+            var text = formatSelectedText();
+            if (!text) { Swal.fire({title: 'Kosong', text: 'Pilih foto terlebih dahulu.', icon: 'info', confirmButtonColor: '#1e1e2d'}); return; }
+            doCopyText(text, 'Daftar foto siap dipaste.');
+        }
+
+        function sendToWA() {
+            var text = formatSelectedText();
+            if (!text) { Swal.fire({title: 'Kosong', text: 'Pilih foto terlebih dahulu.', icon: 'info', confirmButtonColor: '#1e1e2d'}); return; }
+            var noWa = clientState.nomorWA.replace(/\D/g, ''); 
+            if (noWa.indexOf('0') === 0) noWa = '62' + noWa.substring(1); 
+            window.open("https://wa.me/" + noWa + "?text=" + encodeURIComponent(text), '_blank');
+        }
+    </script>
+</body>
+</html>
