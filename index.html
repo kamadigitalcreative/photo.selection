@@ -763,39 +763,28 @@
                 });
             }
 
-            // Fungsi Toggle Tema (Dark Mode)
+            // Fungsi Toggle Tema (Dark Mode) Independen
             var themeToggle = document.getElementById('hide-checkbox');
             if (themeToggle) {
                 themeToggle.addEventListener('change', function(e) {
-                    if (currentUser && currentUser.role !== 'Admin') {
-                        if (e.target.checked) {
-                            document.documentElement.classList.add('dark');
-                            localStorage.setItem('ps_theme', 'dark');
+                    if (e.target.checked) {
+                        document.documentElement.classList.add('dark');
+                        // Pisahkan penyimpanan antara Admin dan Fotografer
+                        if (currentUser && currentUser.role === 'Admin') {
+                            localStorage.setItem('ps_admin_theme', 'dark');
                         } else {
-                            document.documentElement.classList.remove('dark');
+                            localStorage.setItem('ps_theme', 'dark');
+                        }
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                        if (currentUser && currentUser.role === 'Admin') {
+                            localStorage.setItem('ps_admin_theme', 'light');
+                        } else {
                             localStorage.setItem('ps_theme', 'light');
                         }
-                    } else if (currentUser && currentUser.role === 'Admin') {
-                        // Admin: simpan setelan animasi toggle saja, tetapi JANGAN rubah UI
-                        localStorage.setItem('ps_admin_theme_switch', e.target.checked ? 'dark' : 'light');
                     }
                 });
             }
-        });
-
-        // FUNGSI UNTUK SHOW/HIDE PASSWORD
-        function togglePasswordVisibility(inputId, iconElement) {
-            var input = document.getElementById(inputId);
-            if (input.type === "password") {
-                input.type = "text";
-                iconElement.classList.remove("fa-eye");
-                iconElement.classList.add("fa-eye-slash");
-            } else {
-                input.type = "password";
-                iconElement.classList.remove("fa-eye-slash");
-                iconElement.classList.add("fa-eye");
-            }
-        }
 
         window.addEventListener('load', function() {
             var failsafeTimer = setTimeout(function() {
@@ -852,24 +841,12 @@
 
         // --- BRANDING LOGIC ---
         function applyBranding() {
-            // 1. Ubah Judul Tab Browser
-            if (appBranding.name) {
-                document.title = appBranding.name + " - Client Gallery";
-            }
-
-            // 2. Ubah Icon Tab (Favicon) otomatis sesuai logo
-            var favicon = document.getElementById('dynamic-favicon');
-            if (favicon) {
-                favicon.href = appBranding.logo ? appBranding.logo : "https://img.icons8.com/color/48/000000/camera.png";
-            }
-
-            // 3. Ubah Teks Nama Brand
+            // FUNGSI INI HANYA MENGUBAH TAMPILAN DALAM APLIKASI (UI)
             var brandTexts = document.querySelectorAll('.brand-name-text');
             for(var i=0; i<brandTexts.length; i++) {
                 if(brandTexts[i]) brandTexts[i].innerText = appBranding.name || 'Kama Creative';
             }
             
-            // 4. Ubah Gambar Logo di UI
             function renderLogo(elements, sizeClasses, isLockView) {
                 for(var j=0; j<elements.length; j++) {
                     var el = elements[j];
@@ -1091,10 +1068,34 @@
             }
         }
 
+        // Fungsi baru khusus untuk mengatur Tab Browser (Eksklusif Branding Admin)
+        async function fetchAdminTabBranding() {
+            try {
+                const endpoint = typeof API_ENDPOINT !== 'undefined' ? API_ENDPOINT : '/api/bridge';
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'getGlobalBranding' })
+                });
+                const res = await response.json();
+                if (res.status === 'success' && res.data.success) {
+                    document.title = (res.data.brandName || "Kama Creative") + " - Client Gallery";
+                    var favicon = document.getElementById('dynamic-favicon');
+                    if (favicon) favicon.href = res.data.brandLogo || "https://img.icons8.com/color/48/000000/camera.png";
+                }
+            } catch(e) {
+                console.error("Gagal memuat branding tab admin:", e);
+            }
+        }
+
+        // Fungsi baru khusus untuk mengatur Tab Browser (Eksklusif Branding Admin)    
         function checkLoginState() {
             try { currentUser = JSON.parse(localStorage.getItem('ps_user')); } catch(e) { currentUser = null; }
             var themeToggle = document.getElementById('hide-checkbox');
             var wrapper = document.getElementById('theme-toggle-wrapper');
+
+            // 1. PANGGIL FUNGSI TAB GOOGLE AGAR SELALU MENGIKUTI ADMIN
+            fetchAdminTabBranding();
 
             if (currentUser) {
                 var adminNameEl = document.getElementById('adminName');
@@ -1106,10 +1107,11 @@
                         var expText = currentUser.expiredAt === 'Lifetime' ? 'Lifetime' : (currentUser.expiredAt ? currentUser.expiredAt.substring(0,10) : 'Expired');
                         adminRoleEl.innerHTML = currentUser.role + ' &bull; <span class="text-blue-500 font-semibold text-[10px]" title="Masa Aktif">Exp: ' + expText + '</span>';
                     } else {
-                        adminRoleEl.innerText = currentUser.role; 
+                        adminRoleEl.innerText = currentUser.role;
                     }
                 }
                 
+                // Tampilan UI dalam aplikasi mengikuti user yang login
                 appBranding.name = currentUser.brandName || 'Kama Creative';
                 appBranding.logo = currentUser.brandLogo || '';
                 applyBranding();
@@ -1117,9 +1119,10 @@
                 var adminNavTabs = document.getElementById('admin-nav-tabs');
                 var adminNavTabsMobile = document.getElementById('admin-nav-tabs-mobile');
                 var adminCols = document.querySelectorAll('.admin-only-col');
+
+                // 2. TERAPKAN DARK MODE SECARA INDEPENDEN
+                var savedTheme = currentUser.role === 'Admin' ? localStorage.getItem('ps_admin_theme') : localStorage.getItem('ps_theme');
                 
-                // Terapkan Dark Mode untuk semua role (Admin & Fotografer)
-                var savedTheme = localStorage.getItem('ps_theme');
                 if (savedTheme === 'dark') {
                     document.documentElement.classList.add('dark');
                     if (themeToggle) themeToggle.checked = true;
@@ -1128,36 +1131,34 @@
                     if (themeToggle) themeToggle.checked = false;
                 }
                 if (wrapper) wrapper.title = "Toggle Dark Mode";
-                
+
+                // Atur Tampilan Menu Berdasarkan Role
                 if(currentUser.role === 'Admin') {
                     if (adminNavTabs && adminNavTabs.classList) { adminNavTabs.classList.remove('hidden'); adminNavTabs.classList.add('sm:flex'); }
                     if (adminNavTabsMobile && adminNavTabsMobile.classList) adminNavTabsMobile.classList.remove('hidden');
                     for(var i=0; i<adminCols.length; i++) { if(adminCols[i] && adminCols[i].classList) adminCols[i].classList.remove('hidden'); }
                     
-                    showView('admin-view'); 
+                    showView('admin-view');
                     switchAdminTab('dashboard');
                 } else {
                     if (adminNavTabs && adminNavTabs.classList) { adminNavTabs.classList.add('hidden'); adminNavTabs.classList.remove('sm:flex'); }
                     if (adminNavTabsMobile && adminNavTabsMobile.classList) adminNavTabsMobile.classList.add('hidden');
                     for(var j=0; j<adminCols.length; j++) { if(adminCols[j] && adminCols[j].classList) adminCols[j].classList.add('hidden'); }
                     
-                    showView('admin-view'); 
+                    showView('admin-view');
                     switchAdminTab('projects');
                 }
                 
-                // Mencegah tabel fotografer kosong saat Admin baru login
-                if(currentUser.role === 'Admin') {
-                    loadDataUsers(); 
-                }
+                if(currentUser.role === 'Admin') { loadDataUsers(); }
                 
             } else { 
                 document.documentElement.classList.remove('dark');
                 if (themeToggle) themeToggle.checked = false;
                 showView('auth-view'); 
-                applyBranding(); // Jangan di-reset ke default secara kaku, gunakan global yang sudah di-fetch
+                applyBranding(); 
             }
         }
-
+            
         async function handleRegister(e) {
             e.preventDefault();
             var regNama = document.getElementById('reg_nama');
@@ -2291,6 +2292,7 @@
     </script>
 </body>
 </html>
+
 
 
 
