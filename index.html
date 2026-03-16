@@ -328,7 +328,7 @@
                         <p class="text-sm text-gray-500">Ringkasan performa sistem Photo Selector Anda.</p>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
                         <div class="bg-white p-6 rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-gray-100 flex items-center gap-4">
                             <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl">
                                 <i class="fa-solid fa-folder-open"></i>
@@ -360,6 +360,15 @@
                             <div class="w-12 h-12 bg-yellow-50 text-yellow-600 rounded-xl flex items-center justify-center text-xl">
                                 <i class="fa-solid fa-user-clock"></i>
                             </div>
+                            <div class="bg-white p-6 rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-gray-100 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-user-slash"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tim Tidak Aktif</p>
+                                <h3 class="text-2xl font-bold text-kama-800" id="stat-inactive-users">0</h3>
+                            </div>
+                        </div>
                             <div>
                                 <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Pending ACC</p>
                                 <h3 class="text-2xl font-bold text-kama-800" id="stat-pending-users">0</h3>
@@ -1312,11 +1321,13 @@
             var elUsers = document.getElementById('stat-users');
             var elActive = document.getElementById('stat-active-users');
             var elPending = document.getElementById('stat-pending-users');
+            var elInactive = document.getElementById('stat-inactive-users'); // BARU
             
             if(elProjects) elProjects.innerText = data.totalProjects || 0;
             if(elUsers) elUsers.innerText = data.totalUsers || 0;
             if(elActive) elActive.innerText = data.activeUsers || 0;
             if(elPending) elPending.innerText = data.pendingUsers || 0;
+            if(elInactive) elInactive.innerText = data.inactiveUsers || 0; // BARU
         }
 
         // --- ADMIN: KELOLA PENGGUNA ---
@@ -1354,26 +1365,35 @@
             }
 
             data.forEach(function(row) {
-                var statusBadge = row.Status === 'Active' 
-                    ? '<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded border border-green-200"><i class="fa-solid fa-check mr-1"></i>Aktif</span>'
-                    : '<span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded border border-yellow-200"><i class="fa-solid fa-hourglass-half mr-1"></i>Pending</span>';
-                
-                var actionBtn = row.Status === 'Pending'
-                    ? '<button onclick="promptExpiry(\'' + row.Username + '\', \'\', true)" class="px-3 py-1.5 bg-kama-800 text-white text-xs font-semibold rounded hover:bg-kama-900 shadow-sm mr-2">ACC Akun</button>'
-                    : '<button onclick="promptExpiry(\'' + row.Username + '\', \'' + (row.ExpiredAt || '') + '\', false)" class="px-3 py-1.5 bg-white border border-gray-200 text-kama-800 text-xs font-semibold rounded hover:bg-gray-50 shadow-sm mr-2" title="Set Masa Aktif"><i class="fa-regular fa-calendar-plus"></i> Set Aktif</button>';
-
                 var expBadge = '-';
+                var isExpired = false;
+                
                 if (row.ExpiredAt === 'Lifetime') {
                     expBadge = '<span class="text-xs font-bold text-blue-600"><i class="fa-solid fa-infinity mr-1"></i>Lifetime</span>';
                 } else if (row.ExpiredAt) {
                     var today = new Date();
                     today.setHours(0,0,0,0);
                     var expDate = new Date(row.ExpiredAt);
-                    var isExpired = expDate < today;
+                    isExpired = expDate < today;
                     var colorClass = isExpired ? 'text-red-600 font-bold' : 'text-green-600 font-medium';
                     var iconClass = isExpired ? 'fa-solid fa-circle-exclamation' : 'fa-regular fa-clock';
                     expBadge = '<span class="text-xs ' + colorClass + '"><i class="' + iconClass + ' mr-1"></i>' + row.ExpiredAt.substring(0,10) + '</span>';
                 }
+
+                var statusBadge = '';
+                if (row.Status === 'Active') {
+                    if (isExpired) {
+                        statusBadge = '<span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded border border-red-200"><i class="fa-solid fa-ban mr-1"></i>Tidak Aktif</span>';
+                    } else {
+                        statusBadge = '<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded border border-green-200"><i class="fa-solid fa-check mr-1"></i>Aktif</span>';
+                    }
+                } else {
+                    statusBadge = '<span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded border border-yellow-200"><i class="fa-solid fa-hourglass-half mr-1"></i>Pending</span>';
+                }
+                
+                var actionBtn = row.Status === 'Pending'
+                    ? '<button onclick="promptExpiry(\'' + row.Username + '\', \'\', true)" class="px-3 py-1.5 bg-kama-800 text-white text-xs font-semibold rounded hover:bg-kama-900 shadow-sm mr-2">ACC Akun</button>'
+                    : '<button onclick="promptExpiry(\'' + row.Username + '\', \'' + (row.ExpiredAt || '') + '\', false)" class="px-3 py-1.5 bg-white border border-gray-200 text-kama-800 text-xs font-semibold rounded hover:bg-gray-50 shadow-sm mr-2" title="Set Masa Aktif"><i class="fa-regular fa-calendar-plus"></i> Set Aktif</button>';
 
                 var tr = document.createElement('tr');
                 tr.className = "hover:bg-kama-50/50 transition-colors group";
@@ -1391,7 +1411,7 @@
                 tbody.appendChild(tr);
             });
         }
-
+        
         function promptExpiry(username, currentExpiry, isApproval) {
             var defaultDate = '';
             var isLifetime = false;
