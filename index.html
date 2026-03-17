@@ -264,49 +264,28 @@
     </div>
 
     <div id="admin-view" class="view-section">
-        <header class="glass-header px-6 py-4 flex flex-col sm:flex-row justify-between items-center sticky top-0 gap-4">
-            <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-                <div class="flex items-center gap-3">
-                    <div class="brand-logo-container-sm w-8 h-8 bg-kama-800 text-white rounded-lg flex items-center justify-center shadow-sm overflow-hidden">
-                        <i class="fa-solid fa-camera-retro text-sm"></i>
-                    </div>
-                    <h1 class="font-bold text-lg text-kama-800 tracking-tight brand-name-text">App Name</h1>
+        <header class="glass-header px-4 sm:px-6 py-3 flex flex-wrap justify-between items-center sticky top-0 gap-y-3 gap-x-2 z-40">
+            <div class="flex items-center gap-2.5">
+                <div class="brand-logo-container-sm w-8 h-8 bg-kama-800 text-white rounded-lg flex items-center justify-center shadow-sm overflow-hidden">
+                    <i class="fa-solid fa-camera-retro text-sm"></i>
                 </div>
-                
-                <div id="admin-nav-tabs" class="hidden sm:flex bg-gray-100 p-1 rounded-lg ml-6">
-                    <button onclick="switchAdminTab('dashboard')" id="tab-dashboard" class="nav-tab admin-only-col hidden">Dashboard</button>
-                    <button onclick="switchAdminTab('projects')" id="tab-projects" class="nav-tab active">Projects</button>
-                    <button onclick="switchAdminTab('users')" id="tab-users" class="nav-tab admin-only-col hidden">Kelola Tim</button>
-                </div>
+                <h1 class="font-bold text-lg text-kama-800 tracking-tight brand-name-text">App Name</h1>
+            </div>
+
+            <div id="admin-nav-tabs" class="hidden sm:flex bg-gray-100 p-1 rounded-lg mx-auto">
+                <button onclick="switchAdminTab('dashboard')" id="tab-dashboard" class="nav-tab admin-only-col hidden">Dashboard</button>
+                <button onclick="switchAdminTab('projects')" id="tab-projects" class="nav-tab active">Projects</button>
+                <button onclick="switchAdminTab('users')" id="tab-users" class="nav-tab admin-only-col hidden">Kelola Tim</button>
             </div>
             
-            <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
-                <div id="admin-nav-tabs-mobile" class="flex sm:hidden bg-gray-100 p-1 rounded-lg mr-auto">
-                    <button onclick="switchAdminTab('dashboard')" id="tab-dashboard-m" class="nav-tab admin-only-col hidden text-xs px-3">Dash</button>
-                    <button onclick="switchAdminTab('projects')" id="tab-projects-m" class="nav-tab active text-xs px-3">Proj</button>
-                    <button onclick="switchAdminTab('users')" id="tab-users-m" class="nav-tab admin-only-col hidden text-xs px-3">Tim</button>
-                </div>
-
-                <div class="wrapper ml-auto sm:ml-0" title="Dark Mode" id="theme-toggle-wrapper">
+            <div class="flex items-center gap-2 sm:gap-3 ml-auto">
+                <div class="wrapper scale-[0.4] origin-right" title="Dark Mode" id="theme-toggle-wrapper">
                     <input type="checkbox" id="hide-checkbox">
                     <label for="hide-checkbox" class="toggle">
                         <span class="toggle-button">
-                        <span class="crater crater-1"></span>
-                        <span class="crater crater-2"></span>
-                        <span class="crater crater-3"></span>   
-                        <span class="crater crater-4"></span>
-                        <span class="crater crater-5"></span>
-                        <span class="crater crater-6"></span>
-                        <span class="crater crater-7"></span>
+                        <span class="crater crater-1"></span><span class="crater crater-2"></span><span class="crater crater-3"></span><span class="crater crater-4"></span><span class="crater crater-5"></span><span class="crater crater-6"></span><span class="crater crater-7"></span>
                         </span>
-                        <span class="star star-1"></span>
-                        <span class="star star-2"></span>
-                        <span class="star star-3"></span>
-                        <span class="star star-4"></span>
-                        <span class="star star-5"></span>
-                        <span class="star star-6"></span>
-                        <span class="star star-7"></span>
-                        <span class="star star-8"></span>
+                        <span class="star star-1"></span><span class="star star-2"></span><span class="star star-3"></span><span class="star star-4"></span><span class="star star-5"></span><span class="star star-6"></span><span class="star star-7"></span><span class="star star-8"></span>
                     </label>
                 </div>
 
@@ -314,15 +293,23 @@
                     <p class="text-xs font-bold text-kama-800" id="adminName">User</p>
                     <p class="text-[10px] text-gray-500" id="adminRole">Role</p>
                 </div>
-                <button onclick="openModalSettings()" class="text-gray-500 hover:text-kama-800 w-9 h-9 rounded-lg border border-gray-200 bg-white flex items-center justify-center transition-colors shadow-sm" title="Pengaturan Brand">
+                <button onclick="openModalSettings()" class="text-gray-500 hover:text-kama-800 w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-gray-200 bg-white flex items-center justify-center transition-colors shadow-sm" title="Pengaturan Brand">
                     <i class="fa-solid fa-gear"></i>
                 </button>
-                <button onclick="handleLogout()" class="text-red-500 hover:text-red-700 w-9 h-9 rounded-lg border border-red-100 bg-red-50 flex items-center justify-center transition-colors shadow-sm" title="Logout">
+                <button onclick="handleLogout()" class="text-red-500 hover:text-red-700 w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-red-100 bg-red-50 flex items-center justify-center transition-colors shadow-sm" title="Logout">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i>
                 </button>
             </div>
-        </header>
 
+            <div class="w-full flex sm:hidden">
+                <div id="admin-nav-tabs-mobile" class="flex bg-gray-100 p-1 rounded-lg w-full">
+                    <button onclick="switchAdminTab('dashboard')" id="tab-dashboard-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center">Dash</button>
+                    <button onclick="switchAdminTab('projects')" id="tab-projects-m" class="nav-tab flex-1 active text-xs py-2 text-center">Projects</button>
+                    <button onclick="switchAdminTab('users')" id="tab-users-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center">Tim</button>
+                </div>
+            </div>
+        </header>
+        
         <main class="scrollable-content bg-kama-50 p-4 sm:p-8">
             <div class="max-w-6xl mx-auto h-full flex flex-col">
                 
@@ -405,23 +392,23 @@
 
                     <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-kama-100 flex-1 flex flex-col overflow-hidden">
                         <div class="table-container flex-1">
-                            <table class="w-full text-left border-collapse whitespace-nowrap">
+                            <table class="w-full text-left border-collapse">
                                 <thead class="bg-gray-50/50 sticky top-0 z-10 backdrop-blur-md">
                                     <tr>
-                                        <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">
-                                            <i class="fa-solid fa-user-tag text-gray-400 mr-1.5"></i> Client Info
+                                        <th class="p-3 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">
+                                            <i class="fa-solid fa-user-tag text-gray-400 mr-1.5 hidden sm:inline"></i> Info
                                         </th>
-                                        <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 admin-only-col hidden">
-                                            <i class="fa-solid fa-camera text-gray-400 mr-1.5"></i> Pemilik
+                                        <th class="p-3 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 admin-only-col hidden">
+                                            Pemilik
                                         </th>
-                                        <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">
-                                            <i class="fa-solid fa-chart-pie text-gray-400 mr-1.5"></i> Quota
+                                        <th class="p-3 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 text-center sm:text-left">
+                                            Quota
                                         </th>
-                                        <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 hidden sm:table-cell">
-                                            <i class="fa-regular fa-calendar-days text-gray-400 mr-1.5"></i> Date
+                                        <th class="p-3 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 hidden sm:table-cell">
+                                            Date
                                         </th>
-                                        <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 text-right">
-                                            <i class="fa-solid fa-list-check text-gray-400 mr-1.5"></i> Actions
+                                        <th class="p-3 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 text-right">
+                                            Actions
                                         </th>
                                     </tr>
                                 </thead>
@@ -1573,26 +1560,26 @@
                 var ownerHtml = isUserAdmin ? '<td class="p-4 sm:px-6 admin-only-col"><span class="bg-indigo-50 text-indigo-700 text-xs px-2 py-1 rounded border border-indigo-100"><i class="fa-solid fa-user-astronaut mr-1"></i>' + (row.Owner || '-') + '</span></td>' : '<td class="admin-only-col hidden"></td>';
 
                 tr.innerHTML = 
-                    '<td class="p-4 sm:px-6 overflow-hidden">' +
+                    '<td class="p-3 sm:px-6 max-w-[140px] sm:max-w-xs">' +
                         '<div class="font-bold text-kama-800 truncate" title="' + (row['Nama Client'] || '-') + '">' + (row['Nama Client'] || '-') + '</div>' +
-                        '<div class="text-xs text-blue-500 font-medium mt-0.5 truncate max-w-[200px] sm:max-w-xs" title="' + displayLink + '"><i class="fa-solid fa-link mr-1 opacity-50"></i>' + displayedTokenOrLink + '</div>' +
+                        '<div class="text-[11px] text-blue-500 font-medium mt-0.5 truncate w-full" title="' + displayLink + '"><i class="fa-solid fa-link mr-1 opacity-50 hidden sm:inline"></i>' + displayedTokenOrLink + '</div>' +
                         '<div class="text-[10px] text-gray-400 sm:hidden mt-1"><i class="fa-regular fa-clock mr-1"></i> ' + dateFull + '</div>' +
                     '</td>' +
                     ownerHtml +
-                    '<td class="p-4 sm:px-6">' +
-                        '<span class="bg-gray-100 text-kama-800 text-xs font-bold px-2.5 py-1 rounded-md border border-gray-200">' + (row['Max Foto'] || 0) + ' pics</span>' +
+                    '<td class="p-3 sm:px-6 text-center sm:text-left">' +
+                        '<span class="bg-gray-100 text-kama-800 text-[10px] sm:text-xs font-bold px-2 py-1 sm:px-2.5 rounded-md border border-gray-200 whitespace-nowrap">' + (row['Max Foto'] || 0) + ' pics</span>' +
                     '</td>' +
-                    '<td class="p-4 sm:px-6 text-xs text-gray-500 font-medium hidden sm:table-cell">' + dateFull + '</td>' +
-                    '<td class="p-4 sm:px-6 text-right whitespace-nowrap">' +
-                        '<div class="flex items-center justify-end gap-2 min-w-max">' +
-                            '<button onclick="copyLink(\'' + displayLink + '\')" class="px-3 py-1.5 rounded-lg bg-gray-50 text-gray-700 hover:bg-gray-200 hover:text-kama-800 transition-colors flex items-center text-xs font-semibold border border-gray-200" title="Copy Link">' +
-                                '<i class="fa-regular fa-copy mr-1.5"></i> Copy' +
+                    '<td class="p-3 sm:px-6 text-xs text-gray-500 font-medium hidden sm:table-cell">' + dateFull + '</td>' +
+                    '<td class="p-3 sm:px-6 text-right">' +
+                        '<div class="flex items-center justify-end gap-1.5 sm:gap-2">' +
+                            '<button onclick="copyLink(\'' + displayLink + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-gray-50 text-gray-700 hover:bg-gray-200 hover:text-kama-800 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200" title="Copy Link">' +
+                                '<i class="fa-regular fa-copy sm:mr-1.5"></i> <span class="hidden sm:inline">Copy</span>' +
                             '</button>' +
-                            '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 transition-colors flex items-center text-xs font-semibold border border-blue-200" title="Lihat Galeri">' +
-                                '<i class="fa-regular fa-eye mr-1.5"></i> Lihat' +
+                            '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 transition-colors flex items-center justify-center text-xs font-semibold border border-blue-200" title="Lihat Galeri">' +
+                                '<i class="fa-regular fa-eye sm:mr-1.5"></i> <span class="hidden sm:inline">Lihat</span>' +
                             '</button>' +
-                            '<button onclick="deleteProjectPrompt(\'' + row.ID + '\')" class="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-800 transition-colors flex items-center text-xs font-semibold border border-red-200 opacity-100" title="Hapus Project">' +
-                                '<i class="fa-solid fa-trash-can mr-1.5"></i> Hapus' +
+                            '<button onclick="deleteProjectPrompt(\'' + row.ID + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-800 transition-colors flex items-center justify-center text-xs font-semibold border border-red-200" title="Hapus Project">' +
+                                '<i class="fa-solid fa-trash-can sm:mr-1.5"></i> <span class="hidden sm:inline">Hapus</span>' +
                             '</button>' +
                         '</div>' +
                     '</td>';
