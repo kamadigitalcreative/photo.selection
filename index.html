@@ -1560,6 +1560,8 @@
                 var tr = document.createElement('tr');
                 tr.className = "hover:bg-kama-50/50 transition-colors group";
                 
+                var safeName = (row['Nama Client'] || '').replace(/'/g, "\\'");
+                var safePass = (row['Password Client'] || '').replace(/'/g, "\\'");
                 var isUserAdmin = currentUser && currentUser.role === 'Admin';
                 var ownerHtml = isUserAdmin ? '<td class="p-4 sm:px-6 admin-only-col"><span class="bg-indigo-50 text-indigo-700 text-xs px-2 py-1 rounded border border-indigo-100"><i class="fa-solid fa-user-astronaut mr-1"></i>' + (row.Owner || '-') + '</span></td>' : '<td class="admin-only-col hidden"></td>';
 
@@ -1593,6 +1595,15 @@
 
         function copyLink(link) { 
             doCopyText(link, 'Link klien berhasil disalin.');
+        }
+
+        function copyProjectInfo(clientName, link, password) {
+            var passText = password ? password : "(tanpa password)";
+            var textToCopy = "Berikut Link fotonya ya kak \"" + clientName + "\"\n" +
+                             "Link : " + link + "\n" +
+                             "Pass : " + passText + "\n\n" +
+                             "Terima kasih";
+            doCopyText(textToCopy, 'Pesan link klien berhasil disalin.');
         }
 
         function simulateClientLink(token) { 
