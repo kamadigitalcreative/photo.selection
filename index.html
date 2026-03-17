@@ -2120,10 +2120,10 @@
                     card.innerHTML = 
                         '<div class="number-badge">' + (index + 1) + '</div>' +
                         '<div class="check-badge"><i class="fa-solid fa-check"></i></div>' +
-                        '<img src="' + imgData.url + '" alt="' + imgData.name + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=\'https://placehold.co/400x400?text=Error\';">' +
+                        '<img onclick="openImageViewer(\'' + imgData.url + '\', \'' + imgData.name + '\', event)" src="' + imgData.url + '" alt="' + imgData.name + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=\'https://placehold.co/400x400?text=Error\';">' +
                         '<div class="info-overlay">' +
                             '<span class="filename-text mb-2 w-full truncate" title="' + imgData.name + '">' + shortName + '</span>' +
-                            '<button onclick="openImageViewer(\'' + imgData.url + '\', \'' + imgData.name + '\', event)" class="w-full bg-white/30 hover:bg-white/50 backdrop-blur-md border border-white/40 text-white rounded-lg py-2 text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm">' +
+                            '<button onclick="toggleSelection(this.closest(\'.photo-card\'), \'' + imgData.name + '\'); event.stopPropagation();" class="w-full bg-white/30 hover:bg-white/50 backdrop-blur-md border border-white/40 text-white rounded-lg py-2 text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm">' +
                                 '<i class="fa-solid fa-hand-pointer"></i> Pilih' +
                             '</button>' +
                         '</div>';
