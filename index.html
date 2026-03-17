@@ -48,7 +48,8 @@
             display: flex; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px);
         }
 
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; padding: 16px; }
+        /* Di layar HP dipaksa 3 kolom dengan jarak lebih rapat agar modern minimalis */
+        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 10px; }
         @media (min-width: 640px) { .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; padding: 24px; } }
         @media (min-width: 1024px) { .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); } }
 
@@ -60,8 +61,11 @@
             will-change: transform, box-shadow, border-color; transform: translateZ(0); 
         }
         .photo-card:hover { transform: translateY(-3px) translateZ(0); box-shadow: 0 8px 16px rgba(0,0,0,0.08); }
+        
         .photo-card img { width: 100%; height: 100%; object-fit: cover; display: block; background: #ececf1; transition: transform 0.3s ease, filter 0.3s ease; will-change: transform, filter; transform: translateZ(0); }
-
+        /* Perbaikan overlay agar serasi dengan mobile 3 baris */
+        .photo-card photo-view-cols3 img { transition-delay: 0s !important; }
+        
         .photo-card .info-overlay {
             position: absolute; bottom: 0; left: 0; right: 0;
             background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
@@ -2123,7 +2127,7 @@
                         '<img onclick="openImageViewer(\'' + imgData.url + '\', \'' + imgData.name + '\', event)" src="' + imgData.url + '" alt="' + imgData.name + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=\'https://placehold.co/400x400?text=Error\';">' +
                         '<div class="info-overlay">' +
                             '<span class="filename-text mb-2 w-full truncate" title="' + imgData.name + '">' + shortName + '</span>' +
-                            '<button onclick="toggleSelection(this.closest(\'.photo-card\'), \'' + imgData.name + '\'); event.stopPropagation();" class="w-full bg-white/30 hover:bg-white/50 backdrop-blur-md border border-white/40 text-white rounded-lg py-2 text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm">' +
+                            '<button onclick="toggleSelection(this.closest(\'.photo-card\'), \'' + imgData.name + '\'); event.stopPropagation();" class="w-full bg-white/50 hover:bg-white/70 backdrop-blur-md border border-white/40 text-white rounded-lg py-2 text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm">' +
                                 '<i class="fa-solid fa-hand-pointer"></i> Pilih' +
                             '</button>' +
                         '</div>';
