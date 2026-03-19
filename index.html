@@ -1617,6 +1617,9 @@
                             '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 transition-colors flex items-center justify-center text-xs font-semibold border border-blue-200" title="Lihat Galeri">' +
                                 '<i class="fa-regular fa-eye sm:mr-1.5"></i> <span class="hidden sm:inline">Lihat</span>' +
                             '</button>' +
+                            '<button onclick="editPasswordPrompt(\'' + row.ID + '\', \'' + safeJSName + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-yellow-50 text-yellow-600 hover:bg-yellow-100 hover:text-yellow-700 transition-colors flex items-center justify-center text-xs font-semibold border border-yellow-200" title="Edit Password">' +
+                                '<i class="fa-solid fa-key sm:mr-1.5"></i> <span class="hidden sm:inline">Password</span>' +
+                            '</button>' +
                             '<button onclick="deleteProjectPrompt(\'' + row.ID + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-800 transition-colors flex items-center justify-center text-xs font-semibold border border-red-200" title="Hapus Project">' +
                                 '<i class="fa-solid fa-trash-can sm:mr-1.5"></i> <span class="hidden sm:inline">Hapus</span>' +
                             '</button>' +
@@ -1747,6 +1750,43 @@
                         if (res.status === 'success' && res.data.success) {
                             Swal.fire({icon: 'success', title: 'Dihapus', timer: 1500, showConfirmButton: false});
                             loadDataProjects();
+                        } else {
+                            Swal.fire('Error', res.message || res.data.message, 'error');
+                        }
+                    } catch(err) {
+                        endLoading();
+                        Swal.fire('Error', err.message, 'error');
+                    }
+                }
+            });
+        }
+
+        function editPasswordPrompt(id, clientName) {
+            Swal.fire({
+                title: 'Ubah Password',
+                html: '<p class="text-sm text-gray-500 mb-4">Set password baru untuk galeri <b>' + clientName + '</b>.<br>Kosongkan jika ingin galeri terbuka tanpa password.</p>' +
+                      '<input type="password" id="swal-new-pass" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-center tracking-widest" placeholder="Ketik password baru...">',
+                showCancelButton: true,
+                confirmButtonText: 'Simpan',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#1e1e2d',
+                preConfirm: () => {
+                    return document.getElementById('swal-new-pass').value;
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    var newPass = result.value;
+                    startLoading("Menyimpan...");
+                    try {
+                        const response = await fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'updateClientPassword', id: id, newPassword: newPass, currentUser: currentUser })
+                        });
+                        const res = await response.json();
+                        endLoading();
+                        if (res.status === 'success' && res.data.success) {
+                            Swal.fire({icon: 'success', title: 'Berhasil', text: 'Password untuk ' + clientName + ' telah diperbarui.', timer: 2000, showConfirmButton: false});
                         } else {
                             Swal.fire('Error', res.message || res.data.message, 'error');
                         }
