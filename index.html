@@ -1583,15 +1583,24 @@
                 var tr = document.createElement('tr');
                 tr.className = "hover:bg-kama-50/50 transition-colors group";
                 
-                // --- SECURITY PATCH: Escape HTML & Hide Password ---
-                var safeName = escapeHTML(row['Nama Client'] || '').replace(/'/g, "\\'");
+                // --- PENGAMAN TAMPILAN (ANTI-XSS) ---
+                var rawName = row['Nama Client'] || '-';
+                // Fallback darurat jika fungsi escapeHTML belum terbaca
+                var safeHTMLName = typeof escapeHTML === 'function' ? escapeHTML(rawName) : rawName.replace(/</g, "&lt;").replace(/>/g, "&gt;"); 
                 var safePass = "(Tersembunyi demi keamanan)"; 
+                
+                // --- PENGAMAN TOMBOL ONCLICK ---
+                // Mencegah tanda kutip dari input hacker merusak fungsi JS
+                var safeJSName = rawName.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
                 var isUserAdmin = currentUser && currentUser.role === 'Admin';
-                var ownerHtml = isUserAdmin ? '<td class="p-4 sm:px-6 admin-only-col"><span class="bg-indigo-50 text-indigo-700 text-xs px-2 py-1 rounded border border-indigo-100"><i class="fa-solid fa-user-astronaut mr-1"></i>' + escapeHTML(row.Owner || '-') + '</span></td>' : '<td class="admin-only-col hidden"></td>';
+                var ownerRaw = row.Owner || '-';
+                var safeOwner = typeof escapeHTML === 'function' ? escapeHTML(ownerRaw) : ownerRaw.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                var ownerHtml = isUserAdmin ? '<td class="p-4 sm:px-6 admin-only-col"><span class="bg-indigo-50 text-indigo-700 text-xs px-2 py-1 rounded border border-indigo-100"><i class="fa-solid fa-user-astronaut mr-1"></i>' + safeOwner + '</span></td>' : '<td class="admin-only-col hidden"></td>';
 
                 tr.innerHTML = 
                     '<td class="p-3 sm:px-6 max-w-[140px] sm:max-w-xs">' +
-                        '<div class="font-bold text-kama-800 truncate" title="' + escapeHTML(row['Nama Client'] || '-') + '">' + escapeHTML(row['Nama Client'] || '-') + '</div>' +
+                        '<div class="font-bold text-kama-800 truncate" title="' + safeHTMLName + '">' + safeHTMLName + '</div>' +
                         '<div class="text-[11px] text-blue-500 font-medium mt-0.5 truncate w-full" title="' + displayLink + '"><i class="fa-solid fa-link mr-1 opacity-50 hidden sm:inline"></i>' + displayedTokenOrLink + '</div>' +
                         '<div class="text-[10px] text-gray-400 sm:hidden mt-1"><i class="fa-regular fa-clock mr-1"></i> ' + dateFull + '</div>' +
                     '</td>' +
@@ -1602,7 +1611,7 @@
                     '<td class="p-3 sm:px-6 text-xs text-gray-500 font-medium hidden sm:table-cell">' + dateFull + '</td>' +
                     '<td class="p-3 sm:px-6 text-right">' +
                         '<div class="flex items-center justify-end gap-1.5 sm:gap-2">' +
-                            '<button onclick="copyProjectInfo(\'' + safeName + '\', \'' + displayLink + '\', \'' + safePass + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-gray-50 text-gray-700 hover:bg-gray-200 hover:text-kama-800 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200" title="Copy Link">' +
+                            '<button onclick="copyProjectInfo(\'' + safeJSName + '\', \'' + displayLink + '\', \'' + safePass + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-gray-50 text-gray-700 hover:bg-gray-200 hover:text-kama-800 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200" title="Copy Link">' +
                                 '<i class="fa-regular fa-copy sm:mr-1.5"></i> <span class="hidden sm:inline">Copy</span>' +
                             '</button>' +
                             '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 transition-colors flex items-center justify-center text-xs font-semibold border border-blue-200" title="Lihat Galeri">' +
