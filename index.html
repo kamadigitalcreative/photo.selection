@@ -705,6 +705,15 @@
             token: '', namaClient: '', nomorWA: '', maxFoto: 0, driveLink: '', 
             selectedImages: [], folderHistory: [], currentFolderId: '', currentFolderName: '', currentContent: { folders: [], images: [] }, isPreviewMode: false
         };
+        
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, function(match) {
+                const escape = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+                return escape[match];
+            });
+        }
+        
         var appBranding = { name: 'Kama Creative', logo: '' };
         var currentUser = null;
 
@@ -1413,8 +1422,8 @@
                 var tr = document.createElement('tr');
                 tr.className = "hover:bg-kama-50/50 transition-colors group";
                 tr.innerHTML = 
-                    '<td class="p-4 sm:px-6 font-semibold text-kama-800">' + (row.Nama || '-') + '</td>' +
-                    '<td class="p-4 sm:px-6 text-gray-500">@' + (row.Username || '-') + '</td>' +
+                    '<td class="p-4 sm:px-6 font-semibold text-kama-800">' + escapeHTML(row.Nama || '-') + '</td>' +
+                    '<td class="p-4 sm:px-6 text-gray-500">@' + escapeHTML(row.Username || '-') + '</td>' +
                     '<td class="p-4 sm:px-6">' + statusBadge + '</td>' +
                     '<td class="p-4 sm:px-6">' + expBadge + '</td>' +
                     '<td class="p-4 sm:px-6 text-right whitespace-nowrap">' +
@@ -1574,14 +1583,15 @@
                 var tr = document.createElement('tr');
                 tr.className = "hover:bg-kama-50/50 transition-colors group";
                 
-                var safeName = (row['Nama Client'] || '').replace(/'/g, "\\'");
-                var safePass = (row['Password Client'] || '').replace(/'/g, "\\'");
+                // --- SECURITY PATCH: Escape HTML & Hide Password ---
+                var safeName = escapeHTML(row['Nama Client'] || '').replace(/'/g, "\\'");
+                var safePass = "(Tersembunyi demi keamanan)"; 
                 var isUserAdmin = currentUser && currentUser.role === 'Admin';
-                var ownerHtml = isUserAdmin ? '<td class="p-4 sm:px-6 admin-only-col"><span class="bg-indigo-50 text-indigo-700 text-xs px-2 py-1 rounded border border-indigo-100"><i class="fa-solid fa-user-astronaut mr-1"></i>' + (row.Owner || '-') + '</span></td>' : '<td class="admin-only-col hidden"></td>';
+                var ownerHtml = isUserAdmin ? '<td class="p-4 sm:px-6 admin-only-col"><span class="bg-indigo-50 text-indigo-700 text-xs px-2 py-1 rounded border border-indigo-100"><i class="fa-solid fa-user-astronaut mr-1"></i>' + escapeHTML(row.Owner || '-') + '</span></td>' : '<td class="admin-only-col hidden"></td>';
 
                 tr.innerHTML = 
                     '<td class="p-3 sm:px-6 max-w-[140px] sm:max-w-xs">' +
-                        '<div class="font-bold text-kama-800 truncate" title="' + (row['Nama Client'] || '-') + '">' + (row['Nama Client'] || '-') + '</div>' +
+                        '<div class="font-bold text-kama-800 truncate" title="' + escapeHTML(row['Nama Client'] || '-') + '">' + escapeHTML(row['Nama Client'] || '-') + '</div>' +
                         '<div class="text-[11px] text-blue-500 font-medium mt-0.5 truncate w-full" title="' + displayLink + '"><i class="fa-solid fa-link mr-1 opacity-50 hidden sm:inline"></i>' + displayedTokenOrLink + '</div>' +
                         '<div class="text-[10px] text-gray-400 sm:hidden mt-1"><i class="fa-regular fa-clock mr-1"></i> ' + dateFull + '</div>' +
                     '</td>' +
@@ -1606,7 +1616,7 @@
                 tbody.appendChild(tr);
             });
         }
-
+        
         function copyLink(link) { 
             doCopyText(link, 'Link klien berhasil disalin.');
         }
