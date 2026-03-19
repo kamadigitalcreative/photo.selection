@@ -2,7 +2,9 @@ export default async function handler(req, res) {
   const allowedOrigin = 'https://ps.kamacreative.my.id'; // Domain resmi Anda
   const origin = req.headers.origin;
 
-  if (origin === allowedOrigin || origin?.includes('localhost')) {
+  // --- SECURITY PATCH: Strict CORS ---
+  const isLocal = origin === 'http://localhost:3000' || origin === 'http://localhost:5500';
+  if (origin === allowedOrigin || isLocal) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   } else {
     return res.status(403).json({ error: 'Akses ditolak: Beda Domain' });
@@ -15,6 +17,11 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Metode tidak diizinkan' });
 
   try {
+    // --- SECURITY PATCH: Anti DoS & Quota Drain ---
+    if (!req.body || Object.keys(req.body).length === 0 || !req.body.action) {
+      return res.status(400).json({ error: 'Bad Request: Payload tidak valid' });
+    }
+
     const { GAS_URL, SECRET_TOKEN } = process.env;
 
     if (!GAS_URL || !SECRET_TOKEN) {
