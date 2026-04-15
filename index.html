@@ -1092,8 +1092,7 @@
         }
 
         function checkLoginState() {
-            // --- REVISI KEAMANAN: Pakai sessionStorage ---
-            try { currentUser = JSON.parse(sessionStorage.getItem('ps_user')); } catch(e) { currentUser = null; }
+            try { currentUser = JSON.parse(localStorage.getItem('ps_user')); } catch(e) { currentUser = null; }
             var themeToggle = document.getElementById('hide-checkbox');
             var wrapper = document.getElementById('theme-toggle-wrapper');
 
@@ -1234,8 +1233,7 @@
                 setButtonState('btnLogin', false, 'Sign In');
 
                 if (res.status === 'success') {
-                    // --- REVISI KEAMANAN: Pakai sessionStorage ---
-                    sessionStorage.setItem('ps_user', JSON.stringify(res.data));
+                    localStorage.setItem('ps_user', JSON.stringify(res.data));
                     checkLoginState();
                     
                     Swal.fire({
@@ -1256,8 +1254,7 @@
         }
         
         async function handleLogout() {
-            // --- REVISI KEAMANAN: Pakai sessionStorage ---
-            sessionStorage.removeItem('ps_user');
+            localStorage.removeItem('ps_user');
             currentUser = null;
             var loginForm = document.querySelector('#login-form-wrapper form');
             if (loginForm) loginForm.reset();
@@ -2321,4 +2318,3 @@
     </script>
 </body>
 </html>
-
