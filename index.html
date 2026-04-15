@@ -489,7 +489,6 @@
                 </div>
 
                 <div id="section-status" class="hidden flex-1 flex-col">
-                    <div id="section-status" class="hidden flex-1 flex-col">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                         <div>
                             <h2 class="text-xl font-bold text-kama-800">Pantau Status Klien</h2>
@@ -529,7 +528,6 @@
                             <div class="text-center py-10 text-gray-400 text-sm font-medium"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat data...</div>
                         </div>
                     </div>
-                </div>
                 </div>
 
             </div>
@@ -886,13 +884,6 @@
         }); // <-- PERBAIKAN FATAL: Kurung tutup ini tadinya hilang!
 
         window.addEventListener('load', function() {
-            // --- AUTO FIX: Tarik section-status ke dalam kotak utama jika salah paste ---
-            var statusSec = document.getElementById('section-status');
-            var mainContainer = document.querySelector('.max-w-6xl.mx-auto.h-full');
-            if (statusSec && mainContainer && statusSec.parentElement !== mainContainer) {
-                mainContainer.appendChild(statusSec);
-            }
-
             var failsafeTimer = setTimeout(function() {
                 endLoading();
                 var loader = document.getElementById('global-loader');
