@@ -1478,8 +1478,15 @@
             } else if (tabId === 'status') {
                 if (sectionStatus && sectionStatus.classList) { sectionStatus.classList.remove('hidden'); sectionStatus.classList.add('flex'); }
                 loadClientProgress();
-                // Refresh data diam-diam setiap 15 detik agar Admin selalu update real-time
-                window.statusAutoRefresh = setInterval(function() { loadClientProgress(true); }, 15000);
+                
+                // Minta izin agar timer tetap jalan meski tab tidak terlihat (Background Timer)
+                const runStatusRefresh = function() {
+                    if (document.getElementById('section-status') && !document.getElementById('section-status').classList.contains('hidden')) {
+                        loadClientProgress(true);
+                        window.statusAutoRefresh = setTimeout(runStatusRefresh, 10000); // Tarik data setiap 10 detik
+                    }
+                };
+                window.statusAutoRefresh = setTimeout(runStatusRefresh, 10000);
             }
         }
 
@@ -2512,8 +2519,13 @@
             try {
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'getProjects', currentUser: currentUser, _cb: new Date().getTime() })
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache, no-store, must-revalidate', // BUSTER UTAMA 1
+                        'Pragma': 'no-cache', // BUSTER UTAMA 2
+                        'Expires': '0'
+                    },
+                    body: JSON.stringify({ action: 'getProjects', currentUser: currentUser, _cb: Date.now() }) // Date.now lebih cepat
                 });
                 const res = await response.json();
                 if (!isSilent) endLoading();
