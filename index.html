@@ -24,8 +24,8 @@
                 <span id="preview-count">0</span> Foto
             </div>
         </header>
-        <div class="flex-1 overflow-y-auto bg-kama-50 scrollable-content relative">
-            <div id="preview-grid" class="gallery-grid max-w-[1600px] mx-auto pb-8"></div>
+        <div class="flex-1 overflow-y-auto h-0 bg-kama-50 relative p-4 sm:p-6" style="-webkit-overflow-scrolling: touch;">
+            <div id="preview-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-[1600px] mx-auto pb-24"></div>
         </div>
     </div>
     
@@ -2541,13 +2541,19 @@
 
             data.forEach(function(row) {
                 var status = row['Status Client'] || 'Belum Memilih';
-                var lastUpdate = row['Last Update'] ? new Date(row['Last Update']) : null;
+                var luVal = row['Last Update'];
+                var lastUpdate = null;
+                
+                // Parsing tanggal anti-gagal (mendukung format angka Epoch dan teks biasa)
+                if (luVal) {
+                    lastUpdate = !isNaN(Number(luVal)) ? new Date(Number(luVal)) : new Date(luVal);
+                }
                 var now = new Date();
 
-                // DETEKSI OFFLINE: Jika status "Sedang Memilih" tapi sudah > 60 detik tidak ada sinyal, kembalikan ke "Belum Memilih"
+                // DETEKSI OFFLINE: Longgarkan batas ke 90 detik untuk antisipasi internet klien delay/lambat
                 if (status === 'Sedang Memilih' && lastUpdate) {
                     var diffSeconds = (now - lastUpdate) / 1000;
-                    if (diffSeconds > 60) { status = 'Belum Memilih'; }
+                    if (diffSeconds > 90) { status = 'Belum Memilih'; }
                 }
 
                 if (status === 'Belum Memilih') countBelum++;
