@@ -324,11 +324,11 @@
                 <h1 class="font-bold text-lg text-kama-800 tracking-tight brand-name-text">App Name</h1>
             </div>
 
-            <div id="admin-nav-tabs" class="hidden sm:flex bg-gray-100 p-1 rounded-lg mx-auto">
-                <button onclick="switchAdminTab('dashboard')" id="tab-dashboard" class="nav-tab admin-only-col hidden">Dashboard</button>
-                <button onclick="switchAdminTab('projects')" id="tab-projects" class="nav-tab active">Projects</button>
-                <button onclick="switchAdminTab('status')" id="tab-status" class="nav-tab">Pantau Klien</button>
-                <button onclick="switchAdminTab('users')" id="tab-users" class="nav-tab admin-only-col hidden">Kelola Tim</button>
+            <div id="admin-nav-tabs" class="hidden sm:flex bg-white/80 backdrop-blur-md border border-gray-200 p-1.5 rounded-2xl mx-auto shadow-sm gap-1">
+                <button onclick="switchAdminTab('dashboard')" id="tab-dashboard" class="nav-tab admin-only-col hidden px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"><i class="fa-solid fa-chart-pie mr-2"></i>Dashboard</button>
+                <button onclick="switchAdminTab('projects')" id="tab-projects" class="nav-tab active px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"><i class="fa-solid fa-folder-open mr-2"></i>Projects</button>
+                <button onclick="switchAdminTab('status')" id="tab-status" class="nav-tab px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"><i class="fa-solid fa-desktop mr-2"></i>Pantau Klien</button>
+                <button onclick="switchAdminTab('users')" id="tab-users" class="nav-tab admin-only-col hidden px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"><i class="fa-solid fa-users-gear mr-2"></i>Kelola Tim</button>
             </div>
             
             <div class="flex items-center gap-2 sm:gap-3 ml-auto">
@@ -355,11 +355,11 @@
             </div>
 
             <div class="w-full flex sm:hidden">
-                <div id="admin-nav-tabs-mobile" class="flex bg-gray-100 p-1 rounded-lg w-full">
-                    <button onclick="switchAdminTab('dashboard')" id="tab-dashboard-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center">Dash</button>
-                    <button onclick="switchAdminTab('projects')" id="tab-projects-m" class="nav-tab flex-1 active text-xs py-2 text-center">Projects</button>
-                    <button onclick="switchAdminTab('status')" id="tab-status-m" class="nav-tab flex-1 text-xs py-2 text-center">Pantau</button>
-                    <button onclick="switchAdminTab('users')" id="tab-users-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center">Tim</button>
+                <div id="admin-nav-tabs-mobile" class="flex bg-white border border-gray-200 p-1.5 rounded-2xl w-full shadow-sm gap-1">
+                    <button onclick="switchAdminTab('dashboard')" id="tab-dashboard-m" class="nav-tab flex-1 admin-only-col hidden text-[11px] py-2.5 rounded-xl font-semibold flex flex-col items-center justify-center gap-1 transition-all"><i class="fa-solid fa-chart-pie text-lg"></i>Dash</button>
+                    <button onclick="switchAdminTab('projects')" id="tab-projects-m" class="nav-tab flex-1 active text-[11px] py-2.5 rounded-xl font-semibold flex flex-col items-center justify-center gap-1 transition-all"><i class="fa-solid fa-folder-open text-lg"></i>Projects</button>
+                    <button onclick="switchAdminTab('status')" id="tab-status-m" class="nav-tab flex-1 text-[11px] py-2.5 rounded-xl font-semibold flex flex-col items-center justify-center gap-1 transition-all"><i class="fa-solid fa-desktop text-lg"></i>Pantau</button>
+                    <button onclick="switchAdminTab('users')" id="tab-users-m" class="nav-tab flex-1 admin-only-col hidden text-[11px] py-2.5 rounded-xl font-semibold flex flex-col items-center justify-center gap-1 transition-all"><i class="fa-solid fa-users-gear text-lg"></i>Tim</button>
                 </div>
             </div>
         </header>
@@ -511,20 +511,20 @@
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                        <div class="bg-red-50/70 border border-red-100 rounded-2xl p-5 text-center flex flex-col justify-center shadow-sm relative overflow-hidden">
-                            <div class="absolute -right-4 -top-4 opacity-5 text-red-900"><i class="fa-solid fa-hourglass-start text-7xl"></i></div>
-                            <h3 class="text-3xl font-bold text-red-500 mb-1 relative z-10" id="count-belum">0</h3>
-                            <p class="text-[11px] font-bold text-red-600 uppercase tracking-wider relative z-10"><i class="fa-regular fa-circle-xmark mr-1"></i> Belum Memilih</p>
+                        <div class="bg-gradient-to-br from-rose-500 to-red-600 rounded-2xl p-5 text-center flex flex-col justify-center shadow-lg shadow-red-500/20 relative overflow-hidden text-white border border-red-400/50">
+                            <div class="absolute -right-4 -top-4 opacity-20 text-white"><i class="fa-solid fa-hourglass-start text-7xl"></i></div>
+                            <h3 class="text-4xl font-extrabold mb-1 relative z-10 drop-shadow-md" id="count-belum">0</h3>
+                            <p class="text-[11px] font-bold uppercase tracking-wider relative z-10 text-red-50"><i class="fa-regular fa-circle-xmark mr-1"></i> Belum Memilih</p>
                         </div>
-                        <div class="bg-amber-50/70 border border-amber-100 rounded-2xl p-5 text-center flex flex-col justify-center shadow-sm relative overflow-hidden">
-                            <div class="absolute -right-4 -top-4 opacity-5 text-amber-900"><i class="fa-solid fa-spinner text-7xl"></i></div>
-                            <h3 class="text-3xl font-bold text-amber-500 mb-1 relative z-10" id="count-sedang">0</h3>
-                            <p class="text-[11px] font-bold text-amber-600 uppercase tracking-wider relative z-10"><i class="fa-regular fa-clock mr-1"></i> Sedang Memilih</p>
+                        <div class="bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl p-5 text-center flex flex-col justify-center shadow-lg shadow-orange-500/20 relative overflow-hidden text-white border border-orange-400/50">
+                            <div class="absolute -right-4 -top-4 opacity-20 text-white"><i class="fa-solid fa-spinner text-7xl"></i></div>
+                            <h3 class="text-4xl font-extrabold mb-1 relative z-10 drop-shadow-md" id="count-sedang">0</h3>
+                            <p class="text-[11px] font-bold uppercase tracking-wider relative z-10 text-orange-50"><i class="fa-solid fa-tower-broadcast animate-pulse mr-1"></i> Sedang Memilih</p>
                         </div>
-                        <div class="bg-green-50/70 border border-green-100 rounded-2xl p-5 text-center flex flex-col justify-center shadow-sm relative overflow-hidden">
-                            <div class="absolute -right-4 -top-4 opacity-5 text-green-900"><i class="fa-solid fa-check-double text-7xl"></i></div>
-                            <h3 class="text-3xl font-bold text-green-500 mb-1 relative z-10" id="count-selesai">0</h3>
-                            <p class="text-[11px] font-bold text-green-600 uppercase tracking-wider relative z-10"><i class="fa-regular fa-circle-check mr-1"></i> Selesai (Disubmit)</p>
+                        <div class="bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl p-5 text-center flex flex-col justify-center shadow-lg shadow-green-500/20 relative overflow-hidden text-white border border-green-400/50">
+                            <div class="absolute -right-4 -top-4 opacity-20 text-white"><i class="fa-solid fa-check-double text-7xl"></i></div>
+                            <h3 class="text-4xl font-extrabold mb-1 relative z-10 drop-shadow-md" id="count-selesai">0</h3>
+                            <p class="text-[11px] font-bold uppercase tracking-wider relative z-10 text-green-50"><i class="fa-regular fa-circle-check mr-1"></i> Selesai (Disubmit)</p>
                         </div>
                     </div>
 
@@ -1464,6 +1464,8 @@
             if (sectionUsers && sectionUsers.classList) { sectionUsers.classList.remove('flex'); sectionUsers.classList.add('hidden'); }
             if (sectionStatus && sectionStatus.classList) { sectionStatus.classList.remove('flex'); sectionStatus.classList.add('hidden'); }
 
+            if (window.statusAutoRefresh) clearInterval(window.statusAutoRefresh); // Bersihkan timer lama
+
             if(tabId === 'dashboard') {
                 if (sectionDash && sectionDash.classList) { sectionDash.classList.remove('hidden'); sectionDash.classList.add('flex'); }
                 loadDashboardStats();
@@ -1476,6 +1478,8 @@
             } else if (tabId === 'status') {
                 if (sectionStatus && sectionStatus.classList) { sectionStatus.classList.remove('hidden'); sectionStatus.classList.add('flex'); }
                 loadClientProgress();
+                // Refresh data diam-diam setiap 15 detik agar Admin selalu update real-time
+                window.statusAutoRefresh = setInterval(function() { loadClientProgress(true); }, 15000);
             }
         }
 
@@ -2266,7 +2270,14 @@
                 if (res.status === 'success') {
                     clientState.currentContent = { folders: res.data.folders, images: res.data.images };
                     renderClientGallery();
-                    pingClientStatus('Sedang Memilih');
+                    
+                    // --- SISTEM DETAK JANTUNG (HEARTBEAT) ---
+                    if (window.clientHeartbeat) clearInterval(window.clientHeartbeat);
+                    pingClientStatus('Sedang Memilih'); // Kirim sinyal pertama
+                    window.clientHeartbeat = setInterval(function() {
+                        pingClientStatus('Sedang Memilih'); // Kirim sinyal setiap 30 detik
+                    }, 30000);
+                    
                 } else {
                     Swal.fire('Error', res.message, 'error');
                     var emptyState = document.getElementById('gallery-empty');
@@ -2496,8 +2507,8 @@
             }).catch(function(e) { console.log("Tracker ping failed:", e); });
         }
 
-        async function loadClientProgress() {
-            startLoading("Memuat Status...");
+        async function loadClientProgress(isSilent) {
+            if (!isSilent) startLoading("Memuat Status...");
             try {
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
@@ -2505,14 +2516,15 @@
                     body: JSON.stringify({ action: 'getProjects', currentUser: currentUser })
                 });
                 const res = await response.json();
-                endLoading();
+                if (!isSilent) endLoading();
+                
                 if (res.status === 'success') {
                     rawStatusData = res.data.data;
                     renderClientProgress(rawStatusData);
                 } else {
-                    Swal.fire('Error', res.message, 'error');
+                    if (!isSilent) Swal.fire('Error', res.message, 'error');
                 }
-            } catch (err) { endLoading(); Swal.fire('Error', err.message, 'error'); }
+            } catch (err) { if (!isSilent) { endLoading(); Swal.fire('Error', err.message, 'error'); } }
         }
 
         function renderClientProgress(data) {
@@ -2529,16 +2541,25 @@
 
             data.forEach(function(row) {
                 var status = row['Status Client'] || 'Belum Memilih';
+                var lastUpdate = row['Last Update'] ? new Date(row['Last Update']) : null;
+                var now = new Date();
+
+                // DETEKSI OFFLINE: Jika status "Sedang Memilih" tapi sudah > 60 detik tidak ada sinyal, kembalikan ke "Belum Memilih"
+                if (status === 'Sedang Memilih' && lastUpdate) {
+                    var diffSeconds = (now - lastUpdate) / 1000;
+                    if (diffSeconds > 60) { status = 'Belum Memilih'; }
+                }
+
                 if (status === 'Belum Memilih') countBelum++;
                 else if (status === 'Sedang Memilih') countSedang++;
                 else if (status === 'Selesai') countSelesai++;
 
                 var badgeClass = ''; var iconClass = '';
-                if (status === 'Belum Memilih') { badgeClass = 'bg-red-50 text-red-600 border-red-200'; iconClass = 'fa-regular fa-circle-xmark'; }
-                else if (status === 'Sedang Memilih') { badgeClass = 'bg-amber-50 text-amber-600 border-amber-200'; iconClass = 'fa-regular fa-clock'; }
-                else if (status === 'Selesai') { badgeClass = 'bg-green-50 text-green-600 border-green-200'; iconClass = 'fa-regular fa-circle-check'; }
+                if (status === 'Belum Memilih') { badgeClass = 'bg-red-500 text-white shadow-sm shadow-red-500/30'; iconClass = 'fa-regular fa-circle-xmark'; }
+                else if (status === 'Sedang Memilih') { badgeClass = 'bg-orange-500 text-white shadow-sm shadow-orange-500/30'; iconClass = 'fa-solid fa-tower-broadcast animate-pulse'; }
+                else if (status === 'Selesai') { badgeClass = 'bg-green-500 text-white shadow-sm shadow-green-500/30'; iconClass = 'fa-regular fa-circle-check'; }
 
-                var dateTxt = row['Last Update'] ? new Date(row['Last Update']).toLocaleString('id-ID', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '-';
+                var dateTxt = lastUpdate ? lastUpdate.toLocaleString('id-ID', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '-';
                 
                 var card = document.createElement('div');
                 card.className = "flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-white border border-gray-200 rounded-xl mb-3 shadow-sm hover:shadow-md transition-shadow gap-3";
