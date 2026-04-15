@@ -24,8 +24,8 @@
                 <span id="preview-count">0</span> Foto
             </div>
         </header>
-        <div class="flex-1 overflow-y-auto min-h-0 bg-kama-50 relative p-4 sm:p-6" style="-webkit-overflow-scrolling: touch;">
-            <div id="preview-grid" class="gallery-grid max-w-[1600px] mx-auto pb-24 px-2"></div>
+        <div class="flex-1 overflow-y-auto bg-kama-50 relative p-4 sm:p-6" style="-webkit-overflow-scrolling: touch;">
+            <div id="preview-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 max-w-[1600px] mx-auto pb-24"></div>
         </div>
     </div>
     
@@ -2716,13 +2716,17 @@
             });
 
             modal.classList.remove('hidden');
+            modal.classList.add('flex'); // <-- Ini kunci utamanya
             setTimeout(function() { modal.classList.remove('opacity-0'); }, 10);
         }
 
         function closePreviewSelected() {
             var modal = document.getElementById('previewModal');
             modal.classList.add('opacity-0');
-            setTimeout(function() { modal.classList.add('hidden'); }, 300);
+            setTimeout(function() { 
+                modal.classList.add('hidden'); 
+                modal.classList.remove('flex'); 
+            }, 300);
         }
 
         async function verifyEmailToken(token) {
