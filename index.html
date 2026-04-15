@@ -884,6 +884,13 @@
         }); // <-- PERBAIKAN FATAL: Kurung tutup ini tadinya hilang!
 
         window.addEventListener('load', function() {
+            // --- AUTO FIX: Tarik section-status ke dalam kotak utama jika salah paste ---
+            var statusSec = document.getElementById('section-status');
+            var mainContainer = document.querySelector('.max-w-6xl.mx-auto.h-full');
+            if (statusSec && mainContainer && statusSec.parentElement !== mainContainer) {
+                mainContainer.appendChild(statusSec);
+            }
+
             var failsafeTimer = setTimeout(function() {
                 endLoading();
                 var loader = document.getElementById('global-loader');
@@ -1441,10 +1448,11 @@
             var sectionUsers = document.getElementById('section-users');
             var sectionStatus = document.getElementById('section-status');
 
-            if (sectionDash && sectionDash.classList) sectionDash.classList.add('hidden');
-            if (sectionProj && sectionProj.classList) sectionProj.classList.add('hidden');
-            if (sectionUsers && sectionUsers.classList) sectionUsers.classList.add('hidden');
-            if (sectionStatus && sectionStatus.classList) sectionStatus.classList.add('hidden');
+            // Hapus flex dan tambah hidden agar benar-benar hilang tanpa sisa ruang kosong
+            if (sectionDash && sectionDash.classList) { sectionDash.classList.remove('flex'); sectionDash.classList.add('hidden'); }
+            if (sectionProj && sectionProj.classList) { sectionProj.classList.remove('flex'); sectionProj.classList.add('hidden'); }
+            if (sectionUsers && sectionUsers.classList) { sectionUsers.classList.remove('flex'); sectionUsers.classList.add('hidden'); }
+            if (sectionStatus && sectionStatus.classList) { sectionStatus.classList.remove('flex'); sectionStatus.classList.add('hidden'); }
 
             if(tabId === 'dashboard') {
                 if (sectionDash && sectionDash.classList) { sectionDash.classList.remove('hidden'); sectionDash.classList.add('flex'); }
