@@ -331,8 +331,8 @@
                 <button onclick="switchAdminTab('users')" id="tab-users" class="nav-tab admin-only-col hidden px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"><i class="fa-solid fa-users-gear mr-2"></i>Kelola Tim</button>
             </div>
             
-            <div class="flex items-center gap-2 sm:gap-3 ml-auto">
-                <div class="relative">
+            <div class="flex items-center gap-2 sm:gap-3 ml-auto flex-nowrap">
+                <div class="relative shrink-0">
                     <select onchange="changeLanguage(this.value)" class="lang-selector-sync appearance-none bg-white border border-gray-200 text-gray-600 text-[10px] font-bold py-1.5 pl-2 pr-5 rounded-lg focus:outline-none cursor-pointer text-center shadow-sm">
                         <option value="id">ID</option>
                         <option value="en">EN</option>
@@ -342,7 +342,7 @@
                     </div>
                 </div>
 
-                <div class="wrapper scale-[0.4] origin-right" title="Dark Mode" id="theme-toggle-wrapper">
+                <div class="wrapper scale-[0.4] origin-right shrink-0" title="Dark Mode" id="theme-toggle-wrapper">
                     <input type="checkbox" id="hide-checkbox">
                     <label for="hide-checkbox" class="toggle">
                         <span class="toggle-button">
@@ -352,14 +352,21 @@
                     </label>
                 </div>
 
-                <div class="text-right mr-2 hidden sm:block">
-                    <p class="text-xs font-bold text-kama-800" id="adminName">User</p>
-                    <p class="text-[10px] text-gray-500" id="adminRole">Role</p>
+                <div class="flex items-center gap-2 sm:gap-3 px-2 py-1.5 sm:px-3 sm:py-1.5 bg-gray-50 border border-gray-200 rounded-xl shrink-0">
+                    <div class="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-kama-800 to-kama-600 text-white flex items-center justify-center font-bold text-[10px] sm:text-xs shadow-sm">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div class="hidden sm:block text-left min-w-[60px]">
+                        <p class="text-xs font-bold text-kama-800 leading-tight mb-0.5" id="adminName">User</p>
+                        <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider leading-tight" id="adminRole">Role</p>
+                    </div>
                 </div>
-                <button onclick="openModalSettings()" class="text-gray-500 hover:text-kama-800 w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-gray-200 bg-white flex items-center justify-center transition-colors shadow-sm" title="Pengaturan Brand">
+
+                <button onclick="openModalSettings()" class="admin-only-col hidden w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 hover:text-kama-800 flex items-center justify-center transition-colors shadow-sm shrink-0" title="Pengaturan Brand">
                     <i class="fa-solid fa-gear"></i>
                 </button>
-                <button onclick="handleLogout()" id="btn-logout" class="text-red-500 hover:text-red-700 w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-red-100 bg-red-50 flex items-center justify-center transition-colors shadow-sm" title="Logout">
+
+                <button onclick="handleLogout()" id="btn-logout" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-700 flex items-center justify-center transition-colors shadow-sm shrink-0" title="Logout">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i>
                 </button>
             </div>
@@ -1449,11 +1456,13 @@
                 if (res.status === 'success') {
                     var remember = document.getElementById('rememberMe');
                     if (remember && remember.checked) {
-                        localStorage.setItem('ps_user', JSON.stringify(res.data)); 
-                        localStorage.setItem('ps_saved_username', username); // BARU: Ingat text username
+                        localStorage.setItem('ps_user', JSON.stringify(res.data));
+                        localStorage.setItem('ps_saved_username', formData.username); // FIX: Simpan Username
+                        localStorage.setItem('ps_saved_password', formData.password); // FIX: Simpan Password
                     } else {
-                        sessionStorage.setItem('ps_user', JSON.stringify(res.data)); 
-                        localStorage.removeItem('ps_saved_username'); // BARU: Lupakan text username
+                        sessionStorage.setItem('ps_user', JSON.stringify(res.data));
+                        localStorage.removeItem('ps_saved_username');
+                        localStorage.removeItem('ps_saved_password');
                     }
                     checkLoginState();
                     
