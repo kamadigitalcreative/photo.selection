@@ -24,8 +24,8 @@
                 <span id="preview-count">0</span> Foto
             </div>
         </header>
-        <div class="flex-1 overflow-y-auto h-0 bg-kama-50 relative p-4 sm:p-6" style="-webkit-overflow-scrolling: touch;">
-            <div id="preview-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-[1600px] mx-auto pb-24"></div>
+        <div class="flex-1 overflow-y-auto min-h-0 bg-kama-50 relative p-4 sm:p-6" style="-webkit-overflow-scrolling: touch;">
+            <div id="preview-grid" class="gallery-grid max-w-[1600px] mx-auto pb-24 px-2"></div>
         </div>
     </div>
     
@@ -2503,7 +2503,7 @@
             fetch(API_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'updateClientStatus', token: clientState.token, status: status })
+                body: JSON.stringify({ action: 'updateClientStatus', token: clientState.token, status: status, _cb: new Date().getTime() })
             }).catch(function(e) { console.log("Tracker ping failed:", e); });
         }
 
@@ -2513,7 +2513,7 @@
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'getProjects', currentUser: currentUser })
+                    body: JSON.stringify({ action: 'getProjects', currentUser: currentUser, _cb: new Date().getTime() })
                 });
                 const res = await response.json();
                 if (!isSilent) endLoading();
