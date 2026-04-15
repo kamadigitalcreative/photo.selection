@@ -11,6 +11,23 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
+
+    <div id="previewModal" class="fixed inset-0 bg-white z-[9990] hidden flex-col transition-opacity duration-300 opacity-0">
+        <header class="glass-header px-4 sm:px-6 py-3 flex justify-between items-center border-b border-gray-100 shrink-0">
+            <div class="flex items-center gap-3">
+                <button onclick="closePreviewSelected()" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center justify-center transition-colors shadow-sm">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <h2 class="font-bold text-lg text-kama-800 tracking-tight">Preview Pilihan</h2>
+            </div>
+            <div class="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg shadow-sm">
+                <span id="preview-count">0</span> Foto
+            </div>
+        </header>
+        <div class="flex-1 overflow-y-auto bg-kama-50 scrollable-content relative">
+            <div id="preview-grid" class="gallery-grid max-w-[1600px] mx-auto pb-8"></div>
+        </div>
+    </div>
     
     <script>
         tailwind.config = {
@@ -217,8 +234,9 @@
 
                         <button type="submit" id="btnLogin" class="w-full bg-kama-800 text-white py-3 rounded-xl hover:bg-kama-900 font-semibold text-sm shadow-md transition-colors relative flex items-center justify-center">Sign In</button>
 
-                        <div class="mt-4 text-center">
-                            <button type="button" onclick="toggleAuth('register')" class="text-xs text-gray-500 hover:text-kama-800 font-medium">Belum punya akun? <span class="text-blue-600 underline">Daftar disini</span></button>
+                        <div class="mt-4 text-center flex flex-col gap-2 items-center">
+                            <button type="button" onclick="forgotPasswordPrompt()" class="text-xs text-blue-500 hover:text-blue-700 font-bold transition-colors">Lupa Password?</button>
+                            <button type="button" onclick="toggleAuth('register')" class="text-xs text-gray-500 hover:text-kama-800 font-medium mt-1">Belum punya akun? <span class="text-blue-600 underline">Daftar disini</span></button>
                         </div>
                     </form>
                 </div>
@@ -670,13 +688,16 @@
                 </div>
             </div>
             <div class="controls flex gap-2 sm:gap-3">
-                <button onclick="resetSelection()" class="px-4 py-2 sm:py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium flex items-center shadow-sm">
-                    <i class="fa-solid fa-rotate-left sm:mr-2 text-xs"></i> <span class="hidden sm:inline">Reset</span>
+                <button onclick="resetSelection()" class="px-3 py-2 sm:px-4 sm:py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium flex items-center justify-center shadow-sm" title="Reset">
+                    <i class="fa-solid fa-rotate-left"></i> <span class="hidden sm:inline sm:ml-2">Reset</span>
                 </button>
-                <button onclick="copyOnly()" class="px-4 py-2 sm:py-2.5 bg-kama-800 text-white rounded-xl hover:bg-kama-900 transition-colors text-sm font-semibold flex items-center shadow-md">
-                    <i class="fa-regular fa-copy sm:mr-2"></i> <span class="hidden sm:inline">Copy List</span>
+                <button onclick="showPreviewSelected()" class="px-3 py-2 sm:px-4 sm:py-2.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors text-sm font-semibold flex items-center justify-center shadow-sm" title="Preview">
+                    <i class="fa-regular fa-images"></i> <span class="hidden sm:inline sm:ml-2">Preview</span>
                 </button>
-                <button onclick="sendToWA()" class="px-5 sm:px-6 py-2 sm:py-2.5 bg-[#25D366] text-white rounded-xl hover:bg-[#128C7E] transition-colors text-sm font-semibold flex items-center shadow-md shadow-green-500/20">
+                <button onclick="copyOnly()" class="px-3 py-2 sm:px-4 sm:py-2.5 bg-kama-800 text-white rounded-xl hover:bg-kama-900 transition-colors text-sm font-semibold flex items-center justify-center shadow-md" title="Copy Text">
+                    <i class="fa-regular fa-copy"></i>
+                </button>
+                <button onclick="sendToWA()" class="px-4 py-2 sm:px-6 sm:py-2.5 bg-[#25D366] text-white rounded-xl hover:bg-[#128C7E] transition-colors text-sm font-semibold flex items-center justify-center shadow-md shadow-green-500/20 flex-1 sm:flex-none">
                     <i class="fa-brands fa-whatsapp sm:mr-2 text-lg"></i> <span>Kirim WA</span>
                 </button>
             </div>
@@ -2211,7 +2232,7 @@
                         '<img onclick="openImageViewer(\'' + imgData.url + '\', \'' + imgData.name + '\', event)" src="' + imgData.url + '" alt="' + imgData.name + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=\'https://placehold.co/400x400?text=Error\';">' +
                         '<div class="info-overlay">' +
                             '<span class="filename-text mb-2 w-full truncate" title="' + imgData.name + '">' + shortName + '</span>' +
-                            '<button onclick="toggleSelection(this.closest(\'.photo-card\'), \'' + imgData.name + '\'); event.stopPropagation();" class="w-full bg-white/20 hover:bg-white/40 backdrop-blur-md border border-white/40 text-white rounded-lg py-1.5 sm:py-2 text-[10px] sm:text-sm font-semibold transition-colors flex items-center justify-center shadow-sm">' +
+                            '<button onclick="toggleSelection(this.closest(\'.photo-card\'), \'' + imgData.name + '\', \'' + imgData.url + '\'); event.stopPropagation();" class="w-full bg-white/20 hover:bg-white/40 backdrop-blur-md border border-white/40 text-white rounded-lg py-1.5 sm:py-2 text-[10px] sm:text-sm font-semibold transition-colors flex items-center justify-center shadow-sm">' +
                                 'Pilih' +
                             '</button>' +
                         '</div>';
@@ -2221,7 +2242,7 @@
                     if (btnPilih) {
                         btnPilih.onclick = function(e) {
                             e.stopPropagation(); // Sangat Penting: Mencegah foto terbuka saat tombol pilih diklik
-                            toggleSelection(card, imgData.name);
+                            toggleSelection(card, imgData.name, imgData.url);
                         };
                     }
                     
@@ -2233,14 +2254,14 @@
             if (scrollArea) scrollArea.scrollTop = 0;
         }
 
-        function toggleSelection(cardElement, filename) {
+        function toggleSelection(cardElement, filename, url) {
             var index = clientState.selectedImages.findIndex(function(sel) { 
                 return sel.name === filename && sel.folder === clientState.currentFolderName; 
             });
             
             if (index === -1) {
                 if (clientState.selectedImages.length >= clientState.maxFoto) { Swal.fire({title: 'Batas Pilihan', text: "Maksimal " + clientState.maxFoto + " foto.", icon: 'info', confirmButtonColor: '#1e1e2d'}); return; }
-                clientState.selectedImages.push({ name: filename, folder: clientState.currentFolderName }); 
+                clientState.selectedImages.push({ name: filename, folder: clientState.currentFolderName, url: url });
                 if (cardElement && cardElement.classList) cardElement.classList.add('selected');
             } else { 
                 clientState.selectedImages.splice(index, 1); 
@@ -2315,6 +2336,80 @@
             if (noWa.indexOf('0') === 0) noWa = '62' + noWa.substring(1); 
             window.open("https://wa.me/" + noWa + "?text=" + encodeURIComponent(text), '_blank');
         }
+        
+        // --- FITUR LUPA PASSWORD ---
+        function forgotPasswordPrompt() {
+            Swal.fire({
+                title: 'Lupa Password',
+                text: 'Ketik Username akun Anda. Sistem akan membuat password baru dan mengirimkannya ke alamat Email Anda.',
+                input: 'text',
+                inputPlaceholder: 'Ketik Username Anda di sini...',
+                showCancelButton: true,
+                confirmButtonText: 'Kirim Sandi Baru',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#1e1e2d',
+                showLoaderOnConfirm: true,
+                preConfirm: async (username) => {
+                    if (!username) { Swal.showValidationMessage('Username tidak boleh kosong'); return false; }
+                    try {
+                        const response = await fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'forgotPassword', username: username.trim() })
+                        });
+                        const res = await response.json();
+                        if (res.status !== 'success' || !res.data.success) { throw new Error(res.message || res.data.message); }
+                        return res.data;
+                    } catch (error) { Swal.showValidationMessage(`Gagal: ${error}`); }
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) { Swal.fire('Berhasil Terkirim', result.value.message, 'success'); }
+            });
+        }
+
+        // --- FITUR PREVIEW FOTO KLIEN ---
+        function showPreviewSelected() {
+            if (clientState.selectedImages.length === 0) {
+                Swal.fire({title: 'Masih Kosong', text: 'Silakan pilih beberapa foto terlebih dahulu.', icon: 'info', confirmButtonColor: '#1e1e2d'});
+                return;
+            }
+
+            var modal = document.getElementById('previewModal');
+            var grid = document.getElementById('preview-grid');
+            var count = document.getElementById('preview-count');
+
+            count.innerText = clientState.selectedImages.length;
+            grid.innerHTML = '';
+
+            clientState.selectedImages.forEach(function(img, index) {
+                var card = document.createElement('div');
+                card.className = "photo-card border border-gray-200 group";
+                var safeUrl = img.url || 'https://placehold.co/400x400?text=Memuat...';
+                var shortName = img.name.length > 20 ? img.name.substring(0, 17) + '...' : img.name;
+
+                card.innerHTML =
+                    '<div class="number-badge">' + (index + 1) + '</div>' +
+                    '<img src="' + safeUrl + '" alt="' + img.name + '" loading="lazy" referrerpolicy="no-referrer">' +
+                    '<div class="info-overlay pb-2">' +
+                        '<span class="filename-text w-full truncate mb-1" title="' + img.name + '">' + shortName + '</span>' +
+                        '<span class="text-[9px] text-gray-300 font-semibold bg-black/40 px-2 py-0.5 rounded inline-block self-start"><i class="fa-regular fa-folder-open mr-1"></i>' + img.folder + '</span>' +
+                    '</div>';
+
+                card.onclick = function(e) { openImageViewer(safeUrl, img.name, e); };
+                grid.appendChild(card);
+            });
+
+            modal.classList.remove('hidden');
+            setTimeout(function() { modal.classList.remove('opacity-0'); }, 10);
+        }
+
+        function closePreviewSelected() {
+            var modal = document.getElementById('previewModal');
+            modal.classList.add('opacity-0');
+            setTimeout(function() { modal.classList.add('hidden'); }, 300);
+        }
+        
     </script>
 </body>
 </html>
