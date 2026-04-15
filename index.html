@@ -2521,10 +2521,11 @@
             .catch(function(e) { console.log("Tracker ping failed:", e); });
         }
 
+        window.serverTimeOffset = 0; // Variabel Penyelamat Zona Waktu
+
         async function loadClientProgress(isSilent) {
             if (!isSilent) startLoading("Memuat Status...");
             try {
-                // Sidik jari waktu di URL Admin
                 var urlAntiCache = API_ENDPOINT + (API_ENDPOINT.includes('?') ? '&' : '?') + 'load=' + new Date().getTime();
 
                 const response = await fetch(urlAntiCache, {
@@ -2533,8 +2534,15 @@
                         'Content-Type': 'application/json',
                         'Cache-Control': 'no-cache, no-store, must-revalidate'
                     },
-                    body: JSON.stringify({ action: 'getProjects', currentUser: currentUser })
+                    body: JSON.stringify({ action: 'getProjects', currentUser: currentUser, _cb: new Date().getTime() })
                 });
+                
+                // TANGKAP WAKTU ASLI SERVER UNTUK MENCEGAH CLOCK DRIFT
+                const serverDate = response.headers.get('Date');
+                if (serverDate) {
+                    window.serverTimeOffset = new Date(serverDate).getTime() - new Date().getTime();
+                }
+
                 const res = await response.json();
                 if (!isSilent) endLoading();
                 
@@ -2565,19 +2573,20 @@
                 var lastUpdate = null;
                 
                 if (luVal) {
-                    // Jika berisi deretan angka murni (Epoch), jadikan angka. Jika teks, biarkan.
                     if (/^\d+$/.test(luVal.toString())) {
                         lastUpdate = new Date(parseInt(luVal));
                     } else {
                         lastUpdate = new Date(luVal);
                     }
                 }
-                var now = new Date();
+                
+                // SINKRONISASI WAKTU: Gunakan waktu server, bukan waktu PC Admin
+                var now = new Date(new Date().getTime() + (window.serverTimeOffset || 0));
 
-                // DETEKSI OFFLINE: Longgarkan batas ke 90 detik untuk antisipasi internet klien delay/lambat
+                // DETEKSI OFFLINE: Toleransi ditingkatkan jadi 150 detik (2.5 Menit)
                 if (status === 'Sedang Memilih' && lastUpdate) {
-                    var diffSeconds = (now - lastUpdate) / 1000;
-                    if (diffSeconds > 90) { status = 'Belum Memilih'; }
+                    var diffSeconds = (now.getTime() - lastUpdate.getTime()) / 1000;
+                    if (diffSeconds > 150) { status = 'Belum Memilih'; } 
                 }
 
                 if (status === 'Belum Memilih') countBelum++;
@@ -2589,7 +2598,17 @@
                 else if (status === 'Sedang Memilih') { badgeClass = 'bg-orange-500 text-white shadow-sm shadow-orange-500/30'; iconClass = 'fa-solid fa-tower-broadcast animate-pulse'; }
                 else if (status === 'Selesai') { badgeClass = 'bg-green-500 text-white shadow-sm shadow-green-500/30'; iconClass = 'fa-regular fa-circle-check'; }
 
-                var dateTxt = lastUpdate ? lastUpdate.toLocaleString('id-ID', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '-';
+                // FORMAT TANGGAL KHUSUS (Contoh: 15 Apr 2026, 15.51)
+                var dateTxt = '-';
+                if (lastUpdate) {
+                    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
+                    var d = lastUpdate.getDate();
+                    var m = months[lastUpdate.getMonth()];
+                    var y = lastUpdate.getFullYear();
+                    var h = lastUpdate.getHours().toString().padStart(2, '0');
+                    var min = lastUpdate.getMinutes().toString().padStart(2, '0');
+                    dateTxt = d + ' ' + m + ' ' + y + ', ' + h + '.' + min;
+                }
                 
                 var card = document.createElement('div');
                 card.className = "flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-white border border-gray-200 rounded-xl mb-3 shadow-sm hover:shadow-md transition-shadow gap-3";
