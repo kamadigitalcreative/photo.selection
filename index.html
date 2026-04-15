@@ -217,7 +217,7 @@
                 
                 <div class="absolute top-4 right-4 z-10">
                     <div class="relative">
-                        <select id="langSelector" onchange="changeLanguage(this.value)" class="appearance-none bg-gray-50 border border-gray-200 text-gray-600 text-[10px] font-bold py-1.5 pl-2 pr-6 rounded-lg focus:outline-none focus:border-kama-800 cursor-pointer text-center">
+                        <select onchange="changeLanguage(this.value)" class="lang-selector-sync appearance-none bg-gray-50 border border-gray-200 text-gray-600 text-[10px] font-bold py-1.5 pl-2 pr-6 rounded-lg focus:outline-none focus:border-kama-800 cursor-pointer text-center">
                             <option value="id">ID</option>
                             <option value="en">EN</option>
                         </select>
@@ -797,20 +797,34 @@
         // --- FITUR BAHASA (MULTI-LANGUAGE) ---
         var langDict = {
             'id': {
-                'lbl-remember': 'Ingat Saya',
-                'lbl-forgot': 'Lupa Password?',
+                'lbl-remember': 'Ingat Saya', 'lbl-forgot': 'Lupa Password?',
                 'lbl-no-account': 'Belum punya akun? <span class="text-blue-600 underline">Daftar disini</span>',
                 'lbl-has-account': 'Sudah punya akun? <span class="text-kama-800 underline">Sign In</span>',
-                'btnLogin': 'Sign In',
-                'btnRegister': 'Daftar Sekarang'
+                'btnLogin': 'Sign In', 'btnRegister': 'Daftar Sekarang',
+                'txt-dash': '<i class="fa-solid fa-chart-pie mr-2"></i>Dashboard',
+                'txt-proj': '<i class="fa-solid fa-folder-open mr-2"></i>Projects',
+                'txt-stat': '<i class="fa-solid fa-desktop mr-2"></i>Pantau Klien',
+                'txt-user': '<i class="fa-solid fa-users-gear mr-2"></i>Kelola Tim',
+                'txt-dash-m': '<i class="fa-solid fa-chart-pie text-lg"></i>Dash',
+                'txt-proj-m': '<i class="fa-solid fa-folder-open text-lg"></i>Projects',
+                'txt-stat-m': '<i class="fa-solid fa-desktop text-lg"></i>Pantau',
+                'txt-user-m': '<i class="fa-solid fa-users-gear text-lg"></i>Tim',
+                'txt-logout': '<i class="fa-solid fa-right-from-bracket sm:mr-2"></i><span class="hidden sm:inline">Logout</span>'
             },
             'en': {
-                'lbl-remember': 'Remember Me',
-                'lbl-forgot': 'Forgot Password?',
+                'lbl-remember': 'Remember Me', 'lbl-forgot': 'Forgot Password?',
                 'lbl-no-account': 'Don\'t have an account? <span class="text-blue-600 underline">Register here</span>',
                 'lbl-has-account': 'Already have an account? <span class="text-kama-800 underline">Sign In</span>',
-                'btnLogin': 'Sign In',
-                'btnRegister': 'Register Now'
+                'btnLogin': 'Sign In', 'btnRegister': 'Register Now',
+                'txt-dash': '<i class="fa-solid fa-chart-pie mr-2"></i>Dashboard',
+                'txt-proj': '<i class="fa-solid fa-folder-open mr-2"></i>Projects',
+                'txt-stat': '<i class="fa-solid fa-desktop mr-2"></i>Monitor',
+                'txt-user': '<i class="fa-solid fa-users-gear mr-2"></i>Team',
+                'txt-dash-m': '<i class="fa-solid fa-chart-pie text-lg"></i>Dash',
+                'txt-proj-m': '<i class="fa-solid fa-folder-open text-lg"></i>Projects',
+                'txt-stat-m': '<i class="fa-solid fa-desktop text-lg"></i>Monitor',
+                'txt-user-m': '<i class="fa-solid fa-users-gear text-lg"></i>Team',
+                'txt-logout': '<i class="fa-solid fa-right-from-bracket sm:mr-2"></i><span class="hidden sm:inline">Logout</span>'
             }
         };
 
@@ -823,19 +837,26 @@
             var dict = langDict[lang] || langDict['id'];
             var ids = ['lbl-remember', 'lbl-forgot', 'lbl-no-account', 'lbl-has-account'];
             
-            ids.forEach(function(id) {
-                var el = document.getElementById(id);
-                if (el) el.innerHTML = dict[id];
-            });
+            ids.forEach(function(id) { var el = document.getElementById(id); if (el) el.innerHTML = dict[id]; });
+
+            // Update Menu Desktop & Mobile
+            var dId = ['tab-dashboard', 'tab-projects', 'tab-status', 'tab-users'];
+            var mId = ['tab-dashboard-m', 'tab-projects-m', 'tab-status-m', 'tab-users-m'];
+            var dKey = ['txt-dash', 'txt-proj', 'txt-stat', 'txt-user'];
+            var mKey = ['txt-dash-m', 'txt-proj-m', 'txt-stat-m', 'txt-user-m'];
+
+            for(var i=0; i<4; i++) {
+                var dt = document.getElementById(dId[i]); if(dt) dt.innerHTML = dict[dKey[i]];
+                var mt = document.getElementById(mId[i]); if(mt) mt.innerHTML = dict[mKey[i]];
+            }
             
-            var btnLog = document.getElementById('btnLogin'); 
-            if (btnLog && !btnLog.disabled) btnLog.innerText = dict['btnLogin'];
+            var lg = document.getElementById('btn-logout'); if(lg) lg.innerHTML = dict['txt-logout'];
+            var btnLog = document.getElementById('btnLogin'); if(btnLog && !btnLog.disabled) btnLog.innerText = dict['btnLogin'];
+            var btnReg = document.getElementById('btnRegister'); if(btnReg && !btnReg.disabled) btnReg.innerText = dict['btnRegister'];
             
-            var btnReg = document.getElementById('btnRegister'); 
-            if (btnReg && !btnReg.disabled) btnReg.innerText = dict['btnRegister'];
-            
-            var selector = document.getElementById('langSelector'); 
-            if (selector) selector.value = lang;
+            // Sync semua dropdown bahasa
+            var selectors = document.querySelectorAll('.lang-selector-sync'); 
+            selectors.forEach(function(s) { s.value = lang; });
         }
 
         // GLOBAL VARIABLES
