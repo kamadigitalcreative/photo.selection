@@ -843,7 +843,7 @@
         var baseAppUrl = "";
         var clientState = { 
             token: '', namaClient: '', nomorWA: '', maxFoto: 0, driveLink: '', 
-            selectedImages: [], folderHistory: [], currentFolderId: '', currentFolderName: '', currentContent: { folders: [], images: [] }, isPreviewMode: false
+            selectedImages: [], folderHistory: [], currentFolderId: '', currentFolderName: '', currentContent: { folders: [], images: [] }, isPreviewMode: false, isFinished: false
         };
         
         function escapeHTML(str) {
@@ -2472,6 +2472,7 @@
             var text = formatSelectedText();
             if (!text) { Swal.fire({title: 'Kosong', text: 'Pilih foto terlebih dahulu.', icon: 'info', confirmButtonColor: '#1e1e2d'}); return; }
             doCopyText(text, 'Daftar foto siap dipaste.');
+            clientState.isFinished = true;
             pingClientStatus('Selesai');
         }
 
@@ -2481,6 +2482,7 @@
             var noWa = clientState.nomorWA.replace(/\D/g, ''); 
             if (noWa.indexOf('0') === 0) noWa = '62' + noWa.substring(1); 
             window.open("https://wa.me/" + noWa + "?text=" + encodeURIComponent(text), '_blank');
+            clientState.isFinished = true;
             pingClientStatus('Selesai');
         }
 
@@ -2724,6 +2726,20 @@
                 Swal.fire('Error', err.message, 'error');
             }
         }
+        // Deteksi saat klien menutup browser / tab
+        window.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'hidden' && clientState.token && !clientState.isFinished && !clientState.isPreviewMode) {
+                // Gunakan sendBeacon agar request tetap terkirim meski tab sedang ditutup
+                var payload = JSON.stringify({ action: 'updateClientStatus', token: clientState.token, status: 'Belum Memilih' });
+                navigator.sendBeacon(API_ENDPOINT, payload);
+            }
+        });
+        window.addEventListener('pagehide', function() {
+            if (clientState.token && !clientState.isFinished && !clientState.isPreviewMode) {
+                var payload = JSON.stringify({ action: 'updateClientStatus', token: clientState.token, status: 'Belum Memilih' });
+                navigator.sendBeacon(API_ENDPOINT, payload);
+            }
+        });
     </script>
 </body>
 </html>
