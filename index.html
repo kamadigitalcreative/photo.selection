@@ -296,6 +296,17 @@
                     </form>
                 </div>
 
+                <div id="verify-email-wrapper" class="hidden text-center py-4">
+                    <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fa-regular fa-envelope-open text-3xl text-green-500"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-kama-800 tracking-tight mb-2">Cek Email Anda</h2>
+                    <p class="text-gray-500 text-sm mb-6 leading-relaxed">Pendaftaran berhasil! Kami telah mengirimkan link konfirmasi ke alamat email Anda. Silakan cek Inbox atau folder Spam untuk mengaktifkan akun.</p>
+                    <button type="button" onclick="toggleAuth('login')" class="w-full bg-white border border-gray-200 text-kama-800 py-3 rounded-xl hover:bg-gray-50 font-semibold text-sm shadow-sm transition-colors">
+                        Kembali ke Login
+                    </button>
+                </div>
+                
             </div>
         </div>
         
@@ -897,13 +908,14 @@
                 var savedBrand = localStorage.getItem('ps_branding');
                 if (savedBrand) appBranding = JSON.parse(savedBrand);
 
-                var rawToken = null, rawBn = null, rawBl = null, rawC = null;
+                var rawToken = null, rawBn = null, rawBl = null, rawC = null, rawConfirm = null; // Tambah rawConfirm
                 try {
                     var urlParams = new URLSearchParams(window.location.search);
                     rawToken = urlParams.get('token');
                     rawBn = urlParams.get('bn');
                     rawBl = urlParams.get('bl');
                     rawC = urlParams.get('c'); 
+                    rawConfirm = urlParams.get('confirm'); // Tangkap link dari email
                 } catch(e) {}
 
                 clearTimeout(failsafeTimer);
@@ -918,10 +930,11 @@
                 if(rawBl) appBranding.logo = rawBl;
                 applyBranding();
 
-                // PERBAIKAN: Panggil fungsi branding Admin untuk SEMUA halaman, termasuk halaman Client
                 fetchAdminTabBranding();
 
-                if (rawToken) { 
+                if (rawConfirm) { 
+                    verifyEmailToken(rawConfirm); // Jalankan fungsi verifikasi
+                } else if (rawToken) { 
                     clientState.token = rawToken; 
                     initClientApp(); 
                 } else if (rawC) { 
@@ -1185,7 +1198,10 @@
         function toggleAuth(type) {
             var loginForm = document.getElementById('login-form-wrapper');
             var regForm = document.getElementById('register-form-wrapper');
+            var verifyForm = document.getElementById('verify-email-wrapper'); // BARU
             if (!loginForm || !regForm) return;
+
+            if (verifyForm && verifyForm.classList) verifyForm.classList.add('hidden'); // Sembunyikan pesan sukses
 
             if (type === 'register') {
                 if(loginForm.classList) loginForm.classList.add('hidden'); 
@@ -1327,9 +1343,10 @@
                 setButtonState('btnRegister', false, 'Daftar Sekarang');
 
                 if (res.status === 'success' && res.data.success) {
-                    Swal.fire('Berhasil', res.data.message, 'success');
+                    // Sembunyikan Form Register & Tampilkan Pesan Sukses
+                    document.getElementById('register-form-wrapper').classList.add('hidden');
+                    document.getElementById('verify-email-wrapper').classList.remove('hidden');
                     document.querySelector('#register-form-wrapper form').reset();
-                    toggleAuth('login');
                 } else {
                     Swal.fire('Gagal', res.message || res.data.message, 'error');
                 }
@@ -2680,7 +2697,33 @@
             modal.classList.add('opacity-0');
             setTimeout(function() { modal.classList.add('hidden'); }, 300);
         }
-        
+
+        async function verifyEmailToken(token) {
+            startLoading("Memverifikasi...");
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'confirmEmail', token: token })
+                });
+                const res = await response.json();
+                endLoading();
+                
+                // Bersihkan URL dari token agar rapi kembali
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+                if (res.status === 'success' && res.data.success) {
+                    Swal.fire({
+                        icon: 'success', title: 'Berhasil!', text: res.data.message, confirmButtonColor: '#1e1e2d'
+                    }).then(() => { toggleAuth('login'); });
+                } else {
+                    Swal.fire('Verifikasi Gagal', res.message || res.data.message, 'error').then(() => { toggleAuth('login'); });
+                }
+            } catch (err) {
+                endLoading();
+                Swal.fire('Error', err.message, 'error');
+            }
+        }
     </script>
 </body>
 </html>
