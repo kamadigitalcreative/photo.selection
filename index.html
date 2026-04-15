@@ -2337,35 +2337,85 @@
             window.open("https://wa.me/" + noWa + "?text=" + encodeURIComponent(text), '_blank');
         }
         
-        // --- FITUR LUPA PASSWORD ---
-        function forgotPasswordPrompt() {
-            Swal.fire({
+        // --- FITUR LUPA PASSWORD (SISTEM OTP & CUSTOM PASSWORD) ---
+        async function forgotPasswordPrompt() {
+            // TAHAP 1: Minta Username & Kirim OTP
+            const { value: usernameInput } = await Swal.fire({
                 title: 'Lupa Password',
-                text: 'Ketik Username akun Anda. Sistem akan membuat password baru dan mengirimkannya ke alamat Email Anda.',
+                text: 'Masukkan Username Anda. Kami akan mengirimkan Kode Keamanan (OTP) ke email terdaftar Anda.',
                 input: 'text',
                 inputPlaceholder: 'Ketik Username Anda di sini...',
                 showCancelButton: true,
-                confirmButtonText: 'Kirim Sandi Baru',
+                confirmButtonText: 'Kirim Kode OTP',
                 cancelButtonText: 'Batal',
                 confirmButtonColor: '#1e1e2d',
                 showLoaderOnConfirm: true,
-                preConfirm: async (username) => {
-                    if (!username) { Swal.showValidationMessage('Username tidak boleh kosong'); return false; }
+                preConfirm: async (user) => {
+                    if (!user) { Swal.showValidationMessage('Username tidak boleh kosong'); return false; }
                     try {
                         const response = await fetch(API_ENDPOINT, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'forgotPassword', username: username.trim() })
+                            body: JSON.stringify({ action: 'requestOTP', username: user.trim() })
                         });
                         const res = await response.json();
                         if (res.status !== 'success' || !res.data.success) { throw new Error(res.message || res.data.message); }
-                        return res.data;
-                    } catch (error) { Swal.showValidationMessage(`Gagal: ${error}`); }
+                        return { username: user.trim(), message: res.data.message };
+                    } catch (error) { Swal.showValidationMessage(`Gagal: ${error.message}`); }
                 },
                 allowOutsideClick: () => !Swal.isLoading()
-            }).then((result) => {
-                if (result.isConfirmed) { Swal.fire('Berhasil Terkirim', result.value.message, 'success'); }
             });
+
+            // TAHAP 2: Jika OTP terkirim, Minta User Input OTP + Buat Password Baru
+            if (usernameInput) {
+                const { value: formValues } = await Swal.fire({
+                    title: 'Verifikasi & Buat Password',
+                    html:
+                        `<p class="text-xs text-green-600 mb-4 font-medium"><i class="fa-solid fa-check-circle mr-1"></i> ${usernameInput.message}</p>` +
+                        `<div class="text-left mb-1 text-xs font-bold text-gray-500 uppercase tracking-wide">1. Masukkan 6 Digit OTP:</div>` +
+                        `<input id="swal-otp" type="number" class="w-full px-4 py-3 mb-4 bg-gray-50 border border-gray-200 rounded-xl outline-none text-center tracking-widest font-bold text-xl text-blue-600 focus:border-blue-500" placeholder="• • • • • •">` +
+                        `<div class="text-left mb-1 text-xs font-bold text-gray-500 uppercase tracking-wide">2. Buat Password Baru Anda:</div>` +
+                        `<input id="swal-newpass" type="password" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-center focus:border-blue-500" placeholder="Ketik sandi rahasia baru...">`,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonText: 'Simpan Password Baru',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#1e1e2d',
+                    showLoaderOnConfirm: true,
+                    preConfirm: async () => {
+                        const otp = document.getElementById('swal-otp').value.trim();
+                        const newpass = document.getElementById('swal-newpass').value.trim();
+
+                        if (!otp || !newpass) { Swal.showValidationMessage('Kolom OTP dan Password Baru wajib diisi!'); return false; }
+                        if (newpass.length < 5) { Swal.showValidationMessage('Password terlalu pendek (Minimal 5 karakter).'); return false; }
+
+                        try {
+                            const response = await fetch(API_ENDPOINT, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ 
+                                    action: 'resetPasswordWithOTP', 
+                                    username: usernameInput.username, 
+                                    otp: otp, 
+                                    newPassword: newpass 
+                                })
+                            });
+                            const res = await response.json();
+                            if (res.status !== 'success' || !res.data.success) { throw new Error(res.message || res.data.message); }
+                            return res.data;
+                        } catch (error) { Swal.showValidationMessage(`Gagal: ${error.message}`); }
+                    }
+                });
+
+                if (formValues) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: formValues.message,
+                        confirmButtonColor: '#1e1e2d'
+                    });
+                }
+            }
         }
 
         // --- FITUR PREVIEW FOTO KLIEN ---
