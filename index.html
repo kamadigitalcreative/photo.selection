@@ -2727,18 +2727,27 @@
             }
         }
         // Deteksi saat klien menutup browser / tab
-        window.addEventListener('visibilitychange', function() {
-            if (document.visibilityState === 'hidden' && clientState.token && !clientState.isFinished && !clientState.isPreviewMode) {
-                // Gunakan sendBeacon agar request tetap terkirim meski tab sedang ditutup
-                var payload = JSON.stringify({ action: 'updateClientStatus', token: clientState.token, status: 'Belum Memilih' });
-                navigator.sendBeacon(API_ENDPOINT, payload);
+        function sendCloseSignal() {
+            if (clientState.token && !clientState.isFinished && !clientState.isPreviewMode) {
+                // Gunakan fetch keepalive karena server bridge mewajibkan format JSON
+                fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'updateClientStatus', token: clientState.token, status: 'Belum Memilih' }),
+                    keepalive: true
+                }).catch(function(e) { console.log("Sinyal tutup tab gagal:", e); });
             }
+        }
+        
+        window.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'hidden') sendCloseSignal();
         });
         window.addEventListener('pagehide', function() {
-            if (clientState.token && !clientState.isFinished && !clientState.isPreviewMode) {
-                var payload = JSON.stringify({ action: 'updateClientStatus', token: clientState.token, status: 'Belum Memilih' });
-                navigator.sendBeacon(API_ENDPOINT, payload);
-            }
+            sendCloseSignal();
+        });
+        // Tambahan penjagaan untuk beberapa browser laptop/PC
+        window.addEventListener('beforeunload', function() {
+            sendCloseSignal();
         });
     </script>
 </body>
