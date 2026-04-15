@@ -2507,25 +2507,33 @@
 
         function pingClientStatus(status) {
             if (!clientState.token) return;
-            fetch(API_ENDPOINT, {
+            
+            // Tambahkan sidik jari waktu langsung ke URL agar menjebol cache Bridge/Vercel
+            var urlAntiCache = API_ENDPOINT + (API_ENDPOINT.includes('?') ? '&' : '?') + 'ping=' + new Date().getTime();
+            
+            fetch(urlAntiCache, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'updateClientStatus', token: clientState.token, status: status, _cb: new Date().getTime() })
-            }).catch(function(e) { console.log("Tracker ping failed:", e); });
+                headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+                body: JSON.stringify({ action: 'updateClientStatus', token: clientState.token, status: status })
+            })
+            .then(res => res.json())
+            .then(data => console.log("Ping respon:", data)) // Log ini akan membantu Anda melihat apakah sukses
+            .catch(function(e) { console.log("Tracker ping failed:", e); });
         }
 
         async function loadClientProgress(isSilent) {
             if (!isSilent) startLoading("Memuat Status...");
             try {
-                const response = await fetch(API_ENDPOINT, {
+                // Sidik jari waktu di URL Admin
+                var urlAntiCache = API_ENDPOINT + (API_ENDPOINT.includes('?') ? '&' : '?') + 'load=' + new Date().getTime();
+
+                const response = await fetch(urlAntiCache, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
-                        'Cache-Control': 'no-cache, no-store, must-revalidate', // BUSTER UTAMA 1
-                        'Pragma': 'no-cache', // BUSTER UTAMA 2
-                        'Expires': '0'
+                        'Cache-Control': 'no-cache, no-store, must-revalidate'
                     },
-                    body: JSON.stringify({ action: 'getProjects', currentUser: currentUser, _cb: Date.now() }) // Date.now lebih cepat
+                    body: JSON.stringify({ action: 'getProjects', currentUser: currentUser })
                 });
                 const res = await response.json();
                 if (!isSilent) endLoading();
@@ -2556,9 +2564,13 @@
                 var luVal = row['Last Update'];
                 var lastUpdate = null;
                 
-                // Parsing tanggal anti-gagal (mendukung format angka Epoch dan teks biasa)
                 if (luVal) {
-                    lastUpdate = !isNaN(Number(luVal)) ? new Date(Number(luVal)) : new Date(luVal);
+                    // Jika berisi deretan angka murni (Epoch), jadikan angka. Jika teks, biarkan.
+                    if (/^\d+$/.test(luVal.toString())) {
+                        lastUpdate = new Date(parseInt(luVal));
+                    } else {
+                        lastUpdate = new Date(luVal);
+                    }
                 }
                 var now = new Date();
 
