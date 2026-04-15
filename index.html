@@ -1271,8 +1271,11 @@
                     showView('admin-view');
                     switchAdminTab('dashboard');
                 } else {
-                    if (adminNavTabs && adminNavTabs.classList) { adminNavTabs.classList.add('hidden'); adminNavTabs.classList.remove('sm:flex'); }
-                    if (adminNavTabsMobile && adminNavTabsMobile.classList) adminNavTabsMobile.classList.add('hidden');
+                    // Tampilkan baris menu untuk Fotografer
+                    if (adminNavTabs && adminNavTabs.classList) { adminNavTabs.classList.remove('hidden'); adminNavTabs.classList.add('sm:flex'); }
+                    if (adminNavTabsMobile && adminNavTabsMobile.classList) adminNavTabsMobile.classList.remove('hidden');
+                    
+                    // Sembunyikan HANYA menu khusus admin (Dashboard & Kelola Tim)
                     for(var j=0; j<adminCols.length; j++) { if(adminCols[j] && adminCols[j].classList) adminCols[j].classList.add('hidden'); }
                     
                     showView('admin-view');
