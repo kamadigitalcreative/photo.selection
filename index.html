@@ -1711,7 +1711,8 @@
                 const res = await response.json();
                 endLoading();
                 if (res.status === 'success' && res.data.success) {
-                    if(res.data.appUrl) baseAppUrl = res.data.appUrl;
+                    // Penimpaan URL dihapus agar link klien tetap menggunakan domain Vercel
+                    baseAppUrl = window.location.origin + window.location.pathname;
                     renderProjectsTable(res.data.data);
                 } else {
                     Swal.fire('Error', res.message || res.data.message, 'error');
