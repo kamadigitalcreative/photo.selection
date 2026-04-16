@@ -894,6 +894,13 @@
             }
         }); // <-- PERBAIKAN FATAL: Kurung tutup ini tadinya hilang!
 
+        // Menangani tombol back/forward di browser agar menu web ikut berubah
+        window.addEventListener('popstate', function(event) {
+            if (event.state && event.state.tab) {
+                switchAdminTab(event.state.tab, true);
+            }
+        });
+
         window.addEventListener('load', function() {
             var failsafeTimer = setTimeout(function() {
                 endLoading();
@@ -1279,13 +1286,21 @@
                 }
                 if (wrapper) wrapper.title = "Toggle Dark Mode";
 
+                // Membaca kata terakhir di link (contoh: dari /id/dashboard diambil 'dashboard')
+                var pathParts = window.location.pathname.split('/').filter(Boolean);
+                var currentTab = pathParts.length > 0 ? pathParts[pathParts.length - 1] : '';
+
                 if(currentUser.role === 'Admin') {
                     if (adminNavTabs && adminNavTabs.classList) { adminNavTabs.classList.remove('hidden'); adminNavTabs.classList.add('sm:flex'); }
                     if (adminNavTabsMobile && adminNavTabsMobile.classList) adminNavTabsMobile.classList.remove('hidden');
                     for(var i=0; i<adminCols.length; i++) { if(adminCols[i] && adminCols[i].classList) adminCols[i].classList.remove('hidden'); }
                     
                     showView('admin-view');
-                    switchAdminTab('dashboard');
+                    // Buka tab sesuai link, jika link tidak dikenali, kembali ke dashboard
+                    var validAdminTabs = ['dashboard', 'projects', 'status', 'users'];
+                    if (validAdminTabs.includes(currentTab)) { switchAdminTab(currentTab, true); } 
+                    else { switchAdminTab('dashboard', true); }
+
                 } else {
                     // Tampilkan baris menu untuk Fotografer
                     if (adminNavTabs && adminNavTabs.classList) { adminNavTabs.classList.remove('hidden'); adminNavTabs.classList.add('sm:flex'); }
@@ -1295,7 +1310,10 @@
                     for(var j=0; j<adminCols.length; j++) { if(adminCols[j] && adminCols[j].classList) adminCols[j].classList.add('hidden'); }
                     
                     showView('admin-view');
-                    switchAdminTab('projects');
+                    // Buka tab sesuai link, jika link tidak dikenali, kembali ke projects
+                    var validPhotoTabs = ['projects', 'status'];
+                    if (validPhotoTabs.includes(currentTab)) { switchAdminTab(currentTab, true); } 
+                    else { switchAdminTab('projects', true); }
                 }
                 
                 if(currentUser.role === 'Admin') { loadDataUsers(); }
@@ -1411,6 +1429,7 @@
         }
         
         async function handleLogout() {
+            window.history.pushState({}, '', '/'); // Bersihkan link saat logout
             localStorage.removeItem('ps_user');
             sessionStorage.removeItem('ps_user');
             currentUser = null;
@@ -1442,7 +1461,10 @@
         }
         
         // --- DASHBOARD TABS ---
-        function switchAdminTab(tabId) {
+        function switchAdminTab(tabId, skipHistory) {
+            // Ubah link di address bar tanpa me-refresh halaman
+            if (!skipHistory) { window.history.pushState({ tab: tabId }, '', '/' + tabId); }
+            
             var dTabs = document.querySelectorAll('#admin-nav-tabs .nav-tab');
             for(var i=0; i<dTabs.length; i++) { if(dTabs[i] && dTabs[i].classList) dTabs[i].classList.remove('active'); }
             var desktopTab = document.getElementById('tab-'+tabId);
