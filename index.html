@@ -1461,8 +1461,9 @@
         }
         
         // --- DASHBOARD TABS ---
+        var autoRefreshInterval = null; // Memori mesin robot
+
         function switchAdminTab(tabId, skipHistory) {
-            // Ubah link di address bar tanpa me-refresh halaman
             if (!skipHistory) { window.history.pushState({ tab: tabId }, '', '/' + tabId); }
             
             var dTabs = document.querySelectorAll('#admin-nav-tabs .nav-tab');
@@ -1480,11 +1481,13 @@
             var sectionUsers = document.getElementById('section-users');
             var sectionStatus = document.getElementById('section-status');
 
-            // Hapus flex dan tambah hidden agar benar-benar hilang tanpa sisa ruang kosong
             if (sectionDash && sectionDash.classList) { sectionDash.classList.remove('flex'); sectionDash.classList.add('hidden'); }
             if (sectionProj && sectionProj.classList) { sectionProj.classList.remove('flex'); sectionProj.classList.add('hidden'); }
             if (sectionUsers && sectionUsers.classList) { sectionUsers.classList.remove('flex'); sectionUsers.classList.add('hidden'); }
             if (sectionStatus && sectionStatus.classList) { sectionStatus.classList.remove('flex'); sectionStatus.classList.add('hidden'); }
+
+            // FIX: Matikan robot setiap kali pindah menu agar hemat memori
+            clearInterval(autoRefreshInterval);
 
             if(tabId === 'dashboard') {
                 if (sectionDash && sectionDash.classList) { sectionDash.classList.remove('hidden'); sectionDash.classList.add('flex'); }
@@ -1497,7 +1500,12 @@
                 loadDataUsers();
             } else if (tabId === 'status') {
                 if (sectionStatus && sectionStatus.classList) { sectionStatus.classList.remove('hidden'); sectionStatus.classList.add('flex'); }
-                loadClientProgress(); // Load pertama, robot akan otomatis jalan di dalamnya
+                loadClientProgress();
+
+                // FIX: Nyalakan robot stabil (setInterval) HANYA di menu Pantau Klien
+                autoRefreshInterval = setInterval(function() {
+                    loadClientProgress(true);
+                }, 10000); // 10000 = Tarik data otomatis tiap 10 detik
             }
         }
 
@@ -2541,17 +2549,24 @@
             }).catch(function(e) { console.log("Tracker ping failed:", e); });
         }
 
-        var statusTimer = null; // Tambahkan memori untuk robot
-
         async function loadClientProgress(isSilent = false) {
-            clearTimeout(statusTimer); // Hentikan robot lama agar tidak dobel
-            
+            // Animasi visual pada tombol Refresh agar Admin tahu robot sedang bekerja
+            var btnRefresh = document.querySelector('button[onclick="loadClientProgress()"]');
+            var originalBtnHtml = btnRefresh ? btnRefresh.innerHTML : '';
+            if (btnRefresh && isSilent) { 
+                btnRefresh.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-blue-500"></i> Mengecek...'; 
+            }
+
             if (!isSilent) startLoading("Memuat Status...");
             try {
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'getProjects', currentUser: currentUser })
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache, no-store, must-revalidate' // ANTI-CACHE LEVEL 1
+                    },
+                    // ANTI-CACHE LEVEL 2: Tambahkan _timestamp agar Vercel dipaksa ambil data baru
+                    body: JSON.stringify({ action: 'getProjects', currentUser: currentUser, _timestamp: new Date().getTime() })
                 });
                 const res = await response.json();
                 if (!isSilent) endLoading();
@@ -2564,14 +2579,15 @@
                 }
             } catch (err) { 
                 if (!isSilent) { endLoading(); Swal.fire('Error', err.message, 'error'); } 
-            }
-
-            // --- ROBOT AUTO-REFRESH 15 DETIK (Sistem Rantai Paling Stabil) ---
-            var sectionStatus = document.getElementById('section-status');
-            if (sectionStatus && !sectionStatus.classList.contains('hidden')) {
-                statusTimer = setTimeout(function() { 
-                    loadClientProgress(true); 
-                }, 15000);
+            } finally {
+                // Kembalikan tombol refresh seperti semula setelah selesai mengecek
+                if (btnRefresh && isSilent) {
+                    var d = new Date();
+                    var timeStr = ('0'+d.getHours()).slice(-2) + ':' + ('0'+d.getMinutes()).slice(-2) + ':' + ('0'+d.getSeconds()).slice(-2);
+                    btnRefresh.innerHTML = '<i class="fa-solid fa-check text-green-500"></i> Update: ' + timeStr;
+                    // Tahan tulisan "Update: Jam" selama 3 detik, lalu kembalikan ke "Refresh Data"
+                    setTimeout(function() { if (btnRefresh.innerHTML.includes(timeStr)) btnRefresh.innerHTML = originalBtnHtml; }, 3000);
+                }
             }
         }
 
