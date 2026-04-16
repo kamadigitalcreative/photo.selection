@@ -1497,7 +1497,14 @@
                 loadDataUsers();
             } else if (tabId === 'status') {
                 if (sectionStatus && sectionStatus.classList) { sectionStatus.classList.remove('hidden'); sectionStatus.classList.add('flex'); }
-                loadClientProgress();
+                loadClientProgress(); // Load pertama pakai loading screen
+                if (!statusInterval) statusInterval = setInterval(function() { loadClientProgress(true); }, 15000); // Silent refresh tiap 15 detik
+            }
+
+            // Matikan auto-refresh jika admin pindah tab untuk hemat kuota Google
+            if (tabId !== 'status' && typeof statusInterval !== 'undefined' && statusInterval) {
+                clearInterval(statusInterval);
+                statusInterval = null;
             }
         }
 
@@ -2491,11 +2498,13 @@
             return text;
         }
 
+        var hasClientSubmitted = false; // Penanda apakah klien sudah selesai
+
         function copyOnly() {
             var text = formatSelectedText();
             if (!text) { Swal.fire({title: 'Kosong', text: 'Pilih foto terlebih dahulu.', icon: 'info', confirmButtonColor: '#1e1e2d'}); return; }
             doCopyText(text, 'Daftar foto siap dipaste.');
-            clientState.isFinished = true;
+            hasClientSubmitted = true;
             pingClientStatus('Selesai');
         }
 
@@ -2505,9 +2514,17 @@
             var noWa = clientState.nomorWA.replace(/\D/g, ''); 
             if (noWa.indexOf('0') === 0) noWa = '62' + noWa.substring(1); 
             window.open("https://wa.me/" + noWa + "?text=" + encodeURIComponent(text), '_blank');
-            clientState.isFinished = true;
+            hasClientSubmitted = true;
             pingClientStatus('Selesai');
         }
+
+        // Pendeteksi Klien Keluar / Pindah Aplikasi (Terutama di HP)
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'hidden' && clientState.token && !hasClientSubmitted) {
+                // Jika web ditutup/disembunyikan tapi belum selesai, otomatis reset statusnya
+                pingClientStatus('Belum Memilih');
+            }
+        });
 
         // --- CLIENT TRACKER LOGIC ---
         var rawStatusData = [];
@@ -2516,13 +2533,16 @@
             if (!clientState.token) return;
             fetch(API_ENDPOINT, {
                 method: 'POST',
+                keepalive: true, // WAJIB: Memaksa sinyal tetap jalan walau tab di-close
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'updateClientStatus', token: clientState.token, status: status })
             }).catch(function(e) { console.log("Tracker ping failed:", e); });
         }
 
-        async function loadClientProgress() {
-            startLoading("Memuat Status...");
+        var statusInterval = null; // Robot auto-refresh
+
+        async function loadClientProgress(isSilent = false) {
+            if (!isSilent) startLoading("Memuat Status...");
             try {
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
@@ -2530,14 +2550,17 @@
                     body: JSON.stringify({ action: 'getProjects', currentUser: currentUser })
                 });
                 const res = await response.json();
-                endLoading();
+                if (!isSilent) endLoading();
+                
                 if (res.status === 'success') {
                     rawStatusData = res.data.data;
                     renderClientProgress(rawStatusData);
                 } else {
-                    Swal.fire('Error', res.message, 'error');
+                    if (!isSilent) Swal.fire('Error', res.message, 'error');
                 }
-            } catch (err) { endLoading(); Swal.fire('Error', err.message, 'error'); }
+            } catch (err) { 
+                if (!isSilent) { endLoading(); Swal.fire('Error', err.message, 'error'); } 
+            }
         }
 
         function renderClientProgress(data) {
