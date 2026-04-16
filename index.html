@@ -2437,8 +2437,9 @@
             }
             updateClientCounterUI();
             
-            // --- BARU: Update status seketika saat foto dipilih ---
-            if (!hasClientSubmitted) { pingClientStatus('Sedang Memilih'); }
+            // --- FIX PC/LAPTOP: Tembak status tiap kali foto dipilih/dihapus ---
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
+            if (!isSubmitted) { pingClientStatus('Sedang Memilih'); }
         }
 
         function updateClientCounterUI() {
@@ -2514,18 +2515,16 @@
             pingClientStatus('Selesai');
         }
 
-        // Pendeteksi Klien Keluar / Pindah Aplikasi (Terutama di HP)
+        // Pendeteksi Klien Keluar / Pindah Aplikasi (HP & PC)
         document.addEventListener('visibilitychange', function() {
-            if (!clientState.token || hasClientSubmitted) return;
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
+            if (!clientState.token || isSubmitted) return;
             
             if (document.visibilityState === 'hidden') {
-                // Klien pindah tab / layar mati -> Set Belum Memilih
                 pingClientStatus('Belum Memilih');
             } else if (document.visibilityState === 'visible') {
-                // Klien kembali ke tab / layar nyala -> Set Sedang Memilih (Jika sudah ada foto dipilih)
-                if (clientState.selectedImages.length > 0) {
-                    pingClientStatus('Sedang Memilih');
-                }
+                // PC FIX: Pokoknya asal tab dilihat lagi, langsung paksa jadi Sedang Memilih
+                pingClientStatus('Sedang Memilih'); 
             }
         });
 
@@ -2542,7 +2541,7 @@
             }).catch(function(e) { console.log("Tracker ping failed:", e); });
         }
 
-        var statusTimer = null; // Robot auto-refresh baru yang anti-macet
+        var statusTimer = null; 
 
         async function loadClientProgress(isSilent = false) {
             if (!isSilent) startLoading("Memuat Status...");
@@ -2565,10 +2564,10 @@
                 if (!isSilent) { endLoading(); Swal.fire('Error', err.message, 'error'); } 
             }
 
-            // AUTO-REFRESH CERDAS: Hanya mengulang jika Admin sedang berada di tab Pantau Klien
+            // AUTO-REFRESH SUPER BANDEL: Cek langsung apakah area layar Pantau Klien sedang aktif/kelihatan
             clearTimeout(statusTimer);
-            var activeTab = document.querySelector('#admin-nav-tabs .active');
-            if (activeTab && activeTab.id === 'tab-status') {
+            var sectionStatus = document.getElementById('section-status');
+            if (sectionStatus && !sectionStatus.classList.contains('hidden')) {
                 statusTimer = setTimeout(function() { loadClientProgress(true); }, 15000);
             }
         }
