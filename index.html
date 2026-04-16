@@ -2541,8 +2541,6 @@
             }).catch(function(e) { console.log("Tracker ping failed:", e); });
         }
 
-        var statusTimer = null; 
-
         async function loadClientProgress(isSilent = false) {
             if (!isSilent) startLoading("Memuat Status...");
             try {
@@ -2563,14 +2561,17 @@
             } catch (err) { 
                 if (!isSilent) { endLoading(); Swal.fire('Error', err.message, 'error'); } 
             }
-
-            // AUTO-REFRESH SUPER BANDEL: Cek langsung apakah area layar Pantau Klien sedang aktif/kelihatan
-            clearTimeout(statusTimer);
-            var sectionStatus = document.getElementById('section-status');
-            if (sectionStatus && !sectionStatus.classList.contains('hidden')) {
-                statusTimer = setTimeout(function() { loadClientProgress(true); }, 15000);
-            }
         }
+
+        // --- ROBOT AUTO-REFRESH GLOBAL (Anti-Macet) ---
+        // Mengecek setiap 10 detik (10000 milidetik) secara mandiri di latar belakang
+        setInterval(function() {
+            var sectionStatus = document.getElementById('section-status');
+            // Hanya menarik data baru jika menu Pantau Klien sedang dilihat/terbuka
+            if (sectionStatus && !sectionStatus.classList.contains('hidden')) {
+                loadClientProgress(true); // true = refresh dalam diam (tanpa loading screen)
+            }
+        }, 10000);
 
         function renderClientProgress(data) {
             var container = document.getElementById('client-status-container');
