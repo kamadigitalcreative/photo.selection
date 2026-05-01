@@ -1519,6 +1519,12 @@
             } else if (tabId === 'users') {
                 if (sectionUsers && sectionUsers.classList) { sectionUsers.classList.remove('hidden'); sectionUsers.classList.add('flex'); }
                 loadDataUsers();
+
+                // Nyalakan robot refresh stabil untuk cek Online/Offline tiap 15 detik
+                autoRefreshInterval = setInterval(function() {
+                    loadDataUsers(true); // true = refresh diam-diam tanpa layar loading
+                }, 15000); 
+
             } else if (tabId === 'status') {
                 if (sectionStatus && sectionStatus.classList) { sectionStatus.classList.remove('hidden'); sectionStatus.classList.add('flex'); }
                 loadClientProgress();
@@ -1571,8 +1577,8 @@
         }
 
         // --- ADMIN: KELOLA PENGGUNA ---
-        async function loadDataUsers() {
-            startLoading("Memuat Fotografer...");
+        async function loadDataUsers(isSilent = false) {
+            if (!isSilent) startLoading("Memuat Fotografer...");
             try {
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
@@ -1583,15 +1589,15 @@
                     })
                 });
                 const res = await response.json();
-                endLoading();
+                if (!isSilent) endLoading();
                 if (res.status === 'success' && res.data.success) {
                     renderUsersTable(res.data.data);
                 } else {
-                    Swal.fire('Error', res.message || res.data.message, 'error');
+                    if (!isSilent) Swal.fire('Error', res.message || res.data.message, 'error');
                 }
             } catch (err) {
-                endLoading();
-                Swal.fire('Error', err.message, 'error');
+                if (!isSilent) endLoading();
+                if (!isSilent) Swal.fire('Error', err.message, 'error');
             }
         }
         
