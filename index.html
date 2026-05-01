@@ -488,6 +488,7 @@
                                         <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">Nama Fotografer</th>
                                         <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">Username</th>
                                         <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">Status</th>
+                                        <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 text-center">Aktivitas</th>
                                         <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">Masa Aktif</th>
                                         <th class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 text-right">Aksi</th>
                                     </tr>
@@ -1317,8 +1318,27 @@
                 }
                 
                 if(currentUser.role === 'Admin') { loadDataUsers(); }
+
+                // Robot ping online/offline
+                clearInterval(userPingInterval);
+                userPingInterval = setInterval(function() {
+                    fetch(API_ENDPOINT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'pingUser', currentUser: currentUser }),
+                        keepalive: true
+                    }).catch(function(e) {});
+                }, 30000); // Ping tiap 30 detik
+
+                // Pancing ping pertama kali login/buka web
+                fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'pingUser', currentUser: currentUser })
+                }).catch(function(e) {});
                 
             } else { 
+                clearInterval(userPingInterval);
                 document.documentElement.classList.remove('dark');
                 if (themeToggle) themeToggle.checked = false;
                 showView('auth-view'); 
@@ -1462,6 +1482,7 @@
         
         // --- DASHBOARD TABS ---
         var autoRefreshInterval = null; // Memori mesin robot
+        var userPingInterval = null; // Robot ping aktivitas user
 
         function switchAdminTab(tabId, skipHistory) {
             if (!skipHistory) { window.history.pushState({ tab: tabId }, '', '/' + tabId); }
@@ -1616,10 +1637,15 @@
 
                 var tr = document.createElement('tr');
                 tr.className = "hover:bg-kama-50/50 transition-colors group";
+                var onlineBadge = row.isOnline
+                    ? '<span class="bg-green-100 text-green-700 text-[10px] px-2 py-1 rounded-full font-bold border border-green-200"><i class="fa-solid fa-circle text-[8px] mr-1"></i>Online</span>'
+                    : '<span class="bg-gray-100 text-gray-500 text-[10px] px-2 py-1 rounded-full font-bold border border-gray-200"><i class="fa-solid fa-circle text-[8px] mr-1"></i>Offline</span>';
+
                 tr.innerHTML = 
                     '<td class="p-4 sm:px-6 font-semibold text-kama-800">' + escapeHTML(row.Nama || '-') + '</td>' +
                     '<td class="p-4 sm:px-6 text-gray-500">@' + escapeHTML(row.Username || '-') + '</td>' +
                     '<td class="p-4 sm:px-6">' + statusBadge + '</td>' +
+                    '<td class="p-4 sm:px-6 text-center">' + onlineBadge + '</td>' +
                     '<td class="p-4 sm:px-6">' + expBadge + '</td>' +
                     '<td class="p-4 sm:px-6 text-right whitespace-nowrap">' +
                         '<div class="flex items-center justify-end gap-2 min-w-max">' +
@@ -2056,7 +2082,7 @@
                 var cleanTarget = line.replace(/^\d+[\.\)]\s*/, '').trim();
                 var extRemoved = cleanTarget.replace(/\.[^/.]+$/, "").toLowerCase();
                 
-                if (extRemoved) {
+                if (extRemoved && extRemoved.length > 2) { // Mencegah crash memori jika ada karakter nyasar
                     targets.push({ raw: line.toLowerCase(), clean: extRemoved, folder: currentFolder });
                 }
             }
@@ -2106,9 +2132,9 @@
             function finishZip() {
                 if (matchCount === 0) { Swal.fire('Hasil Sortir', 'Tidak ada foto yang cocok.', 'info'); endSorterLoading(); return; }
 
-                updateProgress("Membuat ZIP...", 100, "Mengkompresi " + matchCount + " file...");
-                zip.generateAsync({ type: "blob" }, function (metadata) { 
-                    updateProgress("Membuat ZIP...", metadata.percent.toFixed(0), "Kompresi: " + metadata.percent.toFixed(0) + "%"); 
+                updateProgress("Membuat ZIP...", 100, "Menyatukan " + matchCount + " file (Tanpa kompresi ulang)...");
+                zip.generateAsync({ type: "blob", compression: "STORE" }, function (metadata) { 
+                    updateProgress("Membuat ZIP...", metadata.percent.toFixed(0), "Menyatukan: " + metadata.percent.toFixed(0) + "%"); 
                 }).then(function(blob) {
                     saveAs(blob, "Hasil_Sortir_Foto.zip");
                     Swal.fire('Selesai!', "Berhasil menyortir " + matchCount + " file. ZIP diunduh.", 'success');
