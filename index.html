@@ -316,56 +316,60 @@
     </div>
 
     <div id="admin-view" class="view-section">
-        <header class="glass-header px-4 sm:px-6 py-3 flex flex-wrap justify-between items-center sticky top-0 gap-y-3 gap-x-2 z-40">
-            <div class="flex items-center gap-2.5">
-                <div class="brand-logo-container-sm w-8 h-8 bg-kama-800 text-white rounded-lg flex items-center justify-center shadow-sm overflow-hidden">
-                    <i class="fa-solid fa-camera-retro text-sm"></i>
-                </div>
-                <h1 class="font-bold text-lg text-kama-800 tracking-tight brand-name-text">App Name</h1>
-            </div>
-
-            <div id="admin-nav-tabs" class="hidden sm:flex bg-gray-100 p-1 rounded-lg mx-auto">
-                <button onclick="switchAdminTab('dashboard')" id="tab-dashboard" class="nav-tab admin-only-col hidden">Dashboard</button>
-                <button onclick="switchAdminTab('projects')" id="tab-projects" class="nav-tab active">Projects</button>
-                <button onclick="switchAdminTab('status')" id="tab-status" class="nav-tab">Pantau Klien</button>
-                <button onclick="switchAdminTab('panduan')" id="tab-panduan" class="nav-tab photo-only-col hidden">Panduan</button>
-                <button onclick="switchAdminTab('feedback')" id="tab-feedback" class="nav-tab photo-only-col hidden">Kirim Saran</button>
-                <button onclick="switchAdminTab('users')" id="tab-users" class="nav-tab admin-only-col hidden">Kelola Tim</button>
-                <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback" class="nav-tab admin-only-col hidden">Laporan Feedback</button>
-            </div>
-            
-            <div class="flex items-center gap-2 sm:gap-3 ml-auto">
-                <div class="wrapper scale-[0.4] origin-right" title="Dark Mode" id="theme-toggle-wrapper">
-                    <input type="checkbox" id="hide-checkbox">
-                    <label for="hide-checkbox" class="toggle">
-                        <span class="toggle-button">
-                        <span class="crater crater-1"></span><span class="crater crater-2"></span><span class="crater crater-3"></span><span class="crater crater-4"></span><span class="crater crater-5"></span><span class="crater crater-6"></span><span class="crater crater-7"></span>
-                        </span>
-                        <span class="star star-1"></span><span class="star star-2"></span><span class="star star-3"></span><span class="star star-4"></span><span class="star star-5"></span><span class="star star-6"></span><span class="star star-7"></span><span class="star star-8"></span>
-                    </label>
+        <header class="glass-header px-4 sm:px-6 py-3 flex flex-col sticky top-0 gap-y-3 z-40">
+            <!-- Baris Atas (Logo, Tabs Desktop, dan Kontrol Kanan) -->
+            <div class="flex justify-between items-center w-full">
+                <div class="flex items-center gap-2.5 shrink-0">
+                    <div class="brand-logo-container-sm w-8 h-8 bg-kama-800 text-white rounded-lg flex items-center justify-center shadow-sm overflow-hidden">
+                        <i class="fa-solid fa-camera-retro text-sm"></i>
+                    </div>
+                    <h1 class="font-bold text-lg text-kama-800 tracking-tight brand-name-text truncate max-w-[140px] sm:max-w-xs">App Name</h1>
                 </div>
 
-                <div class="text-right mr-2 hidden sm:block">
-                    <p class="text-xs font-bold text-kama-800" id="adminName">User</p>
-                    <p class="text-[10px] text-gray-500" id="adminRole">Role</p>
+                <div id="admin-nav-tabs" class="hidden sm:flex bg-gray-100 p-1 rounded-lg mx-auto shrink-0">
+                    <button onclick="switchAdminTab('dashboard')" id="tab-dashboard" class="nav-tab admin-only-col hidden">Dashboard</button>
+                    <button onclick="switchAdminTab('projects')" id="tab-projects" class="nav-tab active">Projects</button>
+                    <button onclick="switchAdminTab('status')" id="tab-status" class="nav-tab">Pantau Klien</button>
+                    <button onclick="switchAdminTab('panduan')" id="tab-panduan" class="nav-tab photo-only-col hidden">Panduan</button>
+                    <button onclick="switchAdminTab('feedback')" id="tab-feedback" class="nav-tab photo-only-col hidden">Kirim Saran</button>
+                    <button onclick="switchAdminTab('users')" id="tab-users" class="nav-tab admin-only-col hidden">Kelola Tim</button>
+                    <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback" class="nav-tab admin-only-col hidden">Laporan Feedback</button>
                 </div>
-                <button onclick="openModalSettings()" class="text-gray-500 hover:text-kama-800 w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-gray-200 bg-white flex items-center justify-center transition-colors shadow-sm" title="Pengaturan Brand">
-                    <i class="fa-solid fa-gear"></i>
-                </button>
-                <button onclick="handleLogout()" class="text-red-500 hover:text-red-700 w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-red-100 bg-red-50 flex items-center justify-center transition-colors shadow-sm" title="Logout">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                </button>
+                
+                <div class="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
+                    <div class="wrapper scale-[0.4] origin-right" title="Dark Mode" id="theme-toggle-wrapper">
+                        <input type="checkbox" id="hide-checkbox">
+                        <label for="hide-checkbox" class="toggle">
+                            <span class="toggle-button">
+                            <span class="crater crater-1"></span><span class="crater crater-2"></span><span class="crater crater-3"></span><span class="crater crater-4"></span><span class="crater crater-5"></span><span class="crater crater-6"></span><span class="crater crater-7"></span>
+                            </span>
+                            <span class="star star-1"></span><span class="star star-2"></span><span class="star star-3"></span><span class="star star-4"></span><span class="star star-5"></span><span class="star star-6"></span><span class="star star-7"></span><span class="star star-8"></span>
+                        </label>
+                    </div>
+
+                    <div class="text-right mr-2 hidden sm:block">
+                        <p class="text-xs font-bold text-kama-800" id="adminName">User</p>
+                        <p class="text-[10px] text-gray-500" id="adminRole">Role</p>
+                    </div>
+                    <button onclick="openModalSettings()" class="text-gray-500 hover:text-kama-800 w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-gray-200 bg-white flex items-center justify-center transition-colors shadow-sm" title="Pengaturan Brand">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+                    <button onclick="handleLogout()" class="text-red-500 hover:text-red-700 w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-red-100 bg-red-50 flex items-center justify-center transition-colors shadow-sm" title="Logout">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    </button>
+                </div>
             </div>
 
+            <!-- Baris Bawah (Menu Tab Mobile) -->
             <div class="w-full flex sm:hidden">
-                <div id="admin-nav-tabs-mobile" class="flex bg-gray-100 p-1 rounded-lg w-full">
-                    <button onclick="switchAdminTab('dashboard')" id="tab-dashboard-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center">Dash</button>
-                    <button onclick="switchAdminTab('projects')" id="tab-projects-m" class="nav-tab flex-1 active text-xs py-2 text-center">Projects</button>
-                    <button onclick="switchAdminTab('status')" id="tab-status-m" class="nav-tab flex-1 text-xs py-2 text-center">Pantau</button>
-                    <button onclick="switchAdminTab('panduan')" id="tab-panduan-m" class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center">Panduan</button>
-                    <button onclick="switchAdminTab('feedback')" id="tab-feedback-m" class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center">Saran</button>
-                    <button onclick="switchAdminTab('users')" id="tab-users-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center">Tim</button>
-                    <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center">Feedback</button>
+                <div id="admin-nav-tabs-mobile" class="flex bg-gray-100 p-1 rounded-lg w-full overflow-x-auto">
+                    <button onclick="switchAdminTab('dashboard')" id="tab-dashboard-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center px-1">Dash</button>
+                    <button onclick="switchAdminTab('projects')" id="tab-projects-m" class="nav-tab flex-1 active text-xs py-2 text-center px-1">Projects</button>
+                    <button onclick="switchAdminTab('status')" id="tab-status-m" class="nav-tab flex-1 text-xs py-2 text-center px-1">Pantau</button>
+                    <button onclick="switchAdminTab('panduan')" id="tab-panduan-m" class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1">Panduan</button>
+                    <button onclick="switchAdminTab('feedback')" id="tab-feedback-m" class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1">Saran</button>
+                    <button onclick="switchAdminTab('users')" id="tab-users-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center px-1">Tim</button>
+                    <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center px-1">Feedback</button>
                 </div>
             </div>
         </header>
