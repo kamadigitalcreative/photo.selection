@@ -445,7 +445,7 @@
                             <p class="text-sm text-gray-500">Kelola akses galeri client Anda.</p>
                         </div>
                         <div class="flex gap-2 w-full sm:w-auto">
-                            <button onclick="showView('local-sorter-view')" class="bg-white border border-gray-200 text-kama-800 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors shadow-sm text-sm font-semibold flex items-center justify-center gap-2 flex-1 sm:flex-none">
+                            <button onclick="openSortirLokal()" class="bg-white border border-gray-200 text-kama-800 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors shadow-sm text-sm font-semibold flex items-center justify-center gap-2 flex-1 sm:flex-none">
                                 <i class="fa-solid fa-folder-tree text-blue-500"></i> Sortir Lokal
                             </button>
                             <button onclick="openModalCreate()" class="bg-kama-800 text-white px-5 py-2.5 rounded-xl hover:bg-kama-900 transition-colors shadow-md text-sm font-semibold flex items-center gap-2 flex-1 sm:flex-none justify-center">
@@ -721,7 +721,7 @@
 
     <div id="local-sorter-view" class="view-section bg-kama-50 min-h-screen">
         <header class="glass-header px-6 py-4 flex items-center sticky top-0 gap-4 shadow-sm">
-            <button onclick="showView('admin-view')" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center justify-center transition-colors">
+            <button onclick="closeSortirLokal()" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center justify-center transition-colors">
                 <i class="fa-solid fa-arrow-left"></i>
             </button>
             <div>
@@ -978,10 +978,28 @@
 
         // Menangani tombol back/forward di browser agar menu web ikut berubah
         window.addEventListener('popstate', function(event) {
-            if (event.state && event.state.tab) {
-                switchAdminTab(event.state.tab, true);
+            if (event.state) {
+                if (event.state.view === 'local-sorter-view') {
+                    showView('local-sorter-view');
+                } else if (event.state.tab) {
+                    showView('admin-view');
+                    switchAdminTab(event.state.tab, true);
+                }
+            } else {
+                checkLoginState();
             }
         });
+
+        function openSortirLokal() {
+            window.history.pushState({ view: 'local-sorter-view' }, '', '/projects/sortirlokal');
+            showView('local-sorter-view');
+        }
+
+        function closeSortirLokal() {
+            window.history.pushState({ tab: 'projects' }, '', '/projects');
+            showView('admin-view');
+            switchAdminTab('projects', true);
+        }
 
         window.addEventListener('load', function() {
             var failsafeTimer = setTimeout(function() {
@@ -1382,11 +1400,15 @@
                     showView('admin-view');
                     for(var p=0; p<photoCols.length; p++) { if(photoCols[p] && photoCols[p].classList) photoCols[p].classList.add('hidden'); } // Sembunyikan menu fotografer dari admin
                     
-                    showView('admin-view');
                     // Buka tab sesuai link, jika link tidak dikenali, kembali ke dashboard
                     var validAdminTabs = ['dashboard', 'projects', 'status', 'users', 'admin-feedback'];
-                    if (validAdminTabs.includes(currentTab)) { switchAdminTab(currentTab, true); }
-                    else { switchAdminTab('dashboard', true); }
+                    if (currentTab === 'sortirlokal') {
+                        showView('local-sorter-view');
+                    } else {
+                        showView('admin-view');
+                        if (validAdminTabs.includes(currentTab)) { switchAdminTab(currentTab, true); } 
+                        else { switchAdminTab('dashboard', true); }
+                    }
 
                 } else {
                     // Tampilkan baris menu untuk Fotografer
@@ -1397,11 +1419,15 @@
                     for(var j=0; j<adminCols.length; j++) { if(adminCols[j] && adminCols[j].classList) adminCols[j].classList.add('hidden'); }
                     for(var p=0; p<photoCols.length; p++) { if(photoCols[p] && photoCols[p].classList) photoCols[p].classList.remove('hidden'); } // Tampilkan khusus fotografer
                     
-                    showView('admin-view');
                     // Buka tab sesuai link, jika link tidak dikenali, kembali ke projects
                     var validPhotoTabs = ['projects', 'status', 'panduan', 'feedback'];
-                    if (validPhotoTabs.includes(currentTab)) { switchAdminTab(currentTab, true); }
-                    else { switchAdminTab('projects', true); }
+                    if (currentTab === 'sortirlokal') {
+                        showView('local-sorter-view');
+                    } else {
+                        showView('admin-view');
+                        if (validPhotoTabs.includes(currentTab)) { switchAdminTab(currentTab, true); } 
+                        else { switchAdminTab('projects', true); }
+                    }
                 }
                 
                 if(currentUser.role === 'Admin') { loadDataUsers(); }
