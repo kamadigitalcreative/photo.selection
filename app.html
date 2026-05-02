@@ -1950,11 +1950,11 @@
                 var encodedLogo = encodeURIComponent(appBranding.logo || '');
                 
                 var displayLink = row['Short Slug'] 
-                    ? ("https://ps.kamacreative.my.id/?c=" + row['Short Slug']) 
-                    : (baseAppUrl + "?token=" + row.Token + "&bn=" + encodedBrand + "&bl=" + encodedLogo);
+                    ? ("https://ps.kamacreative.my.id/app?c=" + row['Short Slug']) 
+                    : ("https://ps.kamacreative.my.id/app?token=" + row.Token + "&bn=" + encodedBrand + "&bl=" + encodedLogo);
                 
                 var displayedTokenOrLink = row['Short Slug'] 
-                    ? ("ps.kamacreative.my.id/?c=" + row['Short Slug']) 
+                    ? ("ps.kamacreative.my.id/app?c=" + row['Short Slug']) 
                     : row.Token;
                 
                 var dateStr = row['Dibuat Pada'] ? row['Dibuat Pada'].toString() : '-';
