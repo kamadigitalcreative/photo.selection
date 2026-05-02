@@ -979,7 +979,10 @@
         // Menangani tombol back/forward di browser agar menu web ikut berubah
         window.addEventListener('popstate', function(event) {
             if (event.state) {
-                if (event.state.view === 'local-sorter-view') {
+                if (event.state.auth) {
+                    showView('auth-view');
+                    toggleAuth(event.state.auth, true);
+                } else if (event.state.view === 'local-sorter-view') {
                     showView('local-sorter-view');
                 } else if (event.state.tab) {
                     showView('admin-view');
@@ -1302,11 +1305,13 @@
         }
 
         // --- AUTH LOGIC ---
-        function toggleAuth(type) {
+        function toggleAuth(type, skipHistory) {
             var loginForm = document.getElementById('login-form-wrapper');
             var regForm = document.getElementById('register-form-wrapper');
             var verifyForm = document.getElementById('verify-email-wrapper'); // BARU
             if (!loginForm || !regForm) return;
+
+            if (!skipHistory) { window.history.pushState({ auth: type }, '', '/' + type); }
 
             if (verifyForm && verifyForm.classList) verifyForm.classList.add('hidden'); // Sembunyikan pesan sukses
 
@@ -1455,6 +1460,20 @@
                 document.documentElement.classList.remove('dark');
                 if (themeToggle) themeToggle.checked = false;
                 showView('auth-view'); 
+                
+                var pathParts = window.location.pathname.split('/').filter(Boolean);
+                var currentPath = pathParts.length > 0 ? pathParts[0] : 'login';
+
+                if (currentPath === 'register') {
+                    toggleAuth('register', true);
+                } else {
+                    // Jika di root (landing page), otomatis dorong ke /login untuk area aplikasi
+                    if (window.location.pathname === '/' || window.location.pathname === '') {
+                        window.history.replaceState({ auth: 'login' }, '', '/login');
+                    }
+                    toggleAuth('login', true);
+                }
+                
                 applyBranding(); 
             }
         }
@@ -1562,7 +1581,7 @@
         }
         
         async function handleLogout() {
-            window.history.pushState({}, '', '/'); // Bersihkan link saat logout
+            window.history.pushState({ auth: 'login' }, '', '/login'); // Arahkan ke login saat logout
             localStorage.removeItem('ps_user');
             sessionStorage.removeItem('ps_user');
             currentUser = null;
