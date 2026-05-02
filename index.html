@@ -328,7 +328,10 @@
                 <button onclick="switchAdminTab('dashboard')" id="tab-dashboard" class="nav-tab admin-only-col hidden">Dashboard</button>
                 <button onclick="switchAdminTab('projects')" id="tab-projects" class="nav-tab active">Projects</button>
                 <button onclick="switchAdminTab('status')" id="tab-status" class="nav-tab">Pantau Klien</button>
+                <button onclick="switchAdminTab('panduan')" id="tab-panduan" class="nav-tab photo-only-col hidden">Panduan</button>
+                <button onclick="switchAdminTab('feedback')" id="tab-feedback" class="nav-tab photo-only-col hidden">Kirim Saran</button>
                 <button onclick="switchAdminTab('users')" id="tab-users" class="nav-tab admin-only-col hidden">Kelola Tim</button>
+                <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback" class="nav-tab admin-only-col hidden">Laporan Feedback</button>
             </div>
             
             <div class="flex items-center gap-2 sm:gap-3 ml-auto">
@@ -359,7 +362,10 @@
                     <button onclick="switchAdminTab('dashboard')" id="tab-dashboard-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center">Dash</button>
                     <button onclick="switchAdminTab('projects')" id="tab-projects-m" class="nav-tab flex-1 active text-xs py-2 text-center">Projects</button>
                     <button onclick="switchAdminTab('status')" id="tab-status-m" class="nav-tab flex-1 text-xs py-2 text-center">Pantau</button>
+                    <button onclick="switchAdminTab('panduan')" id="tab-panduan-m" class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center">Panduan</button>
+                    <button onclick="switchAdminTab('feedback')" id="tab-feedback-m" class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center">Saran</button>
                     <button onclick="switchAdminTab('users')" id="tab-users-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center">Tim</button>
+                    <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center">Feedback</button>
                 </div>
             </div>
         </header>
@@ -539,6 +545,77 @@
                         <div class="overflow-y-auto flex-1 p-4 bg-gray-50/30" id="client-status-container">
                             <div class="text-center py-10 text-gray-400 text-sm font-medium"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat data...</div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- SECTION PANDUAN -->
+                <div id="section-panduan" class="hidden flex-1 flex-col">
+                    <div class="mb-6">
+                        <h2 class="text-xl font-bold text-kama-800">Panduan Penggunaan</h2>
+                        <p class="text-sm text-gray-500">Pelajari cara menggunakan sistem Photo Selector untuk mempermudah pekerjaan Anda.</p>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-kama-100 p-6 space-y-6">
+                        <div>
+                            <h3 class="font-bold text-kama-800 mb-2 flex items-center"><i class="fa-solid fa-folder-plus text-blue-500 mr-2"></i> 1. Membuat Project Baru</h3>
+                            <p class="text-sm text-gray-600 ml-6 leading-relaxed">Masuk ke menu <b>Projects</b>, klik tombol <b>New Project</b>. Isi nama klien, link Google Drive yang berisi folder foto klien (pastikan akses linknya diset "Siapa saja yang memiliki link / Viewer"), nomor WhatsApp klien, dan batas maksimal foto yang boleh dipilih. Password opsional jika ingin galeri diprivasi.</p>
+                        </div>
+                        <hr class="border-gray-100">
+                        <div>
+                            <h3 class="font-bold text-kama-800 mb-2 flex items-center"><i class="fa-solid fa-share-nodes text-green-500 mr-2"></i> 2. Mengirim Link ke Klien</h3>
+                            <p class="text-sm text-gray-600 ml-6 leading-relaxed">Setelah project terbuat, klik tombol <i class="fa-regular fa-copy text-gray-400 mx-1"></i> <b>Copy</b> pada baris project tersebut. Teks otomatis disalin beserta link dan passwordnya. Anda tinggal menempelkannya (Paste) di chat WhatsApp klien Anda.</p>
+                        </div>
+                        <hr class="border-gray-100">
+                        <div>
+                            <h3 class="font-bold text-kama-800 mb-2 flex items-center"><i class="fa-solid fa-satellite-dish text-amber-500 mr-2"></i> 3. Memantau Proses Pemilihan</h3>
+                            <p class="text-sm text-gray-600 ml-6 leading-relaxed">Buka menu <b>Pantau Klien</b>. Di sini Anda bisa melihat status secara real-time apakah klien <i>Belum Memilih</i>, <i>Sedang Memilih</i>, atau sudah <i>Selesai</i>. Jika sudah selesai, klien akan mengirimkan list file foto ke WhatsApp Anda.</p>
+                        </div>
+                        <hr class="border-gray-100">
+                        <div>
+                            <h3 class="font-bold text-kama-800 mb-2 flex items-center"><i class="fa-solid fa-file-zipper text-purple-500 mr-2"></i> 4. Sortir File Lokal (Otomatis ZIP)</h3>
+                            <p class="text-sm text-gray-600 ml-6 leading-relaxed">Setelah menerima list foto dari klien di WA, copy teks list tersebut. Masuk ke menu <b>Projects</b> > klik <b>Sortir Lokal</b>. Pilih folder asli (mentahan) di komputer Anda, lalu paste list dari klien ke kotak yang disediakan, lalu klik proses. Sistem otomatis menyortir foto ke dalam file ZIP.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION KIRIM FEEDBACK (FOTOGRAFER) -->
+                <div id="section-feedback" class="hidden flex-1 flex-col max-w-3xl mx-auto w-full">
+                    <div class="mb-6">
+                        <h2 class="text-xl font-bold text-kama-800">Kirim Feedback / Laporan</h2>
+                        <p class="text-sm text-gray-500">Ada kendala, saran, atau menemukan bug? Sampaikan langsung ke Admin sistem.</p>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-kama-100 p-6">
+                        <form id="formFeedback" onsubmit="handleKirimFeedback(event)">
+                            <div class="mb-4">
+                                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Pesan Laporan <span class="text-red-500">*</span></label>
+                                <textarea id="fb_pesan" required rows="5" placeholder="Jelaskan detail saran atau kendala/error yang Anda alami..." class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none transition-all text-sm resize-none"></textarea>
+                            </div>
+                            <div class="mb-6">
+                                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Lampiran Bukti Gambar (Opsional)</label>
+                                <div class="file-upload-wrapper w-full relative">
+                                    <input type="file" id="fb_file" accept="image/*" class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border border-gray-200 rounded-xl bg-gray-50 p-1.5 transition-colors">
+                                </div>
+                                <p class="text-[10px] text-gray-400 mt-1.5"><i class="fa-solid fa-circle-info mr-1"></i> Sertakan screenshot layar jika ada fitur yang error.</p>
+                            </div>
+                            <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-kama-800 text-white text-sm font-semibold rounded-xl hover:bg-kama-900 shadow-md transition-colors flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-paper-plane"></i> Kirim Laporan
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- SECTION LAPORAN FEEDBACK (ADMIN) -->
+                <div id="section-admin-feedback" class="hidden flex-1 flex-col">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-xl font-bold text-kama-800">Laporan Masuk</h2>
+                            <p class="text-sm text-gray-500">Daftar saran dan keluhan bug dari tim fotografer Anda.</p>
+                        </div>
+                        <button onclick="loadAdminFeedback()" class="bg-white border border-gray-200 text-kama-800 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors shadow-sm text-sm font-semibold flex items-center gap-2">
+                            <i class="fa-solid fa-rotate-right text-blue-500"></i> Refresh
+                        </button>
+                    </div>
+                    <div id="admin-feedback-container" class="space-y-4 pb-8">
+                        <div class="text-center py-10 text-gray-400 text-sm font-medium"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat laporan...</div>
                     </div>
                 </div>
 
@@ -1275,6 +1352,7 @@
                 var adminNavTabs = document.getElementById('admin-nav-tabs');
                 var adminNavTabsMobile = document.getElementById('admin-nav-tabs-mobile');
                 var adminCols = document.querySelectorAll('.admin-only-col');
+                var photoCols = document.querySelectorAll('.photo-only-col'); // Deteksi menu khusus fotografer
 
                 var savedTheme = currentUser.role === 'Admin' ? localStorage.getItem('ps_admin_theme') : localStorage.getItem('ps_theme');
                 
@@ -1297,9 +1375,12 @@
                     for(var i=0; i<adminCols.length; i++) { if(adminCols[i] && adminCols[i].classList) adminCols[i].classList.remove('hidden'); }
                     
                     showView('admin-view');
+                    for(var p=0; p<photoCols.length; p++) { if(photoCols[p] && photoCols[p].classList) photoCols[p].classList.add('hidden'); } // Sembunyikan menu fotografer dari admin
+                    
+                    showView('admin-view');
                     // Buka tab sesuai link, jika link tidak dikenali, kembali ke dashboard
-                    var validAdminTabs = ['dashboard', 'projects', 'status', 'users'];
-                    if (validAdminTabs.includes(currentTab)) { switchAdminTab(currentTab, true); } 
+                    var validAdminTabs = ['dashboard', 'projects', 'status', 'users', 'admin-feedback'];
+                    if (validAdminTabs.includes(currentTab)) { switchAdminTab(currentTab, true); }
                     else { switchAdminTab('dashboard', true); }
 
                 } else {
@@ -1309,11 +1390,12 @@
                     
                     // Sembunyikan HANYA menu khusus admin (Dashboard & Kelola Tim)
                     for(var j=0; j<adminCols.length; j++) { if(adminCols[j] && adminCols[j].classList) adminCols[j].classList.add('hidden'); }
+                    for(var p=0; p<photoCols.length; p++) { if(photoCols[p] && photoCols[p].classList) photoCols[p].classList.remove('hidden'); } // Tampilkan khusus fotografer
                     
                     showView('admin-view');
                     // Buka tab sesuai link, jika link tidak dikenali, kembali ke projects
-                    var validPhotoTabs = ['projects', 'status'];
-                    if (validPhotoTabs.includes(currentTab)) { switchAdminTab(currentTab, true); } 
+                    var validPhotoTabs = ['projects', 'status', 'panduan', 'feedback'];
+                    if (validPhotoTabs.includes(currentTab)) { switchAdminTab(currentTab, true); }
                     else { switchAdminTab('projects', true); }
                 }
                 
@@ -1501,11 +1583,17 @@
             var sectionProj = document.getElementById('section-projects');
             var sectionUsers = document.getElementById('section-users');
             var sectionStatus = document.getElementById('section-status');
+            var sectionPanduan = document.getElementById('section-panduan');
+            var sectionFeedback = document.getElementById('section-feedback');
+            var sectionAdminFeedback = document.getElementById('section-admin-feedback');
 
             if (sectionDash && sectionDash.classList) { sectionDash.classList.remove('flex'); sectionDash.classList.add('hidden'); }
             if (sectionProj && sectionProj.classList) { sectionProj.classList.remove('flex'); sectionProj.classList.add('hidden'); }
             if (sectionUsers && sectionUsers.classList) { sectionUsers.classList.remove('flex'); sectionUsers.classList.add('hidden'); }
             if (sectionStatus && sectionStatus.classList) { sectionStatus.classList.remove('flex'); sectionStatus.classList.add('hidden'); }
+            if (sectionPanduan && sectionPanduan.classList) { sectionPanduan.classList.remove('flex'); sectionPanduan.classList.add('hidden'); }
+            if (sectionFeedback && sectionFeedback.classList) { sectionFeedback.classList.remove('flex'); sectionFeedback.classList.add('hidden'); }
+            if (sectionAdminFeedback && sectionAdminFeedback.classList) { sectionAdminFeedback.classList.remove('flex'); sectionAdminFeedback.classList.add('hidden'); }
 
             // FIX: Matikan robot setiap kali pindah menu agar hemat memori
             clearInterval(autoRefreshInterval);
@@ -1533,6 +1621,13 @@
                 autoRefreshInterval = setInterval(function() {
                     loadClientProgress(true);
                 }, 10000); // 10000 = Tarik data otomatis tiap 10 detik
+            } else if (tabId === 'panduan') {
+                if (sectionPanduan) { sectionPanduan.classList.remove('hidden'); sectionPanduan.classList.add('flex'); }
+            } else if (tabId === 'feedback') {
+                if (sectionFeedback) { sectionFeedback.classList.remove('hidden'); sectionFeedback.classList.add('flex'); }
+            } else if (tabId === 'admin-feedback') {
+                if (sectionAdminFeedback) { sectionAdminFeedback.classList.remove('hidden'); sectionAdminFeedback.classList.add('flex'); }
+                loadAdminFeedback();
             }
         }
 
@@ -2844,6 +2939,103 @@
                 }).catch(function(e) {});
             }
         });
+        // --- LOGIKA FEEDBACK & LAPORAN ---
+        async function handleKirimFeedback(e) {
+            e.preventDefault();
+            var pesanInput = document.getElementById('fb_pesan').value;
+            var fileInput = document.getElementById('fb_file');
+            
+            if(!pesanInput.trim()) { Swal.fire('Peringatan', 'Pesan tidak boleh kosong', 'warning'); return; }
+            
+            startLoading("Mengirim Laporan...");
+            
+            let base64Data = null;
+            let filename = null;
+            
+            // Proses gambar ke sistem base64 jika dilampirkan
+            if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                var file = fileInput.files[0];
+                filename = file.name;
+                base64Data = await new Promise((resolve) => {
+                    let reader = new FileReader();
+                    reader.onload = (evt) => resolve(evt.target.result);
+                    reader.readAsDataURL(file);
+                });
+            }
+            
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'submitFeedback',
+                        data: { pesan: pesanInput, base64Data: base64Data, filename: filename },
+                        currentUser: currentUser
+                    })
+                });
+                const res = await response.json();
+                endLoading();
+                if (res.status === 'success' && res.data.success) {
+                    Swal.fire({icon:'success', title:'Terkirim!', text:'Terima kasih atas laporan dan masukan Anda.', confirmButtonColor:'#1e1e2d'});
+                    document.getElementById('formFeedback').reset();
+                } else {
+                    Swal.fire('Gagal', res.message || res.data.message, 'error');
+                }
+            } catch(err) {
+                endLoading();
+                Swal.fire('Error', err.message, 'error');
+            }
+        }
+
+        async function loadAdminFeedback() {
+            startLoading("Memuat Laporan...");
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'getFeedbacks', currentUser: currentUser })
+                });
+                const res = await response.json();
+                endLoading();
+                if (res.status === 'success' && res.data.success) {
+                    renderAdminFeedback(res.data.data);
+                } else {
+                    Swal.fire('Error', res.message || res.data.message, 'error');
+                }
+            } catch(err) {
+                endLoading();
+                Swal.fire('Error', err.message, 'error');
+            }
+        }
+
+        function renderAdminFeedback(data) {
+            var container = document.getElementById('admin-feedback-container');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 text-gray-400 italic">Belum ada feedback / laporan masuk.</div>';
+                return;
+            }
+            
+            data.forEach(function(row) {
+                var dateStr = row.Tanggal ? new Date(row.Tanggal).toLocaleString('id-ID', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '-';
+                // Jika URL lampiran ada, tampilkan gambarnya (dan manfaatkan viewer galeri bawaan)
+                var imgHtml = row.LampiranURL ? '<div class="mt-4"><img src="'+row.LampiranURL+'" class="max-h-48 rounded-lg cursor-pointer hover:opacity-80 transition border border-gray-200" onclick="openImageViewer(\''+row.LampiranURL+'\', \'Lampiran Bukti Laporan\', event)"></div>' : '';
+                
+                var card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-2xl border border-gray-200 shadow-sm";
+                card.innerHTML = 
+                    '<div class="flex justify-between items-start mb-3">' +
+                        '<div><span class="font-bold text-kama-800 text-sm">@' + escapeHTML(row.Username) + '</span> <span class="text-[9px] font-bold text-white bg-blue-500 px-2 py-0.5 rounded-full ml-1">' + escapeHTML(row.Role) + '</span></div>' +
+                        '<div class="text-[10px] font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100"><i class="fa-regular fa-clock mr-1"></i>' + dateStr + '</div>' +
+                    '</div>' +
+                    '<p class="text-gray-600 text-sm whitespace-pre-wrap leading-relaxed">' + escapeHTML(row.Pesan) + '</p>' +
+                    imgHtml;
+                
+                container.appendChild(card);
+            });
+        }
     </script>
 </body>
 </html>
