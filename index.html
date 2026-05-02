@@ -1370,9 +1370,10 @@
                 var currentTab = pathParts.length > 0 ? pathParts[pathParts.length - 1] : '';
 
                 if(currentUser.role === 'Admin') {
-                    if (adminNavTabs && adminNavTabs.classList) { adminNavTabs.classList.remove('hidden'); adminNavTabs.classList.add('sm:flex'); }
+                    if (adminNavTabs && adminNavTabs.classList) { adminNavTabs.classList.add('hidden', 'sm:flex'); }
                     if (adminNavTabsMobile && adminNavTabsMobile.classList) adminNavTabsMobile.classList.remove('hidden');
                     for(var i=0; i<adminCols.length; i++) { if(adminCols[i] && adminCols[i].classList) adminCols[i].classList.remove('hidden'); }
+                    for(var p=0; p<photoCols.length; p++) { if(photoCols[p] && photoCols[p].classList) photoCols[p].classList.add('hidden'); } // Sembunyikan menu fotografer dari admin
                     
                     showView('admin-view');
                     for(var p=0; p<photoCols.length; p++) { if(photoCols[p] && photoCols[p].classList) photoCols[p].classList.add('hidden'); } // Sembunyikan menu fotografer dari admin
@@ -1385,7 +1386,7 @@
 
                 } else {
                     // Tampilkan baris menu untuk Fotografer
-                    if (adminNavTabs && adminNavTabs.classList) { adminNavTabs.classList.remove('hidden'); adminNavTabs.classList.add('sm:flex'); }
+                    if (adminNavTabs && adminNavTabs.classList) { adminNavTabs.classList.add('hidden', 'sm:flex'); }
                     if (adminNavTabsMobile && adminNavTabsMobile.classList) adminNavTabsMobile.classList.remove('hidden');
                     
                     // Sembunyikan HANYA menu khusus admin (Dashboard & Kelola Tim)
@@ -2958,7 +2959,21 @@
                 filename = file.name;
                 base64Data = await new Promise((resolve) => {
                     let reader = new FileReader();
-                    reader.onload = (evt) => resolve(evt.target.result);
+                    reader.onload = (evt) => {
+                        var img = new Image();
+                        img.onload = () => {
+                            var canvas = document.createElement('canvas');
+                            var MAX_WIDTH = 1000; // Perkecil ke batas aman Vercel
+                            var scaleSize = img.width > MAX_WIDTH ? (MAX_WIDTH / img.width) : 1;
+                            canvas.width = img.width * scaleSize;
+                            canvas.height = img.height * scaleSize;
+                            var ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            resolve(canvas.toDataURL('image/jpeg', 0.6));
+                        };
+                        img.onerror = () => resolve(evt.target.result);
+                        img.src = evt.target.result;
+                    };
                     reader.readAsDataURL(file);
                 });
             }
@@ -2975,11 +2990,12 @@
                 });
                 const res = await response.json();
                 endLoading();
-                if (res.status === 'success' && res.data.success) {
+                if (res.status === 'success' && res.data && res.data.success) {
                     Swal.fire({icon:'success', title:'Terkirim!', text:'Terima kasih atas laporan dan masukan Anda.', confirmButtonColor:'#1e1e2d'});
                     document.getElementById('formFeedback').reset();
                 } else {
-                    Swal.fire('Gagal', res.message || res.data.message, 'error');
+                    var errMsg = res.message || (res.data ? res.data.message : res.error) || 'Terjadi kesalahan sistem pengiriman.';
+                    Swal.fire('Gagal', errMsg, 'error');
                 }
             } catch(err) {
                 endLoading();
@@ -2997,10 +3013,11 @@
                 });
                 const res = await response.json();
                 endLoading();
-                if (res.status === 'success' && res.data.success) {
+                if (res.status === 'success' && res.data && res.data.success) {
                     renderAdminFeedback(res.data.data);
                 } else {
-                    Swal.fire('Error', res.message || res.data.message, 'error');
+                    var errMsg = res.message || (res.data ? res.data.message : res.error) || 'Gagal memuat data laporan.';
+                    Swal.fire('Error', errMsg, 'error');
                 }
             } catch(err) {
                 endLoading();
@@ -3021,7 +3038,8 @@
             data.forEach(function(row) {
                 var dateStr = row.Tanggal ? new Date(row.Tanggal).toLocaleString('id-ID', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '-';
                 // Jika URL lampiran ada, tampilkan gambarnya (dan manfaatkan viewer galeri bawaan)
-                var imgHtml = row.LampiranURL ? '<div class="mt-4"><img src="'+row.LampiranURL+'" class="max-h-48 rounded-lg cursor-pointer hover:opacity-80 transition border border-gray-200" onclick="openImageViewer(\''+row.LampiranURL+'\', \'Lampiran Bukti Laporan\', event)"></div>' : '';
+                var originalImgUrl = row.LampiranURL ? row.LampiranURL.replace('=w400', '') : '';
+                var imgHtml = row.LampiranURL ? '<div class="mt-4"><img src="'+row.LampiranURL+'" class="max-h-48 rounded-lg cursor-pointer hover:opacity-80 transition border border-gray-200" onclick="openImageViewer(\''+originalImgUrl+'\', \'Lampiran Bukti Laporan\', event)"></div>' : '';
                 
                 var card = document.createElement('div');
                 card.className = "bg-white p-5 rounded-2xl border border-gray-200 shadow-sm";
