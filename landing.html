@@ -82,13 +82,13 @@
                 
                 <!-- Desktop Buttons -->
                 <div class="hidden md:flex items-center gap-4">
-                    <a href="#" onclick="Swal.fire('Info', 'Halaman Login sedang dalam pengembangan.', 'info')" class="text-slate-600 hover:text-primary-600 font-bold transition">Login</a>
-                    <a href="#join" class="bg-dark hover:bg-slate-800 text-white px-6 py-2.5 rounded-full font-semibold transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">Daftar Sekarang</a>
+                    <a href="/login" class="text-slate-600 hover:text-primary-600 font-bold transition">Login</a>
+                    <a href="/register" class="bg-dark hover:bg-slate-800 text-white px-6 py-2.5 rounded-full font-semibold transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">Daftar Sekarang</a>
                 </div>
 
                 <!-- Mobile Menu Button -->
                 <div class="md:hidden flex items-center gap-4">
-                    <a href="#" onclick="Swal.fire('Info', 'Halaman Login sedang dalam pengembangan.', 'info')" class="text-slate-600 font-bold text-sm">Login</a>
+                    <a href="/login" class="text-slate-600 font-bold text-sm">Login</a>
                     <button onclick="toggleMobileMenu()" class="text-dark hover:text-primary-600 focus:outline-none">
                         <i class="fa-solid fa-bars text-2xl"></i>
                     </button>
@@ -104,7 +104,7 @@
                 <a href="#harga" onclick="toggleMobileMenu()" class="block px-3 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg">Harga</a>
                 <a href="#testimoni" onclick="toggleMobileMenu()" class="block px-3 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg">Testimoni</a>
                 <a href="#faq" onclick="toggleMobileMenu()" class="block px-3 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg">FAQ</a>
-                <a href="#join" onclick="toggleMobileMenu()" class="block mt-4 px-3 py-3 bg-dark text-white font-bold rounded-lg shadow-md">Daftar Sekarang</a>
+                <a href="/register" class="block mt-4 px-3 py-3 bg-dark text-white font-bold rounded-lg shadow-md text-center">Daftar Sekarang</a>
             </div>
         </div>
     </nav>
@@ -123,7 +123,7 @@
                 Photo Selection adalah platform cerdas yang membantu klien memilih foto secara elegan, dan <b>otomatis menyortir ribuan file RAW Anda dalam hitungan detik.</b> Hemat waktu berjam-jam, fokus pada karya!
             </p>
             <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
-                <a href="#join" class="w-full sm:w-auto px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-full font-bold text-lg transition shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                <a href="/register" class="w-full sm:w-auto px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-full font-bold text-lg transition shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                     Mulai Hemat Waktu Anda
                 </a>
                 <a href="#fitur" class="w-full sm:w-auto px-8 py-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-full font-bold text-lg transition flex items-center justify-center gap-2">
@@ -437,7 +437,7 @@
                         <li class="flex items-center text-slate-600"><i class="fa-solid fa-check text-green-500 mr-3 w-5"></i> Client Gallery Link</li>
                         <li class="flex items-center text-slate-600"><i class="fa-solid fa-check text-green-500 mr-3 w-5"></i> Basic Support</li>
                     </ul>
-                    <button onclick="openModal()" class="w-full py-3.5 px-6 rounded-xl font-bold border-2 border-primary-100 text-primary-600 hover:bg-primary-50 hover:border-primary-200 transition">Pilih Paket</button>
+                    <a href="/register" class="w-full py-3.5 px-6 rounded-xl font-bold border-2 border-primary-100 text-primary-600 hover:bg-primary-50 hover:border-primary-200 transition block text-center">Pilih Paket</a>
                 </div>
 
                 <!-- Paket 2 (Popular) -->
@@ -458,7 +458,7 @@
                         <li class="flex items-center text-slate-300"><i class="fa-solid fa-check text-primary-400 mr-3 w-5"></i> Custom Branding Logo</li>
                         <li class="flex items-center text-slate-300"><i class="fa-solid fa-check text-primary-400 mr-3 w-5"></i> VIP Support 24/7</li>
                     </ul>
-                    <button onclick="openModal()" class="w-full py-3.5 px-6 rounded-xl font-bold bg-primary-600 text-white hover:bg-primary-500 shadow-[0_0_15px_rgba(59,130,246,0.4)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] transition transform hover:-translate-y-0.5">Pilih Paket Terbaik</button>
+                    <a href="/register" class="w-full py-3.5 px-6 rounded-xl font-bold bg-primary-600 text-white hover:bg-primary-500 shadow-[0_0_15px_rgba(59,130,246,0.4)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] transition transform hover:-translate-y-0.5 block text-center">Pilih Paket Terbaik</a>
                 </div>
 
                 <!-- Paket 3 -->
@@ -476,7 +476,7 @@
                         <li class="flex items-center text-slate-600"><i class="fa-solid fa-check text-green-500 mr-3 w-5"></i> Client Gallery Link</li>
                         <li class="flex items-center text-slate-600"><i class="fa-solid fa-check text-green-500 mr-3 w-5"></i> Prioritas Support</li>
                     </ul>
-                    <button onclick="openModal()" class="w-full py-3.5 px-6 rounded-xl font-bold border-2 border-primary-100 text-primary-600 hover:bg-primary-50 hover:border-primary-200 transition">Pilih Paket</button>
+                    <a href="/register" class="w-full py-3.5 px-6 rounded-xl font-bold border-2 border-primary-100 text-primary-600 hover:bg-primary-50 hover:border-primary-200 transition block text-center">Pilih Paket</a>
                 </div>
             </div>
             
@@ -837,9 +837,9 @@
             <div class="bg-gradient-to-br from-primary-500 via-primary-600 to-indigo-900 rounded-3xl shadow-2xl overflow-hidden p-12 md:p-16 text-center border border-primary-400/30">
                 <h2 class="text-3xl md:text-5xl font-bold text-white mb-4">Tingkatkan Level Studio Anda Hari Ini</h2>
                 <p class="text-primary-100 mb-10 text-lg md:px-10">Daftar sekarang dan dapatkan akses eksklusif ke seluruh fitur otomatisasi premium yang akan merevolusi cara kerja Anda.</p>
-                <button onclick="openModal()" class="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-700 hover:bg-primary-50 rounded-xl font-extrabold text-lg transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_35px_rgba(255,255,255,0.6)] transform hover:-translate-y-1 ring-4 ring-white/20">
+                <a href="/register" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-primary-700 hover:bg-primary-50 rounded-xl font-extrabold text-lg transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_35px_rgba(255,255,255,0.6)] transform hover:-translate-y-1 ring-4 ring-white/20">
                     🚀 Daftar Sekarang Juga <i class="fa-solid fa-arrow-right ml-2"></i>
-                </button>
+                </a>
             </div>
         </div>
     </section>
