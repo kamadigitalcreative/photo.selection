@@ -1519,10 +1519,24 @@
                 setButtonState('btnRegister', false, 'Daftar Sekarang');
 
                 if (res.status === 'success' && res.data.success) {
-                    // Sembunyikan Form Register & Tampilkan Pesan Sukses
                     document.getElementById('register-form-wrapper').classList.add('hidden');
-                    document.getElementById('verify-email-wrapper').classList.remove('hidden');
                     document.querySelector('#register-form-wrapper form').reset();
+                    
+                    // --- PINDAH KE HALAMAN MAYAR ---
+                    if (res.data.paymentUrl && res.data.paymentUrl.includes('http')) {
+                        Swal.fire({
+                            title: 'Mengarahkan ke Pembayaran...',
+                            text: 'Pendaftaran berhasil. Mohon tunggu, Anda sedang diarahkan ke sistem pembayaran aman Mayar.id.',
+                            icon: 'info',
+                            showConfirmButton: false,
+                            timer: 3500
+                        }).then(() => {
+                            window.location.href = res.data.paymentUrl; // Terbangkan user!
+                        });
+                    } else {
+                        // Jika karena suatu hal tidak ada link Mayar, tampilkan pesan sukses biasa
+                        document.getElementById('verify-email-wrapper').classList.remove('hidden');
+                    }
                 } else {
                     Swal.fire('Gagal', res.message || res.data.message, 'error');
                 }
