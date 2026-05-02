@@ -5,6 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Photo Selection - Smart Client Gallery & Sorter</title>
+    <script>
+        // Deteksi jika ini adalah link klien (mengandung ?c= atau ?token=) dan lempar ke aplikasi
+        if (window.location.search.includes('?c=') || window.location.search.includes('?token=')) {
+            window.location.replace('/app' + window.location.search);
+        }
+    </script>
     
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
