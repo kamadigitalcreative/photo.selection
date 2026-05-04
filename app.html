@@ -1197,6 +1197,11 @@
                 if(brandTexts[i]) brandTexts[i].innerText = appBranding.name || 'Kama Creative';
             }
             
+            // --- OPTIMASI: Ganti Tulisan & Logo di Tab Browser Secara Instan ---
+            document.title = (appBranding.name || "Kama Creative") + " - Client Gallery";
+            var favicon = document.getElementById('dynamic-favicon');
+            if (favicon) favicon.href = appBranding.logo || "https://img.icons8.com/color/48/000000/camera.png";
+            
             function renderLogo(elements, sizeClasses, isLockView) {
                 for(var j=0; j<elements.length; j++) {
                     var el = elements[j];
@@ -2069,8 +2074,11 @@
         
         // --- PROJECTS LOGIC ---
         async function loadDataProjects() {
-            // 1. Tampilkan memori instan (tanpa mengganggu tombol New Project)
-            var cachedProjects = localStorage.getItem('ps_cache_projects');
+            // --- SECURITY PATCH: Laci memori dikunci spesifik menggunakan Username ---
+            var cacheKey = 'ps_cache_projects_' + (currentUser ? currentUser.username : 'guest');
+            var cachedProjects = localStorage.getItem(cacheKey);
+            
+            // 1. Tampilkan memori instan (Hanya memori milik akun yang sedang login)
             if (cachedProjects) {
                 renderProjectsTable(JSON.parse(cachedProjects));
             } else {
@@ -2078,14 +2086,14 @@
             }
 
             try {
-                // 2. Tembus paksa Cache Browser & Vercel dengan kode _timestamp
+                // 2. Tembus paksa Cache Browser & Vercel
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache, no-store, must-revalidate' },
                     body: JSON.stringify({
                         action: 'getProjects',
                         currentUser: currentUser,
-                        _timestamp: new Date().getTime() // <- Kunci agar data Laptop & HP selalu sama
+                        _timestamp: new Date().getTime() // Sinkronisasi realtime
                     })
                 });
                 const res = await response.json();
@@ -2097,9 +2105,9 @@
                 if (res.status === 'success' && res.data.success) {
                     baseAppUrl = window.location.origin + window.location.pathname;
                     
-                    // 3. Update tabel jika ada data baru dari Google Sheets
+                    // 3. Update tabel & laci memori pribadi jika ada data baru
                     if (JSON.stringify(res.data.data) !== cachedProjects) {
-                        localStorage.setItem('ps_cache_projects', JSON.stringify(res.data.data));
+                        localStorage.setItem(cacheKey, JSON.stringify(res.data.data));
                         renderProjectsTable(res.data.data);
                     }
                 } else {
@@ -2911,22 +2919,19 @@
             var originalBtnHtml = btnRefresh ? btnRefresh.innerHTML : '';
             var isEn = localStorage.getItem('ps_lang') === 'en';
             
-            // 1. Cek laci memori browser
-            var cachedStatus = localStorage.getItem('ps_cache_status');
+            // --- SECURITY PATCH: Laci memori dikunci spesifik menggunakan Username ---
+            var cacheKey = 'ps_cache_status_' + (currentUser ? currentUser.username : 'guest');
+            var cachedStatus = localStorage.getItem(cacheKey);
+            
             if (cachedStatus && !isSilent) {
-                // Tampilkan instan
                 rawStatusData = JSON.parse(cachedStatus);
                 renderClientProgress(rawStatusData);
-                // Ubah animasi tombol jadi Syncing...
-                if (btnRefresh) btnRefresh.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-blue-500"></i> ' + (isEn ? 'Syncing...' : 'Mengecek...');
-            } else if (btnRefresh && isSilent) { 
-                btnRefresh.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-blue-500"></i> ' + (isEn ? 'Syncing...' : 'Mengecek...'); 
+                // Catatan: Tulisan "Syncing..." yang mengganggu sudah dihapus total
             } else if (!cachedStatus && !isSilent) {
                 startLoading("Memuat Status...");
             }
 
             try {
-                // 2. Hubungi Google diam-diam
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache, no-store, must-revalidate' },
@@ -2936,10 +2941,9 @@
                 if (!cachedStatus && !isSilent) endLoading();
                 
                 if (res.status === 'success') {
-                    // 3. Jika ada update dari klien, update tampilan & simpan memori
                     if (JSON.stringify(res.data.data) !== cachedStatus) {
                         rawStatusData = res.data.data;
-                        localStorage.setItem('ps_cache_status', JSON.stringify(rawStatusData));
+                        localStorage.setItem(cacheKey, JSON.stringify(rawStatusData));
                         renderClientProgress(rawStatusData);
                     }
                 } else {
@@ -2948,7 +2952,7 @@
             } catch (err) { 
                 if (!cachedStatus && !isSilent) { endLoading(); Swal.fire('Error', err.message, 'error'); } 
             } finally {
-                // 4. Tampilkan tulisan "Update: (Jam Berapa)" di tombol
+                // Tampilkan tulisan "Update: Jam Berapa" di tombol Refresh selama 3 detik
                 if (btnRefresh) {
                     var d = new Date();
                     var timeStr = ('0'+d.getHours()).slice(-2) + ':' + ('0'+d.getMinutes()).slice(-2) + ':' + ('0'+d.getSeconds()).slice(-2);
