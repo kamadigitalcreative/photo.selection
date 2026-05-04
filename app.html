@@ -337,6 +337,18 @@
                 </div>
                 
                 <div class="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
+                    
+                    <!-- TOMBOL BAHASA DASHBOARD -->
+                    <div class="relative">
+                        <select id="dashLangSelector" onchange="changeLanguage(this.value)" class="appearance-none bg-white border border-gray-200 text-kama-800 text-[10px] sm:text-xs font-bold py-1.5 sm:py-2 pl-7 sm:pl-8 pr-2 sm:pr-3 rounded-lg focus:outline-none focus:border-kama-800 cursor-pointer shadow-sm hover:bg-gray-50 transition-colors">
+                            <option value="id">ID</option>
+                            <option value="en">EN</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 sm:pl-3 text-blue-500">
+                            <i class="fa-solid fa-earth-americas text-xs sm:text-sm"></i>
+                        </div>
+                    </div>
+
                     <div class="wrapper scale-[0.4] origin-right" title="Dark Mode" id="theme-toggle-wrapper">
                         <input type="checkbox" id="hide-checkbox">
                         <label for="hide-checkbox" class="toggle">
@@ -876,48 +888,98 @@
     <script>
         console.log("App Initialized: Safe UI Elements with Lottie Loader");
 
-        // --- FITUR BAHASA (MULTI-LANGUAGE) ---
-        var langDict = {
-            'id': {
-                'lbl-remember': 'Ingat Saya',
-                'lbl-forgot': 'Lupa Password?',
-                'lbl-no-account': 'Belum punya akun? <span class="text-blue-600 underline">Daftar disini</span>',
-                'lbl-has-account': 'Sudah punya akun? <span class="text-kama-800 underline">Sign In</span>',
-                'btnLogin': 'Sign In',
-                'btnRegister': 'Daftar Sekarang'
-            },
-            'en': {
-                'lbl-remember': 'Remember Me',
-                'lbl-forgot': 'Forgot Password?',
-                'lbl-no-account': 'Don\'t have an account? <span class="text-blue-600 underline">Register here</span>',
-                'lbl-has-account': 'Already have an account? <span class="text-kama-800 underline">Sign In</span>',
-                'btnLogin': 'Sign In',
-                'btnRegister': 'Register Now'
-            }
-        };
-
+        // --- FITUR BAHASA (MULTI-LANGUAGE) TERBARU ---
         function changeLanguage(lang) {
             localStorage.setItem('ps_lang', lang);
             applyLanguage(lang);
         }
 
         function applyLanguage(lang) {
-            var dict = langDict[lang] || langDict['id'];
-            var ids = ['lbl-remember', 'lbl-forgot', 'lbl-no-account', 'lbl-has-account'];
+            var isEn = lang === 'en';
+
+            // Alat pintar 1: Mengubah teks biasa & HTML
+            function setTx(selector, idText, enText, isHTML = false) {
+                var els = document.querySelectorAll(selector);
+                els.forEach(function(el) {
+                    if (isHTML) el.innerHTML = isEn ? enText : idText;
+                    else el.innerText = isEn ? enText : idText;
+                });
+            }
+
+            // Alat pintar 2: Mengubah placeholder (teks bayangan di form)
+            function setPh(selector, idText, enText) {
+                var els = document.querySelectorAll(selector);
+                els.forEach(function(el) { el.placeholder = isEn ? enText : idText; });
+            }
+
+            // ==========================================
+            // 1. TRANSLASI HALAMAN LOGIN & REGISTER
+            // ==========================================
+            setTx('#register-form-wrapper h2', 'Daftar Akun', 'Create Account');
+            setTx('#register-form-wrapper p.text-gray-500', 'Daftar sebagai fotografer baru', 'Register as a new photographer');
+            setTx('#lbl-remember', 'Ingat Saya', 'Remember Me');
+            setTx('#lbl-forgot', 'Lupa Password?', 'Forgot Password?');
+            setTx('#lbl-no-account', 'Belum punya akun? <span class="text-blue-600 underline">Daftar disini</span>', 'Don\'t have an account? <span class="text-blue-600 underline">Register here</span>', true);
+            setTx('#lbl-has-account', 'Sudah punya akun? <span class="text-kama-800 underline">Sign In</span>', 'Already have an account? <span class="text-kama-800 underline">Sign In</span>', true);
             
-            ids.forEach(function(id) {
-                var el = document.getElementById(id);
-                if (el) el.innerHTML = dict[id];
-            });
+            var btnLog = document.getElementById('btnLogin'); if (btnLog && !btnLog.disabled) btnLog.innerText = isEn ? 'Sign In' : 'Sign In';
+            var btnReg = document.getElementById('btnRegister'); if (btnReg && !btnReg.disabled) btnReg.innerText = isEn ? 'Register Now' : 'Daftar Sekarang';
+
+            // Placeholder Form
+            setPh('#username', 'Username', 'Username');
+            setPh('#password', 'Password', 'Password');
+            setPh('#reg_nama', 'Nama Lengkap / Studio', 'Full Name / Studio');
+            setPh('#reg_email', 'Alamat Email', 'Email Address');
+            setPh('#reg_nohp', 'Nomor Handphone (WA)', 'Phone Number (WA)');
+            setPh('#reg_username', 'Username', 'Username');
+            setPh('#reg_password', 'Password', 'Password');
             
-            var btnLog = document.getElementById('btnLogin'); 
-            if (btnLog && !btnLog.disabled) btnLog.innerText = dict['btnLogin'];
+            // Pilihan Paket
+            setTx('#reg_paket option[value=""]', 'Pilih Paket Langganan', 'Select Subscription Plan');
+            setTx('#reg_paket option[value="1 Bulan"]', '1 Bulan', '1 Month');
+            setTx('#reg_paket option[value="6 Bulan"]', '6 Bulan', '6 Months');
+            setTx('#reg_paket option[value="1 Tahun"]', '1 Tahun', '1 Year');
+
+            // ==========================================
+            // 2. TRANSLASI MENU DASHBOARD
+            // ==========================================
+            // Desktop
+            setTx('#tab-dashboard', 'Dashboard', 'Dashboard');
+            setTx('#tab-projects', 'Projects', 'Projects');
+            setTx('#tab-status', 'Pantau Klien', 'Client Status');
+            setTx('#tab-panduan', 'Panduan', 'Guide');
+            setTx('#tab-feedback', 'Kirim Saran', 'Send Feedback');
+            setTx('#tab-users', 'Kelola Tim', 'Manage Team');
+            setTx('#tab-admin-feedback', 'Laporan Feedback', 'Feedback Reports');
+            // Mobile (HP)
+            setTx('#tab-dashboard-m', 'Dash', 'Dash');
+            setTx('#tab-projects-m', 'Projects', 'Projects');
+            setTx('#tab-status-m', 'Pantau', 'Status');
+            setTx('#tab-panduan-m', 'Panduan', 'Guide');
+            setTx('#tab-feedback-m', 'Saran', 'Feedback');
+            setTx('#tab-users-m', 'Tim', 'Team');
+            setTx('#tab-admin-feedback-m', 'Feedback', 'Reports');
+
+            // ==========================================
+            // 3. TRANSLASI JUDUL & TEKS DALAM DASHBOARD
+            // ==========================================
+            setTx('#section-projects h2', 'Projects Overview', 'Projects Overview');
+            setTx('#section-projects p', 'Kelola akses galeri client Anda.', 'Manage your client gallery access.');
+            setTx('#section-status h2', 'Pantau Status Klien', 'Client Status Monitor');
+            setTx('#section-status p', 'Monitoring progres pemilihan foto oleh klien Anda.', 'Monitor photo selection progress by your clients.');
+            setTx('#section-users h2', 'Kelola Fotografer', 'Manage Photographers');
+            setTx('#section-users p', 'ACC pendaftaran akun fotografer dan atur masa aktifnya.', 'Approve registrations and set account expiry.');
+            setPh('#search-client-status', 'Cari nama klien di sini...', 'Search client name here...');
             
-            var btnReg = document.getElementById('btnRegister'); 
-            if (btnReg && !btnReg.disabled) btnReg.innerText = dict['btnRegister'];
-            
-            var selector = document.getElementById('langSelector'); 
-            if (selector) selector.value = lang;
+            setTx('button[onclick="openSortirLokal()"]', '<i class="fa-solid fa-folder-tree text-blue-500"></i> Sortir Lokal', '<i class="fa-solid fa-folder-tree text-blue-500"></i> Local Sort', true);
+
+            // ==========================================
+            // 4. SINKRONISASI TOMBOL BAHASA (AUTH & DASHBOARD)
+            // ==========================================
+            var authSel = document.getElementById('langSelector');
+            var dashSel = document.getElementById('dashLangSelector');
+            if(authSel) authSel.value = lang;
+            if(dashSel) dashSel.value = lang;
         }
 
         // GLOBAL VARIABLES
