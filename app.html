@@ -1531,10 +1531,10 @@
                             showConfirmButton: false,
                             timer: 3500
                         }).then(() => {
-                            window.location.href = res.data.paymentUrl; // Terbangkan user!
+                            window.location.href = res.data.paymentUrl; // Terbangkan user ke Mayar!
                         });
                     } else {
-                        // Jika karena suatu hal tidak ada link Mayar, tampilkan pesan sukses biasa
+                        // Jika karena suatu hal tidak ada link Mayar (contoh: paket trial), tampilkan pesan cek email biasa
                         document.getElementById('verify-email-wrapper').classList.remove('hidden');
                     }
                 } else {
