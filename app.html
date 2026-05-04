@@ -475,16 +475,16 @@
                                             <i class="fa-solid fa-user-tag text-gray-400 mr-1.5 hidden sm:inline"></i> Info
                                         </th>
                                         <th class="p-3 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 admin-only-col hidden">
-                                            Pemilik
+                                            <i class="fa-solid fa-user-tie text-gray-400 mr-1.5 hidden sm:inline"></i> Pemilik
                                         </th>
                                         <th class="p-3 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 text-center sm:text-left">
-                                            Quota
+                                            <i class="fa-solid fa-images text-gray-400 mr-1.5 hidden sm:inline"></i> Quota
                                         </th>
                                         <th class="p-3 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 hidden sm:table-cell">
-                                            Date
+                                            <i class="fa-regular fa-calendar-days text-gray-400 mr-1.5 hidden sm:inline"></i> Date
                                         </th>
                                         <th class="p-3 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 text-right">
-                                            Actions
+                                            <i class="fa-solid fa-sliders text-gray-400 mr-1.5 hidden sm:inline"></i> Actions
                                         </th>
                                     </tr>
                                 </thead>
@@ -940,22 +940,24 @@
             setTx('#reg_paket option[value="6 Bulan"]', '6 Bulan', '6 Months');
             setTx('#reg_paket option[value="1 Tahun"]', '1 Tahun', '1 Year');
 
-            // 2. DASHBOARD MENU
-            setTx('#tab-dashboard', 'Dashboard', 'Dashboard');
-            setTx('#tab-projects', 'Projects', 'Projects');
-            setTx('#tab-status', 'Pantau Klien', 'Client Status');
-            setTx('#tab-panduan', 'Panduan', 'Guide');
-            setTx('#tab-feedback', 'Kirim Saran', 'Send Feedback');
-            setTx('#tab-users', 'Kelola Tim', 'Manage Team');
-            setTx('#tab-admin-feedback', 'Laporan Feedback', 'Feedback Reports');
+            // 2. DASHBOARD MENU (DENGAN IKON MENARIK)
+            // Versi PC/Laptop
+            setTx('#tab-dashboard', '<i class="fa-solid fa-chart-pie mr-1.5"></i> Dashboard', '<i class="fa-solid fa-chart-pie mr-1.5"></i> Dashboard', true);
+            setTx('#tab-projects', '<i class="fa-solid fa-folder-open mr-1.5"></i> Projects', '<i class="fa-solid fa-folder-open mr-1.5"></i> Projects', true);
+            setTx('#tab-status', '<i class="fa-solid fa-satellite-dish mr-1.5"></i> Pantau Klien', '<i class="fa-solid fa-satellite-dish mr-1.5"></i> Client Status', true);
+            setTx('#tab-panduan', '<i class="fa-solid fa-book-open mr-1.5"></i> Panduan', '<i class="fa-solid fa-book-open mr-1.5"></i> Guide', true);
+            setTx('#tab-feedback', '<i class="fa-solid fa-paper-plane mr-1.5"></i> Kirim Saran', '<i class="fa-solid fa-paper-plane mr-1.5"></i> Send Feedback', true);
+            setTx('#tab-users', '<i class="fa-solid fa-users-gear mr-1.5"></i> Kelola Tim', '<i class="fa-solid fa-users-gear mr-1.5"></i> Manage Team', true);
+            setTx('#tab-admin-feedback', '<i class="fa-solid fa-inbox mr-1.5"></i> Laporan Feedback', '<i class="fa-solid fa-inbox mr-1.5"></i> Feedback Reports', true);
             
-            setTx('#tab-dashboard-m', 'Dash', 'Dash');
-            setTx('#tab-projects-m', 'Projects', 'Projects');
-            setTx('#tab-status-m', 'Pantau', 'Status');
-            setTx('#tab-panduan-m', 'Panduan', 'Guide');
-            setTx('#tab-feedback-m', 'Saran', 'Feedback');
-            setTx('#tab-users-m', 'Tim', 'Team');
-            setTx('#tab-admin-feedback-m', 'Feedback', 'Reports');
+            // Versi Mobile/HP (Ikon numpuk di atas teks agar mirip aplikasi AppStore/PlayStore)
+            setTx('#tab-dashboard-m', '<i class="fa-solid fa-chart-pie block mb-0.5 text-lg opacity-90"></i>Dash', '<i class="fa-solid fa-chart-pie block mb-0.5 text-lg opacity-90"></i>Dash', true);
+            setTx('#tab-projects-m', '<i class="fa-solid fa-folder-open block mb-0.5 text-lg opacity-90"></i>Projects', '<i class="fa-solid fa-folder-open block mb-0.5 text-lg opacity-90"></i>Projects', true);
+            setTx('#tab-status-m', '<i class="fa-solid fa-satellite-dish block mb-0.5 text-lg opacity-90"></i>Pantau', '<i class="fa-solid fa-satellite-dish block mb-0.5 text-lg opacity-90"></i>Status', true);
+            setTx('#tab-panduan-m', '<i class="fa-solid fa-book-open block mb-0.5 text-lg opacity-90"></i>Panduan', '<i class="fa-solid fa-book-open block mb-0.5 text-lg opacity-90"></i>Guide', true);
+            setTx('#tab-feedback-m', '<i class="fa-solid fa-paper-plane block mb-0.5 text-lg opacity-90"></i>Saran', '<i class="fa-solid fa-paper-plane block mb-0.5 text-lg opacity-90"></i>Feedback', true);
+            setTx('#tab-users-m', '<i class="fa-solid fa-users-gear block mb-0.5 text-lg opacity-90"></i>Tim', '<i class="fa-solid fa-users-gear block mb-0.5 text-lg opacity-90"></i>Team', true);
+            setTx('#tab-admin-feedback-m', '<i class="fa-solid fa-inbox block mb-0.5 text-lg opacity-90"></i>Feedback', '<i class="fa-solid fa-inbox block mb-0.5 text-lg opacity-90"></i>Reports', true);
 
             // 3. DASHBOARD HEADERS & TEXTS
             setTx('#section-projects h2', 'Projects Overview', 'Projects Overview');
