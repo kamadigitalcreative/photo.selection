@@ -2069,8 +2069,23 @@
         
         // --- PROJECTS LOGIC ---
         async function loadDataProjects() {
-            startLoading("Memuat Project...");
+            // 1. Cek laci memori browser dulu
+            var cachedProjects = localStorage.getItem('ps_cache_projects');
+            if (cachedProjects) {
+                // Jika memori ada, langsung gambar tabel detik itu juga!
+                renderProjectsTable(JSON.parse(cachedProjects));
+                
+                // Beri efek loading kecil di tombol New Project sebagai penanda robot sedang ngecek ke Google
+                var btnNew = document.querySelector('button[onclick="openModalCreate()"]');
+                var originalNewHtml = btnNew ? btnNew.innerHTML : '';
+                if (btnNew) btnNew.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Syncing...';
+            } else {
+                // Jika memori kosong (baru pertama kali buka), baru tampilkan layar loading penuh
+                startLoading("Memuat Project..."); 
+            }
+
             try {
+                // 2. Tetap panggil server Google diam-diam di latar belakang
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -2080,17 +2095,28 @@
                     })
                 });
                 const res = await response.json();
-                endLoading();
-                if (res.status === 'success' && res.data.success) {
-                    // Penimpaan URL dihapus agar link klien tetap menggunakan domain Vercel
-                    baseAppUrl = window.location.origin + window.location.pathname;
-                    renderProjectsTable(res.data.data);
+                
+                // Matikan efek loading
+                if (cachedProjects) {
+                    var btnNew = document.querySelector('button[onclick="openModalCreate()"]');
+                    if (btnNew && originalNewHtml) btnNew.innerHTML = originalNewHtml;
                 } else {
-                    Swal.fire('Error', res.message || res.data.message, 'error');
+                    endLoading();
+                }
+
+                if (res.status === 'success' && res.data.success) {
+                    baseAppUrl = window.location.origin + window.location.pathname;
+                    
+                    // 3. Bandingkan data Google vs Memori. Jika ada yang beda, update tabel & simpan memori baru
+                    if (JSON.stringify(res.data.data) !== cachedProjects) {
+                        localStorage.setItem('ps_cache_projects', JSON.stringify(res.data.data));
+                        renderProjectsTable(res.data.data);
+                    }
+                } else {
+                    if(!cachedProjects) Swal.fire('Error', res.message || res.data.message, 'error');
                 }
             } catch (err) {
-                endLoading();
-                Swal.fire('Error', err.message, 'error');
+                if(!cachedProjects) { endLoading(); Swal.fire('Error', err.message, 'error'); }
             }
         }
 
@@ -2891,42 +2917,52 @@
         }
 
         async function loadClientProgress(isSilent = false) {
-            // Animasi visual pada tombol Refresh agar Admin tahu robot sedang bekerja
             var btnRefresh = document.querySelector('button[onclick="loadClientProgress()"]');
             var originalBtnHtml = btnRefresh ? btnRefresh.innerHTML : '';
-            if (btnRefresh && isSilent) { 
-                btnRefresh.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-blue-500"></i> Mengecek...'; 
+            var isEn = localStorage.getItem('ps_lang') === 'en';
+            
+            // 1. Cek laci memori browser
+            var cachedStatus = localStorage.getItem('ps_cache_status');
+            if (cachedStatus && !isSilent) {
+                // Tampilkan instan
+                rawStatusData = JSON.parse(cachedStatus);
+                renderClientProgress(rawStatusData);
+                // Ubah animasi tombol jadi Syncing...
+                if (btnRefresh) btnRefresh.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-blue-500"></i> ' + (isEn ? 'Syncing...' : 'Mengecek...');
+            } else if (btnRefresh && isSilent) { 
+                btnRefresh.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-blue-500"></i> ' + (isEn ? 'Syncing...' : 'Mengecek...'); 
+            } else if (!cachedStatus && !isSilent) {
+                startLoading("Memuat Status...");
             }
 
-            if (!isSilent) startLoading("Memuat Status...");
             try {
+                // 2. Hubungi Google diam-diam
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Cache-Control': 'no-cache, no-store, must-revalidate' // ANTI-CACHE LEVEL 1
-                    },
-                    // ANTI-CACHE LEVEL 2: Tambahkan _timestamp agar Vercel dipaksa ambil data baru
+                    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache, no-store, must-revalidate' },
                     body: JSON.stringify({ action: 'getProjects', currentUser: currentUser, _timestamp: new Date().getTime() })
                 });
                 const res = await response.json();
-                if (!isSilent) endLoading();
+                if (!cachedStatus && !isSilent) endLoading();
                 
                 if (res.status === 'success') {
-                    rawStatusData = res.data.data;
-                    renderClientProgress(rawStatusData);
+                    // 3. Jika ada update dari klien, update tampilan & simpan memori
+                    if (JSON.stringify(res.data.data) !== cachedStatus) {
+                        rawStatusData = res.data.data;
+                        localStorage.setItem('ps_cache_status', JSON.stringify(rawStatusData));
+                        renderClientProgress(rawStatusData);
+                    }
                 } else {
-                    if (!isSilent) Swal.fire('Error', res.message, 'error');
+                    if (!cachedStatus && !isSilent) Swal.fire('Error', res.message, 'error');
                 }
             } catch (err) { 
-                if (!isSilent) { endLoading(); Swal.fire('Error', err.message, 'error'); } 
+                if (!cachedStatus && !isSilent) { endLoading(); Swal.fire('Error', err.message, 'error'); } 
             } finally {
-                // Kembalikan tombol refresh seperti semula setelah selesai mengecek
-                if (btnRefresh && isSilent) {
+                // 4. Tampilkan tulisan "Update: (Jam Berapa)" di tombol
+                if (btnRefresh) {
                     var d = new Date();
                     var timeStr = ('0'+d.getHours()).slice(-2) + ':' + ('0'+d.getMinutes()).slice(-2) + ':' + ('0'+d.getSeconds()).slice(-2);
                     btnRefresh.innerHTML = '<i class="fa-solid fa-check text-green-500"></i> Update: ' + timeStr;
-                    // Tahan tulisan "Update: Jam" selama 3 detik, lalu kembalikan ke "Refresh Data"
                     setTimeout(function() { if (btnRefresh.innerHTML.includes(timeStr)) btnRefresh.innerHTML = originalBtnHtml; }, 3000);
                 }
             }
