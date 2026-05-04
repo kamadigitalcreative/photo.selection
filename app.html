@@ -1196,8 +1196,8 @@
             for(var i=0; i<brandTexts.length; i++) {
                 if(brandTexts[i]) brandTexts[i].innerText = appBranding.name || 'Kama Creative';
             }
-            
-            // --- OPTIMASI: Ganti Tulisan & Logo di Tab Browser Secara Instan ---
+
+            // --- FIX ANTI-KEDIP: Pasang Logo ke Tab Browser secara Instan di sini ---
             document.title = (appBranding.name || "Kama Creative") + " - Client Gallery";
             var favicon = document.getElementById('dynamic-favicon');
             if (favicon) favicon.href = appBranding.logo || "https://img.icons8.com/color/48/000000/camera.png";
@@ -1466,18 +1466,12 @@
                 });
                 const res = await response.json();
                 if (res.status === 'success' && res.data.success) {
-                    // --- OPTIMASI FRONTEND: Simpan ke memori Browser agar selanjutnya INSTAN ---
                     localStorage.setItem('ps_branding', JSON.stringify({
                         name: res.data.brandName || "Kama Creative",
                         logo: res.data.brandLogo || ""
                     }));
 
-                    // 1. Update Tab Browser (Selalu ikut Admin)
-                    document.title = (res.data.brandName || "Kama Creative") + " - Client Gallery";
-                    var favicon = document.getElementById('dynamic-favicon');
-                    if (favicon) favicon.href = res.data.brandLogo || "https://img.icons8.com/color/48/000000/camera.png";
-                    
-                    // 2. Jika ini halaman Client (bukan admin/fotografer yang login), update Logo UI nya juga
+                    // --- PERBAIKAN: Hanya gunakan Logo Admin JIKA pengunjung belum Login sama sekali ---
                     if (!currentUser) {
                         appBranding.name = res.data.brandName || "Kama Creative";
                         appBranding.logo = res.data.brandLogo || "";
