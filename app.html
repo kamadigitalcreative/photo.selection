@@ -1334,6 +1334,12 @@
                 });
                 const res = await response.json();
                 if (res.status === 'success' && res.data.success) {
+                    // --- OPTIMASI FRONTEND: Simpan ke memori Browser agar selanjutnya INSTAN ---
+                    localStorage.setItem('ps_branding', JSON.stringify({
+                        name: res.data.brandName || "Kama Creative",
+                        logo: res.data.brandLogo || ""
+                    }));
+
                     // 1. Update Tab Browser (Selalu ikut Admin)
                     document.title = (res.data.brandName || "Kama Creative") + " - Client Gallery";
                     var favicon = document.getElementById('dynamic-favicon');
