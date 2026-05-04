@@ -2069,45 +2069,35 @@
         
         // --- PROJECTS LOGIC ---
         async function loadDataProjects() {
-            // 1. Cek laci memori browser dulu
+            // 1. Tampilkan memori instan (tanpa mengganggu tombol New Project)
             var cachedProjects = localStorage.getItem('ps_cache_projects');
             if (cachedProjects) {
-                // Jika memori ada, langsung gambar tabel detik itu juga!
                 renderProjectsTable(JSON.parse(cachedProjects));
-                
-                // Beri efek loading kecil di tombol New Project sebagai penanda robot sedang ngecek ke Google
-                var btnNew = document.querySelector('button[onclick="openModalCreate()"]');
-                var originalNewHtml = btnNew ? btnNew.innerHTML : '';
-                if (btnNew) btnNew.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Syncing...';
             } else {
-                // Jika memori kosong (baru pertama kali buka), baru tampilkan layar loading penuh
                 startLoading("Memuat Project..."); 
             }
 
             try {
-                // 2. Tetap panggil server Google diam-diam di latar belakang
+                // 2. Tembus paksa Cache Browser & Vercel dengan kode _timestamp
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache, no-store, must-revalidate' },
                     body: JSON.stringify({
                         action: 'getProjects',
-                        currentUser: currentUser
+                        currentUser: currentUser,
+                        _timestamp: new Date().getTime() // <- Kunci agar data Laptop & HP selalu sama
                     })
                 });
                 const res = await response.json();
                 
-                // Matikan efek loading
-                if (cachedProjects) {
-                    var btnNew = document.querySelector('button[onclick="openModalCreate()"]');
-                    if (btnNew && originalNewHtml) btnNew.innerHTML = originalNewHtml;
-                } else {
+                if (!cachedProjects) {
                     endLoading();
                 }
 
                 if (res.status === 'success' && res.data.success) {
                     baseAppUrl = window.location.origin + window.location.pathname;
                     
-                    // 3. Bandingkan data Google vs Memori. Jika ada yang beda, update tabel & simpan memori baru
+                    // 3. Update tabel jika ada data baru dari Google Sheets
                     if (JSON.stringify(res.data.data) !== cachedProjects) {
                         localStorage.setItem('ps_cache_projects', JSON.stringify(res.data.data));
                         renderProjectsTable(res.data.data);
