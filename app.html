@@ -897,7 +897,6 @@
         function applyLanguage(lang) {
             var isEn = lang === 'en';
 
-            // Alat pintar 1: Mengubah teks biasa & HTML
             function setTx(selector, idText, enText, isHTML = false) {
                 var els = document.querySelectorAll(selector);
                 els.forEach(function(el) {
@@ -906,23 +905,18 @@
                 });
             }
 
-            // Alat pintar 2: Mengubah placeholder (teks bayangan di form)
             function setPh(selector, idText, enText) {
                 var els = document.querySelectorAll(selector);
                 els.forEach(function(el) { el.placeholder = isEn ? enText : idText; });
             }
 
-            // Alat pintar 3: Mengubah Label (Judul di atas form)
-            function setLabel(inputId, idText, enText) {
-                var el = document.getElementById(inputId);
-                if (el && el.previousElementSibling) {
-                    el.previousElementSibling.innerHTML = isEn ? enText : idText;
-                }
+            // Alat baru untuk membidik Label dengan super presisi
+            function setLbl(selector, idText, enText) {
+                var el = document.querySelector(selector);
+                if (el) el.innerHTML = isEn ? enText : idText;
             }
 
-            // ==========================================
             // 1. AUTH (LOGIN & REGISTER)
-            // ==========================================
             setTx('#register-form-wrapper h2', 'Daftar Akun', 'Create Account');
             setTx('#register-form-wrapper p.text-gray-500', 'Daftar sebagai fotografer baru', 'Register as a new photographer');
             setTx('#lbl-remember', 'Ingat Saya', 'Remember Me');
@@ -946,9 +940,7 @@
             setTx('#reg_paket option[value="6 Bulan"]', '6 Bulan', '6 Months');
             setTx('#reg_paket option[value="1 Tahun"]', '1 Tahun', '1 Year');
 
-            // ==========================================
-            // 2. DASHBOARD MENU (PC & HP)
-            // ==========================================
+            // 2. DASHBOARD MENU
             setTx('#tab-dashboard', 'Dashboard', 'Dashboard');
             setTx('#tab-projects', 'Projects', 'Projects');
             setTx('#tab-status', 'Pantau Klien', 'Client Status');
@@ -965,9 +957,7 @@
             setTx('#tab-users-m', 'Tim', 'Team');
             setTx('#tab-admin-feedback-m', 'Feedback', 'Reports');
 
-            // ==========================================
-            // 3. DASHBOARD HEADERS & STATUS KARTU (MEMPERBAIKI ERROR TEXT PANJANG)
-            // ==========================================
+            // 3. DASHBOARD HEADERS & TEXTS
             setTx('#section-projects h2', 'Projects Overview', 'Projects Overview');
             setTx('#section-projects > div:first-child > div > p', 'Kelola akses galeri client Anda.', 'Manage your client gallery access.');
             setTx('#section-status h2', 'Pantau Status Klien', 'Client Status Monitor');
@@ -978,63 +968,57 @@
             
             setTx('button[onclick="openSortirLokal()"]', '<i class="fa-solid fa-folder-tree text-blue-500"></i> Sortir Lokal', '<i class="fa-solid fa-folder-tree text-blue-500"></i> Local Sort', true);
 
-            // KARTU STATUS: Singkat, Padat, Rapi (ID & EN)
             setTx('#count-belum + p', '<i class="fa-regular fa-circle-xmark mr-1"></i> Belum Memilih', '<i class="fa-regular fa-circle-xmark mr-1"></i> Not Started', true);
             setTx('#count-sedang + p', '<i class="fa-regular fa-clock mr-1"></i> Sedang Memilih', '<i class="fa-regular fa-clock mr-1"></i> Selecting', true);
             setTx('#count-selesai + p', '<i class="fa-regular fa-circle-check mr-1"></i> Selesai', '<i class="fa-regular fa-circle-check mr-1"></i> Completed', true);
 
-            // Tampilan saat Kosong (Empty States)
-            setTx('td.text-center.text-gray-400.italic', 'Belum ada project.', 'No projects yet.');
-            setTx('#client-status-container > div.text-center', '<i class="fa-regular fa-folder-open text-3xl mb-2 block opacity-50"></i>Belum ada klien yang terdaftar.', '<i class="fa-regular fa-folder-open text-3xl mb-2 block opacity-50"></i>No clients registered yet.', true);
-
-            // ==========================================
             // 4. TRANSLASI MODAL (CREATE PROJECT & SETTINGS)
-            // ==========================================
             setTx('#modalCreateContent h3', 'Create New Project', 'Create New Project'); 
-            setLabel('p_nama', 'Nama Client <span class="text-red-500">*</span>', 'Client Name <span class="text-red-500">*</span>');
-            setLabel('p_drive', 'Link Google Drive <span class="text-red-500">*</span>', 'Google Drive Link <span class="text-red-500">*</span>');
-            setLabel('p_wa', 'WhatsApp Fotografer <span class="text-red-500">*</span>', 'Photographer WhatsApp <span class="text-red-500">*</span>');
-            setLabel('p_max', 'Maksimal Foto <span class="text-red-500">*</span>', 'Max Photos <span class="text-red-500">*</span>');
-            setLabel('p_pass', 'Password <span class="text-gray-400 font-normal lowercase">(Opsional)</span>', 'Password <span class="text-gray-400 font-normal lowercase">(Opt)</span>');
+            setLbl('#formCreateProject div.space-y-5 > div:nth-child(1) > label', 'Nama Client <span class="text-red-500">*</span>', 'Client Name <span class="text-red-500">*</span>');
+            setLbl('#formCreateProject div.space-y-5 > div:nth-child(2) > label', 'Link Google Drive <span class="text-red-500">*</span>', 'Google Drive Link <span class="text-red-500">*</span>');
+            setLbl('#formCreateProject div.space-y-5 > div:nth-child(3) > label', 'WhatsApp Fotografer <span class="text-red-500">*</span>', 'Photographer WhatsApp <span class="text-red-500">*</span>');
+            setLbl('#formCreateProject div.grid > div:nth-child(1) > label', 'Maksimal Foto <span class="text-red-500">*</span>', 'Max Photos <span class="text-red-500">*</span>');
+            setLbl('#formCreateProject div.grid > div:nth-child(2) > label', 'Password <span class="text-gray-400 font-normal lowercase">(Opsional)</span>', 'Password <span class="text-gray-400 font-normal lowercase">(Opt)</span>');
             setPh('#p_pass', 'Kosong jika open', 'Leave blank if open');
-            setTx('button[onclick="closeModalCreate()"]', 'Batal', 'Cancel');
+            setTx('#formCreateProject + div button[type="button"]', 'Batal', 'Cancel'); // Khusus tombol bawah, tombol X aman!
             setTx('#btnCreate', 'Buat Link', 'Generate Link');
 
             setTx('#modalSettingsContent h3', '<i class="fa-solid fa-palette text-blue-500 mr-2"></i> Pengaturan Tampilan', '<i class="fa-solid fa-palette text-blue-500 mr-2"></i> Display Settings', true);
-            setLabel('set_brand_name', 'Nama Studio / Brand', 'Studio / Brand Name');
-            setLabel('set_brand_file', 'Upload Logo (JPG/PNG)', 'Upload Logo (JPG/PNG)');
+            setLbl('#formSettings > div > div:nth-child(2) > label', 'Nama Studio / Brand', 'Studio / Brand Name');
+            setLbl('#formSettings > div > div:nth-child(3) > label:nth-of-type(1)', 'Upload Logo (JPG/PNG)', 'Upload Logo (JPG/PNG)');
             setTx('#modalSettingsContent .text-\\[10px\\].font-bold.text-gray-400', 'ATAU PAKAI LINK', 'OR USE LINK');
-            setLabel('set_brand_logo', 'URL Logo', 'Logo URL');
+            setLbl('#formSettings > div > div:nth-child(3) > label:nth-of-type(2)', 'URL Logo', 'Logo URL');
             setPh('#set_brand_logo', 'https://... (kosongkan jika upload file)', 'https://... (leave blank if upload file)');
-            setTx('button[onclick="closeModalSettings()"]', 'Batal', 'Cancel');
+            setTx('#formSettings .mt-6 button[type="button"]', 'Batal', 'Cancel'); // Khusus tombol bawah, tombol X aman!
             setTx('#btnSaveSettings', 'Simpan', 'Save');
 
-            // ==========================================
+            // Pengaturan Peringatan Admin di Modal Settings
+            var pInfo = document.querySelector('#formSettings .bg-blue-50 p');
+            if (pInfo && currentUser) {
+                var warning = (currentUser.role === 'Admin') ? (isEn ? "<br><span class='text-red-500 font-bold text-[10px]'><i class='fa-solid fa-triangle-exclamation mr-1'></i>Warning: As Admin, this also changes the Login Page Name & Logo!</span>" : "<br><span class='text-red-500 font-bold text-[10px]'><i class='fa-solid fa-triangle-exclamation mr-1'></i>Perhatian: Karena Anda Admin, ini juga akan mengubah Nama & Logo di Halaman Login Utama!</span>") : '';
+                pInfo.innerHTML = isEn ? `<i class="fa-solid fa-circle-info mr-1"></i> This setting is saved specifically for your account (<span id="set_username_label" class="font-bold">${currentUser.username}</span>). ${warning}` : `<i class="fa-solid fa-circle-info mr-1"></i> Pengaturan ini tersimpan khusus untuk akun Anda (<span id="set_username_label" class="font-bold">${currentUser.username}</span>). ${warning}`;
+            }
+
             // 5. TRANSLASI FEEDBACK
-            // ==========================================
             setTx('#section-feedback h2', 'Kirim Feedback / Laporan', 'Send Feedback / Report');
             setTx('#section-feedback > div > p.text-sm.text-gray-500', 'Ada kendala, saran, atau menemukan bug? Sampaikan langsung ke Admin sistem.', 'Any issues, suggestions, or bugs? Report directly to the Admin.');
-            setLabel('fb_pesan', 'Pesan Laporan <span class="text-red-500">*</span>', 'Report Message <span class="text-red-500">*</span>');
+            setLbl('#formFeedback > div.mb-4 > label', 'Pesan Laporan <span class="text-red-500">*</span>', 'Report Message <span class="text-red-500">*</span>');
             setPh('#fb_pesan', 'Jelaskan detail saran atau kendala/error yang Anda alami...', 'Explain the details of the suggestion or error you are experiencing...');
-            setLabel('fb_file', 'Lampiran Bukti Gambar (Opsional)', 'Attachment/Proof Image (Optional)');
+            setLbl('#formFeedback > div.mb-6 > label', 'Lampiran Bukti Gambar (Opsional)', 'Attachment/Proof Image (Optional)');
             setTx('#section-feedback p.text-\\[10px\\]', '<i class="fa-solid fa-circle-info mr-1"></i> Sertakan screenshot layar jika ada fitur yang error.', '<i class="fa-solid fa-circle-info mr-1"></i> Include a screenshot if a feature has an error.', true);
             setTx('#formFeedback button[type="submit"]', '<i class="fa-solid fa-paper-plane"></i> Kirim Laporan', '<i class="fa-solid fa-paper-plane"></i> Send Report', true);
 
-            // ==========================================
             // 6. TRANSLASI SORTIR LOKAL
-            // ==========================================
             setTx('#local-sorter-view h1', 'Sortir File Lokal (Otomatis ZIP)', 'Local File Sorter (Auto ZIP)');
             setTx('#local-sorter-view header p', 'Pilih folder foto master, paste list klien, jadikan satu ZIP', 'Select master photo folder, paste client list, create one ZIP');
-            setLabel('sourceDirectory', '1. Pilih Folder Sumber (Bisa pilih lebih dari 1 folder)', '1. Select Source Folder (Can select multiple)');
+            setLbl('#sortForm > div:nth-child(1) > label', '1. Pilih Folder Sumber (Bisa pilih lebih dari 1 folder)', '1. Select Source Folder (Can select multiple)');
             setTx('.file-upload-wrapper span.text-kama-800', 'Klik untuk memilih / tambah Folder Master', 'Click to select / add Master Folder');
-            setLabel('targetNames', '2. Paste Nama/Nomor Foto Klien', '2. Paste Client Photo Names/Numbers');
+            setLbl('#sortForm > div:nth-child(2) > label', '2. Paste Nama/Nomor Foto Klien', '2. Paste Client Photo Names/Numbers');
             setPh('#targetNames', 'Contoh:\n1. DSC_0012.JPG\n2. DSC_0055.JPG', 'Example:\n1. DSC_0012.JPG\n2. DSC_0055.JPG');
             setTx('#btnCancelSorter', 'Cancel Proses', 'Cancel Process');
             setTx('#btnProsesSorter span', 'Proses & Download ZIP', 'Process & Download ZIP');
 
-            // ==========================================
             // 7. TRANSLASI PANDUAN (GUIDE)
-            // ==========================================
             setTx('#section-panduan h2', 'Panduan Penggunaan', 'User Guide');
             setTx('#section-panduan > div > p', 'Pelajari cara menggunakan sistem Photo Selection untuk mempermudah pekerjaan Anda.', 'Learn how to use the Photo Selection system to simplify your work.');
             
@@ -1054,9 +1038,7 @@
                 gP[3].innerHTML = isEn ? 'After receiving the photo list, go to <b>Projects</b> > <b>Local Sort</b>. Select your master folder on your computer, paste the list into the box, and click process. The system will automatically sort and create a ZIP file.' : 'Setelah menerima list foto dari klien di WA, copy teks list tersebut. Masuk ke menu <b>Projects</b> > klik <b>Sortir Lokal</b>. Pilih folder asli (mentahan) di komputer Anda, lalu paste list dari klien ke kotak yang disediakan, lalu klik proses. Sistem otomatis menyortir foto ke dalam file ZIP.';
             }
 
-            // ==========================================
             // 8. SINKRONISASI DROPDOWN BAHASA
-            // ==========================================
             var authSel = document.getElementById('langSelector');
             var dashSel = document.getElementById('dashLangSelector');
             if(authSel) authSel.value = lang;
