@@ -1194,13 +1194,8 @@
         function applyBranding() {
             var brandTexts = document.querySelectorAll('.brand-name-text');
             for(var i=0; i<brandTexts.length; i++) {
-                if(brandTexts[i]) brandTexts[i].innerText = appBranding.name || 'Kama Creative';
+                if(brandTexts[i]) brandTexts[i].innerText = appBranding.name || 'Photo Selection';
             }
-
-            // --- FIX ANTI-KEDIP: Pasang Logo ke Tab Browser secara Instan di sini ---
-            document.title = (appBranding.name || "Kama Creative") + " - Client Gallery";
-            var favicon = document.getElementById('dynamic-favicon');
-            if (favicon) favicon.href = appBranding.logo || "https://img.icons8.com/color/48/000000/camera.png";
             
             function renderLogo(elements, sizeClasses, isLockView) {
                 for(var j=0; j<elements.length; j++) {
@@ -1457,6 +1452,17 @@
         }
 
         async function fetchAdminTabBranding() {
+            // --- ANTI-KEDIP: Tampilkan logo Admin di Tab secara instan dari memori ---
+            try {
+                var cached = localStorage.getItem('ps_branding');
+                if (cached) {
+                    var parsed = JSON.parse(cached);
+                    document.title = (parsed.name || "Photo Selection") + " - Client Gallery";
+                    var fav = document.getElementById('dynamic-favicon');
+                    if (fav) fav.href = parsed.logo || "https://img.icons8.com/color/48/000000/camera.png";
+                }
+            } catch(e) {}
+
             try {
                 const endpoint = typeof API_ENDPOINT !== 'undefined' ? API_ENDPOINT : '/api/bridge';
                 const response = await fetch(endpoint, {
@@ -1465,15 +1471,24 @@
                     body: JSON.stringify({ action: 'getGlobalBranding' })
                 });
                 const res = await response.json();
+                
                 if (res.status === 'success' && res.data.success) {
+                    var adminName = res.data.brandName || "Photo Selection";
+                    var adminLogo = res.data.brandLogo || "https://img.icons8.com/color/48/000000/camera.png";
+                    
                     localStorage.setItem('ps_branding', JSON.stringify({
-                        name: res.data.brandName || "Kama Creative",
+                        name: adminName,
                         logo: res.data.brandLogo || ""
                     }));
 
-                    // --- PERBAIKAN: Hanya gunakan Logo Admin JIKA pengunjung belum Login sama sekali ---
+                    // 1. KUNCI PERMANEN: Tab Browser Selalu Menggunakan Data Admin (Photo Selection)
+                    document.title = adminName + " - Client Gallery";
+                    var favicon = document.getElementById('dynamic-favicon');
+                    if (favicon) favicon.href = adminLogo;
+
+                    // 2. Hanya update UI web jika belum login (Halaman Login Awal)
                     if (!currentUser) {
-                        appBranding.name = res.data.brandName || "Kama Creative";
+                        appBranding.name = adminName;
                         appBranding.logo = res.data.brandLogo || "";
                         applyBranding();
                     }
