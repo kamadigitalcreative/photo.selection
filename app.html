@@ -1525,13 +1525,24 @@
                     // --- PINDAH KE HALAMAN MAYAR ---
                     if (res.data.paymentUrl && res.data.paymentUrl.includes('http')) {
                         Swal.fire({
-                            title: 'Mengarahkan ke Pembayaran...',
-                            text: 'Pendaftaran berhasil. Mohon tunggu, Anda sedang diarahkan ke sistem pembayaran aman Mayar.id.',
-                            icon: 'info',
+                            html: `
+                                <div class="py-4">
+                                    <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-bounce shadow-sm">
+                                        <i class="fa-solid fa-wallet text-2xl"></i>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-gray-800 mb-2 tracking-tight">Data Tersimpan!</h3>
+                                    <p class="text-sm text-gray-500 leading-relaxed px-2">
+                                        Satu langkah lagi untuk mengaktifkan akun Anda. Silakan selesaikan pembayaran di halaman berikutnya.<br><br>
+                                        <span class="text-xs text-blue-500 font-semibold inline-flex items-center bg-blue-50 px-3 py-1.5 rounded-lg"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Membuka halaman tagihan Mayar...</span>
+                                    </p>
+                                </div>
+                            `,
                             showConfirmButton: false,
-                            timer: 3500
+                            timer: 4000,
+                            background: '#ffffff',
+                            customClass: { popup: 'rounded-2xl border border-gray-100 shadow-xl' }
                         }).then(() => {
-                            window.location.href = res.data.paymentUrl; // Terbangkan user ke Mayar!
+                            window.location.href = res.data.paymentUrl;
                         });
                     } else {
                         // Jika karena suatu hal tidak ada link Mayar (contoh: paket trial), tampilkan pesan cek email biasa
