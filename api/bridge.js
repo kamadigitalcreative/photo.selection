@@ -2,9 +2,13 @@ export default async function handler(req, res) {
   const allowedOrigin = 'https://ps.kamacreative.my.id'; // Domain resmi Anda
   const origin = req.headers.origin;
 
-  // --- SECURITY PATCH: Strict CORS ---
+  // --- SECURITY PATCH: Strict CORS & VERCEL PREVIEW SUPPORT ---
   const isLocal = origin === 'http://localhost:3000' || origin === 'http://localhost:5500';
-  if (origin === allowedOrigin || isLocal) {
+  
+  // Deteksi jika ini adalah link cabang rahasia dari Vercel (berakhiran .vercel.app)
+  const isVercelPreview = origin && origin.endsWith('.vercel.app');
+
+  if (origin === allowedOrigin || isLocal || isVercelPreview) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   } else {
     return res.status(403).json({ error: 'Akses ditolak: Beda Domain' });
