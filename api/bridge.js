@@ -1,11 +1,9 @@
 export default async function handler(req, res) {
-  const allowedOrigin = 'https://ps.kamacreative.my.id'; // Domain resmi Anda
+  const allowedOrigin = 'https://ps.kamacreative.my.id'; 
   const origin = req.headers.origin;
 
   // --- SECURITY PATCH: Strict CORS & VERCEL PREVIEW SUPPORT ---
   const isLocal = origin === 'http://localhost:3000' || origin === 'http://localhost:5500';
-  
-  // Deteksi jika ini adalah link cabang rahasia dari Vercel (berakhiran .vercel.app)
   const isVercelPreview = origin && origin.endsWith('.vercel.app');
 
   if (origin === allowedOrigin || isLocal || isVercelPreview) {
@@ -21,7 +19,6 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Metode tidak diizinkan' });
 
   try {
-    // --- SECURITY PATCH: Anti DoS & Quota Drain ---
     if (!req.body || Object.keys(req.body).length === 0 || !req.body.action) {
       return res.status(400).json({ error: 'Bad Request: Payload tidak valid' });
     }
@@ -34,16 +31,15 @@ export default async function handler(req, res) {
 
     const securePayload = { ...req.body, secret_token: SECRET_TOKEN };
 
-    const response = await fetch(GAS_URL, {
+    const gasResponse = await fetch(GAS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(securePayload),
+      body: JSON.stringify(securePayload)
     });
 
-    const data = await response.json();
-    return res.status(data.code || 200).json(data);
-
+    const data = await gasResponse.json();
+    return res.status(200).json(data);
   } catch (error) {
-    return res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
