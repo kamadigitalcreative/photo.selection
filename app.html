@@ -3548,6 +3548,60 @@
                 Swal.fire('Error', 'Gagal memproses ZIP. Pastikan koneksi internet stabil. Detail: ' + err.message, 'error');
             }
         }
+
+        // ========================================================
+        // FITUR SILENT AUTO-REFRESH (REAL-TIME PROGRESS BAR)
+        // ========================================================
+        var autoRefreshTimer;
+
+        // Fungsi ini mengambil data ke server TANPA memunculkan loading & pop-up
+        function silentFetchData() {
+            if (typeof currentUser === 'undefined' || !currentUser) return; // Hanya jalan jika admin/fotografer login
+            
+            fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    action: 'getProjects', 
+                    currentUser: currentUser 
+                })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(res) {
+                if (res.status === 'success' && res.data.success) {
+                    var freshData = res.data.data;
+                    renderProjectsTable(freshData); // Update tabel secara diam-diam
+                    renderClientProgress(freshData); // Update progress bar secara diam-diam
+                }
+            })
+            .catch(function(err) { console.log("Silent refresh background loop:", err); });
+        }
+
+        // Jalankan auto-refresh setiap 3 detik secara aman
+        function startAutoRefresh() {
+            if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+            autoRefreshTimer = setInterval(silentFetchData, 3000); // 3000ms = 3 detik
+        }
+
+        // HACK: Timpa tombol "Refresh" manual bawaan agar tidak memunculkan pop-up lagi
+        var originalFetchProjects = window.fetchProjects; 
+        window.fetchProjects = function() {
+            // Putar ikon panah sesaat agar terkesan ditekan
+            var btnIcon = document.querySelector('button[onclick="fetchProjects()"] i');
+            if (btnIcon) btnIcon.classList.add('fa-spin');
+            
+            silentFetchData(); // Panggil fungsi diam-diam
+            
+            // Hentikan putaran ikon setelah 1 detik
+            setTimeout(function() {
+                if (btnIcon) btnIcon.classList.remove('fa-spin');
+            }, 1000);
+        };
+
+        // Otomatis mulai mesin real-time 2 detik setelah website selesai dimuat
+        document.addEventListener("DOMContentLoaded", function() {
+            setTimeout(startAutoRefresh, 2000); 
+        });
     </script>
 </body>
 </html>
