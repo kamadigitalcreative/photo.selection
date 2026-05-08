@@ -3112,10 +3112,16 @@
 
                 var dateTxt = row['Last Update'] ? new Date(row['Last Update']).toLocaleString('id-ID', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '-';
                 
-                // Perhitungan Progress (Membaca kolom 'Foto Terpilih' dari Spreadsheet)
+                // Perhitungan Progress
                 var selected = parseInt(row['Foto Terpilih'] || 0);
                 var max = parseInt(row['Max Foto'] || 1);
                 var percent = Math.min(Math.round((selected / max) * 100), 100);
+                
+                // LOGIKA PINTAR: Jika statusnya Selesai, paksa progress bar jadi 100% penuh
+                if (status === 'Selesai') {
+                    percent = 100;
+                }
+                
                 var barColor = percent === 100 ? 'bg-green-500' : 'bg-primary-600';
 
                 var card = document.createElement('div');
