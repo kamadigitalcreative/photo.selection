@@ -838,6 +838,40 @@
         </footer>
     </div>
 
+    <div id="client-mode-view" class="view-section relative hero-pattern-bg">
+        <div class="flex-1 flex flex-col items-center justify-center p-4">
+            <div class="bg-white p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-full max-w-[400px] border border-slate-100 text-center">
+                <h2 class="text-2xl font-bold text-dark mb-2 brand-name-text">Selamat Datang</h2>
+                <p class="text-slate-500 text-sm mb-8">Silakan pilih tindakan yang ingin Anda lakukan pada galeri ini.</p>
+                
+                <div class="space-y-4">
+                    <button onclick="selectClientMode('selection')" class="w-full bg-primary-50 hover:bg-primary-100 border border-primary-200 text-primary-700 p-4 rounded-2xl transition-all flex items-center gap-4 group">
+                        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-primary-600 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-check-double text-xl"></i>
+                        </div>
+                        <div class="text-left">
+                            <h3 class="font-bold text-sm">Pilih Foto</h3>
+                            <p class="text-[11px] opacity-80 mt-0.5">Pilih foto untuk diedit/dicetak</p>
+                        </div>
+                    </button>
+                    
+                    <button onclick="selectClientMode('download')" class="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 p-4 rounded-2xl transition-all flex items-center gap-4 group">
+                        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-slate-600 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-cloud-arrow-down text-xl"></i>
+                        </div>
+                        <div class="text-left">
+                            <h3 class="font-bold text-sm">Download Foto</h3>
+                            <p class="text-[11px] opacity-80 mt-0.5">Unduh foto secara bebas (Bentuk ZIP)</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <footer class="py-6 text-center text-xs text-gray-400">
+            Powered by <span class="font-semibold text-gray-600">Kama Creative</span>
+        </footer>
+    </div>
+
     <div id="client-gallery-view" class="view-section bg-white">
         <header class="glass-header px-4 sm:px-6 py-3 flex justify-between items-center shrink-0">
             <div class="flex-1 min-w-0 pr-4 flex items-center">
@@ -849,13 +883,18 @@
                 </button>
                 <div>
                     <h1 class="font-bold text-kama-800 truncate text-base sm:text-lg tracking-tight" id="gallery-title">Gallery</h1>
-                    <p class="text-[11px] sm:text-xs text-gray-500 truncate">Pilih maksimal <span id="gallery-max" class="font-semibold text-kama-800">0</span> foto</p>
+                    <p class="text-[11px] sm:text-xs text-gray-500 truncate" id="gallery-subtitle">Pilih maksimal <span id="gallery-max" class="font-semibold text-kama-800">0</span> foto</p>
                 </div>
             </div>
-            <div class="shrink-0 flex items-center gap-2">
-                <div class="bg-kama-50 border border-kama-100 px-3 py-1.5 rounded-lg flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-green-500" id="status-dot"></span>
-                    <span class="text-xs font-semibold text-kama-800 whitespace-nowrap"><span id="counter-selected">0</span> / <span id="counter-max">0</span></span>
+            <div class="shrink-0 flex items-center gap-3 sm:gap-4 bg-white border border-slate-200 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
+                <div class="text-center px-2 border-r border-slate-100">
+                    <div class="text-[9px] sm:text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Total Foto</div>
+                    <div class="text-xs sm:text-sm font-bold text-dark" id="header-total-foto">0</div>
+                </div>
+                <div class="text-center px-2 relative">
+                    <span class="absolute top-1 -right-1 w-1.5 h-1.5 rounded-full bg-green-500 hidden" id="status-dot"></span>
+                    <div class="text-[9px] sm:text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Terpilih</div>
+                    <div class="text-xs sm:text-sm font-bold text-primary-600" id="header-terpilih-foto">0</div>
                 </div>
             </div>
         </header>
@@ -876,7 +915,7 @@
                     <span class="text-sm font-medium text-gray-500">terpilih</span>
                 </div>
             </div>
-            <div class="controls flex gap-2 sm:gap-3">
+            <div id="action-selection-mode" class="controls flex gap-2 sm:gap-3">
                 <button onclick="resetSelection()" class="px-3 py-2 sm:px-4 sm:py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium flex items-center justify-center shadow-sm" title="Reset">
                     <i class="fa-solid fa-rotate-left"></i> <span class="hidden sm:inline sm:ml-2">Reset</span>
                 </button>
@@ -889,6 +928,16 @@
                 <button onclick="sendToWA()" class="px-4 py-2 sm:px-6 sm:py-2.5 bg-[#25D366] text-white rounded-xl hover:bg-[#128C7E] transition-colors text-sm font-semibold flex items-center justify-center shadow-md shadow-green-500/20 flex-1 sm:flex-none">
                     <i class="fa-brands fa-whatsapp sm:mr-2 text-lg"></i> <span>Kirim WA</span>
                 </button>
+            </div>
+            
+            <div id="action-download-mode" class="controls hidden flex gap-3 items-center w-full sm:w-auto">
+                 <label class="flex items-center gap-2 text-sm font-bold text-dark cursor-pointer mr-auto sm:mr-4 bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl">
+                     <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAllClient()" class="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-600 cursor-pointer">
+                     Pilih Semua
+                 </label>
+                 <button onclick="downloadSelectedAsZip()" class="px-4 py-2 sm:px-6 sm:py-2.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors text-sm font-bold flex items-center justify-center shadow-lg shadow-primary-500/30 flex-1 sm:flex-none">
+                     <i class="fa-solid fa-cloud-arrow-down sm:mr-2 text-lg"></i> <span class="whitespace-nowrap">Download ZIP</span>
+                 </button>
             </div>
         </div>
     </div>
@@ -1072,7 +1121,8 @@
         var baseAppUrl = "";
         var clientState = { 
             token: '', namaClient: '', nomorWA: '', maxFoto: 0, driveLink: '', 
-            selectedImages: [], folderHistory: [], currentFolderId: '', currentFolderName: '', currentContent: { folders: [], images: [] }, isPreviewMode: false, isFinished: false
+            selectedImages: [], folderHistory: [], currentFolderId: '', currentFolderName: '', currentContent: { folders: [], images: [] }, isPreviewMode: false, isFinished: false,
+            galleryMode: 'selection' // BARU: 'selection' atau 'download'
         };
         
         function escapeHTML(str) {
@@ -2611,9 +2661,7 @@
                 setButtonState('btnClientAuth', false, 'Unlock Gallery');
                 
                 if (res.status === 'success' && res.data.success) {
-                    clientState.currentFolderId = clientState.driveLink;
-                    clientState.currentFolderName = clientState.namaClient;
-                    fetchClientContent(clientState.currentFolderId, clientState.currentFolderName);
+                    showClientModeSelection();
                 } else {
                     Swal.fire('Ditolak', res.message || res.data.message, 'error');
                 }
@@ -2653,9 +2701,7 @@
             
             if (projectData.needsPassword) { showView('client-auth-view'); } 
             else { 
-                clientState.currentFolderId = clientState.driveLink;
-                clientState.currentFolderName = clientState.namaClient;
-                fetchClientContent(clientState.currentFolderId, clientState.currentFolderName); 
+                showClientModeSelection();
             }
         }
 
@@ -2767,6 +2813,10 @@
                 return; 
             }
             if (emptyState && emptyState.classList) emptyState.classList.add('hidden');
+            
+            // Update Angka Total Foto di Header
+            var totalHeader = document.getElementById('header-total-foto');
+            if (totalHeader) totalHeader.innerText = clientState.currentContent.images.length;
 
             if (hasFolders) {
                 clientState.currentContent.folders.forEach(function(folder) {
@@ -2795,6 +2845,7 @@
                     card.onclick = function(event) { openImageViewer(imgData.url, imgData.name, event); };
                     
                     var shortName = imgData.name.length > 20 ? imgData.name.substring(0, 17) + '...' : imgData.name;
+                    var btnText = clientState.galleryMode === 'download' ? '<i class="fa-solid fa-cloud-arrow-down mr-1.5"></i> Download' : 'Pilih';
 
                     card.innerHTML = 
                         '<div class="number-badge">' + (index + 1) + '</div>' +
@@ -2802,8 +2853,8 @@
                         '<img onclick="openImageViewer(\'' + imgData.url + '\', \'' + imgData.name + '\', event)" src="' + imgData.url + '" alt="' + imgData.name + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=\'https://placehold.co/400x400?text=Error\';">' +
                         '<div class="info-overlay">' +
                             '<span class="filename-text mb-2 w-full truncate" title="' + imgData.name + '">' + shortName + '</span>' +
-                            '<button onclick="toggleSelection(this.closest(\'.photo-card\'), \'' + imgData.name + '\', \'' + imgData.url + '\'); event.stopPropagation();" class="w-full bg-white/20 hover:bg-white/40 backdrop-blur-md border border-white/40 text-white rounded-lg py-1.5 sm:py-2 text-[10px] sm:text-sm font-semibold transition-colors flex items-center justify-center shadow-sm">' +
-                                'Pilih' +
+                            '<button onclick="toggleSelection(this.closest(\'.photo-card\'), \'' + imgData.name + '\', \'' + imgData.url + '\'); event.stopPropagation();" class="w-full bg-white/20 hover:bg-white/40 backdrop-blur-md border border-white/40 text-white rounded-lg py-1.5 sm:py-2 text-[10px] sm:text-sm font-semibold transition-colors flex items-center justify-center shadow-sm btn-pilih-foto">' +
+                                btnText +
                             '</button>' +
                         '</div>';
                     
@@ -2830,10 +2881,14 @@
             });
             
             if (index === -1) {
-                if (clientState.selectedImages.length >= clientState.maxFoto) { Swal.fire({title: 'Batas Pilihan', text: "Maksimal " + clientState.maxFoto + " foto.", icon: 'info', confirmButtonColor: '#1e1e2d'}); return; }
+                // Jangan batasi jika sedang dalam Mode Download
+                if (clientState.galleryMode !== 'download' && clientState.selectedImages.length >= clientState.maxFoto) { 
+                    Swal.fire({title: 'Batas Pilihan', text: "Maksimal " + clientState.maxFoto + " foto.", icon: 'info', confirmButtonColor: '#1e1e2d'}); 
+                    return; 
+                }
                 clientState.selectedImages.push({ name: filename, folder: clientState.currentFolderName, url: url });
                 if (cardElement && cardElement.classList) cardElement.classList.add('selected');
-            } else { 
+            } else {
                 clientState.selectedImages.splice(index, 1); 
                 if (cardElement && cardElement.classList) cardElement.classList.remove('selected'); 
             }
@@ -2846,18 +2901,37 @@
 
         function updateClientCounterUI() {
             var count = clientState.selectedImages.length;
-            var cSelected = document.getElementById('counter-selected');
-            if (cSelected) cSelected.innerText = count; 
             
+            // Text counter bawah
             var bCounter = document.getElementById('bottom-counter');
             if (bCounter) bCounter.innerText = count;
             
+            // Text Header UI Baru
+            var headerTerpilih = document.getElementById('header-terpilih-foto');
+            if (headerTerpilih) headerTerpilih.innerText = count;
+            
             var dot = document.getElementById('status-dot');
-            if (dot && dot.classList) {
+            if (dot && dot.classList && clientState.galleryMode !== 'download') {
+                dot.classList.remove('hidden');
                 if (count === clientState.maxFoto) { 
                     dot.classList.remove('bg-green-500'); dot.classList.add('bg-red-500'); 
                 } else { 
                     dot.classList.remove('bg-red-500'); dot.classList.add('bg-green-500'); 
+                }
+            } else if (dot) {
+                dot.classList.add('hidden'); // Sembunyikan titik merah/hijau saat download mode
+            }
+
+            // Atur status centang otomatis di checkbox "Pilih Semua"
+            var selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            if (selectAllCheckbox && clientState.currentContent && clientState.currentContent.images) {
+                if (clientState.currentContent.images.length === 0) {
+                    selectAllCheckbox.checked = false;
+                } else {
+                    var allCurrentSelected = clientState.currentContent.images.every(function(imgData) {
+                        return clientState.selectedImages.some(function(sel) { return sel.name === imgData.name && sel.folder === clientState.currentFolderName; });
+                    });
+                    selectAllCheckbox.checked = allCurrentSelected;
                 }
             }
         }
@@ -3325,6 +3399,107 @@
                 
                 container.appendChild(card);
             });
+        }
+
+        // --- LOGIKA MODE & DOWNLOAD --- //
+        function showClientModeSelection() {
+            clientState.currentFolderId = clientState.driveLink;
+            clientState.currentFolderName = clientState.namaClient;
+            showView('client-mode-view');
+        }
+
+        function selectClientMode(mode) {
+            clientState.galleryMode = mode;
+            
+            var modeSelection = document.getElementById('action-selection-mode');
+            var modeDownload = document.getElementById('action-download-mode');
+            var subtitle = document.getElementById('gallery-subtitle');
+            
+            if (mode === 'download') {
+                if (modeSelection) modeSelection.classList.add('hidden');
+                if (modeDownload) modeDownload.classList.remove('hidden');
+                if (subtitle) subtitle.classList.add('hidden'); // Sembunyikan tulisan "Maksimal x foto"
+            } else {
+                if (modeSelection) modeSelection.classList.remove('hidden');
+                if (modeDownload) modeDownload.classList.add('hidden');
+                if (subtitle) subtitle.classList.remove('hidden');
+            }
+            
+            fetchClientContent(clientState.currentFolderId, clientState.currentFolderName);
+        }
+
+        function toggleSelectAllClient() {
+            var checkbox = document.getElementById('selectAllCheckbox');
+            var isChecked = checkbox.checked;
+            
+            if (isChecked) {
+                clientState.currentContent.images.forEach(function(imgData) {
+                    var exists = clientState.selectedImages.some(function(sel) { return sel.name === imgData.name && sel.folder === clientState.currentFolderName; });
+                    if (!exists) {
+                        clientState.selectedImages.push({ name: imgData.name, folder: clientState.currentFolderName, url: imgData.url });
+                    }
+                });
+            } else {
+                clientState.currentContent.images.forEach(function(imgData) {
+                    var index = clientState.selectedImages.findIndex(function(sel) { return sel.name === imgData.name && sel.folder === clientState.currentFolderName; });
+                    if (index !== -1) {
+                        clientState.selectedImages.splice(index, 1);
+                    }
+                });
+            }
+            
+            renderClientGallery(); // Render ulang centang visualnya
+            updateClientCounterUI(); // Update angkanya
+        }
+
+        async function downloadSelectedAsZip() {
+            if (clientState.selectedImages.length === 0) {
+                Swal.fire({title: 'Masih Kosong', text: 'Pilih foto yang ingin di-download terlebih dahulu.', icon: 'info', confirmButtonColor: '#2563eb'});
+                return;
+            }
+            
+            startLoading("Mendownload " + clientState.selectedImages.length + " foto...");
+            try {
+                var zip = new JSZip();
+                var folderName = clientState.namaClient.replace(/[^a-zA-Z0-9]/g, '_');
+                var rootFolder = zip.folder(folderName);
+                
+                var promises = clientState.selectedImages.map(async function(img) {
+                    try {
+                        const response = await fetch(img.url);
+                        if(!response.ok) throw new Error("Gagal mengambil data dari Google Drive");
+                        const blob = await response.blob();
+                        
+                        // Handle folder structure jika dalam sub-folder
+                        if (img.folder && img.folder !== clientState.namaClient) {
+                            rootFolder.folder(img.folder).file(img.name, blob);
+                        } else {
+                            rootFolder.file(img.name, blob);
+                        }
+                    } catch(e) {
+                        console.error("Gagal mendownload:", img.name, e);
+                    }
+                });
+                
+                await Promise.all(promises);
+                
+                var loaderText = document.getElementById('loader-text');
+                if(loaderText) loaderText.innerText = "MEMBUAT FILE ZIP...";
+                
+                const zipBlob = await zip.generateAsync({ type: "blob" });
+                saveAs(zipBlob, folderName + "_Photos.zip");
+                
+                endLoading();
+                Swal.fire({
+                    title: 'Berhasil!',
+                    text: 'File ZIP berisi ' + clientState.selectedImages.length + ' foto sedang diunduh ke perangkat Anda.',
+                    icon: 'success',
+                    confirmButtonColor: '#2563eb'
+                });
+            } catch (err) {
+                endLoading();
+                Swal.fire('Error', 'Gagal memproses ZIP. Pastikan koneksi internet stabil. Detail: ' + err.message, 'error');
+            }
         }
     </script>
 </body>
