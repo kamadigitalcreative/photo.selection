@@ -3099,20 +3099,53 @@
 
                 var dateTxt = row['Last Update'] ? new Date(row['Last Update']).toLocaleString('id-ID', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '-';
                 
+                // Hitung Progress
+                var selected = parseInt(row['Selected Count'] || 0);
+                var max = parseInt(row['Max Foto'] || 1);
+                var percent = Math.min(Math.round((selected / max) * 100), 100);
+                var barColor = percent === 100 ? 'bg-green-500' : 'bg-primary-600';
+
                 var card = document.createElement('div');
-                card.className = "flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-white border border-gray-200 rounded-xl mb-3 shadow-sm hover:shadow-md transition-shadow gap-3";
-                card.innerHTML = 
-                    '<div class="min-w-0 flex-1">' +
-                        '<h4 class="font-bold text-kama-800 text-sm sm:text-base truncate" title="' + escapeHTML(row['Nama Client']) + '">' + escapeHTML(row['Nama Client']) + '</h4>' +
-                        '<div class="flex flex-wrap items-center text-[10px] sm:text-xs text-gray-500 mt-1.5 gap-x-3 gap-y-1">' +
-                            '<span><i class="fa-regular fa-image mr-1 text-gray-400"></i> Max: <span class="font-bold text-kama-800">' + row['Max Foto'] + '</span></span>' +
-                            '<span class="hidden sm:inline text-gray-300">&bull;</span>' +
-                            '<span><i class="fa-solid fa-clock-rotate-left mr-1 text-gray-400"></i> Update: ' + dateTxt + '</span>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="shrink-0 self-start sm:self-auto">' +
-                        '<span class="px-3 py-1.5 rounded-lg border text-[11px] font-bold ' + badgeClass + ' inline-flex items-center"><i class="' + iconClass + ' mr-1.5"></i>' + status + '</span>' +
-                    '</div>';
+                card.className = "bg-white border border-slate-200 rounded-2xl mb-4 p-5 shadow-sm hover:shadow-md transition-all duration-300 group";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="min-w-0">
+                            <h4 class="font-extrabold text-slate-800 text-base truncate group-hover:text-primary-600 transition-colors" title="${escapeHTML(row['Nama Client'])}">
+                                ${escapeHTML(row['Nama Client'])}
+                            </h4>
+                            <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter mt-0.5">
+                                <i class="fa-solid fa-clock-rotate-left mr-1"></i> Update: ${dateTxt}
+                            </p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full border text-[10px] font-extrabold uppercase tracking-tight ${badgeClass} flex items-center shadow-sm">
+                            <i class="${iconClass} mr-1.5"></i> ${status}
+                        </span>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-end">
+                            <div class="flex gap-4">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Total Foto</p>
+                                    <p class="text-sm font-black text-slate-700">${max}</p>
+                                </div>
+                                <div class="border-l border-slate-100 pl-4">
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Dipilih</p>
+                                    <p class="text-sm font-black text-primary-600">${selected}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-lg font-black text-slate-800">${percent}%</span>
+                            </div>
+                        </div>
+
+                        <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200/50">
+                            <div class="${barColor} h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(37,99,235,0.2)]" 
+                                 style="width: ${percent}%">
+                            </div>
+                        </div>
+                    </div>
+                `;
                 container.appendChild(card);
             });
             
