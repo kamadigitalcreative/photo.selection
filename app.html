@@ -3023,7 +3023,12 @@
                 method: 'POST',
                 keepalive: true, // WAJIB: Memaksa sinyal tetap jalan walau tab di-close
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'updateClientStatus', token: clientState.token, status: status })
+                body: JSON.stringify({ 
+                    action: 'updateClientStatus', 
+                    token: clientState.token, 
+                    status: status,
+                    selectedCount: clientState.selectedImages.length // MENGIRIM JUMLAH FOTO REALTIME KE DATABASE
+                })
             }).catch(function(e) { console.log("Tracker ping failed:", e); });
         }
 
@@ -3099,8 +3104,8 @@
 
                 var dateTxt = row['Last Update'] ? new Date(row['Last Update']).toLocaleString('id-ID', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '-';
                 
-                // Perhitungan Progress
-                var selected = parseInt(row['Selected Count'] || 0);
+                // Perhitungan Progress (Membaca kolom 'Foto Terpilih' dari Spreadsheet)
+                var selected = parseInt(row['Foto Terpilih'] || 0);
                 var max = parseInt(row['Max Foto'] || 1);
                 var percent = Math.min(Math.round((selected / max) * 100), 100);
                 var barColor = percent === 100 ? 'bg-green-500' : 'bg-primary-600';
