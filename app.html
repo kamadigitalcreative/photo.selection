@@ -839,6 +839,11 @@
     </div>
 
     <div id="client-mode-view" class="view-section relative hero-pattern-bg">
+        <div class="absolute top-6 left-6 z-50">
+            <button id="btn-back-dashboard-mode" onclick="exitClientPreview()" class="hidden text-gray-600 hover:text-kama-800 bg-white border border-gray-200 px-4 py-2 rounded-xl flex items-center justify-center transition-colors shadow-sm text-sm font-semibold">
+                <i class="fa-solid fa-house mr-2"></i> Home
+            </button>
+        </div>
         <div class="flex-1 flex flex-col items-center justify-center p-4">
             <div class="bg-white p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-full max-w-[400px] border border-slate-100 text-center">
                 <h2 class="text-2xl font-bold text-dark mb-2 brand-name-text">Selamat Datang</h2>
@@ -2210,12 +2215,13 @@
                 var encodedBrand = encodeURIComponent(appBranding.name || 'Kama Creative');
                 var encodedLogo = encodeURIComponent(appBranding.logo || '');
                 
+                var currentOrigin = window.location.origin;
                 var displayLink = row['Short Slug'] 
-                    ? ("https://ps.kamacreative.my.id/app?c=" + row['Short Slug']) 
-                    : ("https://ps.kamacreative.my.id/app?token=" + row.Token + "&bn=" + encodedBrand + "&bl=" + encodedLogo);
+                    ? (currentOrigin + "/app?c=" + row['Short Slug']) 
+                    : (currentOrigin + "/app?token=" + row.Token + "&bn=" + encodedBrand + "&bl=" + encodedLogo);
                 
                 var displayedTokenOrLink = row['Short Slug'] 
-                    ? ("ps.kamacreative.my.id/app?c=" + row['Short Slug']) 
+                    ? (currentOrigin.replace(/^https?:\/\//, '') + "/app?c=" + row['Short Slug']) 
                     : row.Token;
                 
                 var dateStr = row['Dibuat Pada'] ? row['Dibuat Pada'].toString() : '-';
@@ -2689,13 +2695,16 @@
             updateClientCounterUI();
 
             var btnBackAuth = document.getElementById('btn-back-dashboard-auth');
+            var btnBackMode = document.getElementById('btn-back-dashboard-mode');
             var btnBackGallery = document.getElementById('btn-back-dashboard');
             
             if (clientState.isPreviewMode) {
                 if (btnBackAuth) btnBackAuth.classList.remove('hidden');
+                if (btnBackMode) btnBackMode.classList.remove('hidden');
                 if (btnBackGallery) btnBackGallery.classList.remove('hidden');
             } else {
                 if (btnBackAuth) btnBackAuth.classList.add('hidden');
+                if (btnBackMode) btnBackMode.classList.add('hidden');
                 if (btnBackGallery) btnBackGallery.classList.add('hidden');
             }
             
