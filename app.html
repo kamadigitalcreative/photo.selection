@@ -2684,7 +2684,14 @@
             clientState.nomorWA = projectData.nomorWA;
             clientState.maxFoto = projectData.maxFoto;
             clientState.driveLink = projectData.driveLink;
-            clientState.selectedImages = [];
+            
+            // LOAD PILIHAN LAMA DARI DATABASE (AUTO-RESUME)
+            try {
+                clientState.selectedImages = JSON.parse(projectData.selectedFiles || "[]");
+            } catch(e) {
+                clientState.selectedImages = [];
+            }
+            
             clientState.folderHistory = [];
             
             var gMax = document.getElementById('gallery-max');
@@ -3027,7 +3034,8 @@
                     action: 'updateClientStatus', 
                     token: clientState.token, 
                     status: status,
-                    selectedCount: clientState.selectedImages.length // MENGIRIM JUMLAH FOTO REALTIME KE DATABASE
+                    selectedCount: clientState.selectedImages.length,
+                    selectedFiles: JSON.stringify(clientState.selectedImages) // KIRIM DAFTAR FOTO LENGKAP
                 })
             }).catch(function(e) { console.log("Tracker ping failed:", e); });
         }
