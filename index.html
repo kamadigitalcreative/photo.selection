@@ -1135,5 +1135,24 @@
         `;
         document.head.appendChild(style);
     </script>
+    <script>
+        (function() {
+            var visitorId = localStorage.getItem('ps_visitor_id');
+            if (!visitorId) {
+                visitorId = 'v-' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('ps_visitor_id', visitorId);
+            }
+            fetch('/api/bridge', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'logVisit',
+                    type: 'VIEW',
+                    page: 'LANDING_PAGE',
+                    visitorId: visitorId
+                })
+            }).catch(function(e){});
+        })();
+    </script>
 </body>
 </html>
