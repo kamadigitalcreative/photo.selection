@@ -352,9 +352,9 @@
                     <button onclick="switchAdminTab('projects')" id="tab-projects" class="nav-tab active">Projects</button>
                     <button onclick="switchAdminTab('status')" id="tab-status" class="nav-tab">Pantau Klien</button>
                     <button onclick="switchAdminTab('panduan')" id="tab-panduan" class="nav-tab photo-only-col hidden">Panduan</button>
-                    <button onclick="switchAdminTab('feedback')" id="tab-feedback" class="nav-tab photo-only-col hidden relative">Kirim Saran <span id="badge-feedback" class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span></button>
+                    <button onclick="switchAdminTab('feedback')" id="tab-feedback" class="nav-tab photo-only-col hidden relative">Kirim Saran <span id="badge-feedback" class="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] font-bold min-w-[20px] h-[20px] flex items-center justify-center rounded-full border-2 border-white shadow-md hidden">0</span></button>
                     <button onclick="switchAdminTab('users')" id="tab-users" class="nav-tab admin-only-col hidden">Kelola Tim</button>
-                    <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback" class="nav-tab admin-only-col hidden relative">Laporan Feedback <span id="badge-admin-feedback" class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span></button>
+                    <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback" class="nav-tab admin-only-col hidden relative">Laporan Feedback <span id="badge-admin-feedback" class="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] font-bold min-w-[20px] h-[20px] flex items-center justify-center rounded-full border-2 border-white shadow-md hidden">0</span></button>
                 </div>
                 
                 <div class="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
@@ -400,9 +400,9 @@
                     <button onclick="switchAdminTab('projects')" id="tab-projects-m" class="nav-tab flex-1 active text-xs py-2 text-center px-1">Projects</button>
                     <button onclick="switchAdminTab('status')" id="tab-status-m" class="nav-tab flex-1 text-xs py-2 text-center px-1">Pantau</button>
                     <button onclick="switchAdminTab('panduan')" id="tab-panduan-m" class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1">Panduan</button>
-                    <button onclick="switchAdminTab('feedback')" id="tab-feedback-m" class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1 relative">Saran <span id="badge-feedback-m" class="absolute top-1 right-2 bg-red-500 text-white text-[8px] font-bold px-1 rounded-full hidden">0</span></button>
+                    <button onclick="switchAdminTab('feedback')" id="tab-feedback-m" class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1 relative">Saran <span id="badge-feedback-m" class="absolute top-0.5 right-1 bg-red-500 text-white text-[9px] font-bold min-w-[16px] h-[16px] flex items-center justify-center rounded-full border border-white shadow-sm hidden">0</span></button>
                     <button onclick="switchAdminTab('users')" id="tab-users-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center px-1">Tim</button>
-                    <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center px-1 relative">Feedback <span id="badge-admin-feedback-m" class="absolute top-1 right-2 bg-red-500 text-white text-[8px] font-bold px-1 rounded-full hidden">0</span></button>
+                    <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center px-1 relative">Feedback <span id="badge-admin-feedback-m" class="absolute top-0.5 right-1 bg-red-500 text-white text-[9px] font-bold min-w-[16px] h-[16px] flex items-center justify-center rounded-full border border-white shadow-sm hidden">0</span></button>
                 </div>
             </div>
         </header>
@@ -3717,27 +3717,31 @@
                         if (badgeDesktop) { badgeDesktop.innerText = newCount; badgeDesktop.classList.remove('hidden'); }
                         if (badgeMobile) { badgeMobile.innerText = newCount; badgeMobile.classList.remove('hidden'); }
                         
-                        // Jika sedang buka tab feedback, otomatis baca & hilangkan angka dalam 2 detik
+                        // Jika tab sedang terbuka, diam-diam tandai sudah dibaca dan hapus angkanya setelah 2 detik
                         if (isFeedbackTab) {
-                           setTimeout(() => {
-                               fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'markFeedbackRead', type: currentUser.role === 'Admin' ? 'admin' : 'user', currentUser: currentUser }) });
-                               if (badgeDesktop) badgeDesktop.classList.add('hidden');
-                               if (badgeMobile) badgeMobile.classList.add('hidden');
-                           }, 2000);
+                            setTimeout(() => {
+                                fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'markFeedbackRead', type: currentUser.role === 'Admin' ? 'admin' : 'user', currentUser: currentUser }) });
+                                if (badgeDesktop) badgeDesktop.classList.add('hidden');
+                                if (badgeMobile) badgeMobile.classList.add('hidden');
+                                lastNotifCount = 0;
+                            }, 2000);
                         }
                     } else {
                         if (badgeDesktop) badgeDesktop.classList.add('hidden');
                         if (badgeMobile) badgeMobile.classList.add('hidden');
                     }
 
-                    if (newCount > lastNotifCount) {
-                        let msg = currentUser.role === 'Admin' ? 'Ada laporan feedback baru masuk!' : 'Ada balasan baru dari Admin!';
+                    // Tampilkan Popup Toast HANYA JIKA user SEDANG TIDAK BUKA tab pesan
+                    if (newCount > lastNotifCount && !isFeedbackTab) {
+                        let msg = currentUser.role === 'Admin' ? 'Ada ' + newCount + ' Laporan/Feedback baru!' : 'Ada balasan Laporan dari Admin!';
                         Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, icon: 'info', title: 'Notifikasi Baru', text: msg });
-
-                        if (isFeedbackTab) {
-                            loadAdminFeedback(true);
-                        }
                     }
+                    
+                    // Refresh daftar pesan diam-diam JIKA user SEDANG BUKA tab pesan
+                    if (newCount > lastNotifCount && isFeedbackTab) {
+                        loadAdminFeedback(true);
+                    }
+                    
                     lastNotifCount = newCount;
                 }
             }).catch(function(e) {});
