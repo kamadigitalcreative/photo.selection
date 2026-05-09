@@ -3506,8 +3506,45 @@
                     '<p class="text-gray-600 text-sm whitespace-pre-wrap leading-relaxed">' + escapeHTML(row.Pesan) + '</p>' +
                     imgHtml + replyHtml;
                 container.appendChild(card);
-                    });
+            });
+        }
+
+        async function submitReply(id) {
+            var replyInput = document.getElementById('reply-msg-' + id);
+            var replyText = replyInput ? replyInput.value.trim() : '';
+            
+            if (!replyText) {
+                Swal.fire('Peringatan', 'Balasan tidak boleh kosong', 'warning');
+                return;
+            }
+
+            startLoading("Mengirim Balasan...");
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'replyFeedback',
+                        id: id,
+                        reply: replyText,
+                        currentUser: currentUser
+                    })
+                });
+                const res = await response.json();
+                endLoading();
+                
+                if (res.status === 'success' && res.data && res.data.success) {
+                    Swal.fire({icon: 'success', title: 'Terkirim!', text: 'Balasan berhasil dikirim ke fotografer.', timer: 1500, showConfirmButton: false});
+                    loadAdminFeedback(); // Muat ulang daftar agar balasan langsung muncul
+                } else {
+                    var errMsg = res.message || (res.data ? res.data.message : 'Gagal mengirim balasan.');
+                    Swal.fire('Gagal', errMsg, 'error');
                 }
+            } catch(err) {
+                endLoading();
+                Swal.fire('Error', err.message, 'error');
+            }
+        }
 
         // --- LOGIKA MODE & DOWNLOAD --- //
         function showClientModeSelection() {
