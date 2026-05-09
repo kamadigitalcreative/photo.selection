@@ -3713,10 +3713,19 @@
                     let badgeDesktop = currentUser.role === 'Admin' ? document.getElementById('badge-admin-feedback') : document.getElementById('badge-feedback');
                     let badgeMobile = currentUser.role === 'Admin' ? document.getElementById('badge-admin-feedback-m') : document.getElementById('badge-feedback-m');
                     
-                    if (newCount > 0 && !isFeedbackTab) {
+                    if (newCount > 0) {
                         if (badgeDesktop) { badgeDesktop.innerText = newCount; badgeDesktop.classList.remove('hidden'); }
                         if (badgeMobile) { badgeMobile.innerText = newCount; badgeMobile.classList.remove('hidden'); }
-                    } else if (newCount === 0 || isFeedbackTab) {
+                        
+                        // Jika sedang buka tab feedback, otomatis baca & hilangkan angka dalam 2 detik
+                        if (isFeedbackTab) {
+                           setTimeout(() => {
+                               fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'markFeedbackRead', type: currentUser.role === 'Admin' ? 'admin' : 'user', currentUser: currentUser }) });
+                               if (badgeDesktop) badgeDesktop.classList.add('hidden');
+                               if (badgeMobile) badgeMobile.classList.add('hidden');
+                           }, 2000);
+                        }
+                    } else {
                         if (badgeDesktop) badgeDesktop.classList.add('hidden');
                         if (badgeMobile) badgeMobile.classList.add('hidden');
                     }
@@ -3726,8 +3735,7 @@
                         Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, icon: 'info', title: 'Notifikasi Baru', text: msg });
 
                         if (isFeedbackTab) {
-                            loadAdminFeedback(true); // Refresh isi pesan diam-diam
-                            fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'markFeedbackRead', type: currentUser.role === 'Admin' ? 'admin' : 'user', currentUser: currentUser }) });
+                            loadAdminFeedback(true);
                         }
                     }
                     lastNotifCount = newCount;
