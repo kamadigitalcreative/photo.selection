@@ -670,6 +670,13 @@
                             </button>
                         </form>
                     </div>
+                    
+                    <div class="mt-8 mb-4">
+                        <h2 class="text-lg font-bold text-kama-800">Riwayat Laporan Saya</h2>
+                    </div>
+                    <div id="my-feedback-container" class="space-y-4 pb-8">
+                        <div class="text-center py-10 text-gray-400 text-sm font-medium"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat riwayat...</div>
+                    </div>
                 </div>
 
                 <!-- SECTION LAPORAN FEEDBACK (ADMIN) -->
@@ -1960,8 +1967,9 @@
             } else if (tabId === 'panduan') {
                 if (sectionPanduan) { sectionPanduan.classList.remove('hidden'); sectionPanduan.classList.add('flex'); }
             } else if (tabId === 'feedback') {
-                if (sectionFeedback) { sectionFeedback.classList.remove('hidden'); sectionFeedback.classList.add('flex'); }
-            } else if (tabId === 'admin-feedback') {
+            if (sectionFeedback) { sectionFeedback.classList.remove('hidden'); sectionFeedback.classList.add('flex'); }
+            loadAdminFeedback(); // Load data juga untuk fotografer
+        } else if (tabId === 'admin-feedback') {
                 if (sectionAdminFeedback) { sectionAdminFeedback.classList.remove('hidden'); sectionAdminFeedback.classList.add('flex'); }
                 loadAdminFeedback();
             }
@@ -3465,14 +3473,13 @@
         }
 
         function renderAdminFeedback(data) {
-            var container = document.getElementById('admin-feedback-container');
-            if (!container) return;
-            container.innerHTML = '';
-            
-            if (!data || data.length === 0) {
-                container.innerHTML = '<div class="text-center py-10 text-gray-400 italic">Belum ada feedback / laporan masuk.</div>';
-                return;
-            }
+                var container = currentUser.role === 'Admin' ? document.getElementById('admin-feedback-container') : document.getElementById('my-feedback-container');
+                if (!container) return;
+                container.innerHTML = '';
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<div class="text-center py-10 text-gray-400 italic">Belum ada laporan.</div>';
+                    return;
+                }
             
             data.forEach(function(row) {
                 var dateStr = row.Tanggal ? new Date(row.Tanggal).toLocaleString('id-ID', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '-';
@@ -3481,18 +3488,26 @@
                 var imgHtml = row.LampiranURL ? '<div class="mt-4"><img src="'+row.LampiranURL+'" class="max-h-48 rounded-lg cursor-pointer hover:opacity-80 transition border border-gray-200" onclick="openImageViewer(\''+originalImgUrl+'\', \'Lampiran Bukti Laporan\', event)"></div>' : '';
                 
                 var card = document.createElement('div');
-                card.className = "bg-white p-5 rounded-2xl border border-gray-200 shadow-sm";
-                card.innerHTML = 
-                    '<div class="flex justify-between items-start mb-3">' +
-                        '<div><span class="font-bold text-kama-800 text-sm">@' + escapeHTML(row.Username) + '</span> <span class="text-[9px] font-bold text-white bg-blue-500 px-2 py-0.5 rounded-full ml-1">' + escapeHTML(row.Role) + '</span></div>' +
-                        '<div class="text-[10px] font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100"><i class="fa-regular fa-clock mr-1"></i>' + dateStr + '</div>' +
+                card.className = "bg-white p-5 rounded-2xl border border-gray-200 shadow-sm mb-4";
+        
+                var replyHtml = '';
+                if (row.Balasan) {
+                    replyHtml = '<div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg"><p class="text-[10px] font-bold text-blue-600 uppercase mb-1"><i class="fa-solid fa-reply"></i> Balasan Admin:</p><p class="text-sm text-blue-800">' + escapeHTML(row.Balasan) + '</p></div>';
+                } else if (currentUser.role === 'Admin') {
+                    replyHtml = '<div class="mt-4 pt-4 border-t border-gray-100"><textarea id="reply-msg-'+row.ID+'" rows="2" class="w-full p-3 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none" placeholder="Tulis balasan untuk '+escapeHTML(row.Username)+'..."></textarea><button onclick="submitReply(\''+row.ID+'\')" class="mt-2 bg-kama-800 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm">Kirim Balasan</button></div>';
+                } else {
+                    replyHtml = '<div class="mt-4 pt-3 border-t border-gray-100"><p class="text-[10px] text-gray-400 italic">Menunggu balasan admin...</p></div>';
+                }
+
+                card.innerHTML = '<div class="flex justify-between items-start mb-3">' +
+                    '<div><span class="font-bold text-kama-800 text-sm">@' + escapeHTML(row.Username) + '</span> <span class="text-[9px] font-bold text-white bg-blue-500 px-2 py-0.5 rounded-full ml-1">' + escapeHTML(row.Role) + '</span></div>' +
+                    '<div class="text-[10px] font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100"><i class="fa-regular fa-clock mr-1"></i>' + dateStr + '</div>' +
                     '</div>' +
                     '<p class="text-gray-600 text-sm whitespace-pre-wrap leading-relaxed">' + escapeHTML(row.Pesan) + '</p>' +
-                    imgHtml;
-                
+                    imgHtml + replyHtml;
                 container.appendChild(card);
-            });
-        }
+                    });
+                }
 
         // --- LOGIKA MODE & DOWNLOAD --- //
         function showClientModeSelection() {
