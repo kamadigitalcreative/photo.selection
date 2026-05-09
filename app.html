@@ -352,9 +352,9 @@
                     <button onclick="switchAdminTab('projects')" id="tab-projects" class="nav-tab active">Projects</button>
                     <button onclick="switchAdminTab('status')" id="tab-status" class="nav-tab">Pantau Klien</button>
                     <button onclick="switchAdminTab('panduan')" id="tab-panduan" class="nav-tab photo-only-col hidden">Panduan</button>
-                    <button onclick="switchAdminTab('feedback')" id="tab-feedback" class="nav-tab photo-only-col hidden">Kirim Saran</button>
+                    <button onclick="switchAdminTab('feedback')" id="tab-feedback" class="nav-tab photo-only-col hidden relative">Kirim Saran <span id="badge-feedback" class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span></button>
                     <button onclick="switchAdminTab('users')" id="tab-users" class="nav-tab admin-only-col hidden">Kelola Tim</button>
-                    <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback" class="nav-tab admin-only-col hidden">Laporan Feedback</button>
+                    <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback" class="nav-tab admin-only-col hidden relative">Laporan Feedback <span id="badge-admin-feedback" class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span></button>
                 </div>
                 
                 <div class="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
@@ -400,9 +400,9 @@
                     <button onclick="switchAdminTab('projects')" id="tab-projects-m" class="nav-tab flex-1 active text-xs py-2 text-center px-1">Projects</button>
                     <button onclick="switchAdminTab('status')" id="tab-status-m" class="nav-tab flex-1 text-xs py-2 text-center px-1">Pantau</button>
                     <button onclick="switchAdminTab('panduan')" id="tab-panduan-m" class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1">Panduan</button>
-                    <button onclick="switchAdminTab('feedback')" id="tab-feedback-m" class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1">Saran</button>
+                    <button onclick="switchAdminTab('feedback')" id="tab-feedback-m" class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1 relative">Saran <span id="badge-feedback-m" class="absolute top-1 right-2 bg-red-500 text-white text-[8px] font-bold px-1 rounded-full hidden">0</span></button>
                     <button onclick="switchAdminTab('users')" id="tab-users-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center px-1">Tim</button>
-                    <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center px-1">Feedback</button>
+                    <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center px-1 relative">Feedback <span id="badge-admin-feedback-m" class="absolute top-1 right-2 bg-red-500 text-white text-[8px] font-bold px-1 rounded-full hidden">0</span></button>
                 </div>
             </div>
         </header>
@@ -684,11 +684,8 @@
                     <div class="flex justify-between items-center mb-6">
                         <div>
                             <h2 class="text-xl font-bold text-kama-800">Laporan Masuk</h2>
-                            <p class="text-sm text-gray-500">Daftar saran dan keluhan bug dari tim fotografer Anda.</p>
+                            <p class="text-sm text-gray-500">Daftar saran dan keluhan bug dari tim fotografer Anda (Auto-Refresh).</p>
                         </div>
-                        <button onclick="loadAdminFeedback()" class="bg-white border border-gray-200 text-kama-800 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors shadow-sm text-sm font-semibold flex items-center gap-2">
-                            <i class="fa-solid fa-rotate-right text-blue-500"></i> Refresh
-                        </button>
                     </div>
                     <div id="admin-feedback-container" class="space-y-4 pb-8">
                         <div class="text-center py-10 text-gray-400 text-sm font-medium"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat laporan...</div>
@@ -1967,11 +1964,22 @@
             } else if (tabId === 'panduan') {
                 if (sectionPanduan) { sectionPanduan.classList.remove('hidden'); sectionPanduan.classList.add('flex'); }
             } else if (tabId === 'feedback') {
-            if (sectionFeedback) { sectionFeedback.classList.remove('hidden'); sectionFeedback.classList.add('flex'); }
-            loadAdminFeedback(); // Load data juga untuk fotografer
-        } else if (tabId === 'admin-feedback') {
+                if (sectionFeedback) { sectionFeedback.classList.remove('hidden'); sectionFeedback.classList.add('flex'); }
+                loadAdminFeedback();
+                
+                let bD = document.getElementById('badge-feedback'), bM = document.getElementById('badge-feedback-m');
+                if (bD) bD.classList.add('hidden'); if (bM) bM.classList.add('hidden');
+                lastNotifCount = 0;
+                fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'markFeedbackRead', type: 'user', currentUser: currentUser }) }).catch(()=>{});
+
+            } else if (tabId === 'admin-feedback') {
                 if (sectionAdminFeedback) { sectionAdminFeedback.classList.remove('hidden'); sectionAdminFeedback.classList.add('flex'); }
                 loadAdminFeedback();
+                
+                let bD = document.getElementById('badge-admin-feedback'), bM = document.getElementById('badge-admin-feedback-m');
+                if (bD) bD.classList.add('hidden'); if (bM) bM.classList.add('hidden');
+                lastNotifCount = 0;
+                fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'markFeedbackRead', type: 'admin', currentUser: currentUser }) }).catch(()=>{});
             }
         }
 
@@ -3696,24 +3704,31 @@
             .then(function(res) {
                 if (res.status === 'success' && res.data.success) {
                     let newCount = res.data.count;
+                    
+                    let sectionAdmin = document.getElementById('section-admin-feedback');
+                    let sectionUser = document.getElementById('section-feedback');
+                    let isFeedbackTab = (sectionAdmin && sectionAdmin.classList.contains('flex')) || (sectionUser && sectionUser.classList.contains('flex'));
+
+                    // Update UI Badge Angka
+                    let badgeDesktop = currentUser.role === 'Admin' ? document.getElementById('badge-admin-feedback') : document.getElementById('badge-feedback');
+                    let badgeMobile = currentUser.role === 'Admin' ? document.getElementById('badge-admin-feedback-m') : document.getElementById('badge-feedback-m');
+                    
+                    if (newCount > 0 && !isFeedbackTab) {
+                        if (badgeDesktop) { badgeDesktop.innerText = newCount; badgeDesktop.classList.remove('hidden'); }
+                        if (badgeMobile) { badgeMobile.innerText = newCount; badgeMobile.classList.remove('hidden'); }
+                    } else if (newCount === 0 || isFeedbackTab) {
+                        if (badgeDesktop) badgeDesktop.classList.add('hidden');
+                        if (badgeMobile) badgeMobile.classList.add('hidden');
+                    }
+
                     if (newCount > lastNotifCount) {
                         let msg = currentUser.role === 'Admin' ? 'Ada laporan feedback baru masuk!' : 'Ada balasan baru dari Admin!';
                         Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, icon: 'info', title: 'Notifikasi Baru', text: msg });
 
-                        let sectionAdmin = document.getElementById('section-admin-feedback');
-                        let sectionUser = document.getElementById('section-feedback');
-                        let isFeedbackTab = (sectionAdmin && sectionAdmin.classList.contains('flex')) || (sectionUser && sectionUser.classList.contains('flex'));
-
                         if (isFeedbackTab) {
-                            loadAdminFeedback(true); // Refresh list diam-diam jika sedang di tab laporan
+                            loadAdminFeedback(true); // Refresh isi pesan diam-diam
+                            fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'markFeedbackRead', type: currentUser.role === 'Admin' ? 'admin' : 'user', currentUser: currentUser }) });
                         }
-
-                        // Tandai sudah dibaca agar pop-up tidak muncul terus-terusan
-                        fetch(API_ENDPOINT, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'markFeedbackRead', type: currentUser.role === 'Admin' ? 'admin' : 'user', currentUser: currentUser })
-                        });
                     }
                     lastNotifCount = newCount;
                 }
