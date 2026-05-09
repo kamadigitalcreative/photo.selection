@@ -331,9 +331,13 @@
                     <button onclick="switchAdminTab('projects')" id="tab-projects" class="nav-tab active">Projects</button>
                     <button onclick="switchAdminTab('status')" id="tab-status" class="nav-tab">Pantau Klien</button>
                     <button onclick="switchAdminTab('panduan')" id="tab-panduan" class="nav-tab photo-only-col hidden">Panduan</button>
-                    <button onclick="switchAdminTab('feedback')" id="tab-feedback" class="nav-tab photo-only-col hidden">Kirim Saran</button>
+                    <button onclick="switchAdminTab('feedback')" id="tab-feedback" class="nav-tab photo-only-col hidden relative">
+                        Kirim Saran <span id="badge-feedback" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full animate-bounce shadow-sm">0</span>
+                    </button>
                     <button onclick="switchAdminTab('users')" id="tab-users" class="nav-tab admin-only-col hidden">Kelola Tim</button>
-                    <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback" class="nav-tab admin-only-col hidden">Laporan Feedback</button>
+                    <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback" class="nav-tab admin-only-col hidden relative">
+                        Laporan Feedback <span id="badge-admin-feedback" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full animate-bounce shadow-sm">0</span>
+                    </button>
                 </div>
                 
                 <div class="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
@@ -379,9 +383,13 @@
                     <button onclick="switchAdminTab('projects')" id="tab-projects-m" class="nav-tab flex-1 active text-xs py-2 text-center px-1">Projects</button>
                     <button onclick="switchAdminTab('status')" id="tab-status-m" class="nav-tab flex-1 text-xs py-2 text-center px-1">Pantau</button>
                     <button onclick="switchAdminTab('panduan')" id="tab-panduan-m" class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1">Panduan</button>
-                    <button onclick="switchAdminTab('feedback')" id="tab-feedback-m" class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1">Saran</button>
+                    <button onclick="switchAdminTab('feedback')" id="tab-feedback-m" class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1 relative">
+                        Saran <span id="badge-feedback-m" class="hidden absolute top-0 right-2 w-3.5 h-3.5 bg-red-500 text-white text-[8px] flex items-center justify-center rounded-full animate-bounce shadow-sm">0</span>
+                    </button>
                     <button onclick="switchAdminTab('users')" id="tab-users-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center px-1">Tim</button>
-                    <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center px-1">Feedback</button>
+                    <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback-m" class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center px-1 relative">
+                        Feedback <span id="badge-admin-feedback-m" class="hidden absolute top-0 right-2 w-3.5 h-3.5 bg-red-500 text-white text-[8px] flex items-center justify-center rounded-full animate-bounce shadow-sm">0</span>
+                    </button>
                 </div>
             </div>
         </header>
@@ -616,6 +624,13 @@
                                 <i class="fa-solid fa-paper-plane"></i> Kirim Laporan
                             </button>
                         </form>
+                    </div>
+                    
+                    <div class="mt-8">
+                        <h3 class="text-sm font-bold text-kama-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-gray-400"></i> Riwayat & Balasan Admin</h3>
+                        <div id="user-feedback-history" class="space-y-4">
+                            <div class="text-center py-6 text-gray-400 text-xs italic">Belum ada riwayat laporan.</div>
+                        </div>
                     </div>
                 </div>
 
@@ -1853,9 +1868,12 @@
                 if (sectionPanduan) { sectionPanduan.classList.remove('hidden'); sectionPanduan.classList.add('flex'); }
             } else if (tabId === 'feedback') {
                 if (sectionFeedback) { sectionFeedback.classList.remove('hidden'); sectionFeedback.classList.add('flex'); }
+                loadUserFeedbackHistory();
+                markFeedbackAsRead('user');
             } else if (tabId === 'admin-feedback') {
                 if (sectionAdminFeedback) { sectionAdminFeedback.classList.remove('hidden'); sectionAdminFeedback.classList.add('flex'); }
                 loadAdminFeedback();
+                markFeedbackAsRead('admin');
             }
         }
 
@@ -3245,6 +3263,7 @@
                 if (res.status === 'success' && res.data && res.data.success) {
                     Swal.fire({icon:'success', title:'Terkirim!', text:'Terima kasih atas laporan dan masukan Anda.', confirmButtonColor:'#1e1e2d'});
                     document.getElementById('formFeedback').reset();
+                    loadUserFeedbackHistory(); // Refresh riwayat setelah kirim
                 } else {
                     var errMsg = res.message || (res.data ? res.data.message : res.error) || 'Terjadi kesalahan sistem pengiriman.';
                     Swal.fire('Gagal', errMsg, 'error');
@@ -3289,10 +3308,23 @@
             
             data.forEach(function(row) {
                 var dateStr = row.Tanggal ? new Date(row.Tanggal).toLocaleString('id-ID', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '-';
-                // Jika URL lampiran ada, tampilkan gambarnya (dan manfaatkan viewer galeri bawaan)
                 var originalImgUrl = row.LampiranURL ? row.LampiranURL.replace('=w400', '') : '';
                 var imgHtml = row.LampiranURL ? '<div class="mt-4"><img src="'+row.LampiranURL+'" class="max-h-48 rounded-lg cursor-pointer hover:opacity-80 transition border border-gray-200" onclick="openImageViewer(\''+originalImgUrl+'\', \'Lampiran Bukti Laporan\', event)"></div>' : '';
                 
+                // --- UI BALASAN ADMIN ---
+                var replyHtml = '';
+                if (row.Balasan) {
+                    replyHtml = '<div class="mt-4 p-4 bg-indigo-50 border-l-4 border-indigo-500 rounded-r-xl">' +
+                                    '<p class="text-[10px] font-bold text-indigo-700 uppercase mb-1 flex items-center"><i class="fa-solid fa-reply mr-1.5"></i>Balasan Anda:</p>' +
+                                    '<p class="text-sm text-indigo-900 whitespace-pre-wrap leading-relaxed">' + escapeHTML(row.Balasan) + '</p>' +
+                                '</div>';
+                } else {
+                    replyHtml = '<div class="mt-4 flex flex-col sm:flex-row gap-2">' +
+                                    '<textarea id="reply-input-'+row.ID+'" rows="2" placeholder="Ketik balasan untuk @'+escapeHTML(row.Username)+'..." class="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-indigo-500 focus:bg-white resize-none transition-colors"></textarea>' +
+                                    '<button onclick="handleReply(\''+row.ID+'\')" class="px-5 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl shadow-sm hover:bg-indigo-700 transition-colors flex items-center justify-center shrink-0 h-fit self-end sm:self-auto"><i class="fa-solid fa-paper-plane mr-2"></i>Kirim</button>' +
+                                '</div>';
+                }
+
                 var card = document.createElement('div');
                 card.className = "bg-white p-5 rounded-2xl border border-gray-200 shadow-sm";
                 card.innerHTML = 
@@ -3301,11 +3333,116 @@
                         '<div class="text-[10px] font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100"><i class="fa-regular fa-clock mr-1"></i>' + dateStr + '</div>' +
                     '</div>' +
                     '<p class="text-gray-600 text-sm whitespace-pre-wrap leading-relaxed">' + escapeHTML(row.Pesan) + '</p>' +
-                    imgHtml;
+                    imgHtml + replyHtml;
                 
                 container.appendChild(card);
             });
         }
+        // --- SISTEM BALASAN & NOTIFIKASI ---
+        async function handleReply(id) {
+            var input = document.getElementById('reply-input-' + id);
+            var replyMsg = input ? input.value.trim() : '';
+            if(!replyMsg) return Swal.fire('Peringatan', 'Balasan tidak boleh kosong!', 'warning');
+            
+            startLoading("Mengirim Balasan...");
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'replyFeedback', id: id, reply: replyMsg, currentUser: currentUser })
+                });
+                const res = await response.json();
+                endLoading();
+                if(res.status === 'success' && res.data && res.data.success) {
+                    Swal.fire({icon:'success', title:'Terkirim', timer:1500, showConfirmButton:false});
+                    loadAdminFeedback(); // Refresh list
+                } else {
+                    Swal.fire('Gagal', res.message || res.data.message, 'error');
+                }
+            } catch(e) { endLoading(); Swal.fire('Error', e.message, 'error'); }
+        }
+
+        async function loadUserFeedbackHistory() {
+            var container = document.getElementById('user-feedback-history');
+            if(!container) return;
+            container.innerHTML = '<div class="text-center py-6 text-gray-400 text-xs italic"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat riwayat...</div>';
+            
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+                    body: JSON.stringify({ action: 'getFeedbacks', currentUser: currentUser })
+                });
+                const res = await response.json();
+                if(res.status === 'success' && res.data && res.data.success) {
+                    container.innerHTML = '';
+                    var myData = res.data.data; // Backend sudah memfilter khusus user ini
+                    if(myData.length === 0) { 
+                        container.innerHTML = '<div class="text-center py-6 text-gray-400 text-xs italic">Belum ada riwayat laporan.</div>'; 
+                        return; 
+                    }
+                    
+                    myData.forEach(function(row) {
+                        var dateStr = new Date(row.Tanggal).toLocaleString('id-ID', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
+                        var balasanBox = row.Balasan ? 
+                            '<div class="mt-3 p-3 bg-indigo-50 border-l-4 border-indigo-500 rounded-r-xl"><p class="text-[10px] font-bold text-indigo-700 uppercase mb-1 flex items-center"><i class="fa-solid fa-reply mr-1"></i>Balasan Admin:</p><p class="text-sm text-indigo-900 whitespace-pre-wrap">' + escapeHTML(row.Balasan) + '</p></div>' : 
+                            '<div class="mt-3 p-2 bg-amber-50 border border-amber-100 rounded-lg text-[10px] text-amber-700 font-medium flex items-center"><i class="fa-regular fa-clock mr-1.5"></i>Menunggu balasan admin...</div>';
+                        
+                        var div = document.createElement('div');
+                        div.className = "p-4 sm:p-5 bg-white rounded-2xl border border-gray-100 shadow-sm";
+                        div.innerHTML = 
+                            '<div class="flex justify-between items-start mb-2">' +
+                                '<span class="text-xs font-bold text-gray-400"><i class="fa-regular fa-calendar mr-1"></i>' + dateStr + '</span>' +
+                            '</div>' +
+                            '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + escapeHTML(row.Pesan) + '</p>' +
+                            balasanBox;
+                        container.appendChild(div);
+                    });
+                } else {
+                    container.innerHTML = '<div class="text-center py-4 text-red-500 text-xs">Gagal memuat riwayat.</div>';
+                }
+            } catch(e) { container.innerHTML = '<div class="text-center py-4 text-red-500 text-xs">Error memuat riwayat.</div>'; }
+        }
+
+        async function checkNotifBadges() {
+            if(!currentUser) return;
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'getNotificationStats', currentUser: currentUser })
+                });
+                const res = await response.json();
+                if(res.status === 'success' && res.data && res.data.success) {
+                    var count = res.data.count;
+                    var bId = currentUser.role === 'Admin' ? 'badge-admin-feedback' : 'badge-feedback';
+                    var bIdM = currentUser.role === 'Admin' ? 'badge-admin-feedback-m' : 'badge-feedback-m';
+                    
+                    [bId, bIdM].forEach(id => {
+                        var el = document.getElementById(id);
+                        if(el) {
+                            if(count > 0) { el.innerText = count; el.classList.remove('hidden'); }
+                            else { el.classList.add('hidden'); }
+                        }
+                    });
+                }
+            } catch(e) {}
+        }
+
+        async function markFeedbackAsRead(type) {
+            try {
+                await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'markFeedbackRead', type: type, currentUser: currentUser })
+                });
+                checkNotifBadges(); // Segarkan badge setelah ditandai read
+            } catch(e) {}
+        }
+
+        // Jalankan pengecekan notifikasi tiap 30 detik
+        setInterval(checkNotifBadges, 30000);
+        setTimeout(checkNotifBadges, 2000);
     </script>
 </body>
 </html>
