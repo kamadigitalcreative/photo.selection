@@ -3450,8 +3450,8 @@
             }
         }
 
-        async function loadAdminFeedback() {
-            startLoading("Memuat Laporan...");
+        async function loadAdminFeedback(isSilent = false) {
+            if (!isSilent) startLoading("Memuat Laporan...");
             try {
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
@@ -3459,16 +3459,16 @@
                     body: JSON.stringify({ action: 'getFeedbacks', currentUser: currentUser })
                 });
                 const res = await response.json();
-                endLoading();
+                if (!isSilent) endLoading();
                 if (res.status === 'success' && res.data && res.data.success) {
                     renderAdminFeedback(res.data.data);
                 } else {
                     var errMsg = res.message || (res.data ? res.data.message : res.error) || 'Gagal memuat data laporan.';
-                    Swal.fire('Error', errMsg, 'error');
+                    if (!isSilent) Swal.fire('Error', errMsg, 'error');
                 }
             } catch(err) {
-                endLoading();
-                Swal.fire('Error', err.message, 'error');
+                if (!isSilent) endLoading();
+                if (!isSilent) Swal.fire('Error', err.message, 'error');
             }
         }
 
@@ -3518,7 +3518,12 @@
                 return;
             }
 
-            startLoading("Mengirim Balasan...");
+            var btn = replyInput.nextElementSibling;
+            var originalBtnText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Mengirim...';
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+
             try {
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
@@ -3531,17 +3536,23 @@
                     })
                 });
                 const res = await response.json();
-                endLoading();
+
+                btn.innerHTML = originalBtnText;
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
                 
                 if (res.status === 'success' && res.data && res.data.success) {
-                    Swal.fire({icon: 'success', title: 'Terkirim!', text: 'Balasan berhasil dikirim ke fotografer.', timer: 1500, showConfirmButton: false});
-                    loadAdminFeedback(); // Muat ulang daftar agar balasan langsung muncul
+                    Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Terkirim!', text: 'Balasan terkirim.', timer: 2000, showConfirmButton: false});
+                    var parentDiv = replyInput.parentElement;
+                    parentDiv.innerHTML = '<div class="p-3 bg-blue-50 border border-blue-100 rounded-lg"><p class="text-[10px] font-bold text-blue-600 uppercase mb-1"><i class="fa-solid fa-reply"></i> Balasan Admin:</p><p class="text-sm text-blue-800">' + escapeHTML(replyText) + '</p></div>';
                 } else {
                     var errMsg = res.message || (res.data ? res.data.message : 'Gagal mengirim balasan.');
                     Swal.fire('Gagal', errMsg, 'error');
                 }
             } catch(err) {
-                endLoading();
+                btn.innerHTML = originalBtnText;
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
                 Swal.fire('Error', err.message, 'error');
             }
         }
@@ -3651,6 +3662,7 @@
         // FITUR SILENT AUTO-REFRESH (REAL-TIME PROGRESS BAR)
         // ========================================================
         var autoRefreshTimer;
+        var lastNotifCount = 0;
 
         // Fungsi ini mengambil data ke server TANPA memunculkan loading & pop-up
         function silentFetchData() {
@@ -3673,6 +3685,39 @@
                 }
             })
             .catch(function(err) { console.log("Silent refresh background loop:", err); });
+
+            // CEK NOTIFIKASI FEEDBACK / BALASAN
+            fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'getNotificationStats', currentUser: currentUser })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(res) {
+                if (res.status === 'success' && res.data.success) {
+                    let newCount = res.data.count;
+                    if (newCount > lastNotifCount) {
+                        let msg = currentUser.role === 'Admin' ? 'Ada laporan feedback baru masuk!' : 'Ada balasan baru dari Admin!';
+                        Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, icon: 'info', title: 'Notifikasi Baru', text: msg });
+
+                        let sectionAdmin = document.getElementById('section-admin-feedback');
+                        let sectionUser = document.getElementById('section-feedback');
+                        let isFeedbackTab = (sectionAdmin && sectionAdmin.classList.contains('flex')) || (sectionUser && sectionUser.classList.contains('flex'));
+
+                        if (isFeedbackTab) {
+                            loadAdminFeedback(true); // Refresh list diam-diam jika sedang di tab laporan
+                        }
+
+                        // Tandai sudah dibaca agar pop-up tidak muncul terus-terusan
+                        fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'markFeedbackRead', type: currentUser.role === 'Admin' ? 'admin' : 'user', currentUser: currentUser })
+                        });
+                    }
+                    lastNotifCount = newCount;
+                }
+            }).catch(function(e) {});
         }
 
         // Jalankan auto-refresh setiap 3 detik secara aman
