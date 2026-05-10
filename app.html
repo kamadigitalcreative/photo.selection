@@ -1394,6 +1394,14 @@
                     }
                 }
             });
+            
+            // HAPUS BADGE SAAT KLIK TAB (Efek Instan)
+            let gB = document.getElementById('badge-global-notif');
+            if(gB) gB.classList.add('hidden');
+            
+            // Beritahu server untuk menandai sudah dibaca
+            fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'markFeedbackRead', type: currentUser.role === 'Admin' ? 'admin' : 'user', currentUser: currentUser }) }).catch(()=>{});
+            
             renderNotifList();
         }
 
@@ -1413,7 +1421,9 @@
                     
                     let gB = document.getElementById('badge-global-notif');
                     if(gB) gB.classList.add('hidden');
-                    lastNotifCount = 0;
+                    
+                    // SINKRONISASI: Paksa hitungan terakhir sama dengan data terbaru agar toast tidak muncul lagi
+                    lastNotifCount = notifDataCache.filter(r => (currentUser.role === 'Admin' ? r.StatusAdmin === 'Unread' : (r.Username === currentUser.username && r.StatusUser === 'Unread'))).length;
                 }
             } catch(e) {
                 if(!isSilent) container.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">Gagal memuat notifikasi.</div>';
@@ -3866,13 +3876,22 @@
                     let modalNotif = document.getElementById('modalNotification');
                     let isModalOpen = modalNotif && !modalNotif.classList.contains('hidden');
 
-                    // UPDATE GLOBAL BELL BADGE
+                    // UPDATE GLOBAL BELL BADGE (LEBIH KETAT)
                     let globalBadge = document.getElementById('badge-global-notif');
                     
+                    // JANGAN tampilkan angka jika: Sedang buka modal Notif ATAU Sedang buka menu Feedback
                     if (newCount > 0 && !isFeedbackTab && !isModalOpen) {
-                        if (globalBadge) { globalBadge.innerText = newCount; globalBadge.classList.remove('hidden'); globalBadge.style.display = 'flex'; }
+                        if (globalBadge) { 
+                            globalBadge.innerText = (newCount > 99) ? '99+' : newCount; 
+                            globalBadge.classList.remove('hidden'); 
+                            globalBadge.style.display = 'flex'; 
+                        }
                     } else {
-                        if (globalBadge) globalBadge.classList.add('hidden');
+                        // Hilangkan angka secara total jika kondisi tidak terpenuhi
+                        if (globalBadge) {
+                            globalBadge.classList.add('hidden');
+                            globalBadge.innerText = '0';
+                        }
                     }
 
                     // Tampilkan POP-UP (Toast) jika ada pesan dan sedang tidak buka lonceng/pesan
