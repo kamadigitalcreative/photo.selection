@@ -1397,7 +1397,7 @@
             
             // HAPUS BADGE SAAT KLIK TAB (Efek Instan)
             let gB = document.getElementById('badge-global-notif');
-            if(gB) gB.classList.add('hidden');
+            if(gB) { gB.classList.add('hidden'); gB.style.display = 'none'; }
             
             // Beritahu server untuk menandai sudah dibaca
             fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'markFeedbackRead', type: currentUser.role === 'Admin' ? 'admin' : 'user', currentUser: currentUser }) }).catch(()=>{});
@@ -1420,7 +1420,7 @@
                     fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'markFeedbackRead', type: currentUser.role === 'Admin' ? 'admin' : 'user', currentUser: currentUser }) }).catch(()=>{});
                     
                     let gB = document.getElementById('badge-global-notif');
-                    if(gB) gB.classList.add('hidden');
+                    if(gB) { gB.classList.add('hidden'); gB.style.display = 'none'; }
                     
                     // SINKRONISASI: Paksa hitungan terakhir sama dengan data terbaru agar toast tidak muncul lagi
                     lastNotifCount = notifDataCache.filter(r => (currentUser.role === 'Admin' ? r.StatusAdmin === 'Unread' : (r.Username === currentUser.username && r.StatusUser === 'Unread'))).length;
@@ -3890,6 +3890,7 @@
                         // Hilangkan angka secara total jika kondisi tidak terpenuhi
                         if (globalBadge) {
                             globalBadge.classList.add('hidden');
+                            globalBadge.style.display = 'none';
                             globalBadge.innerText = '0';
                         }
                     }
