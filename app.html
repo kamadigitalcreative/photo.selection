@@ -1363,6 +1363,7 @@
         // --- LOGIKA LONCENG NOTIFIKASI ---
         let currentNotifTab = 'all';
         let notifDataCache = []; 
+        let systemDataCache = []; 
 
         function openModalNotification() {
             var modal = document.getElementById('modalNotification');
@@ -1410,10 +1411,21 @@
             if (!isSilent) container.innerHTML = '<div class="text-center py-8 text-gray-400 text-sm font-medium"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat notifikasi...</div>';
             
             try {
-                const response = await fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getFeedbacks', currentUser: currentUser }) });
-                const res = await response.json();
-                if (res.status === 'success' && res.data && res.data.success) {
-                    notifDataCache = res.data.data;
+                // Ambil Data Pesan
+                const responseFb = await fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getFeedbacks', currentUser: currentUser }) });
+                const resFb = await responseFb.json();
+                if (resFb.status === 'success' && resFb.data && resFb.data.success) {
+                    notifDataCache = resFb.data.data;
+                }
+
+                // Ambil Data Update Sistem
+                const responseSys = await fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getSystemUpdates' }) });
+                const resSys = await responseSys.json();
+                if (resSys.status === 'success' && resSys.data && resSys.data.success) {
+                    systemDataCache = resSys.data.data;
+                }
+
+                if ((resFb.status === 'success' && resFb.data && resFb.data.success) || (resSys.status === 'success' && resSys.data && resSys.data.success)) {
                     renderNotifList();
                     
                     // Otomatis tandai dibaca saat lonceng dibuka
@@ -1434,21 +1446,32 @@
             var container = document.getElementById('notif-container');
             let html = '';
             
-            // Dummy Data Sistem Update (Statis)
-            let systemHtml = `
-                <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 shadow-sm mb-3 cursor-default">
-                    <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                            <i class="fa-solid fa-rocket"></i>
+            // Generate Data Update Sistem secara Dinamis dari Google Sheets
+            let systemHtml = '';
+            if (!systemDataCache || systemDataCache.length === 0) {
+                systemHtml = '<div class="text-center py-6 text-gray-400 text-xs italic bg-white rounded-xl border border-gray-100 shadow-sm mb-3"><i class="fa-solid fa-info-circle mb-1 block opacity-50"></i>Belum ada pengumuman sistem.</div>';
+            } else {
+                systemDataCache.forEach(upd => {
+                    let dateStr = upd.Tanggal ? new Date(upd.Tanggal).toLocaleDateString('id-ID', {day:'2-digit', month:'short'}) : '';
+                    systemHtml += `
+                        <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 shadow-sm mb-3 cursor-default">
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-rocket"></i>
+                                </div>
+                                <div class="w-full">
+                                    <div class="flex justify-between items-start">
+                                        <h4 class="text-sm font-bold text-kama-800">${escapeHTML(upd.Judul || 'Pengumuman')}</h4>
+                                        <span class="bg-blue-600 text-white text-[8px] px-1.5 py-0.5 rounded font-bold">${escapeHTML(upd.Versi || 'Update')}</span>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1 leading-relaxed">${escapeHTML(upd.Pesan || '')}</p>
+                                    <span class="text-[9px] font-bold text-gray-400 mt-2 block uppercase tracking-wider">${dateStr}</span>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="text-sm font-bold text-kama-800">Sistem Diperbarui</h4>
-                            <p class="text-xs text-gray-500 mt-1 leading-relaxed">Pembaruan V1.0: Fitur Lonceng Notifikasi Cerdas telah aktif. Tampilan sinkron untuk HP & Desktop.</p>
-                            <span class="text-[9px] font-bold text-gray-400 mt-2 block uppercase tracking-wider">Baru Saja</span>
-                        </div>
-                    </div>
-                </div>
-            `;
+                    `;
+                });
+            }
             
             // Filter Pesan sesuai Role
             let feedbackItems = notifDataCache.filter(row => {
