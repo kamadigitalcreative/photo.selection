@@ -1405,35 +1405,34 @@
             if (!isSilent) container.innerHTML = '<div class="text-center py-8 text-gray-400 text-sm font-medium"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat notifikasi...</div>';
             
             try {
-                // Ambil Data Pesan
-                const responseFb = await fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getFeedbacks', currentUser: currentUser }) });
-                const resFb = await responseFb.json();
+                // EKSEKUSI PARALEL (Bersamaan) agar loading sangat cepat!
+                const [resFb, resSys] = await Promise.all([
+                    fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getFeedbacks', currentUser: currentUser }) }).then(r => r.json()),
+                    fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getSystemUpdates' }) }).then(r => r.json())
+                ]);
+
                 if (resFb.status === 'success' && resFb.data && resFb.data.success) {
                     notifDataCache = resFb.data.data;
                 }
 
-                // Fetch Pengumuman Sistem
-                const responseSys = await fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getSystemUpdates' }) });
-                const resSys = await responseSys.json();
                 if (resSys.status === 'success' && resSys.data && resSys.data.success) {
                     systemDataCache = resSys.data.data;
-                    // Simpan waktu pengumuman terbaru ke memori browser agar angkanya tidak muncul lagi
+                    // Simpan ID pengumuman terbaru agar angka merah mati
                     if (systemDataCache.length > 0) {
-                        let latestSysDate = new Date(systemDataCache[0].Tanggal).getTime();
-                        localStorage.setItem('ps_last_sys_update', latestSysDate.toString());
+                        let latestSysId = systemDataCache[0].ID;
+                        localStorage.setItem('ps_last_sys_id', String(latestSysId));
                     }
                 }
 
                 if ((resFb.status === 'success' && resFb.data && resFb.data.success) || (resSys.status === 'success' && resSys.data && resSys.data.success)) {
                     renderNotifList();
                     
-                    // Otomatis tandai dibaca saat lonceng dibuka
+                    // Jalankan di latar tanpa menunggu (fire and forget)
                     fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'markFeedbackRead', type: currentUser.role === 'Admin' ? 'admin' : 'user', currentUser: currentUser }) }).catch(()=>{});
                     
                     let gB = document.getElementById('badge-global-notif');
-                    if(gB) { gB.classList.add('hidden'); gB.style.display = 'none'; }
+                    if(gB) { gB.classList.add('hidden'); gB.style.display = 'none'; gB.innerText = '0'; }
                     
-                    // SINKRONISASI: Paksa hitungan terakhir sama dengan data terbaru agar toast tidak muncul lagi
                     lastNotifCount = notifDataCache.filter(r => (currentUser.role === 'Admin' ? r.StatusAdmin === 'Unread' : (r.Username === currentUser.username && r.StatusUser === 'Unread'))).length;
                 }
             } catch(e) {
@@ -3894,9 +3893,9 @@
                     let fbCount = resNotif.data.count;
                     let sysCount = 0;
 
-                    if (resNotif.data.latestSystemUpdate) {
-                        let lastSeenSys = localStorage.getItem('ps_last_sys_update');
-                        if (!lastSeenSys || resNotif.data.latestSystemUpdate > parseInt(lastSeenSys)) { sysCount = 1; }
+                    if (resNotif.data.latestSystemUpdateId) {
+                        let lastSeenSys = localStorage.getItem('ps_last_sys_id');
+                        if (String(resNotif.data.latestSystemUpdateId) !== String(lastSeenSys)) { sysCount = 1; }
                     }
 
                     let newCount = fbCount + sysCount;
