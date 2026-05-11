@@ -422,12 +422,6 @@
                         </div>
                         
                         <div class="flex flex-wrap items-center gap-3 w-full md:w-auto mt-3 md:mt-0">
-                            <div class="flex bg-white p-1 rounded-xl shadow-sm border border-gray-200 w-fit">
-                                <button onclick="loadDashboardData('day')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-500 hover:text-kama-800" id="btn-day">Hari</button>
-                                <button onclick="loadDashboardData('month')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-500 hover:text-kama-800" id="btn-month">Bulan</button>
-                                <button onclick="loadDashboardData('all')" class="filter-btn bg-kama-50 text-kama-800 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm" id="btn-all">Semua</button>
-                            </div>
-                            
                             <div class="flex items-center bg-white p-1 rounded-xl shadow-sm border border-gray-200 w-fit">
                                 <input type="date" id="custom-start" class="text-xs px-2 py-1.5 outline-none text-gray-600 bg-transparent rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                                 <span class="text-gray-300 text-xs px-1"><i class="fa-solid fa-arrow-right"></i></span>
@@ -2132,7 +2126,14 @@
 
             if(tabId === 'dashboard') {
                 if (sectionDash && sectionDash.classList) { sectionDash.classList.remove('hidden'); sectionDash.classList.add('flex'); }
-                loadDashboardStats();
+                // Langsung jalankan analytics tanpa loading mengganggu
+                loadDashboardData('all');
+                
+                // Aktifkan auto-refresh 3 detik khusus di menu Dashboard
+                autoRefreshInterval = setInterval(function() {
+                    let isCustom = document.getElementById('custom-start').value && document.getElementById('custom-end').value;
+                    loadDashboardData(isCustom ? 'custom' : 'all');
+                }, 3000);
             } else if(tabId === 'projects') {
                 if (sectionProj && sectionProj.classList) { sectionProj.classList.remove('hidden'); sectionProj.classList.add('flex'); }
                 loadDataProjects();
@@ -3865,93 +3866,66 @@
         var autoRefreshTimer;
         var lastNotifCount = 0;
 
+        var isFetchingSilent = false; // Kunci anti-macet
+
         // Fungsi ini mengambil data ke server TANPA memunculkan loading & pop-up
         function silentFetchData() {
-            if (typeof currentUser === 'undefined' || !currentUser) return; // Hanya jalan jika admin/fotografer login
+            if (typeof currentUser === 'undefined' || !currentUser || isFetchingSilent) return; 
+            isFetchingSilent = true; // Kunci agar server tidak diserang request bertubi-tubi
             
-            fetch(API_ENDPOINT, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    action: 'getProjects', 
-                    currentUser: currentUser 
-                })
-            })
-            .then(function(res) { return res.json(); })
-            .then(function(res) {
-                if (res.status === 'success' && res.data.success) {
-                    var freshData = res.data.data;
-                    renderProjectsTable(freshData); // Update tabel secara diam-diam
-                    renderClientProgress(freshData); // Update progress bar secara diam-diam
+            // Eksekusi PARALEL: Tarik Data Project & Data Notifikasi secara bersamaan!
+            Promise.all([
+                fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getProjects', currentUser: currentUser }) }).then(r => r.json()),
+                fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getNotificationStats', currentUser: currentUser }) }).then(r => r.json())
+            ])
+            .then(function(results) {
+                isFetchingSilent = false; // Buka kunci
+                var resProjects = results[0];
+                var resNotif = results[1];
+                
+                // --- 1. UPDATE DATA PROJECTS ---
+                if (resProjects.status === 'success' && resProjects.data.success) {
+                    renderProjectsTable(resProjects.data.data); 
+                    renderClientProgress(resProjects.data.data); 
                 }
-            })
-            .catch(function(err) { console.log("Silent refresh background loop:", err); });
-
-            // CEK NOTIFIKASI FEEDBACK / BALASAN
-            fetch(API_ENDPOINT, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'getNotificationStats', currentUser: currentUser })
-            })
-            .then(function(res) { return res.json(); })
-            .then(function(res) {
-                if (res.status === 'success' && res.data.success) {
-                    let fbCount = res.data.count;
+                
+                // --- 2. UPDATE NOTIFIKASI LONCENG ---
+                if (resNotif.status === 'success' && resNotif.data.success) {
+                    let fbCount = resNotif.data.count;
                     let sysCount = 0;
 
-                    // Cek apakah ada pengumuman sistem yang belum dibaca
-                    if (res.data.latestSystemUpdate) {
+                    if (resNotif.data.latestSystemUpdate) {
                         let lastSeenSys = localStorage.getItem('ps_last_sys_update');
-                        if (!lastSeenSys || res.data.latestSystemUpdate > parseInt(lastSeenSys)) {
-                            sysCount = 1; // Anggap sebagai 1 notifikasi baru
-                        }
+                        if (!lastSeenSys || resNotif.data.latestSystemUpdate > parseInt(lastSeenSys)) { sysCount = 1; }
                     }
 
                     let newCount = fbCount + sysCount;
-                    
                     let isFeedbackTab = (document.getElementById('section-admin-feedback').classList.contains('flex')) || (document.getElementById('section-feedback').classList.contains('flex'));
-                    
-                    // Deteksi apakah pop-up notifikasi sedang dibuka
                     let modalNotif = document.getElementById('modalNotification');
                     let isModalOpen = modalNotif && !modalNotif.classList.contains('hidden');
-
-                    // UPDATE GLOBAL BELL BADGE (LEBIH KETAT)
                     let globalBadge = document.getElementById('badge-global-notif');
                     
-                    // JANGAN tampilkan angka jika: Sedang buka modal Notif ATAU Sedang buka menu Feedback
                     if (newCount > 0 && !isFeedbackTab && !isModalOpen) {
-                        if (globalBadge) { 
-                            globalBadge.innerText = (newCount > 99) ? '99+' : newCount; 
-                            globalBadge.classList.remove('hidden'); 
-                            globalBadge.style.display = 'flex'; 
-                        }
+                        if (globalBadge) { globalBadge.innerText = (newCount > 99) ? '99+' : newCount; globalBadge.classList.remove('hidden'); globalBadge.style.display = 'flex'; }
                     } else {
-                        // Hilangkan angka secara total jika kondisi tidak terpenuhi
-                        if (globalBadge) {
-                            globalBadge.classList.add('hidden');
-                            globalBadge.style.display = 'none';
-                            globalBadge.innerText = '0';
-                        }
+                        if (globalBadge) { globalBadge.classList.add('hidden'); globalBadge.style.display = 'none'; globalBadge.innerText = '0'; }
                     }
 
-                    // Tampilkan POP-UP (Toast) jika ada pesan dan sedang tidak buka lonceng/pesan
                     if (newCount > lastNotifCount && !isFeedbackTab && !isModalOpen) {
                         let msg = currentUser.role === 'Admin' ? 'Ada ' + fbCount + ' Laporan/Saran baru!' : 'Ada balasan Saran dari Admin!';
                         if (sysCount > 0 && fbCount === 0) msg = 'Ada Pengumuman Sistem Baru!';
                         else if (sysCount > 0 && fbCount > 0) msg = 'Ada Pesan & Pengumuman Baru!';
-
                         Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, icon: 'info', title: 'Notifikasi Baru', text: msg });
                     }
                     
-                    // Refresh isi pesan diam-diam jika menunya sedang dibuka
                     if (newCount > lastNotifCount) {
                         if (isFeedbackTab) loadAdminFeedback(true);
                         if (isModalOpen && typeof fetchNotifData === 'function') fetchNotifData(true);
                     }
-                    
                     lastNotifCount = newCount;
                 }
-            }).catch(function(e) {});
+            })
+            .catch(function(err) { isFetchingSilent = false; });
         }
 
         // Jalankan auto-refresh setiap 3 detik secara aman
