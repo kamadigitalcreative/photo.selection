@@ -1405,29 +1405,22 @@
             if (!isSilent) container.innerHTML = '<div class="text-center py-8 text-gray-400 text-sm font-medium"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat notifikasi...</div>';
             
             try {
-                // EKSEKUSI PARALEL (Bersamaan) agar loading sangat cepat!
-                const [resFb, resSys] = await Promise.all([
-                    fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getFeedbacks', currentUser: currentUser }) }).then(r => r.json()),
-                    fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getSystemUpdates' }) }).then(r => r.json())
-                ]);
-
-                if (resFb.status === 'success' && resFb.data && resFb.data.success) {
-                    notifDataCache = resFb.data.data;
-                }
-
-                if (resSys.status === 'success' && resSys.data && resSys.data.success) {
-                    systemDataCache = resSys.data.data;
-                    // Simpan ID pengumuman terbaru agar angka merah mati
+                // TARIK SEMUA DATA DALAM 1 KALI REQUEST (SUPER CEPAT)
+                const response = await fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getAllNotifications', currentUser: currentUser }) });
+                const res = await response.json();
+                
+                if (res.status === 'success') {
+                    notifDataCache = res.data.feedbacks || [];
+                    systemDataCache = res.data.systemUpdates || [];
+                    
+                    // Simpan ID Pengumuman agar angka merah hilang
                     if (systemDataCache.length > 0) {
                         let latestSysId = systemDataCache[0].ID;
                         localStorage.setItem('ps_last_sys_id', String(latestSysId));
                     }
-                }
 
-                if ((resFb.status === 'success' && resFb.data && resFb.data.success) || (resSys.status === 'success' && resSys.data && resSys.data.success)) {
                     renderNotifList();
                     
-                    // Jalankan di latar tanpa menunggu (fire and forget)
                     fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'markFeedbackRead', type: currentUser.role === 'Admin' ? 'admin' : 'user', currentUser: currentUser }) }).catch(()=>{});
                     
                     let gB = document.getElementById('badge-global-notif');
@@ -3867,61 +3860,67 @@
 
         var isFetchingSilent = false; // Kunci anti-macet
 
-        // Fungsi ini mengambil data ke server TANPA memunculkan loading & pop-up
+        var isFetchingSilent = false;
+
+        // Mesin Sinkronisasi Tunggal 3 Detik (Bebas Macet)
         function silentFetchData() {
             if (typeof currentUser === 'undefined' || !currentUser || isFetchingSilent) return; 
-            isFetchingSilent = true; // Kunci agar server tidak diserang request bertubi-tubi
+            isFetchingSilent = true; 
             
-            // Eksekusi PARALEL: Tarik Data Project & Data Notifikasi secara bersamaan!
-            Promise.all([
-                fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getProjects', currentUser: currentUser }) }).then(r => r.json()),
-                fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getNotificationStats', currentUser: currentUser }) }).then(r => r.json())
-            ])
-            .then(function(results) {
-                isFetchingSilent = false; // Buka kunci
-                var resProjects = results[0];
-                var resNotif = results[1];
-                
-                // --- 1. UPDATE DATA PROJECTS ---
-                if (resProjects.status === 'success' && resProjects.data.success) {
-                    renderProjectsTable(resProjects.data.data); 
-                    renderClientProgress(resProjects.data.data); 
-                }
-                
-                // --- 2. UPDATE NOTIFIKASI LONCENG ---
-                if (resNotif.status === 'success' && resNotif.data.success) {
-                    let fbCount = resNotif.data.count;
-                    let sysCount = 0;
-
-                    if (resNotif.data.latestSystemUpdateId) {
-                        let lastSeenSys = localStorage.getItem('ps_last_sys_id');
-                        if (String(resNotif.data.latestSystemUpdateId) !== String(lastSeenSys)) { sysCount = 1; }
-                    }
-
-                    let newCount = fbCount + sysCount;
-                    let isFeedbackTab = (document.getElementById('section-admin-feedback').classList.contains('flex')) || (document.getElementById('section-feedback').classList.contains('flex'));
-                    let modalNotif = document.getElementById('modalNotification');
-                    let isModalOpen = modalNotif && !modalNotif.classList.contains('hidden');
-                    let globalBadge = document.getElementById('badge-global-notif');
+            fetch(API_ENDPOINT, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ action: 'syncBackground', currentUser: currentUser }) 
+            })
+            .then(r => r.json())
+            .then(function(res) {
+                isFetchingSilent = false; 
+                if (res.status === 'success') {
+                    var resProjects = res.data.projects;
+                    var resNotif = res.data.notifStats;
                     
-                    if (newCount > 0 && !isFeedbackTab && !isModalOpen) {
-                        if (globalBadge) { globalBadge.innerText = (newCount > 99) ? '99+' : newCount; globalBadge.classList.remove('hidden'); globalBadge.style.display = 'flex'; }
-                    } else {
-                        if (globalBadge) { globalBadge.classList.add('hidden'); globalBadge.style.display = 'none'; globalBadge.innerText = '0'; }
-                    }
-
-                    if (newCount > lastNotifCount && !isFeedbackTab && !isModalOpen) {
-                        let msg = currentUser.role === 'Admin' ? 'Ada ' + fbCount + ' Laporan/Saran baru!' : 'Ada balasan Saran dari Admin!';
-                        if (sysCount > 0 && fbCount === 0) msg = 'Ada Pengumuman Sistem Baru!';
-                        else if (sysCount > 0 && fbCount > 0) msg = 'Ada Pesan & Pengumuman Baru!';
-                        Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, icon: 'info', title: 'Notifikasi Baru', text: msg });
+                    // --- 1. UPDATE DATA PROJECTS ---
+                    if (resProjects && resProjects.success) {
+                        renderProjectsTable(resProjects.data); 
+                        renderClientProgress(resProjects.data); 
                     }
                     
-                    if (newCount > lastNotifCount) {
-                        if (isFeedbackTab) loadAdminFeedback(true);
-                        if (isModalOpen && typeof fetchNotifData === 'function') fetchNotifData(true);
+                    // --- 2. UPDATE NOTIFIKASI LONCENG ---
+                    if (resNotif && resNotif.success) {
+                        let fbCount = resNotif.count || 0;
+                        let sysCount = 0;
+
+                        if (resNotif.latestSystemUpdateId) {
+                            let lastSeenSys = localStorage.getItem('ps_last_sys_id');
+                            // Cocokkan ID. Jika beda, berarti ada update baru!
+                            if (String(resNotif.latestSystemUpdateId) !== String(lastSeenSys)) { sysCount = 1; }
+                        }
+
+                        let newCount = fbCount + sysCount;
+                        let isFeedbackTab = (document.getElementById('section-admin-feedback').classList.contains('flex')) || (document.getElementById('section-feedback').classList.contains('flex'));
+                        let modalNotif = document.getElementById('modalNotification');
+                        let isModalOpen = modalNotif && !modalNotif.classList.contains('hidden');
+                        let globalBadge = document.getElementById('badge-global-notif');
+                        
+                        if (newCount > 0 && !isFeedbackTab && !isModalOpen) {
+                            if (globalBadge) { globalBadge.innerText = (newCount > 99) ? '99+' : newCount; globalBadge.classList.remove('hidden'); globalBadge.style.display = 'flex'; }
+                        } else {
+                            if (globalBadge) { globalBadge.classList.add('hidden'); globalBadge.style.display = 'none'; globalBadge.innerText = '0'; }
+                        }
+
+                        if (newCount > lastNotifCount && !isFeedbackTab && !isModalOpen) {
+                            let msg = currentUser.role === 'Admin' ? 'Ada ' + fbCount + ' Laporan/Saran baru!' : 'Ada balasan Saran dari Admin!';
+                            if (sysCount > 0 && fbCount === 0) msg = 'Ada Pengumuman Sistem Baru!';
+                            else if (sysCount > 0 && fbCount > 0) msg = 'Ada Pesan & Pengumuman Baru!';
+                            Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, icon: 'info', title: 'Notifikasi Baru', text: msg });
+                        }
+                        
+                        if (newCount > lastNotifCount) {
+                            if (isFeedbackTab) loadAdminFeedback(true);
+                            if (isModalOpen && typeof fetchNotifData === 'function') fetchNotifData(true);
+                        }
+                        lastNotifCount = newCount;
                     }
-                    lastNotifCount = newCount;
                 }
             })
             .catch(function(err) { isFetchingSilent = false; });
