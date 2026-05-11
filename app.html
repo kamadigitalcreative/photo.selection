@@ -1400,12 +1400,18 @@
             renderNotifList();
         }
 
-        async function fetchNotifData(isSilent = false) {
+        async function fetchNotifData() {
             var container = document.getElementById('notif-container');
-            if (!isSilent) container.innerHTML = '<div class="text-center py-8 text-gray-400 text-sm font-medium"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat notifikasi...</div>';
+            
+            // --- TRIK INSTAN: Langsung tampilkan teks yang sudah ditarik di background (Loading 0 Detik!) ---
+            if (systemDataCache.length > 0 || notifDataCache.length > 0) {
+                renderNotifList(); 
+            } else {
+                container.innerHTML = '<div class="text-center py-8 text-gray-400 text-sm font-medium"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat notifikasi...</div>';
+            }
             
             try {
-                // TARIK SEMUA DATA DALAM 1 KALI REQUEST (SUPER CEPAT)
+                // Konfirmasi ke server di belakang layar agar data tetap akurat
                 const response = await fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getAllNotifications', currentUser: currentUser }) });
                 const res = await response.json();
                 
@@ -1413,7 +1419,7 @@
                     notifDataCache = res.data.feedbacks || [];
                     systemDataCache = res.data.systemUpdates || [];
                     
-                    // Simpan ID Pengumuman agar angka merah hilang
+                    // Simpan ID Pengumuman agar angka merah mati setelah dibaca
                     if (systemDataCache.length > 0) {
                         let latestSysId = systemDataCache[0].ID;
                         localStorage.setItem('ps_last_sys_id', String(latestSysId));
@@ -1428,9 +1434,7 @@
                     
                     lastNotifCount = notifDataCache.filter(r => (currentUser.role === 'Admin' ? r.StatusAdmin === 'Unread' : (r.Username === currentUser.username && r.StatusUser === 'Unread'))).length;
                 }
-            } catch(e) {
-                if(!isSilent) container.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">Gagal memuat notifikasi.</div>';
-            }
+            } catch(e) {}
         }
 
         function renderNotifList() {
@@ -3863,6 +3867,9 @@
         var isFetchingSilent = false;
 
         // Mesin Sinkronisasi Tunggal 3 Detik (Bebas Macet)
+        var isFetchingSilent = false;
+
+        // Mesin Sinkronisasi Tunggal 3 Detik (Bebas Macet & Realtime)
         function silentFetchData() {
             if (typeof currentUser === 'undefined' || !currentUser || isFetchingSilent) return; 
             isFetchingSilent = true; 
@@ -3872,12 +3879,18 @@
                 headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify({ action: 'syncBackground', currentUser: currentUser }) 
             })
-            .then(r => r.json())
+            .then(function(r) { return r.json(); })
             .then(function(res) {
                 isFetchingSilent = false; 
                 if (res.status === 'success') {
                     var resProjects = res.data.projects;
                     var resNotif = res.data.notifStats;
+
+                    // --- SUNTIKAN TEKS INSTAN (AGAR LOADING BISA 0 DETIK) ---
+                    if (res.data.allNotifs) {
+                        notifDataCache = res.data.allNotifs.feedbacks || [];
+                        systemDataCache = res.data.allNotifs.systemUpdates || [];
+                    }
                     
                     // --- 1. UPDATE DATA PROJECTS ---
                     if (resProjects && resProjects.success) {
@@ -3892,7 +3905,7 @@
 
                         if (resNotif.latestSystemUpdateId) {
                             let lastSeenSys = localStorage.getItem('ps_last_sys_id');
-                            // Cocokkan ID. Jika beda, berarti ada update baru!
+                            // Jika ID di Excel beda dengan ingatan Browser = Ada Pengumuman Baru!
                             if (String(resNotif.latestSystemUpdateId) !== String(lastSeenSys)) { sysCount = 1; }
                         }
 
