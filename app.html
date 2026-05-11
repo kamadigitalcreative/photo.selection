@@ -1418,11 +1418,16 @@
                     notifDataCache = resFb.data.data;
                 }
 
-                // Ambil Data Update Sistem
+                // Fetch Pengumuman Sistem
                 const responseSys = await fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getSystemUpdates' }) });
                 const resSys = await responseSys.json();
                 if (resSys.status === 'success' && resSys.data && resSys.data.success) {
                     systemDataCache = resSys.data.data;
+                    // Simpan waktu pengumuman terbaru ke memori browser agar angkanya tidak muncul lagi
+                    if (systemDataCache.length > 0) {
+                        let latestSysDate = new Date(systemDataCache[0].Tanggal).getTime();
+                        localStorage.setItem('ps_last_sys_update', latestSysDate.toString());
+                    }
                 }
 
                 if ((resFb.status === 'success' && resFb.data && resFb.data.success) || (resSys.status === 'success' && resSys.data && resSys.data.success)) {
@@ -3891,7 +3896,18 @@
             .then(function(res) { return res.json(); })
             .then(function(res) {
                 if (res.status === 'success' && res.data.success) {
-                    let newCount = res.data.count;
+                    let fbCount = res.data.count;
+                    let sysCount = 0;
+
+                    // Cek apakah ada pengumuman sistem yang belum dibaca
+                    if (res.data.latestSystemUpdate) {
+                        let lastSeenSys = localStorage.getItem('ps_last_sys_update');
+                        if (!lastSeenSys || res.data.latestSystemUpdate > parseInt(lastSeenSys)) {
+                            sysCount = 1; // Anggap sebagai 1 notifikasi baru
+                        }
+                    }
+
+                    let newCount = fbCount + sysCount;
                     
                     let isFeedbackTab = (document.getElementById('section-admin-feedback').classList.contains('flex')) || (document.getElementById('section-feedback').classList.contains('flex'));
                     
@@ -3920,7 +3936,10 @@
 
                     // Tampilkan POP-UP (Toast) jika ada pesan dan sedang tidak buka lonceng/pesan
                     if (newCount > lastNotifCount && !isFeedbackTab && !isModalOpen) {
-                        let msg = currentUser.role === 'Admin' ? 'Ada ' + newCount + ' Laporan/Saran baru!' : 'Ada balasan Saran dari Admin!';
+                        let msg = currentUser.role === 'Admin' ? 'Ada ' + fbCount + ' Laporan/Saran baru!' : 'Ada balasan Saran dari Admin!';
+                        if (sysCount > 0 && fbCount === 0) msg = 'Ada Pengumuman Sistem Baru!';
+                        else if (sysCount > 0 && fbCount > 0) msg = 'Ada Pesan & Pengumuman Baru!';
+
                         Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, icon: 'info', title: 'Notifikasi Baru', text: msg });
                     }
                     
