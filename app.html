@@ -501,16 +501,16 @@
                         </div>
                     </div>
 
-                    <div class="bg-white p-6 rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.04)] border border-gray-100 mb-8">
-                        <div class="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
-                            <h4 class="text-lg font-bold text-kama-800">Status Workflow Klien</h4>
-                            <span class="bg-green-50 text-green-600 text-[10px] font-bold px-2 py-1 rounded border border-green-200 uppercase">Realtime</span>
+                    <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.04)] border border-gray-100 mb-8">
+                        <div class="flex justify-between items-center mb-8 border-b border-gray-100 pb-4">
+                            <h4 class="text-xl font-bold text-kama-800">Status Workflow Klien</h4>
+                            <span class="bg-green-50 text-green-600 text-[10px] font-bold px-3 py-1 rounded border border-green-200 uppercase">Realtime</span>
                         </div>
-                        <div class="flex flex-col sm:flex-row items-center justify-center gap-12">
-                            <div class="w-48 h-48 shrink-0 relative">
+                        <div class="flex flex-col sm:flex-row items-center justify-center sm:gap-20 gap-8">
+                            <div class="w-64 h-64 shrink-0 relative">
                                 <canvas id="workflowChart"></canvas>
                             </div>
-                            <div class="w-full sm:max-w-xs space-y-3" id="db-statuses-detailed">
+                            <div class="w-full sm:w-80 space-y-4" id="db-statuses-detailed">
                                 <div class="text-center py-4 text-gray-400 text-sm"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat grafik...</div>
                             </div>
                         </div>
@@ -3985,10 +3985,18 @@
 // --- SCRIPT ANALYTICS & DASHBOARD BARU ---
 let workflowChartInstance = null; // Variabel penyimpan grafik
 
-let workflowChartInstance = null; // Variabel penyimpan grafik
-
 function loadDashboardData(range) {
     if (!range) range = 'all';
+    
+    document.querySelectorAll('.filter-btn').forEach(function(btn) {
+        btn.classList.remove('bg-kama-50', 'text-kama-800', 'shadow-sm');
+        btn.classList.add('text-gray-500');
+    });
+    var activeBtn = document.getElementById('btn-' + range);
+    if(activeBtn) {
+        activeBtn.classList.add('bg-kama-50', 'text-kama-800', 'shadow-sm');
+        activeBtn.classList.remove('text-gray-500');
+    }
 
     if (!currentUser || currentUser.role !== 'Admin') return;
 
@@ -4026,7 +4034,7 @@ function loadDashboardData(range) {
             if(document.getElementById('stat-views')) document.getElementById('stat-views').innerText = d.views || 0;
             if(document.getElementById('stat-visitors')) document.getElementById('stat-visitors').innerText = d.visitors || 0;
 
-            // 2. Gambar / Update Grafik Chart.js
+            // 2. Render Grafik Chart.js secara Instan
             renderDashboardGraphics(d);
         }
     })
@@ -4035,39 +4043,40 @@ function loadDashboardData(range) {
 
 // Fungsi Render Grafik Chart.js
 function renderDashboardGraphics(data) {
-    // A. Update Legenda
+    // A. Update Legenda (Sesuai Gambar Request Anda)
     const detailedContainer = document.getElementById('db-statuses-detailed');
     if(detailedContainer) {
         detailedContainer.innerHTML = `
-            <div class="flex items-center justify-between p-3.5 bg-gray-50 rounded-xl border border-gray-100">
-                <div class="flex items-center gap-3">
-                    <div class="w-3.5 h-3.5 rounded-full bg-red-500 shadow-sm border border-white"></div>
-                    <span class="text-sm font-bold text-gray-600">Belum Memilih <span class="font-normal text-[10px] ml-1">(Pending)</span></span>
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 transition-colors hover:bg-gray-100">
+                <div class="flex items-center gap-4">
+                    <div class="w-4 h-4 rounded-full bg-red-500 shadow-sm border-2 border-white"></div>
+                    <span class="text-sm font-bold text-gray-700">Belum Memilih <span class="font-normal text-xs ml-1 text-gray-500">(Pending)</span></span>
                 </div>
-                <span class="text-base font-black text-gray-900">${data.Pending || 0}</span>
+                <span class="text-xl font-black text-gray-900">${data.Pending || 0}</span>
             </div>
-            <div class="flex items-center justify-between p-3.5 bg-gray-50 rounded-xl border border-gray-100 mt-2">
-                <div class="flex items-center gap-3">
-                    <div class="w-3.5 h-3.5 rounded-full bg-amber-500 shadow-sm border border-white"></div>
-                    <span class="text-sm font-bold text-gray-600">Sedang Memilih <span class="font-normal text-[10px] ml-1">(Selection)</span></span>
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 mt-3 transition-colors hover:bg-gray-100">
+                <div class="flex items-center gap-4">
+                    <div class="w-4 h-4 rounded-full bg-amber-500 shadow-sm border-2 border-white"></div>
+                    <span class="text-sm font-bold text-gray-700">Sedang Memilih <span class="font-normal text-xs ml-1 text-gray-500">(Selection)</span></span>
                 </div>
-                <span class="text-base font-black text-gray-900">${data.Selection || 0}</span>
+                <span class="text-xl font-black text-gray-900">${data.Selection || 0}</span>
             </div>
-            <div class="flex items-center justify-between p-3.5 bg-gray-50 rounded-xl border border-gray-100 mt-2">
-                <div class="flex items-center gap-3">
-                    <div class="w-3.5 h-3.5 rounded-full bg-green-500 shadow-sm border border-white"></div>
-                    <span class="text-sm font-bold text-gray-600">Selesai <span class="font-normal text-[10px] ml-1">(Downloaded)</span></span>
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 mt-3 transition-colors hover:bg-gray-100">
+                <div class="flex items-center gap-4">
+                    <div class="w-4 h-4 rounded-full bg-green-500 shadow-sm border-2 border-white"></div>
+                    <span class="text-sm font-bold text-gray-700">Selesai <span class="font-normal text-xs ml-1 text-gray-500">(Downloaded)</span></span>
                 </div>
-                <span class="text-base font-black text-gray-900">${data.Downloaded || 0}</span>
+                <span class="text-xl font-black text-gray-900">${data.Downloaded || 0}</span>
             </div>
         `;
     }
 
-    // B. Gambar Grafik
+    // B. Gambar Grafik Doughnut Mewah
     const canvas = document.getElementById('workflowChart');
     if(!canvas) return;
     const ctx = canvas.getContext('2d');
     
+    // Hancurkan grafik lama jika halaman auto-refresh agar tidak menumpuk error
     if (workflowChartInstance) { workflowChartInstance.destroy(); }
 
     workflowChartInstance = new Chart(ctx, {
@@ -4076,10 +4085,10 @@ function renderDashboardGraphics(data) {
             labels: ['Belum Memilih', 'Sedang Memilih', 'Selesai'],
             datasets: [{
                 data: [data.Pending || 0, data.Selection || 0, data.Downloaded || 0],
-                backgroundColor: ['#ef4444', '#f59e0b', '#22c55e'], // Merah, Kuning, Hijau
-                borderWidth: 3,
+                backgroundColor: ['#ef4444', '#f59e0b', '#22c55e'], 
+                borderWidth: 4,
                 borderColor: '#ffffff',
-                hoverOffset: 6
+                hoverOffset: 8
             }]
         },
         options: {
@@ -4091,77 +4100,8 @@ function renderDashboardGraphics(data) {
                 tooltip: {
                     padding: 12,
                     cornerRadius: 8,
-                    titleFont: { size: 13, family: 'Inter' },
-                    bodyFont: { size: 13, family: 'Inter', weight: 'bold' },
-                    callbacks: {
-                        label: function(context) {
-                            let value = context.parsed || 0;
-                            let total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            let percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                            return ' ' + value + ' Klien (' + percentage + '%)';
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-
-// Fungsi Render Grafik Chart.js
-function renderDashboardGraphics(data) {
-    // A. Update Legenda
-    const detailedContainer = document.getElementById('db-statuses-detailed');
-    if(detailedContainer) {
-        detailedContainer.innerHTML = `
-            <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                <div class="w-3.5 h-3.5 rounded-full bg-red-500 shadow-sm border border-white"></div>
-                <span class="text-sm font-bold text-gray-600 flex-1">Belum Memilih <span class="font-normal text-[10px] ml-1">(Pending)</span></span>
-                <span class="text-base font-black text-gray-900">${data.Pending || 0}</span>
-            </div>
-            <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100 mt-2">
-                <div class="w-3.5 h-3.5 rounded-full bg-amber-500 shadow-sm border border-white"></div>
-                <span class="text-sm font-bold text-gray-600 flex-1">Sedang Memilih <span class="font-normal text-[10px] ml-1">(Selection)</span></span>
-                <span class="text-base font-black text-gray-900">${data.Selection || 0}</span>
-            </div>
-            <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100 mt-2">
-                <div class="w-3.5 h-3.5 rounded-full bg-green-500 shadow-sm border border-white"></div>
-                <span class="text-sm font-bold text-gray-600 flex-1">Selesai <span class="font-normal text-[10px] ml-1">(Downloaded)</span></span>
-                <span class="text-base font-black text-gray-900">${data.Downloaded || 0}</span>
-            </div>
-        `;
-    }
-
-    // B. Gambar Grafik
-    const canvas = document.getElementById('workflowChart');
-    if(!canvas) return;
-    const ctx = canvas.getContext('2d');
-    
-    // Hancurkan grafik lama jika halaman refresh agar tidak menumpuk error
-    if (workflowChartInstance) { workflowChartInstance.destroy(); }
-
-    workflowChartInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Belum Memilih', 'Sedang Memilih', 'Selesai'],
-            datasets: [{
-                data: [data.Pending || 0, data.Selection || 0, data.Downloaded || 0],
-                backgroundColor: ['#ef4444', '#f59e0b', '#22c55e'], // Merah, Kuning, Hijau
-                borderWidth: 3,
-                borderColor: '#ffffff',
-                hoverOffset: 6
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '75%', 
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    padding: 12,
-                    cornerRadius: 8,
-                    titleFont: { size: 13, family: 'Inter' },
-                    bodyFont: { size: 13, family: 'Inter', weight: 'bold' },
+                    titleFont: { size: 14, family: 'Inter' },
+                    bodyFont: { size: 14, family: 'Inter', weight: 'bold' },
                     callbacks: {
                         label: function(context) {
                             let value = context.parsed || 0;
