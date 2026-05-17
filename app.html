@@ -3114,14 +3114,26 @@
             var imgEl = document.getElementById('viewerImage');
             var capEl = document.getElementById('viewerCaption');
             
-            imgEl.classList.add('opacity-40', 'scale-[0.98]');
-            setTimeout(function() {
-                var safeUrl = nextImg.url || 'https://placehold.co/400x400?text=Memuat...';
-                imgEl.src = safeUrl.replace('=w1000', '=s0'); 
-                capEl.innerText = nextImg.name;
-                updateViewerUI(nextImg.name, safeUrl);
-                imgEl.classList.remove('opacity-40', 'scale-[0.98]');
-            }, 150);
+            var safeUrl = nextImg.url || 'https://placehold.co/400x400?text=Memuat...';
+            
+            // 1. Ganti UI dan Judul langsung seketika (0 detik)
+            capEl.innerText = nextImg.name;
+            updateViewerUI(nextImg.name, safeUrl);
+
+            // 2. Trik Anti-Lag: Pasang versi ringan (=w1000) yang sudah ada di memori HP/PC klien.
+            // Ini membuat foto langsung berubah tanpa ada lag sama sekali.
+            imgEl.src = safeUrl; 
+
+            // 3. Mesin Gaib: Tarik resolusi asli (=s0) secara diam-diam di belakang layar.
+            var hdImage = new Image();
+            hdImage.onload = function() {
+                // Begitu foto HD selesai di-download, otomatis timpa foto yang ringan, 
+                // TAPI pastikan klien belum menggeser ke foto yang lain.
+                if (capEl.innerText === nextImg.name) { 
+                    imgEl.src = safeUrl.replace('=w1000', '=s0'); 
+                }
+            };
+            hdImage.src = safeUrl.replace('=w1000', '=s0');
         }
 
         function handleViewerKeyboard(e) {
