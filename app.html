@@ -2146,10 +2146,9 @@
                 if (sectionStatus && sectionStatus.classList) { sectionStatus.classList.remove('hidden'); sectionStatus.classList.add('flex'); }
                 loadClientProgress();
 
-                // FIX: Nyalakan robot stabil (setInterval) HANYA di menu Pantau Klien
-                autoRefreshInterval = setInterval(function() {
-                    loadClientProgress(true);
-                }, 3000); // 3000ms = 3 detik (Batas paling cepat dan paling aman dari blokir Google)
+                // FIX OPTIMASI: Robot interval lama DIHAPUS dari sini!
+                // Data Pantau Klien kini otomatis disinkronkan oleh robot 'silentFetchData' 
+                // secara diam-diam. Menghapus ini mencegah aplikasi menembak server 2x lipat.
             } else if (tabId === 'panduan') {
                 if (sectionPanduan) { sectionPanduan.classList.remove('hidden'); sectionPanduan.classList.add('flex'); }
             } else if (tabId === 'feedback') {
