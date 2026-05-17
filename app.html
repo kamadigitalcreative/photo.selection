@@ -2278,9 +2278,16 @@
 
                 var tr = document.createElement('tr');
                 tr.className = "hover:bg-kama-50/50 transition-colors group";
+                
+                var lastSeen = row.LastActive ? row.LastActive : 'Belum pernah';
                 var onlineBadge = row.isOnline
-                    ? '<span class="bg-green-100 text-green-700 text-[10px] px-2 py-1 rounded-full font-bold border border-green-200"><i class="fa-solid fa-circle text-[8px] mr-1"></i>Online</span>'
-                    : '<span class="bg-gray-100 text-gray-500 text-[10px] px-2 py-1 rounded-full font-bold border border-gray-200"><i class="fa-solid fa-circle text-[8px] mr-1"></i>Offline</span>';
+                    ? '<div class="flex flex-col items-center justify-center">' +
+                      '<span class="bg-green-100 text-green-700 text-[10px] px-2 py-1 rounded-full font-bold border border-green-200"><i class="fa-solid fa-circle text-[8px] mr-1 animate-pulse"></i>Online</span>' +
+                      '</div>'
+                    : '<div class="flex flex-col items-center justify-center">' +
+                      '<span class="bg-gray-100 text-gray-500 text-[10px] px-2 py-1 rounded-full font-bold border border-gray-200"><i class="fa-solid fa-circle text-[8px] mr-1"></i>Offline</span>' +
+                      '<span class="text-[9px] text-gray-400 mt-1 font-medium whitespace-nowrap">Last: ' + lastSeen + '</span>' +
+                      '</div>';
 
                 tr.innerHTML = 
                     '<td class="p-4 sm:px-6 font-semibold text-kama-800">' + escapeHTML(row.Nama || '-') + '</td>' +
