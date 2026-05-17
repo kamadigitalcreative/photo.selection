@@ -1015,10 +1015,10 @@
             </button>
         </div>
         
-        <button onclick="navigateViewer(-1); event.stopPropagation();" class="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-black/40 hover:bg-black/80 backdrop-blur-sm rounded-full text-white flex items-center justify-center transition-colors border border-white/10 shadow-lg z-50">
+        <button onclick="navigateViewer(-1, event)" class="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-black/40 hover:bg-black/80 backdrop-blur-sm rounded-full text-white flex items-center justify-center transition-colors border border-white/10 shadow-lg z-[100000]">
             <i class="fa-solid fa-chevron-left text-xl sm:text-2xl"></i>
         </button>
-        <button onclick="navigateViewer(1); event.stopPropagation();" class="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-black/40 hover:bg-black/80 backdrop-blur-sm rounded-full text-white flex items-center justify-center transition-colors border border-white/10 shadow-lg z-50">
+        <button onclick="navigateViewer(1, event)" class="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-black/40 hover:bg-black/80 backdrop-blur-sm rounded-full text-white flex items-center justify-center transition-colors border border-white/10 shadow-lg z-[100000]">
             <i class="fa-solid fa-chevron-right text-xl sm:text-2xl"></i>
         </button>
 
@@ -3048,33 +3048,31 @@
             }
         }
 
-        let currentViewerIndex = 0;
-        let viewerActiveList = [];
+        // Deklarasi global menggunakan window agar tidak hilang (Scoping Fix)
+        window.currentViewerIndex = 0;
+        window.viewerActiveList = [];
 
         function openImageViewer(url, name, event, index, customList) {
             if (event) event.stopPropagation();
             
-            // Tentukan daftar array gambar yang sedang di-slide (Folder aktif atau Preview pilihan)
-            viewerActiveList = customList ? customList : (clientState.currentContent ? clientState.currentContent.images : []);
+            window.viewerActiveList = customList ? customList : (clientState.currentContent ? clientState.currentContent.images : []);
             
-            if (index !== undefined) {
-                currentViewerIndex = index;
+            if (index !== undefined && index !== null) {
+                window.currentViewerIndex = parseInt(index);
             } else {
-                currentViewerIndex = viewerActiveList.findIndex(function(img) { return img.name === name; });
+                window.currentViewerIndex = window.viewerActiveList.findIndex(function(img) { return img.name === name; });
             }
-            if (currentViewerIndex === -1) currentViewerIndex = 0;
+            if (window.currentViewerIndex === -1) window.currentViewerIndex = 0;
             
             var modal = document.getElementById('imageViewerModal');
             var img = document.getElementById('viewerImage');
             var cap = document.getElementById('viewerCaption');
 
-            // --- RESOLUSI TERTINGGI: Ganti parameter =w1000 jadi =s0 (Original Size) ---
             var hdUrl = url.replace('=w1000', '=s0');
             img.src = hdUrl;
             cap.innerText = name;
 
-            // Update UI (Tombol pilih dan counter)
-            updateViewerUI(name, url);
+            updateViewerUI(name, hdUrl);
 
             modal.classList.remove('hidden');
             void modal.offsetWidth;
@@ -3082,7 +3080,6 @@
             img.classList.remove('scale-95');
             img.classList.add('scale-100');
             
-            // Pasang pendeteksi keyboard (Arrow Kiri/Kanan & Escape)
             document.addEventListener('keydown', handleViewerKeyboard);
         }
 
@@ -3102,24 +3099,25 @@
             document.removeEventListener('keydown', handleViewerKeyboard);
         }
 
-        function navigateViewer(direction) {
-            if (!viewerActiveList || viewerActiveList.length === 0) return;
-            var total = viewerActiveList.length;
+        function navigateViewer(direction, e) {
+            if (e) e.stopPropagation(); // Amankan klik agar tidak menutup modal
+            
+            if (!window.viewerActiveList || window.viewerActiveList.length === 0) return;
+            var total = window.viewerActiveList.length;
 
-            currentViewerIndex += direction;
-            if (currentViewerIndex < 0) currentViewerIndex = total - 1; // Loop ke akhir
-            if (currentViewerIndex >= total) currentViewerIndex = 0; // Loop ke awal
+            window.currentViewerIndex = parseInt(window.currentViewerIndex) + direction;
+            if (window.currentViewerIndex < 0) window.currentViewerIndex = total - 1;
+            if (window.currentViewerIndex >= total) window.currentViewerIndex = 0;
 
-            var nextImg = viewerActiveList[currentViewerIndex];
+            var nextImg = window.viewerActiveList[window.currentViewerIndex];
             
             var imgEl = document.getElementById('viewerImage');
             var capEl = document.getElementById('viewerCaption');
             
-            // Transisi gambar mulus saat bergeser
             imgEl.classList.add('opacity-40', 'scale-[0.98]');
             setTimeout(function() {
                 var safeUrl = nextImg.url || 'https://placehold.co/400x400?text=Memuat...';
-                imgEl.src = safeUrl.replace('=w1000', '=s0'); // Tarik foto resolusi asli (HD)
+                imgEl.src = safeUrl.replace('=w1000', '=s0'); 
                 capEl.innerText = nextImg.name;
                 updateViewerUI(nextImg.name, safeUrl);
                 imgEl.classList.remove('opacity-40', 'scale-[0.98]');
@@ -3127,8 +3125,8 @@
         }
 
         function handleViewerKeyboard(e) {
-            if (e.key === 'ArrowLeft') navigateViewer(-1);
-            if (e.key === 'ArrowRight') navigateViewer(1);
+            if (e.key === 'ArrowLeft') navigateViewer(-1, null);
+            if (e.key === 'ArrowRight') navigateViewer(1, null);
             if (e.key === 'Escape') closeImageViewer();
         }
 
@@ -3142,7 +3140,6 @@
             
             if (!btn) return;
 
-            // Sembunyikan tombol jika klien sedang dalam mode Download
             if (clientState.galleryMode === 'download') {
                 btn.style.display = 'none';
                 return;
@@ -3150,9 +3147,9 @@
                 btn.style.display = 'flex';
             }
 
-            // Periksa apakah foto ini sudah dipilih atau belum
+            // Fix akurasi cek foto saat pindah folder
             var isSelected = clientState.selectedImages.some(function(sel) { 
-                return sel.name === filename; 
+                return sel.name === filename && sel.folder === clientState.currentFolderName; 
             });
 
             if (isSelected) {
@@ -3164,8 +3161,7 @@
             }
             
             btn.onclick = function(e) {
-                e.stopPropagation();
-                // Cari elemen kartu asli agar visual centang di galeri utama juga ikut menyala secara otomatis
+                if (e) e.stopPropagation();
                 var cards = document.querySelectorAll('.photo-card');
                 var activeCard = null;
                 cards.forEach(function(c) { if (c.dataset.filename === filename) activeCard = c; });
