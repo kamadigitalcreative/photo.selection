@@ -3864,11 +3864,6 @@
 
         var isFetchingSilent = false; // Kunci anti-macet
 
-        var isFetchingSilent = false;
-
-        // Mesin Sinkronisasi Tunggal 3 Detik (Bebas Macet)
-        var isFetchingSilent = false;
-
         // Mesin Sinkronisasi Tunggal 3 Detik (Bebas Macet & Realtime)
         function silentFetchData() {
             if (typeof currentUser === 'undefined' || !currentUser || isFetchingSilent) return; 
