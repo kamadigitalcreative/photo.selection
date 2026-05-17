@@ -1010,9 +1010,17 @@
                 <i class="fa-solid fa-check-double text-green-400"></i>
                 <span><span id="viewerCounter">0</span> / <span id="viewerMaxCounter">0</span> Terpilih</span>
             </div>
-            <button onclick="closeImageViewer()" class="w-10 h-10 bg-black/50 hover:bg-black/80 backdrop-blur-md rounded-full text-white flex items-center justify-center transition-colors border border-white/20 shadow-lg pointer-events-auto">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
+            <div class="flex gap-2 pointer-events-auto">
+                <button onclick="zoomViewer(-0.5, event)" class="w-10 h-10 bg-black/50 hover:bg-black/80 backdrop-blur-md rounded-full text-white flex items-center justify-center transition-colors border border-white/20 shadow-lg" title="Zoom Out">
+                    <i class="fa-solid fa-magnifying-glass-minus text-sm"></i>
+                </button>
+                <button onclick="zoomViewer(0.5, event)" class="w-10 h-10 bg-black/50 hover:bg-black/80 backdrop-blur-md rounded-full text-white flex items-center justify-center transition-colors border border-white/20 shadow-lg" title="Zoom In">
+                    <i class="fa-solid fa-magnifying-glass-plus text-sm"></i>
+                </button>
+                <button onclick="closeImageViewer()" class="w-10 h-10 bg-black/50 hover:bg-black/80 backdrop-blur-md rounded-full text-white flex items-center justify-center transition-colors border border-white/20 shadow-lg ml-1 sm:ml-2" title="Tutup">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
         </div>
         
         <button onclick="navigateViewer(-1, event)" class="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-black/40 hover:bg-black/80 backdrop-blur-sm rounded-full text-white flex items-center justify-center transition-colors border border-white/10 shadow-lg z-[100000]">
@@ -1022,8 +1030,8 @@
             <i class="fa-solid fa-chevron-right text-xl sm:text-2xl"></i>
         </button>
 
-        <div class="relative max-w-full max-h-[85vh] flex flex-col items-center justify-center" onclick="event.stopPropagation()">
-            <img id="viewerImage" src="" class="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl scale-95 transition-transform duration-300 bg-black/50">
+        <div class="relative max-w-full max-h-[85vh] flex flex-col items-center justify-center overflow-hidden" onclick="event.stopPropagation()">
+            <img id="viewerImage" src="" onwheel="handleViewerWheel(event)" onmousedown="startDragViewer(event)" onmousemove="dragViewer(event)" onmouseup="endDragViewer()" onmouseleave="endDragViewer()" ontouchstart="startDragViewerTouch(event)" ontouchmove="dragViewerTouch(event)" ontouchend="endDragViewer()" class="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl transition-transform duration-300 bg-black/50 relative z-40 origin-center scale-95">
             
             <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 mt-4 bg-black/60 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 shadow-xl">
                 <p id="viewerCaption" class="text-white font-semibold text-sm tracking-wide"></p>
@@ -3052,8 +3060,96 @@
         window.currentViewerIndex = 0;
         window.viewerActiveList = [];
 
+        // --- MESIN ZOOM & PAN (GESER) ---
+        window.viewerZoom = 1;
+        window.viewerPanX = 0;
+        window.viewerPanY = 0;
+        window.isDraggingViewer = false;
+        window.dragStartX = 0;
+        window.dragStartY = 0;
+
+        function applyViewerTransform() {
+            var img = document.getElementById('viewerImage');
+            if (!img) return;
+            img.style.transform = 'translate(' + window.viewerPanX + 'px, ' + window.viewerPanY + 'px) scale(' + window.viewerZoom + ')';
+            img.style.cursor = window.viewerZoom > 1 ? (window.isDraggingViewer ? 'grabbing' : 'grab') : 'default';
+        }
+
+        function zoomViewer(amount, e) {
+            if (e) e.stopPropagation();
+            window.viewerZoom += amount;
+            if (window.viewerZoom < 1) {
+                window.viewerZoom = 1;
+                window.viewerPanX = 0;
+                window.viewerPanY = 0;
+            }
+            if (window.viewerZoom > 5) window.viewerZoom = 5; // Batas zoom maksimal 5x
+            
+            var img = document.getElementById('viewerImage');
+            img.style.transition = 'transform 0.1s ease-out'; // Animasi mulus
+            applyViewerTransform();
+        }
+
+        function resetZoom() {
+            window.viewerZoom = 1;
+            window.viewerPanX = 0;
+            window.viewerPanY = 0;
+            var img = document.getElementById('viewerImage');
+            if (img) {
+                img.style.transform = ''; // Biarkan Tailwind mengambil alih animasi normal
+                img.style.transition = ''; 
+                img.style.cursor = 'default';
+            }
+        }
+
+        function handleViewerWheel(e) {
+            e.preventDefault(); e.stopPropagation();
+            zoomViewer(e.deltaY < 0 ? 0.25 : -0.25, null);
+        }
+
+        function startDragViewer(e) {
+            if (window.viewerZoom <= 1) return;
+            e.preventDefault(); window.isDraggingViewer = true;
+            window.dragStartX = e.clientX - window.viewerPanX;
+            window.dragStartY = e.clientY - window.viewerPanY;
+            applyViewerTransform();
+        }
+
+        function dragViewer(e) {
+            if (!window.isDraggingViewer) return;
+            e.preventDefault();
+            window.viewerPanX = e.clientX - window.dragStartX;
+            window.viewerPanY = e.clientY - window.dragStartY;
+            var img = document.getElementById('viewerImage');
+            img.style.transition = 'none'; // Drag sangat responsif (tanpa animasi delay)
+            applyViewerTransform();
+        }
+
+        function endDragViewer() {
+            if (window.isDraggingViewer) { window.isDraggingViewer = false; applyViewerTransform(); }
+        }
+
+        function startDragViewerTouch(e) {
+            if (window.viewerZoom <= 1 || e.touches.length !== 1) return;
+            window.isDraggingViewer = true;
+            window.dragStartX = e.touches[0].clientX - window.viewerPanX;
+            window.dragStartY = e.touches[0].clientY - window.viewerPanY;
+            applyViewerTransform();
+        }
+
+        function dragViewerTouch(e) {
+            if (!window.isDraggingViewer || e.touches.length !== 1) return;
+            window.viewerPanX = e.touches[0].clientX - window.dragStartX;
+            window.viewerPanY = e.touches[0].clientY - window.dragStartY;
+            var img = document.getElementById('viewerImage');
+            img.style.transition = 'none';
+            applyViewerTransform();
+        }
+
         function openImageViewer(url, name, event, index, customList) {
             if (event) event.stopPropagation();
+            
+            resetZoom(); // Wajib di-reset setiap kali foto baru dibuka
             
             window.viewerActiveList = customList ? customList : (clientState.currentContent ? clientState.currentContent.images : []);
             
@@ -3087,6 +3183,8 @@
             var modal = document.getElementById('imageViewerModal');
             var img = document.getElementById('viewerImage');
 
+            resetZoom(); // Reset gambar ke ukuran asli sebelum ditutup
+
             modal.classList.add('opacity-0');
             img.classList.remove('scale-100');
             img.classList.add('scale-95');
@@ -3119,6 +3217,7 @@
             // 1. Ganti UI dan Judul langsung seketika (0 detik)
             capEl.innerText = nextImg.name;
             updateViewerUI(nextImg.name, safeUrl);
+            resetZoom(); // Reset posisi dan zoom untuk foto baru
 
             // 2. Trik Anti-Lag: Pasang versi ringan (=w1000) yang sudah ada di memori HP/PC klien.
             // Ini membuat foto langsung berubah tanpa ada lag sama sekali.
