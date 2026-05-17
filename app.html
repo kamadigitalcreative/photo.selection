@@ -3107,7 +3107,7 @@
                         '<img onclick="openImageViewer(\'' + imgData.url + '\', \'' + imgData.name + '\', event)" src="' + imgData.url + '" alt="' + imgData.name + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=\'https://placehold.co/400x400?text=Error\';">' +
                         '<div class="info-overlay">' +
                             '<span class="filename-text mb-2 w-full truncate" title="' + imgData.name + '">' + shortName + '</span>' +
-                            '<button onclick="toggleSelection(this.closest(\'.photo-card\'), \'' + imgData.name + '\', \'' + imgData.url + '\'); event.stopPropagation();" class="w-full bg-white/20 hover:bg-white/40 backdrop-blur-md border border-white/40 text-white rounded-lg py-1.5 sm:py-2 text-[10px] sm:text-sm font-semibold transition-colors flex items-center justify-center shadow-sm btn-pilih-foto">' +
+                            '<button class="w-full bg-white/20 hover:bg-white/40 backdrop-blur-md border border-white/40 text-white rounded-lg py-1.5 sm:py-2 text-[10px] sm:text-sm font-semibold transition-colors flex items-center justify-center shadow-sm btn-pilih-foto">' +
                                 btnText +
                             '</button>' +
                         '</div>';
@@ -3149,9 +3149,12 @@
             updateClientCounterUI();
             
             // --- FIX PC/LAPTOP: Tembak status tiap kali foto dipilih/dihapus ---
-            var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
-            if (!isSubmitted) { pingClientStatus('Sedang Memilih'); }
-        }
+                var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
+                // CEGAH KEBOCORAN DATA: Jangan simpan pilihan ke database jika sedang Mode Download
+                if (!isSubmitted && clientState.galleryMode !== 'download') { 
+                    pingClientStatus('Sedang Memilih'); 
+                }
+            }
 
         function updateClientCounterUI() {
             var count = clientState.selectedImages.length;
