@@ -1004,14 +1004,34 @@
     </div>
 
     <div id="imageViewerModal" class="fixed inset-0 z-[99999] hidden bg-black/95 flex flex-col items-center justify-center p-4 backdrop-blur-md opacity-0 transition-opacity duration-300" onclick="closeImageViewer()">
-        <div class="absolute top-4 right-4 flex gap-3 z-50">
-            <button onclick="closeImageViewer()" class="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full text-white flex items-center justify-center transition-colors border border-white/20">
+        
+        <div class="absolute top-4 left-4 right-4 flex justify-between items-center z-50 pointer-events-none">
+            <div class="bg-black/50 backdrop-blur-md border border-white/20 text-white px-4 py-2 rounded-full font-semibold text-sm shadow-lg pointer-events-auto flex items-center gap-2">
+                <i class="fa-solid fa-check-double text-green-400"></i>
+                <span><span id="viewerCounter">0</span> / <span id="viewerMaxCounter">0</span> Terpilih</span>
+            </div>
+            <button onclick="closeImageViewer()" class="w-10 h-10 bg-black/50 hover:bg-black/80 backdrop-blur-md rounded-full text-white flex items-center justify-center transition-colors border border-white/20 shadow-lg pointer-events-auto">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
         </div>
+        
+        <button onclick="navigateViewer(-1); event.stopPropagation();" class="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-black/40 hover:bg-black/80 backdrop-blur-sm rounded-full text-white flex items-center justify-center transition-colors border border-white/10 shadow-lg z-50">
+            <i class="fa-solid fa-chevron-left text-xl sm:text-2xl"></i>
+        </button>
+        <button onclick="navigateViewer(1); event.stopPropagation();" class="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-black/40 hover:bg-black/80 backdrop-blur-sm rounded-full text-white flex items-center justify-center transition-colors border border-white/10 shadow-lg z-50">
+            <i class="fa-solid fa-chevron-right text-xl sm:text-2xl"></i>
+        </button>
+
         <div class="relative max-w-full max-h-[85vh] flex flex-col items-center justify-center" onclick="event.stopPropagation()">
-            <img id="viewerImage" src="" class="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl scale-95 transition-transform duration-300 bg-black/50">
-            <p id="viewerCaption" class="text-white mt-4 font-semibold text-sm tracking-wide bg-black/50 px-4 py-1.5 rounded-full border border-white/10"></p>
+            <img id="viewerImage" src="" class="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl scale-95 transition-transform duration-300 bg-black/50">
+            
+            <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 mt-4 bg-black/60 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 shadow-xl">
+                <p id="viewerCaption" class="text-white font-semibold text-sm tracking-wide"></p>
+                <div class="w-px h-6 bg-white/20 hidden sm:block"></div>
+                <button id="viewerSelectBtn" class="px-6 py-2 rounded-xl font-bold text-sm transition-all shadow-lg flex items-center gap-2 border">
+                    <i class="fa-solid fa-check"></i> <span>Pilih Foto</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -3028,21 +3048,42 @@
             }
         }
 
-        function openImageViewer(url, name, event) {
+        let currentViewerIndex = 0;
+        let viewerActiveList = [];
+
+        function openImageViewer(url, name, event, index, customList) {
             if (event) event.stopPropagation();
+            
+            // Tentukan daftar array gambar yang sedang di-slide (Folder aktif atau Preview pilihan)
+            viewerActiveList = customList ? customList : (clientState.currentContent ? clientState.currentContent.images : []);
+            
+            if (index !== undefined) {
+                currentViewerIndex = index;
+            } else {
+                currentViewerIndex = viewerActiveList.findIndex(function(img) { return img.name === name; });
+            }
+            if (currentViewerIndex === -1) currentViewerIndex = 0;
             
             var modal = document.getElementById('imageViewerModal');
             var img = document.getElementById('viewerImage');
             var cap = document.getElementById('viewerCaption');
 
-            img.src = url;
+            // --- RESOLUSI TERTINGGI: Ganti parameter =w1000 jadi =s0 (Original Size) ---
+            var hdUrl = url.replace('=w1000', '=s0');
+            img.src = hdUrl;
             cap.innerText = name;
+
+            // Update UI (Tombol pilih dan counter)
+            updateViewerUI(name, url);
 
             modal.classList.remove('hidden');
             void modal.offsetWidth;
             modal.classList.remove('opacity-0');
             img.classList.remove('scale-95');
             img.classList.add('scale-100');
+            
+            // Pasang pendeteksi keyboard (Arrow Kiri/Kanan & Escape)
+            document.addEventListener('keydown', handleViewerKeyboard);
         }
 
         function closeImageViewer() {
@@ -3057,6 +3098,81 @@
                 modal.classList.add('hidden');
                 img.src = '';
             }, 300);
+            
+            document.removeEventListener('keydown', handleViewerKeyboard);
+        }
+
+        function navigateViewer(direction) {
+            if (!viewerActiveList || viewerActiveList.length === 0) return;
+            var total = viewerActiveList.length;
+
+            currentViewerIndex += direction;
+            if (currentViewerIndex < 0) currentViewerIndex = total - 1; // Loop ke akhir
+            if (currentViewerIndex >= total) currentViewerIndex = 0; // Loop ke awal
+
+            var nextImg = viewerActiveList[currentViewerIndex];
+            
+            var imgEl = document.getElementById('viewerImage');
+            var capEl = document.getElementById('viewerCaption');
+            
+            // Transisi gambar mulus saat bergeser
+            imgEl.classList.add('opacity-40', 'scale-[0.98]');
+            setTimeout(function() {
+                var safeUrl = nextImg.url || 'https://placehold.co/400x400?text=Memuat...';
+                imgEl.src = safeUrl.replace('=w1000', '=s0'); // Tarik foto resolusi asli (HD)
+                capEl.innerText = nextImg.name;
+                updateViewerUI(nextImg.name, safeUrl);
+                imgEl.classList.remove('opacity-40', 'scale-[0.98]');
+            }, 150);
+        }
+
+        function handleViewerKeyboard(e) {
+            if (e.key === 'ArrowLeft') navigateViewer(-1);
+            if (e.key === 'ArrowRight') navigateViewer(1);
+            if (e.key === 'Escape') closeImageViewer();
+        }
+
+        function updateViewerUI(filename, url) {
+            var btn = document.getElementById('viewerSelectBtn');
+            var countEl = document.getElementById('viewerCounter');
+            var maxEl = document.getElementById('viewerMaxCounter');
+            
+            if (maxEl) maxEl.innerText = clientState.maxFoto;
+            if (countEl) countEl.innerText = clientState.selectedImages.length;
+            
+            if (!btn) return;
+
+            // Sembunyikan tombol jika klien sedang dalam mode Download
+            if (clientState.galleryMode === 'download') {
+                btn.style.display = 'none';
+                return;
+            } else {
+                btn.style.display = 'flex';
+            }
+
+            // Periksa apakah foto ini sudah dipilih atau belum
+            var isSelected = clientState.selectedImages.some(function(sel) { 
+                return sel.name === filename; 
+            });
+
+            if (isSelected) {
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Batalkan Pilihan</span>';
+                btn.className = "px-6 py-2 rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] flex items-center gap-2 border bg-green-500 border-green-400 text-white hover:bg-green-600";
+            } else {
+                btn.innerHTML = '<i class="fa-regular fa-square-check"></i> <span>Pilih Foto</span>';
+                btn.className = "px-6 py-2 rounded-xl font-bold text-sm transition-all shadow-lg flex items-center gap-2 border bg-white/20 border-white/40 text-white hover:bg-white/40";
+            }
+            
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                // Cari elemen kartu asli agar visual centang di galeri utama juga ikut menyala secara otomatis
+                var cards = document.querySelectorAll('.photo-card');
+                var activeCard = null;
+                cards.forEach(function(c) { if (c.dataset.filename === filename) activeCard = c; });
+                
+                toggleSelection(activeCard, filename, url);
+                updateViewerUI(filename, url); 
+            };
         }
 
         function renderClientGallery() {
@@ -3102,7 +3218,7 @@
                     if (isSelected) card.classList.add('selected');
 
                     // 1. UBAH KLIK KARTU/FOTO MENJADI BUKA VIEWER (PERBESAR FOTO)
-                    card.onclick = function(event) { openImageViewer(imgData.url, imgData.name, event); };
+                    card.onclick = function(event) { openImageViewer(imgData.url, imgData.name, event, index); };
                     
                     var shortName = imgData.name.length > 20 ? imgData.name.substring(0, 17) + '...' : imgData.name;
                     var btnText = clientState.galleryMode === 'download' ? '<i class="fa-solid fa-cloud-arrow-down mr-1.5"></i> Download' : 'Pilih';
@@ -3110,7 +3226,7 @@
                     card.innerHTML = 
                         '<div class="number-badge">' + (index + 1) + '</div>' +
                         '<div class="check-badge"><i class="fa-solid fa-check"></i></div>' +
-                        '<img onclick="openImageViewer(\'' + imgData.url + '\', \'' + imgData.name + '\', event)" src="' + imgData.url + '" alt="' + imgData.name + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=\'https://placehold.co/400x400?text=Error\';">' +
+                        '<img onclick="openImageViewer(\'' + imgData.url + '\', \'' + imgData.name + '\', event, ' + index + ')" src="' + imgData.url + '" alt="' + imgData.name + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=\'https://placehold.co/400x400?text=Error\';">' +
                         '<div class="info-overlay">' +
                             '<span class="filename-text mb-2 w-full truncate" title="' + imgData.name + '">' + shortName + '</span>' +
                             '<button class="w-full bg-white/20 hover:bg-white/40 backdrop-blur-md border border-white/40 text-white rounded-lg py-1.5 sm:py-2 text-[10px] sm:text-sm font-semibold transition-colors flex items-center justify-center shadow-sm btn-pilih-foto">' +
@@ -3541,7 +3657,7 @@
                         '<span class="text-[9px] text-gray-300 font-semibold bg-black/40 px-2 py-0.5 rounded inline-block self-start"><i class="fa-regular fa-folder-open mr-1"></i>' + img.folder + '</span>' +
                     '</div>';
 
-                card.onclick = function(e) { openImageViewer(safeUrl, img.name, e); };
+                card.onclick = function(e) { openImageViewer(safeUrl, img.name, e, index, clientState.selectedImages); };
                 grid.appendChild(card);
             });
 
