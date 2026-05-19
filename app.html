@@ -1203,6 +1203,44 @@
             var dashSel = document.getElementById('dashLangSelector');
             if(authSel) authSel.value = lang;
             if(dashSel) dashSel.value = lang;
+
+            // 9. TAMBAHAN: DASHBOARD STATS & KELOLA TIM & LAPORAN
+            setTx('#section-dashboard p.text-sm.text-gray-500', 'Ringkasan performa sistem Photo Selector Anda.', 'Overview of your Photo Selector system performance.');
+            setTx('#btn-custom', '<i class="fa-solid fa-filter text-[10px]"></i> Cari', '<i class="fa-solid fa-filter text-[10px]"></i> Search', true);
+
+            var dashCards = document.querySelectorAll('#section-dashboard .uppercase.tracking-wider');
+            if (dashCards.length >= 7) {
+                dashCards[0].innerText = isEn ? 'Total Views' : 'Total Tayangan';
+                dashCards[1].innerText = isEn ? 'Unique Visitors' : 'Pengunjung Unik';
+                dashCards[2].innerText = isEn ? 'Projects Created' : 'Project Dibuat';
+                dashCards[3].innerText = isEn ? 'Total Team/Users' : 'Total Tim/User';
+                dashCards[4].innerText = isEn ? 'Active Team' : 'Tim Aktif';
+                dashCards[5].innerText = isEn ? 'Inactive Team' : 'Tim Non-Aktif';
+                dashCards[6].innerText = isEn ? 'Pending ACC' : 'Pending ACC';
+            }
+
+            var projTh = document.querySelectorAll('#section-projects thead th');
+            if (projTh.length >= 5) {
+                projTh[0].innerHTML = '<i class="fa-solid fa-user-tag text-gray-400 mr-1.5 hidden sm:inline"></i> Info';
+                projTh[1].innerHTML = isEn ? '<i class="fa-solid fa-user-tie text-gray-400 mr-1.5 hidden sm:inline"></i> Owner' : '<i class="fa-solid fa-user-tie text-gray-400 mr-1.5 hidden sm:inline"></i> Pemilik';
+                projTh[2].innerHTML = '<i class="fa-solid fa-images text-gray-400 mr-1.5 hidden sm:inline"></i> Quota';
+                projTh[3].innerHTML = '<i class="fa-regular fa-calendar-days text-gray-400 mr-1.5 hidden sm:inline"></i> Date';
+                projTh[4].innerHTML = isEn ? '<i class="fa-solid fa-sliders text-gray-400 mr-1.5 hidden sm:inline"></i> Actions' : '<i class="fa-solid fa-sliders text-gray-400 mr-1.5 hidden sm:inline"></i> Aksi';
+            }
+
+            var userTh = document.querySelectorAll('#section-users thead th');
+            if (userTh.length >= 6) {
+                userTh[0].innerText = isEn ? 'Photographer Name' : 'Nama Fotografer';
+                userTh[1].innerText = 'Username';
+                userTh[2].innerText = 'Status';
+                userTh[3].innerText = isEn ? 'Activity' : 'Aktivitas';
+                userTh[4].innerText = isEn ? 'Active Until' : 'Masa Aktif';
+                userTh[5].innerText = isEn ? 'Actions' : 'Aksi';
+            }
+
+            setTx('#section-admin-feedback h2', 'Laporan Masuk', 'Incoming Reports');
+            setTx('#section-admin-feedback p.text-sm.text-gray-500', 'Daftar saran dan keluhan bug dari tim fotografer Anda (Auto-Refresh).', 'List of suggestions and bug reports from your photographer team (Auto-Refresh).');
+            setTx('#section-feedback h2.text-lg.font-bold', 'Riwayat Laporan Saya', 'My Report History');
         }
 
         // GLOBAL VARIABLES
@@ -2114,10 +2152,11 @@
                     }
                     checkLoginState();
                     
+                    var isEn = localStorage.getItem('ps_lang') === 'en';
                     Swal.fire({
                         icon: 'success',
-                        title: 'Selamat Datang!',
-                        text: 'Berhasil login sebagai ' + res.data.role,
+                        title: isEn ? 'Welcome!' : 'Selamat Datang!',
+                        text: (isEn ? 'Successfully logged in as ' : 'Berhasil login sebagai ') + res.data.role,
                         timer: 1500,
                         showConfirmButton: false
                     });
@@ -2339,26 +2378,27 @@
                     var iconClass = isExpired ? 'fa-solid fa-circle-exclamation' : 'fa-regular fa-clock';
                     expBadge = '<span class="text-xs ' + colorClass + '"><i class="' + iconClass + ' mr-1"></i>' + row.ExpiredAt.substring(0,10) + '</span>';
                 }
-
+var isEn = localStorage.getItem('ps_lang') === 'en';
                 var statusBadge = '';
                 if (row.Status === 'Active') {
                     if (isExpired) {
-                        statusBadge = '<span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded border border-red-200"><i class="fa-solid fa-ban mr-1"></i>Tidak Aktif</span>';
+                        statusBadge = '<span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded border border-red-200"><i class="fa-solid fa-ban mr-1"></i>' + (isEn ? 'Inactive' : 'Tidak Aktif') + '</span>';
                     } else {
-                        statusBadge = '<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded border border-green-200"><i class="fa-solid fa-check mr-1"></i>Aktif</span>';
+                        statusBadge = '<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded border border-green-200"><i class="fa-solid fa-check mr-1"></i>' + (isEn ? 'Active' : 'Aktif') + '</span>';
                     }
                 } else {
                     statusBadge = '<span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded border border-yellow-200"><i class="fa-solid fa-hourglass-half mr-1"></i>Pending</span>';
                 }
                 
                 var actionBtn = row.Status === 'Pending'
-                    ? '<button onclick="promptExpiry(\'' + row.Username + '\', \'\', true)" class="px-3 py-1.5 bg-kama-800 text-white text-xs font-semibold rounded hover:bg-kama-900 shadow-sm mr-2">ACC Akun</button>'
-                    : '<button onclick="promptExpiry(\'' + row.Username + '\', \'' + (row.ExpiredAt || '') + '\', false)" class="px-3 py-1.5 bg-white border border-gray-200 text-kama-800 text-xs font-semibold rounded hover:bg-gray-50 shadow-sm mr-2" title="Set Masa Aktif"><i class="fa-regular fa-calendar-plus"></i> Set Aktif</button>';
+                    ? '<button onclick="promptExpiry(\'' + row.Username + '\', \'\', true)" class="px-3 py-1.5 bg-kama-800 text-white text-xs font-semibold rounded hover:bg-kama-900 shadow-sm mr-2">' + (isEn ? 'Approve' : 'ACC Akun') + '</button>'
+                    : '<button onclick="promptExpiry(\'' + row.Username + '\', \'' + (row.ExpiredAt || '') + '\', false)" class="px-3 py-1.5 bg-white border border-gray-200 text-kama-800 text-xs font-semibold rounded hover:bg-gray-50 shadow-sm mr-2" title="Set Masa Aktif"><i class="fa-regular fa-calendar-plus"></i> ' + (isEn ? 'Set Active' : 'Set Aktif') + '</button>';
 
                 var tr = document.createElement('tr');
                 tr.className = "hover:bg-kama-50/50 transition-colors group";
                 
-                var lastSeen = row.LastActive ? row.LastActive : 'Belum pernah';
+                var lastSeenStr = isEn ? 'Never' : 'Belum pernah';
+                var lastSeen = row.LastActive ? row.LastActive : lastSeenStr;
                 var onlineBadge = row.isOnline
                     ? '<div class="flex flex-col items-center justify-center">' +
                       '<span class="bg-green-100 text-green-700 text-[10px] px-2 py-1 rounded-full font-bold border border-green-200"><i class="fa-solid fa-circle text-[8px] mr-1 animate-pulse"></i>Online</span>' +
@@ -2584,13 +2624,13 @@
                                 '<i class="fa-regular fa-copy sm:mr-1.5"></i> <span class="hidden sm:inline">Copy</span>' +
                             '</button>' +
                             '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 transition-colors flex items-center justify-center text-xs font-semibold border border-blue-200" title="Lihat Galeri">' +
-                                '<i class="fa-regular fa-eye sm:mr-1.5"></i> <span class="hidden sm:inline">Lihat</span>' +
+                                '<i class="fa-regular fa-eye sm:mr-1.5"></i> <span class="hidden sm:inline">' + (localStorage.getItem('ps_lang') === 'en' ? 'View' : 'Lihat') + '</span>' +
                             '</button>' +
                             '<button onclick="editPasswordPrompt(\'' + row.ID + '\', \'' + safeJSName + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-yellow-50 text-yellow-600 hover:bg-yellow-100 hover:text-yellow-700 transition-colors flex items-center justify-center text-xs font-semibold border border-yellow-200" title="Edit Password">' +
                                 '<i class="fa-solid fa-key sm:mr-1.5"></i> <span class="hidden sm:inline">Password</span>' +
                             '</button>' +
                             '<button onclick="deleteProjectPrompt(\'' + row.ID + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-800 transition-colors flex items-center justify-center text-xs font-semibold border border-red-200" title="Hapus Project">' +
-                                '<i class="fa-solid fa-trash-can sm:mr-1.5"></i> <span class="hidden sm:inline">Hapus</span>' +
+                                '<i class="fa-solid fa-trash-can sm:mr-1.5"></i> <span class="hidden sm:inline">' + (localStorage.getItem('ps_lang') === 'en' ? 'Delete' : 'Hapus') + '</span>' +
                             '</button>' +
                         '</div>' +
                     '</td>';
@@ -3640,6 +3680,14 @@
 
                 var dateTxt = row['Last Update'] ? new Date(row['Last Update']).toLocaleString('id-ID', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '-';
                 
+                var isEn = localStorage.getItem('ps_lang') === 'en';
+                var statusText = status;
+                if (isEn) {
+                    if (status === 'Belum Memilih') statusText = 'Not Started';
+                    else if (status === 'Sedang Memilih') statusText = 'Selecting';
+                    else if (status === 'Selesai') statusText = 'Completed';
+                }
+
                 // Perhitungan Progress
                 var selected = parseInt(row['Foto Terpilih'] || 0);
                 var max = parseInt(row['Max Foto'] || 1);
@@ -3661,11 +3709,11 @@
                                 ${escapeHTML(row['Nama Client'])}
                             </h4>
                             <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter mt-0.5">
-                                <i class="fa-solid fa-clock-rotate-left mr-1"></i> Update: ${dateTxt}
+                                <i class="fa-solid fa-clock-rotate-left mr-1"></i> UPDATE: ${dateTxt}
                             </p>
                         </div>
                         <span class="px-3 py-1 rounded-full border text-[10px] font-extrabold uppercase tracking-tight ${badgeClass} flex items-center shadow-sm">
-                            <i class="${iconClass} mr-1.5"></i> ${status}
+                            <i class="${iconClass} mr-1.5"></i> ${statusText}
                         </span>
                     </div>
 
@@ -3673,11 +3721,11 @@
                         <div class="flex justify-between items-end">
                             <div class="flex gap-4">
                                 <div>
-                                    <p class="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Total Foto</p>
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase mb-0.5">${isEn ? 'Total Photos' : 'Total Foto'}</p>
                                     <p class="text-sm font-black text-slate-700">${max}</p>
                                 </div>
                                 <div class="border-l border-slate-100 pl-4">
-                                    <p class="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Dipilih</p>
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase mb-0.5">${isEn ? 'Selected' : 'Dipilih'}</p>
                                     <p class="text-sm font-black text-primary-600">${selected}</p>
                                 </div>
                             </div>
@@ -3979,13 +4027,14 @@
                 var card = document.createElement('div');
                 card.className = "bg-white p-5 rounded-2xl border border-gray-200 shadow-sm mb-4";
         
+                var isEn = localStorage.getItem('ps_lang') === 'en';
                 var replyHtml = '';
                 if (row.Balasan) {
-                    replyHtml = '<div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg"><p class="text-[10px] font-bold text-blue-600 uppercase mb-1"><i class="fa-solid fa-reply"></i> Balasan Admin:</p><p class="text-sm text-blue-800">' + escapeHTML(row.Balasan) + '</p></div>';
+                    replyHtml = '<div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg"><p class="text-[10px] font-bold text-blue-600 uppercase mb-1"><i class="fa-solid fa-reply"></i> ' + (isEn ? 'Admin Reply:' : 'Balasan Admin:') + '</p><p class="text-sm text-blue-800">' + escapeHTML(row.Balasan) + '</p></div>';
                 } else if (currentUser.role === 'Admin') {
-                    replyHtml = '<div class="mt-4 pt-4 border-t border-gray-100"><textarea id="reply-msg-'+row.ID+'" rows="2" class="w-full p-3 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none" placeholder="Tulis balasan untuk '+escapeHTML(row.Username)+'..."></textarea><button onclick="submitReply(\''+row.ID+'\')" class="mt-2 bg-kama-800 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm">Kirim Balasan</button></div>';
+                    replyHtml = '<div class="mt-4 pt-4 border-t border-gray-100"><textarea id="reply-msg-'+row.ID+'" rows="2" class="w-full p-3 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none" placeholder="' + (isEn ? 'Write a reply to ' : 'Tulis balasan untuk ') + escapeHTML(row.Username)+'..."></textarea><button onclick="submitReply(\''+row.ID+'\')" class="mt-2 bg-kama-800 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm">' + (isEn ? 'Send Reply' : 'Kirim Balasan') + '</button></div>';
                 } else {
-                    replyHtml = '<div class="mt-4 pt-3 border-t border-gray-100"><p class="text-[10px] text-gray-400 italic">Menunggu balasan admin...</p></div>';
+                    replyHtml = '<div class="mt-4 pt-3 border-t border-gray-100"><p class="text-[10px] text-gray-400 italic">' + (isEn ? 'Waiting for admin reply...' : 'Menunggu balasan admin...') + '</p></div>';
                 }
 
                 card.innerHTML = '<div class="flex justify-between items-start mb-3">' +
