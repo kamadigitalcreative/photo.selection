@@ -1082,7 +1082,7 @@
             setTx('#lbl-no-account', 'Belum punya akun? <span class="text-blue-600 underline">Daftar disini</span>', 'Don\'t have an account? <span class="text-blue-600 underline">Register here</span>', true);
             setTx('#lbl-has-account', 'Sudah punya akun? <span class="text-kama-800 underline">Sign In</span>', 'Already have an account? <span class="text-kama-800 underline">Sign In</span>', true);
             
-            var btnLog = document.getElementById('btnLogin'); if (btnLog && !btnLog.disabled) btnLog.innerText = isEn ? 'Sign In' : 'Sign In';
+            var btnLog = document.getElementById('btnLogin'); if (btnLog && !btnLog.disabled) btnLog.innerText = isEn ? 'Sign In' : 'Masuk';
             var btnReg = document.getElementById('btnRegister'); if (btnReg && !btnReg.disabled) btnReg.innerText = isEn ? 'Register Now' : 'Daftar Sekarang';
 
             setPh('#username', 'Username', 'Username');
@@ -2118,6 +2118,7 @@
         
         async function handleLogin(e) {
             e.preventDefault();
+            var isEn = localStorage.getItem('ps_lang') === 'en';
             var uName = document.getElementById('username');
             var uPass = document.getElementById('password');
             var formData = { 
@@ -2125,8 +2126,8 @@
                 password: uPass ? uPass.value.trim() : '' 
             };
             
-            setButtonState('btnLogin', true, 'Authenticating...');
-            startLoading("Authenticating...");
+            setButtonState('btnLogin', true, isEn ? 'Authenticating...' : 'Memproses...');
+            startLoading(isEn ? 'Authenticating...' : 'Memproses...');
 
             try {
                 const response = await fetch(API_ENDPOINT, {
@@ -2141,7 +2142,7 @@
 
                 const res = await response.json();
                 endLoading();
-                setButtonState('btnLogin', false, 'Sign In');
+                setButtonState('btnLogin', false, isEn ? 'Sign In' : 'Masuk');
 
                 if (res.status === 'success') {
                     var remember = document.getElementById('rememberMe');
