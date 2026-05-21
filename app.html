@@ -2754,9 +2754,17 @@ var isEn = localStorage.getItem('ps_lang') === 'en';
                 if (cachedProjects.length >= 1) {
                     Swal.fire({
                         icon: 'warning',
-                        title: 'Batas Demo Tercapai',
-                        text: 'Akun Demo maksimal hanya dapat membuat 1 Project. Silakan hapus project yang ada untuk membuat baru, atau daftar langganan untuk Unlimited Project.',
-                        confirmButtonText: 'Tutup'
+                        title: 'Batas Demo Tercapai 🔒',
+                        html: 'Akun Demo hanya dapat membuat maksimal <b>1 Project</b>.<br><br>Untuk membuat project tanpa batas (Unlimited), silakan berlangganan Paket Premium.',
+                        showCancelButton: true,
+                        confirmButtonText: '🚀 Upgrade Premium',
+                        cancelButtonText: 'Tutup',
+                        confirmButtonColor: '#4f46e5',
+                        cancelButtonColor: '#64748b'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.open('https://kamacreative.myr.id/pl/paket-1-bulan-photo-selection', '_blank');
+                        }
                     });
                     return;
                 }
