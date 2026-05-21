@@ -1251,8 +1251,8 @@
             if (projTh.length >= 5) {
                 projTh[0].innerHTML = '<i class="fa-solid fa-user-tag text-gray-400 mr-1.5 hidden sm:inline"></i> Info';
                 projTh[1].innerHTML = isEn ? '<i class="fa-solid fa-user-tie text-gray-400 mr-1.5 hidden sm:inline"></i> Owner' : '<i class="fa-solid fa-user-tie text-gray-400 mr-1.5 hidden sm:inline"></i> Pemilik';
-                projTh[2].innerHTML = '<i class="fa-solid fa-images text-gray-400 mr-1.5 hidden sm:inline"></i> Quota';
-                projTh[3].innerHTML = '<i class="fa-regular fa-calendar-days text-gray-400 mr-1.5 hidden sm:inline"></i> Date';
+                projTh[2].innerHTML = isEn ? '<i class="fa-solid fa-images text-gray-400 mr-1.5 hidden sm:inline"></i> Quota' : '<i class="fa-solid fa-images text-gray-400 mr-1.5 hidden sm:inline"></i> Kuota';
+                projTh[3].innerHTML = isEn ? '<i class="fa-regular fa-calendar-days text-gray-400 mr-1.5 hidden sm:inline"></i> Date' : '<i class="fa-regular fa-calendar-days text-gray-400 mr-1.5 hidden sm:inline"></i> Tanggal';
                 projTh[4].innerHTML = isEn ? '<i class="fa-solid fa-sliders text-gray-400 mr-1.5 hidden sm:inline"></i> Actions' : '<i class="fa-solid fa-sliders text-gray-400 mr-1.5 hidden sm:inline"></i> Aksi';
             }
 
@@ -1269,6 +1269,11 @@
             setTx('#section-admin-feedback h2', 'Laporan Masuk', 'Incoming Reports');
             setTx('#section-admin-feedback p.text-sm.text-gray-500', 'Daftar saran dan keluhan bug dari tim fotografer Anda (Auto-Refresh).', 'List of suggestions and bug reports from your photographer team (Auto-Refresh).');
             setTx('#section-feedback h2.text-lg.font-bold', 'Riwayat Laporan Saya', 'My Report History');
+
+            // Render ulang galeri klien agar tombol-tombol di dalam grid ikut berubah bahasanya
+            if (document.getElementById('client-gallery-view').classList.contains('active') && clientState.currentContent) {
+                renderClientGallery();
+            }
         }
 
         // GLOBAL VARIABLES
@@ -1766,7 +1771,7 @@
             if (logoUrlInput && logoUrlInput.includes('drive.google.com')) {
                 var fileIdMatch = logoUrlInput.match(/[-\w]{25,}/);
                 if (fileIdMatch) {
-                    logoUrlInput = 'https://drive.google.com/uc?id=' + fileIdMatch[0];
+                    logoUrlInput = 'https://drive.google.com/thumbnail?id=' + fileIdMatch[0] + '&sz=w1000';
                 }
             }
             // -------------------------------------
@@ -1822,7 +1827,7 @@
                     }
                     applyBranding(); 
                     closeModalSettings();
-                    Swal.fire({icon: 'success', title: 'Tersimpan', timer: 1500, showConfirmButton: false});
+                    Swal.fire({icon: 'success', title: (localStorage.getItem('ps_lang') === 'en' ? 'Saved' : 'Tersimpan'), timer: 1500, showConfirmButton: false});
                     loadDataProjects();
                 } else {
                     Swal.fire('Error', res.message || res.data.message, 'error');
@@ -3557,9 +3562,17 @@ var isEn = localStorage.getItem('ps_lang') === 'en';
                     
                     var isEn = localStorage.getItem('ps_lang') === 'en';
                     var shortName = imgData.name.length > 20 ? imgData.name.substring(0, 17) + '...' : imgData.name;
-                    var btnText = clientState.galleryMode === 'download' ? '<i class="fa-solid fa-cloud-arrow-down mr-1.5"></i> Download' : (isEn ? 'Select' : 'Pilih');
+                    
+                    var btnText = '';
+                    if (clientState.galleryMode === 'download') {
+                        btnText = '<i class="fa-solid fa-cloud-arrow-down mr-1.5"></i> Download';
+                    } else {
+                        btnText = isSelected 
+                            ? '<i class="fa-solid fa-check"></i> ' + (isEn ? 'Deselect' : 'Batal') 
+                            : '<i class="fa-regular fa-square-check"></i> ' + (isEn ? 'Select' : 'Pilih');
+                    }
 
-                    card.innerHTML =
+                    card.innerHTML = 
                         '<div class="number-badge">' + (index + 1) + '</div>' +
                         '<div class="check-badge"><i class="fa-solid fa-check"></i></div>' +
                         '<img onclick="openImageViewer(\'' + imgData.url + '\', \'' + imgData.name + '\', event, ' + index + ')" src="' + imgData.url + '" alt="' + imgData.name + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=\'https://placehold.co/400x400?text=Error\';">' +
@@ -3592,17 +3605,22 @@ var isEn = localStorage.getItem('ps_lang') === 'en';
                 return sel.name === filename && sel.folder === clientState.currentFolderName; 
             });
             
+            var isEn = localStorage.getItem('ps_lang') === 'en';
+            var btnPilih = cardElement ? cardElement.querySelector('.btn-pilih-foto') : null;
+
             if (index === -1) {
                 // Jangan batasi jika sedang dalam Mode Download
                 if (clientState.galleryMode !== 'download' && clientState.selectedImages.length >= clientState.maxFoto) { 
-                    Swal.fire({title: 'Batas Pilihan', text: "Maksimal " + clientState.maxFoto + " foto.", icon: 'info', confirmButtonColor: '#1e1e2d'}); 
+                    Swal.fire({title: (isEn ? 'Limit Reached' : 'Batas Pilihan'), text: (isEn ? 'Maximum ' : 'Maksimal ') + clientState.maxFoto + (isEn ? ' photos.' : ' foto.'), icon: 'info', confirmButtonColor: '#1e1e2d'}); 
                     return; 
                 }
                 clientState.selectedImages.push({ name: filename, folder: clientState.currentFolderName, url: url });
                 if (cardElement && cardElement.classList) cardElement.classList.add('selected');
+                if (btnPilih && clientState.galleryMode !== 'download') btnPilih.innerHTML = '<i class="fa-solid fa-check"></i> ' + (isEn ? 'Deselect' : 'Batal');
             } else {
                 clientState.selectedImages.splice(index, 1); 
                 if (cardElement && cardElement.classList) cardElement.classList.remove('selected'); 
+                if (btnPilih && clientState.galleryMode !== 'download') btnPilih.innerHTML = '<i class="fa-regular fa-square-check"></i> ' + (isEn ? 'Select' : 'Pilih');
             }
             updateClientCounterUI();
             
