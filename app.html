@@ -1321,7 +1321,8 @@
         });
 
         function isDemoAccount() {
-            return currentUser && currentUser.username === 'demo';
+            // Memastikan deteksi akun demo lebih akurat
+            return currentUser && (currentUser.username.toLowerCase() === 'demo' || currentUser.role === 'Demo' || currentUser.status === 'DEMO');
         }
 
         function showDemoSubscribeAlert() {
@@ -2737,12 +2738,16 @@ var isEn = localStorage.getItem('ps_lang') === 'en';
                 return;
             }
             if (typeof isDemoAccount === 'function' && isDemoAccount()) {
-                if (projectsData && projectsData.length >= 1) {
+                // Perbaikan: Ambil jumlah project langsung dari laci memori pengguna
+                var cacheKey = 'ps_cache_projects_' + (currentUser ? currentUser.username : 'guest');
+                var cachedProjects = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+                
+                if (cachedProjects.length >= 1) {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Batas Demo Tercapai',
                         text: 'Akun Demo maksimal hanya dapat membuat 1 Project. Silakan hapus project yang ada untuk membuat baru, atau daftar langganan untuk Unlimited Project.',
-                        confirmButtonText: 'Mengerti'
+                        confirmButtonText: 'Tutup'
                     });
                     return;
                 }
