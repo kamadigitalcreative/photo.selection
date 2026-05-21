@@ -2747,26 +2747,32 @@ var isEn = localStorage.getItem('ps_lang') === 'en';
                 return;
             }
             if (typeof isDemoAccount === 'function' && isDemoAccount()) {
-                // Perbaikan: Ambil jumlah project langsung dari laci memori pengguna
-                var cacheKey = 'ps_cache_projects_' + (currentUser ? currentUser.username : 'guest');
-                var cachedProjects = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+                // Mengambil jumlah project secara real-time dari tabel visual dashboard
+                var projectRows = document.querySelectorAll('#projectTableBody tr');
+                var projectCount = projectRows.length;
                 
-                if (cachedProjects.length >= 1) {
+                // Jika baris kosong (ada teks "Belum ada project"), set hitungan ke 0
+                if (projectRows.length === 1 && projectRows[0].innerText.includes('Belum ada project')) {
+                    projectCount = 0;
+                }
+                
+                if (projectCount >= 1) {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Batas Demo Tercapai 🔒',
-                        html: 'Akun Demo hanya dapat membuat maksimal <b>1 Project</b>.<br><br>Untuk membuat project tanpa batas (Unlimited), silakan berlangganan Paket Premium.',
+                        html: 'Akun paket Demo Anda hanya diberikan kesempatan membuat maksimal <b>1 Project</b>.<br><br>Upgrade akun Anda ke Premium sekarang untuk menikmati fitur tanpa batasan project!',
                         showCancelButton: true,
                         confirmButtonText: '🚀 Upgrade Premium',
-                        cancelButtonText: 'Tutup',
+                        cancelButtonText: 'Nanti Saja',
                         confirmButtonColor: '#4f46e5',
-                        cancelButtonColor: '#64748b'
+                        cancelButtonColor: '#64748b',
+                        customClass: { popup: 'rounded-2xl border border-gray-100 shadow-2xl' }
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            showDemoSubscribeAlert();
+                            showDemoSubscribeAlert(); // Langsung memicu jendela pilihan paket lengkap
                         }
                     });
-                    return;
+                    return; // Mengunci agar modal form tidak terbuka
                 }
             }
             var formCreate = document.getElementById('formCreateProject');
