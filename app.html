@@ -1207,6 +1207,33 @@
 
             // 9. TAMBAHAN: DASHBOARD STATS & KELOLA TIM & LAPORAN
             setTx('#section-dashboard p.text-sm.text-gray-500', 'Ringkasan performa sistem Photo Selector Anda.', 'Overview of your Photo Selector system performance.');
+
+            // 10. TRANSLASI CLIENT MODE & GALLERY
+            setTx('#client-mode-view h2', 'Selamat Datang', 'Welcome');
+            setTx('#client-mode-view p.text-slate-500', 'Silakan pilih tindakan yang ingin Anda lakukan pada galeri ini.', 'Please select the action you want to perform on this gallery.');
+            setTx('#client-mode-view button[onclick="selectClientMode(\'selection\')"] h3', 'Pilih Foto', 'Select Photos');
+            setTx('#client-mode-view button[onclick="selectClientMode(\'selection\')"] p', 'Pilih foto untuk diedit/dicetak', 'Select photos to edit/print');
+            setTx('#client-mode-view button[onclick="selectClientMode(\'download\')"] h3', 'Download Foto', 'Download Photos');
+            setTx('#client-mode-view button[onclick="selectClientMode(\'download\')"] p', 'Unduh foto secara bebas (Bentuk ZIP)', 'Download photos freely (ZIP format)');
+            
+            var galSub = document.getElementById('gallery-subtitle');
+            if(galSub) {
+                var maxF = document.getElementById('gallery-max') ? document.getElementById('gallery-max').innerText : '0';
+                galSub.innerHTML = isEn ? 'Select maximum <span id="gallery-max" class="font-semibold text-kama-800">' + maxF + '</span> photos' : 'Pilih maksimal <span id="gallery-max" class="font-semibold text-kama-800">' + maxF + '</span> foto';
+            }
+            
+            setTx('.action-bar span.tracking-wider', 'Status Pilihan', 'Selection Status');
+            setTx('#bottom-counter + span', 'terpilih', 'selected');
+            setTx('#previewModal h2', 'Preview Pilihan', 'Selection Preview');
+            
+            var headerLabels = document.querySelectorAll('.shrink-0.flex.items-center.gap-3.sm\\:gap-4 .text-\\[9px\\].uppercase');
+            if(headerLabels.length >= 2) {
+                headerLabels[0].innerText = isEn ? 'Total Photos' : 'Total Foto';
+                headerLabels[1].innerText = isEn ? 'Selected' : 'Terpilih';
+            }
+            
+            setTx('#action-download-mode label', '<input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAllClient()" class="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-600 cursor-pointer"> Pilih Semua', '<input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAllClient()" class="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-600 cursor-pointer"> Select All', true);
+            setTx('#section-feedback h2.text-lg.font-bold', 'Riwayat Laporan Saya', 'My Report History');
             setTx('#btn-custom', '<i class="fa-solid fa-filter text-[10px]"></i> Cari', '<i class="fa-solid fa-filter text-[10px]"></i> Search', true);
 
             var dashCards = document.querySelectorAll('#section-dashboard .uppercase.tracking-wider');
@@ -1734,6 +1761,15 @@
             
             var nameInput = brandNameEl ? (brandNameEl.value.trim() || 'Kama Creative') : 'Kama Creative';
             var logoUrlInput = brandLogoEl ? brandLogoEl.value.trim() : '';
+
+            // --- AUTO-PARSER GOOGLE DRIVE LINK ---
+            if (logoUrlInput && logoUrlInput.includes('drive.google.com')) {
+                var fileIdMatch = logoUrlInput.match(/[-\w]{25,}/);
+                if (fileIdMatch) {
+                    logoUrlInput = 'https://drive.google.com/uc?id=' + fileIdMatch[0];
+                }
+            }
+            // -------------------------------------
 
             if (fileInput && fileInput.files && fileInput.files.length > 0) {
                 var file = fileInput.files[0];
@@ -3454,11 +3490,12 @@ var isEn = localStorage.getItem('ps_lang') === 'en';
                 return sel.name === filename && sel.folder === clientState.currentFolderName; 
             });
 
+            var isEn = localStorage.getItem('ps_lang') === 'en';
             if (isSelected) {
-                btn.innerHTML = '<i class="fa-solid fa-check"></i> <span>Batalkan Pilihan</span>';
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> <span>' + (isEn ? 'Deselect' : 'Batalkan Pilihan') + '</span>';
                 btn.className = "px-6 py-2 rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] flex items-center gap-2 border bg-green-500 border-green-400 text-white hover:bg-green-600";
             } else {
-                btn.innerHTML = '<i class="fa-regular fa-square-check"></i> <span>Pilih Foto</span>';
+                btn.innerHTML = '<i class="fa-regular fa-square-check"></i> <span>' + (isEn ? 'Select Photo' : 'Pilih Foto') + '</span>';
                 btn.className = "px-6 py-2 rounded-xl font-bold text-sm transition-all shadow-lg flex items-center gap-2 border bg-white/20 border-white/40 text-white hover:bg-white/40";
             }
             
@@ -3518,10 +3555,11 @@ var isEn = localStorage.getItem('ps_lang') === 'en';
                     // 1. UBAH KLIK KARTU/FOTO MENJADI BUKA VIEWER (PERBESAR FOTO)
                     card.onclick = function(event) { openImageViewer(imgData.url, imgData.name, event, index); };
                     
+                    var isEn = localStorage.getItem('ps_lang') === 'en';
                     var shortName = imgData.name.length > 20 ? imgData.name.substring(0, 17) + '...' : imgData.name;
-                    var btnText = clientState.galleryMode === 'download' ? '<i class="fa-solid fa-cloud-arrow-down mr-1.5"></i> Download' : 'Pilih';
+                    var btnText = clientState.galleryMode === 'download' ? '<i class="fa-solid fa-cloud-arrow-down mr-1.5"></i> Download' : (isEn ? 'Select' : 'Pilih');
 
-                    card.innerHTML = 
+                    card.innerHTML =
                         '<div class="number-badge">' + (index + 1) + '</div>' +
                         '<div class="check-badge"><i class="fa-solid fa-check"></i></div>' +
                         '<img onclick="openImageViewer(\'' + imgData.url + '\', \'' + imgData.name + '\', event, ' + index + ')" src="' + imgData.url + '" alt="' + imgData.name + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=\'https://placehold.co/400x400?text=Error\';">' +
