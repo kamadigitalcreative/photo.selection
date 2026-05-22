@@ -1051,6 +1051,11 @@
         function changeLanguage(lang) {
             localStorage.setItem('ps_lang', lang);
             applyLanguage(lang);
+            // Sinkronisasi ulang data tabel visual saat bahasa diubah
+            if (typeof checkLoginState === 'function') checkLoginState();
+            if (typeof loadDataProjects === 'function' && document.getElementById('section-projects').classList.contains('flex')) loadDataProjects();
+            if (typeof loadDataUsers === 'function' && document.getElementById('section-users').classList.contains('flex')) loadDataUsers(true);
+            if (typeof renderClientGallery === 'function' && document.getElementById('client-gallery-view').classList.contains('active')) renderClientGallery();
         }
 
         function applyLanguage(lang) {
@@ -1256,6 +1261,7 @@
                 projTh[3].innerHTML = isEn ? '<i class="fa-regular fa-calendar-days text-gray-400 mr-1.5 hidden sm:inline"></i> Date' : '<i class="fa-regular fa-calendar-days text-gray-400 mr-1.5 hidden sm:inline"></i> Tanggal';
                 projTh[4].innerHTML = isEn ? '<i class="fa-solid fa-sliders text-gray-400 mr-1.5 hidden sm:inline"></i> Actions' : '<i class="fa-solid fa-sliders text-gray-400 mr-1.5 hidden sm:inline"></i> Aksi';
             }
+            setTx('#reg_paket option[value="Demo"]', 'Coba Gratis (Demo 1 Project)', 'Free Trial (Demo 1 Project)');
 
             var userTh = document.querySelectorAll('#section-users thead th');
             if (userTh.length >= 6) {
@@ -2491,6 +2497,7 @@
                     expBadge = '<span class="text-xs ' + colorClass + '"><i class="' + iconClass + ' mr-1"></i>' + row.ExpiredAt.substring(0,10) + '</span>';
                 }
 var isEn = localStorage.getItem('ps_lang') === 'en';
+                var isEn = localStorage.getItem('ps_lang') === 'en';
                 var statusBadge = '';
                 if (row.Status === 'Active') {
                     if (isExpired) {
@@ -2504,7 +2511,7 @@ var isEn = localStorage.getItem('ps_lang') === 'en';
                 
                 var actionBtn = row.Status === 'Pending'
                     ? '<button onclick="promptExpiry(\'' + row.Username + '\', \'\', true)" class="px-3 py-1.5 bg-kama-800 text-white text-xs font-semibold rounded hover:bg-kama-900 shadow-sm mr-2">' + (isEn ? 'Approve' : 'ACC Akun') + '</button>'
-                    : '<button onclick="promptExpiry(\'' + row.Username + '\', \'' + (row.ExpiredAt || '') + '\', false)" class="px-3 py-1.5 bg-white border border-gray-200 text-kama-800 text-xs font-semibold rounded hover:bg-gray-50 shadow-sm mr-2" title="Set Masa Aktif"><i class="fa-regular fa-calendar-plus"></i> ' + (isEn ? 'Set Active' : 'Set Aktif') + '</button>';
+                    : '<button onclick="promptExpiry(\'' + row.Username + '\', \'' + (row.ExpiredAt || '') + '\', false)" class="px-3 py-1.5 bg-white border border-gray-200 text-kama-800 text-xs font-semibold rounded hover:bg-gray-50 shadow-sm mr-2" title="' + (isEn ? 'Set Active' : 'Set Aktif') + '"><i class="fa-regular fa-calendar-plus"></i> ' + (isEn ? 'Set Active' : 'Set Aktif') + '</button>';
 
                 var tr = document.createElement('tr');
                 tr.className = "hover:bg-kama-50/50 transition-colors group";
