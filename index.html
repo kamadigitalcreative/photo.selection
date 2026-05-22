@@ -91,14 +91,32 @@
                 </div>
                 
                 <!-- Desktop Buttons -->
-                <div class="hidden md:flex items-center gap-2">
-                    <a href="/login" class="text-slate-600 hover:text-primary-600 font-bold transition px-4 py-2">Login</a>
-                    <a href="/register" class="bg-yellow-400 hover:bg-yellow-300 text-yellow-900 px-6 py-2.5 rounded-full font-bold transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-1"><i class="fa-solid fa-rocket"></i> Coba Demo Gratis</a>
+                <div class="hidden md:flex items-center gap-3">
+                    <div class="relative">
+                        <select id="landingLangSelector" onchange="changeLandingLanguage(this.value)" class="appearance-none bg-white border border-gray-200 text-slate-700 text-xs font-bold py-2 pl-7 pr-3 rounded-xl focus:outline-none focus:border-primary-600 cursor-pointer shadow-sm hover:bg-gray-50 transition-colors">
+                            <option value="id">ID</option>
+                            <option value="en">EN</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-primary-500">
+                            <i class="fa-solid fa-earth-americas text-xs"></i>
+                        </div>
+                    </div>
+                    <a href="/login" class="text-slate-600 hover:text-primary-600 font-bold transition px-4 py-2 id-text-login">Login</a>
+                    <a href="/register" class="bg-yellow-400 hover:bg-yellow-300 text-yellow-900 px-6 py-2.5 rounded-full font-bold transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-1"><i class="fa-solid fa-rocket"></i> <span class="id-text-hero-btn2">Coba Demo Gratis</span></a>
                 </div>
 
                 <!-- Mobile Menu Button -->
-                <div class="md:hidden flex items-center gap-4">
-                    <a href="/login" class="text-slate-600 font-bold text-sm">Login</a>
+                <div class="md:hidden flex items-center gap-3">
+                    <div class="relative scale-90">
+                        <select id="landingLangSelectorMobile" onchange="changeLandingLanguage(this.value)" class="appearance-none bg-white border border-gray-200 text-slate-700 text-xs font-bold py-1.5 pl-7 pr-2 rounded-lg focus:outline-none focus:border-primary-600 cursor-pointer shadow-sm">
+                            <option value="id">ID</option>
+                            <option value="en">EN</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-primary-500">
+                            <i class="fa-solid fa-earth-americas text-xs"></i>
+                        </div>
+                    </div>
+                    <a href="/login" class="text-slate-600 font-bold text-sm id-text-login">Login</a>
                     <button onclick="toggleMobileMenu()" class="text-dark hover:text-primary-600 focus:outline-none">
                         <i class="fa-solid fa-bars text-2xl"></i>
                     </button>
@@ -1158,6 +1176,167 @@
                 })
             }).catch(function(e){});
         })();
+    </script>
+    <script>
+        function changeLandingLanguage(lang) {
+            localStorage.setItem('ps_lang', lang);
+            applyLandingLanguage(lang);
+        }
+
+        function applyLandingLanguage(lang) {
+            var isEn = lang === 'en';
+            
+            // Sinkronkan nilai dropdown desktop dan mobile
+            if(document.getElementById('landingLangSelector')) document.getElementById('landingLangSelector').value = lang;
+            if(document.getElementById('landingLangSelectorMobile')) document.getElementById('landingLangSelectorMobile').value = lang;
+
+            function setT(selector, idText, enText, isHTML = false) {
+                var els = document.querySelectorAll(selector);
+                els.forEach(function(el) {
+                    if (isHTML) el.innerHTML = isEn ? enText : idText;
+                    else el.innerText = isEn ? enText : idText;
+                });
+            }
+
+            // 1. NAVBAR & HERO SECTION
+            setT('a[href="#problem"]', 'Masalah', 'Problems');
+            setT('a[href="#fitur"]', 'Fitur', 'Features');
+            setT('a[href="#harga"]', 'Harga', 'Pricing');
+            setT('a[href="#testimoni"]', 'Testimoni', 'Testimonials');
+            setT('.id-text-login', 'Login', 'Login');
+            setT('.id-text-hero-btn2', 'Coba Demo Gratis', 'Try Free Demo');
+            setT('.hero-pattern .bg-primary-50', '<i class="fa-solid fa-star text-yellow-400 mr-2"></i> Asisten Digital Fotografer Profesional', '<i class="fa-solid fa-star text-yellow-400 mr-2"></i> Professional Photographer Digital Assistant', true);
+            setT('.hero-pattern h1', 'Ucapkan Selamat Tinggal pada <br class="hidden md:block"/> Screenshot Klien & Sortir Manual!', 'Say Goodbye to <br class="hidden md:block"/> Client Screenshots & Manual Sorting!', true);
+            setT('.hero-pattern p.text-slate-600', 'Photo Selection adalah platform cerdas yang membantu klien memilih foto secara elegan, dan <b>otomatis menyortir ribuan file RAW Anda dalam hitungan detik.</b> Hemat waktu berjam-jam, fokus pada karya!', 'Photo Selection is a smart platform that helps clients choose photos elegantly, and <b>automatically sorts thousands of your RAW files in seconds.</b> Save hours of time, focus on your art!', true);
+            setT('.hero-pattern a[href="/register"]', '<i class="fa-solid fa-rocket"></i> Daftar Akun Demo', '<i class="fa-solid fa-rocket"></i> Register Demo Account', true);
+            setT('.hero-pattern a[href="#fitur"]', '<i class="fa-solid fa-circle-down"></i> Pelajari Fitur Selengkapnya', '<i class="fa-solid fa-circle-down"></i> Learn More Features', true);
+            setT('.hero-pattern p.uppercase', 'Dirancang Khusus Untuk', 'Specially Designed For');
+
+            // 2. PROBLEM SECTION
+            setT('#problem h2', 'Sering Frustasi Menghadapi Hal Ini?', 'Often Frustrated with This?');
+            setT('#problem p.text-slate-400', 'Proses pemotretan menyenangkan, tapi mimpi buruk sesungguhnya dimulai saat klien harus memilih foto.', 'The photo shoot process is fun, but the real nightmare begins when the client has to choose the photos.');
+            
+            var probCards = document.querySelectorAll('#problem .bg-slate-800');
+            if(probCards.length >= 4) {
+                probCards[0].querySelector('h3').innerText = isEn ? 'WhatsApp Screenshot' : 'Screenshot WhatsApp';
+                probCards[0].querySelector('p').innerText = isEn ? 'Clients send dozens of low-resolution photo screenshots via chat. You have to guess which file is meant.' : 'Klien mengirim puluhan screenshot foto beresolusi rendah yang dikirim via chat. Anda harus menebak-nebak file mana yang dimaksud.';
+                
+                probCards[1].querySelector('h3').innerText = isEn ? 'Long Text List' : 'List Text Panjang';
+                probCards[1].querySelector('p').innerHTML = isEn ? 'Clients type manually: <i>"IMG_1234.JPG, IMG_1235.JPG..."</i> Rawan typos and makes your eyes tired looking at thousands of numbers.' : 'Klien mengetik manual: <i>"IMG_1234.JPG, IMG_1235.JPG..."</i> Rawan salah ketik dan membuat mata Anda lelah melihat ribuan angka.';
+                
+                probCards[2].querySelector('h3').innerText = isEn ? 'Manual Searching' : 'Pencarian Manual';
+                probCards[2].querySelector('p').innerHTML = isEn ? 'You have to use the *Search* feature one by one in Explorer/Finder to find RAW/High-Res files from thousands of photos.' : 'Anda harus menggunakan fitur *Search* satu per satu di Explorer/Finder untuk menemukan file RAW/High-Res dari ribuan file.';
+                
+                probCards[3].querySelector('h3').innerText = isEn ? 'Wasted Time' : 'Waktu Terbuang';
+                probCards[3].querySelector('p').innerHTML = isEn ? 'Editing workflow becomes very slow. Time that should be used for *color grading* is wasted just for sorting files.' : 'Workflow editing menjadi sangat lambat. Waktu yang seharusnya dipakai untuk *color grading*, habis hanya untuk sortir file.';
+            }
+
+            // 3. FEATURE SECTION
+            setT('#fitur span.text-primary-600', 'Solusi Cerdas', 'Smart Solution');
+            setT('#fitur h2', 'Ubah Cara Kerja Anda Sekarang', 'Change Your Workflow Now');
+            setT('#fitur p.text-slate-600', 'Photo Selection mengotomatiskan alur kerja Anda dari A sampai Z. Klien senang, Anda tenang.', 'Photo Selection automates your workflow from A to Z. Happy clients, peaceful mind.');
+            
+            var featCards = document.querySelectorAll('#fitur .relative.group p');
+            var featTitles = document.querySelectorAll('#fitur .relative.group h3');
+            if(featTitles.length >= 6 && featCards.length >= 6) {
+                featTitles[0].innerText = isEn ? 'Client Gallery Management' : 'Client Gallery Management';
+                featCards[0].innerText = isEn ? 'Create separate projects for each client with an elegant, responsive gallery view easily accessed via phone.' : 'Buat project terpisah untuk setiap klien dengan tampilan galeri yang elegan, responsif, dan mudah diakses via HP.';
+                
+                featTitles[1].innerText = isEn ? 'Unique Client Link' : 'Unique Client Link';
+                featCards[1].innerText = isEn ? 'Generate unique and secure links leading directly to client photos. No need for additional app installation for clients.' : 'Hasilkan link unik dan aman yang langsung mengarah ke foto klien. Tidak perlu instal aplikasi tambahan bagi klien.';
+                
+                featTitles[2].innerText = isEn ? 'Photo Quota Control' : 'Photo Quota Control';
+                featCards[2].innerText = isEn ? 'Package A client can only choose 50 photos? Set a maximum quota! The system automatically prevents clients from selecting beyond the limit.' : 'Klien paket A hanya boleh pilih 50 foto? Setel kuota maksimal! Sistem otomatis mencegah klien memilih melebihi batas.';
+                
+                featTitles[3].innerText = isEn ? 'Automatic Photo Sorting' : 'Automatic Photo Sorting';
+                featCards[3].innerText = isEn ? 'The system records every client selection (file name) automatically and in real-time on your dashboard.' : 'Sistem merekam setiap pilihan klien (file name) secara otomatis dan real-time di dashboard Anda.';
+                
+                featTitles[4].innerText = isEn ? 'Local Photo Sorter' : 'Local Photo Sorter';
+                featCards[4].innerText = isEn ? 'The application detects RAW/Hi-Res files on your PC/Mac according to the client\'s choice, then copies them to a new folder automatically!' : 'Aplikasi mendeteksi file RAW/Hi-Res di PC/Mac Anda sesuai pilihan klien, lalu menyalinnya ke folder baru otomatis!';
+                
+                featTitles[5].innerText = isEn ? 'Custom Branding' : 'Custom Branding';
+                featCards[5].innerText = isEn ? 'Place your own studio logo on the client gallery page. Increase the prestige and professionalism of your brand.' : 'Pasang logo studio Anda sendiri di halaman galeri klien. Tingkatkan prestise dan profesionalitas brand Anda.';
+            }
+
+            // 4. BENEFITS SECTION
+            setT('#fitur + section h2', 'Investasi Terbaik Untuk Alur Kerja Studio Anda', 'The Best Investment for Your Studio Workflow');
+            setT('#fitur + section p.text-slate-400', 'Dengan beralih ke Photo Selection, Anda tidak hanya membeli software, tetapi Anda \'membeli kembali\' waktu Anda yang berharga.', 'By switching to Photo Selection, you are not just buying software, you are \'buying back\' your valuable time.');
+            
+            var benTitles = document.querySelectorAll('#fitur + section h4');
+            var benDescs = document.querySelectorAll('#fitur + section p:not(.text-slate-400)');
+            if(benTitles.length >= 3 && benDescs.length >= 3) {
+                benTitles[0].innerText = isEn ? 'Save 90% Time' : 'Hemat Waktu 90%';
+                benDescs[0].innerText = isEn ? 'Photo sorting work that usually takes 3 hours is now completed in 30 seconds.' : 'Pekerjaan sortir foto yang biasanya memakan waktu 3 jam, kini selesai dalam 30 detik.';
+                
+                benTitles[1].innerText = isEn ? 'Exclusive Client Experience' : 'Pengalaman Klien Eksklusif';
+                benDescs[1].innerText = isEn ? 'Clients feel served in a premium way with an interactive selection gallery, not just via chat.' : 'Klien merasa dilayani secara premium dengan galeri pemilihan interaktif, bukan sekadar via chat.';
+                
+                benTitles[2].innerText = isEn ? 'Error-Free (Human Error)' : 'Bebas Kesalahan (Human Error)';
+                benDescs[2].innerText = isEn ? 'No more drama of wrong editing because the client made a typo in the file name.' : 'Tidak ada lagi drama salah edit foto karena klien salah ketik nomor nama file.';
+            }
+
+            // Mockup Dashboard inside Benefit Section
+            setT('#fitur + section .p-1 rounded-lg span:nth-child(2)', 'Pantau Klien', 'Monitor Client');
+            setT('#count-belum + div', '<i class="fa-regular fa-circle-xmark mr-1"></i> Belum Memilih', '<i class="fa-regular fa-circle-xmark mr-1"></i> Not Started', true);
+            setT('#count-sedang + div', '<i class="fa-regular fa-clock mr-1"></i> Sedang Memilih', '<i class="fa-regular fa-clock mr-1"></i> Selecting', true);
+            setT('#count-selesai + div', '<i class="fa-regular fa-circle-check mr-1"></i> Selesai', '<i class="fa-regular fa-circle-check mr-1"></i> Completed', true);
+            setT('#fitur + section h3.font-bold', 'Projects Overview', 'Projects Overview');
+            setT('#fitur + section p.text-\\[10px\\]', 'Kelola akses galeri client Anda.', 'Manage your client gallery access.');
+
+            // 5. PRICING SECTION
+            setT('#harga span.text-primary-600', 'Investasi Super Terjangkau', 'Super Affordable Investment');
+            setT('#harga h2', 'Fitur Kelas Dunia, Harga Lokal', 'World Class Features, Local Price');
+            setT('#harga p.text-lg', 'Berhenti membuang waktu berjam-jam untuk sortir foto manual. Dapatkan fitur <span class="font-bold text-primary-600">Auto-Sort RAW</span> yang tidak dimiliki kompetitor dengan harga secangkir kopi.', 'Stop wasting hours on manual photo sorting. Get the <span class="font-bold text-primary-600">Auto-Sort RAW</span> feature that competitors don\'t have for the price of a cup of coffee.', true);
+            setT('#harga .bg-yellow-50 p', '<i class="fa-solid fa-star text-yellow-500 mr-2"></i> <strong>Promo Spesial Peluncuran:</strong> Dapatkan trial gratis 14 hari penuh untuk semua paket!', '<i class="fa-solid fa-star text-yellow-500 mr-2"></i> <strong>Special Launch Promo:</strong> Get a full 14-day free trial for all packages!', true);
+            
+            var priceCards = document.querySelectorAll('#harga .grid > div');
+            if(priceCards.length >= 3) {
+                // 1 Month
+                priceCards[0].querySelector('h3').innerText = isEn ? '1 Month' : '1 Bulan';
+                priceCards[0].querySelector('p.text-slate-500').innerText = isEn ? 'Perfect for freelance projects' : 'Sempurna untuk project lepas';
+                priceCards[0].querySelector('p.text-xs').innerText = isEn ? 'No auto-debit. Manual renewal.' : 'Tidak auto-debit. Perpanjangan manual.';
+                priceCards[0].querySelector('a').innerText = isEn ? 'Select Package' : 'Pilih Paket';
+                
+                // 1 Year (Popular)
+                priceCards[1].querySelector('.bg-gradient-to-r').innerText = isEn ? 'Most Popular & Best Value' : 'Paling Populer & Hemat';
+                priceCards[1].querySelector('h3').innerText = isEn ? '1 Year' : '1 Tahun';
+                priceCards[1].querySelector('p.text-slate-400').innerText = isEn ? 'Smart investment for pro studios' : 'Investasi cerdas studio pro';
+                priceCards[1].querySelector('p.text-xs').innerHTML = isEn ? '<i class="fa-solid fa-tags mr-1"></i> Only <strong>Rp16,500/month!</strong> Super value.' : '<i class="fa-solid fa-tags mr-1"></i> Hanya <strong>Rp16.500/bulan!</strong> Super hemat.';
+                priceCards[1].querySelectorAll('ul li')[0].innerHTML = isEn ? '<i class="fa-solid fa-check text-primary-400 mr-3 w-5"></i> <span class="font-bold">Save 33% more</span>' : '<i class="fa-solid fa-check text-primary-400 mr-3 w-5"></i> <span class="font-bold">Lebih hemat 33%</span>';
+                priceCards[1].querySelector('a').innerText = isEn ? 'Select Best Package' : 'Pilih Paket Terbaik';
+                
+                // 6 Months
+                priceCards[2].querySelector('h3').innerText = isEn ? '6 Months' : '6 Bulan';
+                priceCards[2].querySelector('p.text-slate-500').innerText = isEn ? 'The perfect middle choice' : 'Pilihan tengah yang pas';
+                priceCards[2].querySelector('p.text-xs').innerText = isEn ? 'It fields out to Rp20,000/month.' : 'Jatuhnya Rp20.000/bulan.';
+                priceCards[2].querySelector('a').innerText = isEn ? 'Select Package' : 'Pilih Paket';
+            }
+            setT('#harga .mt-12 p', 'Pembayaran diproses dengan aman dan otomatis oleh <strong>Mayar.id</strong>.<br>Mendukung QRIS, E-Wallet (GoPay, OVO), dan Virtual Account.', 'Payments are processed securely and automatically by <strong>Mayar.id</strong>.<br>Supports QRIS, E-Wallet (GoPay, OVO), and Virtual Account.', true);
+
+            // 6. TESTIMONIALS & FAQ
+            setT('#testimoni h2', 'Kisah Sukses dari Balik Lensa', 'Success Stories from Behind the Lens');
+            setT('#testimoni p.text-slate-600', 'Ribuan jam berhasil kami selamatkan. Lihat bagaimana Photo Selection merevolusi alur kerja rekan-rekan fotografer.', 'Thousands of hours successfully saved. See how Photo Selection revolutionizes the workflow of fellow photographers.');
+            setT('#testimoni .mt-2 span', 'Geser untuk melihat lebih banyak', 'Swipe to see more');
+            setT('#faq h2', 'Pertanyaan Umum (FAQ)', 'Frequently Asked Questions (FAQ)');
+            setT('#faq p.text-slate-500', 'Temukan jawaban untuk pertanyaan yang sering diajukan tentang Photo Selection.', 'Find answers to frequently asked questions about Photo Selection.');
+            setT('#faq h3', 'Umum', 'General');
+            setT('#btnMoreFaq', 'Lihat Semua Pertanyaan <i class="fa-solid fa-chevron-down ml-1"></i>', 'View All Questions <i class="fa-solid fa-chevron-down ml-1"></i>', true);
+            setT('#faq .mt-8 p.font-bold', 'Masih ada pertanyaan yang belum terjawab?', 'Still have unanswered questions?');
+            setT('#btnMoreFaq + a', '<i class="fa-brands fa-instagram text-lg mr-1 align-middle"></i> Hubungi kami via Instagram', '<i class="fa-brands fa-instagram text-lg mr-1 align-middle"></i> Contact us via Instagram', true);
+
+            // 7. FOOTER & CTA
+            setT('#join h2', 'Tingkatkan Level Studio Anda Hari Ini', 'Upgrade Your Studio Level Today');
+            setT('#join p.text-primary-100', 'Daftar sekarang dan dapatkan akses eksklusif ke seluruh fitur otomatisasi premium yang akan merevolusi cara kerja Anda.', 'Register now and get exclusive access to all premium automation features that will revolutionize the way you work.');
+            setT('#join a', '🚀 Daftar Sekarang Juga <i class="fa-solid fa-arrow-right ml-2"></i>', '🚀 Register Right Now <i class="fa-solid fa-arrow-right ml-2"></i>', true);
+            setT('footer h2', 'Waktu adalah uang. Berhenti membuangnya untuk pekerjaan manual.', 'Time is money. Stop wasting it on manual work.');
+            setT('footer p.text-slate-400', 'Bergabunglah dengan ratusan fotografer modern yang telah mengoptimalkan proses kerja mereka. Biarkan Photo Selection menangani teknis penyortiran, dan kembalilah melakukan apa yang Anda cintai: Memotret dan Menciptakan Karya Seni.', 'Join hundreds of modern photographers who have optimized their workflow. Let Photo Selection handle the technical sorting, and go back to doing what you love: Shooting and Creating Art.');
+        }
+
+        // Jalankan bahasa saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            var savedLang = localStorage.getItem('ps_lang') || 'id';
+            applyLandingLanguage(savedLang);
+        });
     </script>
 </body>
 </html>
