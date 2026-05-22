@@ -152,7 +152,7 @@
             </p>
             <div class="flex flex-col sm:flex-row justify-center items-center gap-2">
                 <a href="/login" class="w-full sm:w-auto px-12 py-4 bg-white hover:bg-slate-50 text-slate-800 rounded-full font-bold text-xl transition shadow-lg hover:shadow-xl transform hover:-translate-y-1 border border-slate-200 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-right-to-bracket text-primary-600"></i> Masuk Aplikasi
+                    <i class="fa-solid fa-right-to-bracket text-primary-600"></i> <span class="id-text-masuk">Masuk Aplikasi</span>
                 </a>
                 <a href="/register" class="w-full sm:w-auto px-12 py-4 bg-yellow-400 hover:bg-yellow-300 text-yellow-900 rounded-full font-bold text-xl transition shadow-lg hover:shadow-xl transform hover:-translate-y-1 border border-yellow-500 flex items-center justify-center gap-2">
                     <i class="fa-solid fa-rocket"></i> Daftar Akun Demo
@@ -524,8 +524,8 @@
     <section id="testimoni" class="py-24 bg-white overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center max-w-3xl mx-auto mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-dark">Kisah Sukses dari Balik Lensa</h2>
-                <p class="text-slate-600 text-lg">Ribuan jam berhasil kami selamatkan. Lihat bagaimana Photo Selection merevolusi alur kerja rekan-rekan fotografer.</p>
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-dark id-text-testi-h">Kisah Sukses dari Balik Lensa</h2>
+                <p class="text-slate-600 text-lg id-text-testi-p">Ribuan jam berhasil kami selamatkan. Lihat bagaimana Photo Selection merevolusi alur kerja rekan-rekan fotografer.</p>
             </div>
             
             <!-- Horizontal Scroll Slider -->
@@ -1205,6 +1205,7 @@
             setT('a[href="#faq"]', 'FAQ', 'FAQ'); 
             setT('.id-text-login', 'Login', 'Login');
             setT('nav a[href="/register"]', '<i class="fa-solid fa-rocket"></i> Coba Demo Gratis', '<i class="fa-solid fa-rocket"></i> Try Free Demo', true);
+            setT('.id-text-masuk', 'Masuk Aplikasi', 'Sign In');
             
             setT('.hero-pattern .bg-primary-50', '<i class="fa-solid fa-star text-yellow-400 mr-2"></i> Asisten Digital Fotografer Profesional', '<i class="fa-solid fa-star text-yellow-400 mr-2"></i> Professional Photographer Digital Assistant', true);
             setT('.hero-pattern h1', 'Ucapkan Selamat Tinggal pada <br class="hidden md:block"> Screenshot Klien &amp; Sortir Manual!', 'Say Goodbye to <br class="hidden md:block"> Client Screenshots &amp; Manual Sorting!', true);
@@ -1311,8 +1312,8 @@
             setT('#harga .mt-12 p', 'Pembayaran diproses dengan aman dan otomatis oleh <strong>Mayar.id</strong>.<br>Mendukung QRIS, E-Wallet (GoPay, OVO), dan Virtual Account.', 'Payments are processed securely and automatically by <strong>Mayar.id</strong>.<br>Supports QRIS, E-Wallet (GoPay, OVO), and Virtual Account.', true);
 
             // 6. TESTIMONIALS
-            setT('#testimoni h2', 'Kisah Sukses dari Balik Lensa', 'Success Stories from Behind the Lens');
-            setT('#testimoni p.text-lg', 'Ribuan jam berhasil kami selamatkan. Lihat bagaimana Photo Selection merevolusi alur kerja rekan-rekan fotografer.', 'Thousands of hours successfully saved. See how Photo Selection revolutionizes the workflow of fellow photographers.');
+            setT('.id-text-testi-h', 'Kisah Sukses dari Balik Lensa', 'Success Stories from Behind the Lens');
+            setT('.id-text-testi-p', 'Ribuan jam berhasil kami selamatkan. Lihat bagaimana Photo Selection merevolusi alur kerja rekan-rekan fotografer.', 'Thousands of hours successfully saved. See how Photo Selection revolutionizes the workflow of fellow photographers.');
             setT('#testimoni .mt-2 span.px-2', 'Geser untuk melihat lebih banyak', 'Swipe to see more');
 
             // 7. FAQ SECTION
