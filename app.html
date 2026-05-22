@@ -1051,6 +1051,11 @@
         function changeLanguage(lang) {
             localStorage.setItem('ps_lang', lang);
             applyLanguage(lang);
+            // Sinkronisasi ulang data tabel visual saat bahasa diubah
+            if (typeof checkLoginState === 'function') checkLoginState();
+            if (typeof loadDataProjects === 'function' && document.getElementById('section-projects').classList.contains('flex')) loadDataProjects();
+            if (typeof loadDataUsers === 'function' && document.getElementById('section-users').classList.contains('flex')) loadDataUsers(true);
+            if (typeof renderClientGallery === 'function' && document.getElementById('client-gallery-view').classList.contains('active')) renderClientGallery();
         }
 
         function applyLanguage(lang) {
@@ -1095,6 +1100,7 @@
             setPh('#reg_password', 'Password', 'Password');
             
             setTx('#reg_paket option[value=""]', 'Pilih Paket Langganan', 'Select Subscription Plan');
+            setTx('#reg_paket option[value="Demo"]', 'Coba Gratis (Demo 1 Project)', 'Free Trial (Demo 1 Project)');
             setTx('#reg_paket option[value="1 Bulan"]', '1 Bulan', '1 Month');
             setTx('#reg_paket option[value="6 Bulan"]', '6 Bulan', '6 Months');
             setTx('#reg_paket option[value="1 Tahun"]', '1 Tahun', '1 Year');
@@ -1255,6 +1261,7 @@
                 projTh[3].innerHTML = isEn ? '<i class="fa-regular fa-calendar-days text-gray-400 mr-1.5 hidden sm:inline"></i> Date' : '<i class="fa-regular fa-calendar-days text-gray-400 mr-1.5 hidden sm:inline"></i> Tanggal';
                 projTh[4].innerHTML = isEn ? '<i class="fa-solid fa-sliders text-gray-400 mr-1.5 hidden sm:inline"></i> Actions' : '<i class="fa-solid fa-sliders text-gray-400 mr-1.5 hidden sm:inline"></i> Aksi';
             }
+            setTx('#reg_paket option[value="Demo"]', 'Coba Gratis (Demo 1 Project)', 'Free Trial (Demo 1 Project)');
 
             var userTh = document.querySelectorAll('#section-users thead th');
             if (userTh.length >= 6) {
@@ -2022,11 +2029,18 @@
                 var adminRoleEl = document.getElementById('adminRole');
                 if (adminRoleEl) {
                     if (currentUser.role !== 'Admin') {
-                        var expText = currentUser.expiredAt === 'Lifetime' ? 'Lifetime' : (currentUser.expiredAt ? currentUser.expiredAt.substring(0,10) : 'Expired');
+                        var isEn = localStorage.getItem('ps_lang') === 'en';
+                        var expTextStr = isEn ? 'Expired' : 'Kedaluwarsa';
+                        var expText = currentUser.expiredAt === 'Lifetime' ? 'Lifetime' : (currentUser.expiredAt ? currentUser.expiredAt.substring(0,10) : expTextStr);
+                        
+                        var titleClick = isEn ? 'Click to Extend' : 'Klik untuk Perpanjang';
+                        var titleActive = isEn ? 'Active Period' : 'Masa Aktif';
+                        var labelExp = isEn ? 'Expired: ' : 'Kedaluwarsa: ';
+
                         if (typeof isAccountExpired === 'function' && isAccountExpired()) {
-                            adminRoleEl.innerHTML = currentUser.role + ' &bull; <span class="text-red-500 font-bold text-[10px] animate-pulse cursor-pointer border border-red-200 bg-red-50 px-1.5 py-0.5 rounded-md shadow-sm" onclick="showExpiredAlert()" title="Klik untuk Perpanjang"><i class="fa-solid fa-circle-exclamation mr-0.5"></i>Expired: ' + expText + '</span>';
+                            adminRoleEl.innerHTML = currentUser.role + ' &bull; <span class="text-red-500 font-bold text-[10px] animate-pulse cursor-pointer border border-red-200 bg-red-50 px-1.5 py-0.5 rounded-md shadow-sm" onclick="showExpiredAlert()" title="' + titleClick + '"><i class="fa-solid fa-circle-exclamation mr-0.5"></i>' + labelExp + expText + '</span>';
                         } else {
-                            adminRoleEl.innerHTML = currentUser.role + ' &bull; <span class="text-blue-500 font-semibold text-[10px]" title="Masa Aktif">Exp: ' + expText + '</span>';
+                            adminRoleEl.innerHTML = currentUser.role + ' &bull; <span class="text-blue-500 font-semibold text-[10px]" title="' + titleActive + '">Exp: ' + expText + '</span>';
                         }
                     } else {
                         adminRoleEl.innerText = currentUser.role;
@@ -2483,6 +2497,7 @@
                     expBadge = '<span class="text-xs ' + colorClass + '"><i class="' + iconClass + ' mr-1"></i>' + row.ExpiredAt.substring(0,10) + '</span>';
                 }
 var isEn = localStorage.getItem('ps_lang') === 'en';
+                var isEn = localStorage.getItem('ps_lang') === 'en';
                 var statusBadge = '';
                 if (row.Status === 'Active') {
                     if (isExpired) {
@@ -2491,25 +2506,26 @@ var isEn = localStorage.getItem('ps_lang') === 'en';
                         statusBadge = '<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded border border-green-200"><i class="fa-solid fa-check mr-1"></i>' + (isEn ? 'Active' : 'Aktif') + '</span>';
                     }
                 } else {
-                    statusBadge = '<span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded border border-yellow-200"><i class="fa-solid fa-hourglass-half mr-1"></i>Pending</span>';
+                    statusBadge = '<span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded border border-yellow-200"><i class="fa-solid fa-hourglass-half mr-1"></i>' + (isEn ? 'Pending' : 'Tertunda') + '</span>';
                 }
                 
                 var actionBtn = row.Status === 'Pending'
                     ? '<button onclick="promptExpiry(\'' + row.Username + '\', \'\', true)" class="px-3 py-1.5 bg-kama-800 text-white text-xs font-semibold rounded hover:bg-kama-900 shadow-sm mr-2">' + (isEn ? 'Approve' : 'ACC Akun') + '</button>'
-                    : '<button onclick="promptExpiry(\'' + row.Username + '\', \'' + (row.ExpiredAt || '') + '\', false)" class="px-3 py-1.5 bg-white border border-gray-200 text-kama-800 text-xs font-semibold rounded hover:bg-gray-50 shadow-sm mr-2" title="Set Masa Aktif"><i class="fa-regular fa-calendar-plus"></i> ' + (isEn ? 'Set Active' : 'Set Aktif') + '</button>';
+                    : '<button onclick="promptExpiry(\'' + row.Username + '\', \'' + (row.ExpiredAt || '') + '\', false)" class="px-3 py-1.5 bg-white border border-gray-200 text-kama-800 text-xs font-semibold rounded hover:bg-gray-50 shadow-sm mr-2" title="' + (isEn ? 'Set Active' : 'Set Aktif') + '"><i class="fa-regular fa-calendar-plus"></i> ' + (isEn ? 'Set Active' : 'Set Aktif') + '</button>';
 
                 var tr = document.createElement('tr');
                 tr.className = "hover:bg-kama-50/50 transition-colors group";
                 
                 var lastSeenStr = isEn ? 'Never' : 'Belum pernah';
                 var lastSeen = row.LastActive ? row.LastActive : lastSeenStr;
+                var textLast = isEn ? 'Last: ' : 'Terakhir: ';
                 var onlineBadge = row.isOnline
                     ? '<div class="flex flex-col items-center justify-center">' +
                       '<span class="bg-green-100 text-green-700 text-[10px] px-2 py-1 rounded-full font-bold border border-green-200"><i class="fa-solid fa-circle text-[8px] mr-1 animate-pulse"></i>Online</span>' +
                       '</div>'
                     : '<div class="flex flex-col items-center justify-center">' +
                       '<span class="bg-gray-100 text-gray-500 text-[10px] px-2 py-1 rounded-full font-bold border border-gray-200"><i class="fa-solid fa-circle text-[8px] mr-1"></i>Offline</span>' +
-                      '<span class="text-[9px] text-gray-400 mt-1 font-medium whitespace-nowrap">Last: ' + lastSeen + '</span>' +
+                      '<span class="text-[9px] text-gray-400 mt-1 font-medium whitespace-nowrap">' + textLast + lastSeen + '</span>' +
                       '</div>';
 
                 tr.innerHTML = 
