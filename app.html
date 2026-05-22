@@ -1095,6 +1095,7 @@
             setPh('#reg_password', 'Password', 'Password');
             
             setTx('#reg_paket option[value=""]', 'Pilih Paket Langganan', 'Select Subscription Plan');
+            setTx('#reg_paket option[value="Demo"]', 'Coba Gratis (Demo 1 Project)', 'Free Trial (Demo 1 Project)');
             setTx('#reg_paket option[value="1 Bulan"]', '1 Bulan', '1 Month');
             setTx('#reg_paket option[value="6 Bulan"]', '6 Bulan', '6 Months');
             setTx('#reg_paket option[value="1 Tahun"]', '1 Tahun', '1 Year');
@@ -2022,11 +2023,18 @@
                 var adminRoleEl = document.getElementById('adminRole');
                 if (adminRoleEl) {
                     if (currentUser.role !== 'Admin') {
-                        var expText = currentUser.expiredAt === 'Lifetime' ? 'Lifetime' : (currentUser.expiredAt ? currentUser.expiredAt.substring(0,10) : 'Expired');
+                        var isEn = localStorage.getItem('ps_lang') === 'en';
+                        var expTextStr = isEn ? 'Expired' : 'Kedaluwarsa';
+                        var expText = currentUser.expiredAt === 'Lifetime' ? 'Lifetime' : (currentUser.expiredAt ? currentUser.expiredAt.substring(0,10) : expTextStr);
+                        
+                        var titleClick = isEn ? 'Click to Extend' : 'Klik untuk Perpanjang';
+                        var titleActive = isEn ? 'Active Period' : 'Masa Aktif';
+                        var labelExp = isEn ? 'Expired: ' : 'Kedaluwarsa: ';
+
                         if (typeof isAccountExpired === 'function' && isAccountExpired()) {
-                            adminRoleEl.innerHTML = currentUser.role + ' &bull; <span class="text-red-500 font-bold text-[10px] animate-pulse cursor-pointer border border-red-200 bg-red-50 px-1.5 py-0.5 rounded-md shadow-sm" onclick="showExpiredAlert()" title="Klik untuk Perpanjang"><i class="fa-solid fa-circle-exclamation mr-0.5"></i>Expired: ' + expText + '</span>';
+                            adminRoleEl.innerHTML = currentUser.role + ' &bull; <span class="text-red-500 font-bold text-[10px] animate-pulse cursor-pointer border border-red-200 bg-red-50 px-1.5 py-0.5 rounded-md shadow-sm" onclick="showExpiredAlert()" title="' + titleClick + '"><i class="fa-solid fa-circle-exclamation mr-0.5"></i>' + labelExp + expText + '</span>';
                         } else {
-                            adminRoleEl.innerHTML = currentUser.role + ' &bull; <span class="text-blue-500 font-semibold text-[10px]" title="Masa Aktif">Exp: ' + expText + '</span>';
+                            adminRoleEl.innerHTML = currentUser.role + ' &bull; <span class="text-blue-500 font-semibold text-[10px]" title="' + titleActive + '">Exp: ' + expText + '</span>';
                         }
                     } else {
                         adminRoleEl.innerText = currentUser.role;
@@ -2491,7 +2499,7 @@ var isEn = localStorage.getItem('ps_lang') === 'en';
                         statusBadge = '<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded border border-green-200"><i class="fa-solid fa-check mr-1"></i>' + (isEn ? 'Active' : 'Aktif') + '</span>';
                     }
                 } else {
-                    statusBadge = '<span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded border border-yellow-200"><i class="fa-solid fa-hourglass-half mr-1"></i>Pending</span>';
+                    statusBadge = '<span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded border border-yellow-200"><i class="fa-solid fa-hourglass-half mr-1"></i>' + (isEn ? 'Pending' : 'Tertunda') + '</span>';
                 }
                 
                 var actionBtn = row.Status === 'Pending'
@@ -2503,13 +2511,14 @@ var isEn = localStorage.getItem('ps_lang') === 'en';
                 
                 var lastSeenStr = isEn ? 'Never' : 'Belum pernah';
                 var lastSeen = row.LastActive ? row.LastActive : lastSeenStr;
+                var textLast = isEn ? 'Last: ' : 'Terakhir: ';
                 var onlineBadge = row.isOnline
                     ? '<div class="flex flex-col items-center justify-center">' +
                       '<span class="bg-green-100 text-green-700 text-[10px] px-2 py-1 rounded-full font-bold border border-green-200"><i class="fa-solid fa-circle text-[8px] mr-1 animate-pulse"></i>Online</span>' +
                       '</div>'
                     : '<div class="flex flex-col items-center justify-center">' +
                       '<span class="bg-gray-100 text-gray-500 text-[10px] px-2 py-1 rounded-full font-bold border border-gray-200"><i class="fa-solid fa-circle text-[8px] mr-1"></i>Offline</span>' +
-                      '<span class="text-[9px] text-gray-400 mt-1 font-medium whitespace-nowrap">Last: ' + lastSeen + '</span>' +
+                      '<span class="text-[9px] text-gray-400 mt-1 font-medium whitespace-nowrap">' + textLast + lastSeen + '</span>' +
                       '</div>';
 
                 tr.innerHTML = 
