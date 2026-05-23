@@ -4385,6 +4385,22 @@ var isEn = localStorage.getItem('ps_lang') === 'en';
                     var resProjects = res.data.projects;
                     var resNotif = res.data.notifStats;
 
+                    // --- 0. SINKRONISASI PROFIL USER (LOGO & BRAND LINTAS DEVICE) ---
+                    if (res.data.userData && currentUser) {
+                        let isBrandChanged = (currentUser.brandName !== res.data.userData.brandName) || (currentUser.brandLogo !== res.data.userData.brandLogo);
+                        
+                        // Timpa data memori lama di HP/Laptop dengan data terbaru dari Server
+                        currentUser = res.data.userData;
+                        localStorage.setItem('ps_user', JSON.stringify(currentUser));
+                        
+                        // Terapkan logo baru ke tampilan seketika jika terdeteksi perubahan
+                        if (isBrandChanged) {
+                            appBranding.name = currentUser.brandName || 'Kama Creative';
+                            appBranding.logo = currentUser.brandLogo || '';
+                            applyBranding();
+                        }
+                    }
+
                     // --- SUNTIKAN TEKS INSTAN (AGAR LOADING BISA 0 DETIK) ---
                     if (res.data.allNotifs) {
                         notifDataCache = res.data.allNotifs.feedbacks || [];
