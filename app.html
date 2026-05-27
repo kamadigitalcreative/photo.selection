@@ -3448,7 +3448,8 @@
 
                 var actionBtn = row.Status === 'Pending'
                     ? '<button onclick="promptExpiry(\'' + row.Username + '\', \'\', true)" class="px-3 py-1.5 bg-kama-800 text-white text-xs font-semibold rounded hover:bg-kama-900 shadow-sm mr-2">' + (isEn ? 'Approve' : 'ACC Akun') + '</button>'
-                    : '<button onclick="promptExpiry(\'' + row.Username + '\', \'' + (row.ExpiredAt || '') + '\', false)" class="px-3 py-1.5 bg-white border border-gray-200 text-kama-800 text-xs font-semibold rounded hover:bg-gray-50 shadow-sm mr-2" title="' + (isEn ? 'Set Active' : 'Set Aktif') + '"><i class="fa-regular fa-calendar-plus"></i> ' + (isEn ? 'Set Active' : 'Set Aktif') + '</button>';
+                    : '<button onclick="promptExpiry(\'' + row.Username + '\', \'' + (row.ExpiredAt || '') + '\', false)" class="px-3 py-1.5 bg-white border border-gray-200 text-kama-800 text-xs font-semibold rounded hover:bg-gray-50 shadow-sm mr-2" title="' + (isEn ? 'Set Active' : 'Set Aktif') + '"><i class="fa-regular fa-calendar-plus"></i> ' + (isEn ? 'Set Active' : 'Set Aktif') + '</button>' +
+                      '<button onclick="openModalUserAccess(\'' + row.Username + '\', \'' + row.Fitur_Upsell + '\', \'' + row.Fitur_Grid + '\', \'' + row.Fitur_Watermark + '\', \'' + row.Fitur_MultiCategory + '\')" class="px-3 py-1.5 bg-purple-100 text-purple-700 border border-purple-200 text-xs font-semibold rounded hover:bg-purple-200 shadow-sm mr-2" title="Atur Akses Fitur"><i class="fa-solid fa-key"></i></button>';
 
                 var tr = document.createElement('tr');
                 tr.className = "hover:bg-kama-50/50 transition-colors group";
@@ -3848,15 +3849,16 @@
             })
             .then(res => res.json())
             .then(data => {
-                if(data.status === 'success' && data.data) {
+                if(data.status === 'success' && Array.isArray(data.data)) {
                     let html = '';
                     data.data.forEach(item => {
+                        if(!item || !item.Fitur) return;
                         let isChecked = item.Status ? 'checked' : '';
-                        let friendlyName = item.Fitur.replace('Global_', 'Fitur ');
+                        let friendlyName = String(item.Fitur).replace('Global_', 'Fitur ');
                         let icon = 'fa-star';
-                        if(item.Fitur.includes('Watermark')) icon = 'fa-droplet';
-                        if(item.Fitur.includes('Upsell')) icon = 'fa-sack-dollar';
-                        if(item.Fitur.includes('Grid')) icon = 'fa-border-all';
+                        if(String(item.Fitur).includes('Watermark')) icon = 'fa-droplet';
+                        if(String(item.Fitur).includes('Upsell')) icon = 'fa-sack-dollar';
+                        if(String(item.Fitur).includes('Grid')) icon = 'fa-border-all';
                         
                         html += `
                         <div class="flex items-center justify-between p-4 bg-gray-50 border rounded-xl hover:bg-gray-100 transition-colors">
@@ -3866,7 +3868,7 @@
                                 </div>
                                 <div>
                                     <h4 class="font-bold text-kama-800 text-sm sm:text-base">${friendlyName}</h4>
-                                    <p class="text-xs text-gray-500 mt-0.5">${item.Keterangan}</p>
+                                    <p class="text-xs text-gray-500 mt-0.5">${item.Keterangan || ''}</p>
                                 </div>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
@@ -3876,14 +3878,15 @@
                         </div>
                         `;
                     });
-                    if(html === '') html = '<p class="text-center text-gray-500 text-sm">Belum ada konfigurasi.</p>';
+                    if(html === '') html = '<p class="text-center text-gray-500 text-sm">Konfigurasi kosong. Harap login ulang untuk membuat database otomatis.</p>';
                     container.innerHTML = html;
                 } else {
-                    container.innerHTML = '<p class="text-center text-red-500 text-sm">Gagal memuat konfigurasi.</p>';
+                    container.innerHTML = `<p class="text-center text-red-500 text-sm">Gagal memuat konfigurasi. ${data.message || 'Data tidak valid.'}</p>`;
                 }
             })
             .catch(err => {
-                container.innerHTML = '<p class="text-center text-red-500 text-sm">Gagal terhubung ke server.</p>';
+                console.error("GlobalSettings Fetch Error:", err);
+                container.innerHTML = `<p class="text-center text-red-500 text-sm">Gagal terhubung ke server. (${err.message})</p>`;
             });
         }
 
@@ -3915,6 +3918,71 @@
                 }
             })
             .catch(err => {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                Swal.fire('Error!', 'Gagal terhubung ke server', 'error');
+            });
+        }
+
+        let activeAccessUser = '';
+        function openModalUserAccess(username, fUpsell, fGrid, fWatermark, fCategory) {
+            activeAccessUser = username;
+            document.getElementById('ua-username').innerText = username;
+            document.getElementById('ua-upsell').checked = (fUpsell === 'true' || fUpsell === true || fUpsell === 'TRUE');
+            document.getElementById('ua-grid').checked = (fGrid === 'true' || fGrid === true || fGrid === 'TRUE');
+            document.getElementById('ua-watermark').checked = (fWatermark === 'true' || fWatermark === true || fWatermark === 'TRUE');
+            document.getElementById('ua-category').checked = (fCategory === 'true' || fCategory === true || fCategory === 'TRUE');
+            
+            let modal = document.getElementById('modalUserAccess');
+            let content = document.getElementById('modalUserAccessContent');
+            if (modal && modal.classList) {
+                modal.classList.remove('hidden');
+                setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
+            }
+        }
+
+        function closeModalUserAccess() {
+            let modal = document.getElementById('modalUserAccess');
+            let content = document.getElementById('modalUserAccessContent');
+            if (modal && modal.classList) {
+                modal.classList.add('opacity-0');
+                content.classList.add('scale-95');
+                setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            }
+        }
+
+        function saveUserAccess() {
+            let btn = document.getElementById('btn-save-user-access');
+            let originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Menyimpan...';
+            btn.disabled = true;
+
+            let configData = {
+                'Fitur_Upsell': document.getElementById('ua-upsell').checked,
+                'Fitur_Watermark': document.getElementById('ua-watermark').checked,
+                'Fitur_Grid': document.getElementById('ua-grid').checked,
+                'Fitur_MultiCategory': document.getElementById('ua-category').checked
+            };
+
+            fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'updateUserAccess', targetUser: activeAccessUser, config: configData, currentUser: currentUser })
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                if(data.status === 'success') {
+                    closeModalUserAccess();
+                    Swal.fire({ icon: 'success', title: 'Tersimpan!', text: 'Hak akses fitur fotografer berhasil diperbarui.', timer: 2000, showConfirmButton: false });
+                    loadDataUsers(); // Reload table
+                } else {
+                    Swal.fire('Gagal!', data.message || 'Terjadi kesalahan', 'error');
+                }
+            })
+            .catch(err => {
+                console.error(err);
                 btn.innerHTML = originalHtml;
                 btn.disabled = false;
                 Swal.fire('Error!', 'Gagal terhubung ke server', 'error');
