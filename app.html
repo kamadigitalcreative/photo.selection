@@ -3029,7 +3029,6 @@
                         else { switchAdminTab('projects', true); }
                     }
                 }
-
                 if (currentUser.role === 'Admin') { loadDataUsers(); }
 
                 // Robot ping online/offline
@@ -3834,7 +3833,95 @@
             }
         }
 
-        function deleteProjectPrompt(id) {
+        // ==========================================
+        // FASE 1: GLOBAL SETTINGS
+        // ==========================================
+        function loadGlobalSettings() {
+            let container = document.getElementById('global-config-list');
+            if(!container) return;
+            container.innerHTML = '<div class="text-center py-6 text-gray-400 text-sm font-medium"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat konfigurasi...</div>';
+            
+            fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'getGlobalSettings', currentUser: currentUser })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success' && data.data) {
+                    let html = '';
+                    data.data.forEach(item => {
+                        let isChecked = item.Status ? 'checked' : '';
+                        let friendlyName = item.Fitur.replace('Global_', 'Fitur ');
+                        let icon = 'fa-star';
+                        if(item.Fitur.includes('Watermark')) icon = 'fa-droplet';
+                        if(item.Fitur.includes('Upsell')) icon = 'fa-sack-dollar';
+                        if(item.Fitur.includes('Grid')) icon = 'fa-border-all';
+                        
+                        html += `
+                        <div class="flex items-center justify-between p-4 bg-gray-50 border rounded-xl hover:bg-gray-100 transition-colors">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 shrink-0">
+                                    <i class="fa-solid ${icon}"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-kama-800 text-sm sm:text-base">${friendlyName}</h4>
+                                    <p class="text-xs text-gray-500 mt-0.5">${item.Keterangan}</p>
+                                </div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
+                                <input type="checkbox" class="sr-only peer config-toggle" data-fitur="${item.Fitur}" ${isChecked}>
+                                <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                            </label>
+                        </div>
+                        `;
+                    });
+                    if(html === '') html = '<p class="text-center text-gray-500 text-sm">Belum ada konfigurasi.</p>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<p class="text-center text-red-500 text-sm">Gagal memuat konfigurasi.</p>';
+                }
+            })
+            .catch(err => {
+                container.innerHTML = '<p class="text-center text-red-500 text-sm">Gagal terhubung ke server.</p>';
+            });
+        }
+
+        function saveGlobalSettings() {
+            let toggles = document.querySelectorAll('.config-toggle');
+            let configData = {};
+            toggles.forEach(t => {
+                configData[t.dataset.fitur] = t.checked;
+            });
+            
+            let btn = document.getElementById('btn-save-global-settings');
+            let originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+            btn.disabled = true;
+            
+            fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'saveGlobalConfig', config: configData, currentUser: currentUser })
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                if(data.status === 'success') {
+                    Swal.fire('Tersimpan!', 'Pengaturan global berhasil diperbarui.', 'success');
+                } else {
+                    Swal.fire('Gagal!', data.message || 'Terjadi kesalahan', 'error');
+                }
+            })
+            .catch(err => {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                Swal.fire('Error!', 'Gagal terhubung ke server', 'error');
+            });
+        }
+
+        function deleteProject(id) {
             Swal.fire({ title: 'Hapus Project?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus' })
                 .then(async function (result) {
                     if (result.isConfirmed) {
