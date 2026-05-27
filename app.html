@@ -13,6 +13,57 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
 
+    <!-- ANTI INSPECT ELEMENT & RIGHT CLICK PROTECTION -->
+    <script>
+        // Mencegah Klik Kanan (Context Menu)
+        document.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+        });
+
+        // Mencegah Tombol Keyboard untuk Inspect Element
+        document.addEventListener('keydown', function (e) {
+            // F12
+            if (e.key === 'F12' || e.keyCode === 123) {
+                e.preventDefault();
+            }
+            // Ctrl+Shift+I (Inspect)
+            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
+                e.preventDefault();
+            }
+            // Ctrl+Shift+J (Console)
+            if (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j')) {
+                e.preventDefault();
+            }
+            // Ctrl+Shift+C (Inspect Element)
+            if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
+                e.preventDefault();
+            }
+            // Ctrl+U / Cmd+U (View Source)
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'U' || e.key === 'u')) {
+                e.preventDefault();
+            }
+            // Ctrl+S / Cmd+S (Save Page)
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'S' || e.key === 's')) {
+                e.preventDefault();
+            }
+            // Ctrl+P / Cmd+P (Print Page)
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'P' || e.key === 'p')) {
+                e.preventDefault();
+            }
+        });
+
+        // Anti-DevTools Loop (Memperlambat/Menjebak DevTools jika dipaksa buka)
+        setInterval(function () {
+            var before = new Date().getTime();
+            debugger;
+            var after = new Date().getTime();
+            if (after - before > 100) {
+                // DevTools terbuka (script berhenti sejenak di debugger)
+                document.body.innerHTML = "<div style='display:flex;justify-content:center;align-items:center;height:100vh;background:#f8f9fa;font-family:sans-serif;color:#333;text-align:center;padding:20px;'><div><h1 style='font-size:24px;margin-bottom:10px;'>Akses Ditolak</h1><p>Developer Tools tidak diizinkan di halaman ini demi keamanan.</p></div></div>";
+            }
+        }, 2000);
+    </script>
+
     <div id="previewModal"
         class="fixed inset-0 bg-white z-[9990] hidden flex flex-col transition-opacity duration-300 opacity-0">
         <header
