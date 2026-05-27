@@ -1,15 +1,72 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/login", "destination": "/app.html" },
-    { "source": "/register", "destination": "/app.html" },
-    { "source": "/app", "destination": "/app.html" },
-    { "source": "/dashboard", "destination": "/app.html" },
-    { "source": "/projects(.*)", "destination": "/app.html" },
-    { "source": "/status", "destination": "/app.html" },
-    { "source": "/panduan", "destination": "/app.html" },
-    { "source": "/feedback", "destination": "/app.html" },
-    { "source": "/users", "destination": "/app.html" },
-    { "source": "/admin-feedback", "destination": "/app.html" }
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/login",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/register",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/app",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/admin/dashboard",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/projects(.*)",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/client/monitoring",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/docs/guide",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/support/feedback",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/team/management",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/reports/feedback",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/status",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/panduan",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/feedback",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/users",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/admin-feedback",
+      "destination": "/app.html"
+    }
   ]
 }
