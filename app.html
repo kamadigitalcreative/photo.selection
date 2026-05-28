@@ -1701,7 +1701,6 @@
                                 </div>
                             </div>
                         </div>
-                        </div>
 
                         <!-- UI WATERMARK DINAMIS (PHASE 2) -->
                         <div id="wrapper-watermark" class="mt-2 flex items-center justify-between p-3 bg-blue-50/50 border border-blue-100 rounded-xl hidden">
@@ -4068,6 +4067,52 @@
                 content.classList.add('scale-95');
                 setTimeout(() => { modal.classList.add('hidden'); }, 300);
             }
+        }
+
+        function handleSaveUserAccess(e) {
+            e.preventDefault();
+            if(!activeAccessUser) return;
+            
+            let config = {
+                Fitur_Upsell: document.getElementById('ua-upsell').checked,
+                Fitur_Grid: document.getElementById('ua-grid').checked,
+                Fitur_Watermark: document.getElementById('ua-watermark').checked,
+                Fitur_MultiCategory: document.getElementById('ua-category').checked
+            };
+
+            let btn = document.getElementById('btnSaveUserAccess');
+            let originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Menyimpan...';
+            btn.disabled = true;
+
+            fetch(typeof API_ENDPOINT !== 'undefined' ? API_ENDPOINT : '/api/bridge', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'updateUserAccess',
+                    targetUser: activeAccessUser,
+                    config: config,
+                    currentUser: currentUser
+                })
+            })
+            .then(r => r.json())
+            .then(res => {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                let data = res.data;
+                if(data.status === 'success') {
+                    closeModalUserAccess();
+                    Swal.fire({ icon: 'success', title: 'Tersimpan!', text: 'Hak akses fitur fotografer berhasil diperbarui.', timer: 2000, showConfirmButton: false });
+                    if(typeof loadDataUsers === 'function') loadDataUsers();
+                } else {
+                    Swal.fire('Gagal!', data.message || 'Terjadi kesalahan', 'error');
+                }
+            })
+            .catch(err => {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                Swal.fire('Error!', 'Gagal terhubung ke server', 'error');
+            });
         }
 
         function saveUserAccess() {
