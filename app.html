@@ -4926,11 +4926,14 @@
             clientState.folderHistory = [];
 
             // Eksekusi Phase 2: Watermark Dinamis
+            var btnDownload = document.querySelector('#client-mode-view button[onclick="selectClientMode(\'download\')"]');
             if (projectData.watermarkEnabled) {
                 applyWatermark(projectData.brandName || 'Kama Creative');
+                if (btnDownload) btnDownload.classList.add('hidden');
             } else {
                 document.body.classList.remove('has-watermark');
                 document.body.style.removeProperty('--watermark-bg');
+                if (btnDownload) btnDownload.classList.remove('hidden');
             }
 
             var gMax = document.getElementById('gallery-max');
