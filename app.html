@@ -4969,6 +4969,9 @@
                 if (finalAudioUrl.includes('export=view')) {
                     finalAudioUrl = finalAudioUrl.replace('export=view', 'export=download');
                 }
+                if (finalAudioUrl.includes('drive.google.com')) {
+                    finalAudioUrl = finalAudioUrl.replace('drive.google.com', 'docs.google.com');
+                }
                 bgmAudio.src = finalAudioUrl;
                 // Attempt autoplay
                 var playPromise = bgmAudio.play();
@@ -5449,24 +5452,28 @@
             var btn = document.getElementById('btn-toggle-bgm');
             var icon = btn.querySelector('i');
             if (audio.paused) {
+                if (audio.readyState === 0) {
+                    audio.load();
+                }
                 var playPromise = audio.play();
                 if (playPromise !== undefined) {
                     playPromise.then(() => {
                         icon.className = 'fa-solid fa-music animate-spin';
-                        btn.classList.replace('bg-gray-100', 'bg-pink-50');
-                        btn.classList.replace('text-gray-500', 'text-pink-500');
+                        btn.classList.remove('bg-gray-100', 'text-gray-500');
+                        btn.classList.add('bg-pink-50', 'text-pink-500');
                     }).catch(error => {
-                        console.log('Autoplay blocked:', error);
+                        console.log('Audio play error:', error);
+                        Swal.fire({toast: true, position: 'top-end', icon: 'error', title: 'Gagal memutar musik: ' + error.message, timer: 3000, showConfirmButton: false});
                         icon.className = 'fa-solid fa-music';
-                        btn.classList.replace('bg-pink-50', 'bg-gray-100');
-                        btn.classList.replace('text-pink-500', 'text-gray-500');
+                        btn.classList.remove('bg-pink-50', 'text-pink-500');
+                        btn.classList.add('bg-gray-100', 'text-gray-500');
                     });
                 }
             } else {
                 audio.pause();
                 icon.className = 'fa-solid fa-music';
-                btn.classList.replace('bg-pink-50', 'bg-gray-100');
-                btn.classList.replace('text-pink-500', 'text-gray-500');
+                btn.classList.remove('bg-pink-50', 'text-pink-500');
+                btn.classList.add('bg-gray-100', 'text-gray-500');
             }
         };
         
