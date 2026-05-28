@@ -939,6 +939,8 @@
                     <button onclick="switchAdminTab('status')" id="tab-status" class="nav-tab">Pantau Klien</button>
                     <button onclick="switchAdminTab('panduan')" id="tab-panduan"
                         class="nav-tab photo-only-col hidden">Panduan</button>
+                    <button onclick="switchAdminTab('collage')" id="tab-collage"
+                        class="nav-tab photo-only-col hidden text-fuchsia-600 font-bold"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Premium Collage</button>
                     <button onclick="switchAdminTab('feedback')" id="tab-feedback"
                         class="nav-tab photo-only-col hidden relative">Kirim Saran <span id="badge-feedback"
                             class="absolute -top-1.5 -right-2 bg-red-600 text-white text-[10px] font-bold min-w-[20px] h-[20px] flex items-center justify-center rounded-full border-2 border-white shadow-md hidden">0</span></button>
@@ -1018,6 +1020,8 @@
                         class="nav-tab flex-1 text-xs py-2 text-center px-1">Pantau</button>
                     <button onclick="switchAdminTab('panduan')" id="tab-panduan-m"
                         class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1">Panduan</button>
+                    <button onclick="switchAdminTab('collage')" id="tab-collage-m"
+                        class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1 text-fuchsia-600 font-bold"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
                     <button onclick="switchAdminTab('feedback')" id="tab-feedback-m"
                         class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1 relative">Saran <span
                             id="badge-feedback-m"
@@ -1320,6 +1324,145 @@
                         <div class="overflow-y-auto flex-1 p-4 bg-gray-50/30" id="client-status-container">
                             <div class="text-center py-10 text-gray-400 text-sm font-medium"><i
                                     class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat data...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION: PREMIUM COLLAGE (FASE 4) -->
+                <div id="section-collage" class="hidden flex-1 flex-col fade-in h-full bg-white relative">
+                    <!-- Header Bar -->
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-b border-gray-100 shrink-0 gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-fuchsia-100 text-fuchsia-600 flex items-center justify-center shadow-sm border border-fuchsia-200">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800 leading-none">Premium Collage</h2>
+                                <p class="text-xs text-gray-500 mt-1">Branding Estetik Fotografer</p>
+                            </div>
+                        </div>
+                        <div class="flex w-full sm:w-auto items-center gap-3">
+                            <!-- Project Selector -->
+                            <div class="relative w-full sm:w-64">
+                                <i class="fa-solid fa-folder-open absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                <select id="collageProjectSelector" onchange="loadCollageProjectData()" class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-fuchsia-500 outline-none text-sm appearance-none font-semibold text-gray-700 cursor-pointer transition-colors shadow-sm">
+                                    <option value="">-- Pilih Project Klien --</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Split Screen Workspace -->
+                    <div class="flex flex-col sm:flex-row flex-1 overflow-hidden">
+                        <!-- Left Sidebar: Controls -->
+                        <div class="w-full sm:w-80 bg-gray-50 border-r border-gray-200 flex-shrink-0 flex flex-col h-[40vh] sm:h-auto overflow-hidden">
+                            <!-- Tabs untuk sidebar -->
+                            <div class="flex border-b border-gray-200 bg-white shrink-0">
+                                <button onclick="switchCollageSidebar('templates')" id="tab-c-templates" class="flex-1 py-3 text-xs font-bold border-b-2 border-fuchsia-500 text-fuchsia-600 transition-colors">Layout & Desain</button>
+                                <button onclick="switchCollageSidebar('photos')" id="tab-c-photos" class="flex-1 py-3 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition-colors">Pilih Foto</button>
+                            </div>
+
+                            <div class="flex-1 overflow-y-auto custom-scrollbar p-5 pb-16">
+                                <!-- TAB: Layout & Desain -->
+                                <div id="c-panel-templates" class="space-y-6 block">
+                                    
+                                    <!-- Templates -->
+                                    <div>
+                                        <h4 class="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wide">Pilih Template</h4>
+                                        <div class="grid grid-cols-2 gap-2" id="collageTemplateGrid">
+                                            <!-- Di-render oleh JS -->
+                                        </div>
+                                    </div>
+                                    <hr class="border-gray-200">
+                                    
+                                    <!-- Canvas Size -->
+                                    <div>
+                                        <h4 class="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wide">Custom Canvas Size</h4>
+                                        <div class="flex gap-2 items-center mb-2">
+                                            <input type="number" id="cWidth" placeholder="Lebar" value="10" class="w-16 text-xs border border-gray-300 rounded px-2 py-1.5 outline-none">
+                                            <span class="text-xs text-gray-400">x</span>
+                                            <input type="number" id="cHeight" placeholder="Tinggi" value="15" class="w-16 text-xs border border-gray-300 rounded px-2 py-1.5 outline-none">
+                                            <select id="cUnit" class="text-xs border border-gray-300 rounded px-1 py-1.5 outline-none bg-white">
+                                                <option value="cm">cm</option>
+                                                <option value="in">inch</option>
+                                                <option value="px">px</option>
+                                            </select>
+                                        </div>
+                                        <button onclick="applyCustomCanvasSize()" class="w-full bg-gray-800 text-white text-xs font-bold py-1.5 rounded-lg hover:bg-black transition-colors">Terapkan Ukuran</button>
+                                    </div>
+                                    <hr class="border-gray-200">
+
+                                    <!-- Typography -->
+                                    <div>
+                                        <h4 class="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wide">Typography</h4>
+                                        <div class="space-y-3">
+                                            <div>
+                                                <label class="text-[10px] text-gray-500 font-semibold mb-1 block">Teks Utama</label>
+                                                <input type="text" id="collageTextMain" value="VIBRANCE" oninput="requestRenderCollage()" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:border-fuchsia-500 outline-none">
+                                            </div>
+                                            <div>
+                                                <label class="text-[10px] text-gray-500 font-semibold mb-1 block">Teks Sub (Tahun/Pasangan)</label>
+                                                <input type="text" id="collageTextSub" value="Apurva & Punya" oninput="requestRenderCollage()" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:border-fuchsia-500 outline-none">
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label class="text-[10px] text-gray-500 font-semibold mb-1 block">Font Style</label>
+                                                    <select id="collageFont" onchange="requestRenderCollage()" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-2 focus:border-fuchsia-500 outline-none">
+                                                        <option value="Playfair Display">Playfair Display</option>
+                                                        <option value="Montserrat">Montserrat</option>
+                                                        <option value="Cormorant Garamond">Cormorant</option>
+                                                        <option value="Inter">Inter</option>
+                                                        <option value="Dancing Script">Dancing Script</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="text-[10px] text-gray-500 font-semibold mb-1 block">Warna Teks</label>
+                                                    <input type="color" id="collageTextColor" value="#2a2a2a" oninput="requestRenderCollage()" class="w-full h-[34px] rounded-lg cursor-pointer border border-gray-200 p-0.5">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- TAB: Photos -->
+                                <div id="c-panel-photos" class="hidden space-y-4">
+                                    <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg flex items-start gap-2">
+                                        <i class="fa-solid fa-triangle-exclamation text-yellow-600 mt-0.5 text-xs"></i>
+                                        <p class="text-[10px] text-yellow-700 leading-tight">
+                                            <strong>Soft Limit 16 Foto.</strong> Anda bisa memilih foto manapun dari project ini. Memilih banyak foto resolusi tinggi bisa menyebabkan proses lambat di HP jadul.
+                                        </p>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-xs font-bold text-gray-600">Dipilih: <span id="cSelectedCount" class="text-fuchsia-600 font-black text-sm">0</span>/16</span>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2" id="collagePhotoPicker">
+                                        <div class="text-xs text-gray-400 text-center col-span-3 py-4 italic">Pilih project terlebih dahulu di atas.</div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Right Canvas Workspace -->
+                        <div class="flex-1 bg-gray-200 flex flex-col relative overflow-hidden" id="collageCanvasWrapper">
+                            
+                            <div class="flex-1 flex items-center justify-center p-4 sm:p-10 overflow-auto custom-scrollbar relative">
+                                <!-- Interactive Canvas Area -->
+                                <div id="collageInteractiveArea" class="relative shadow-2xl transition-all duration-300 bg-white shrink-0 mx-auto" style="width: 360px; height: 640px; min-width: 360px;">
+                                    <canvas id="collageCanvas" class="w-full h-full absolute inset-0 touch-none pointer-events-none"></canvas>
+                                    <div id="collageOverlays" class="absolute inset-0 z-10 w-full h-full cursor-move touch-none" 
+                                        onmousedown="startPanCollage(event)" onmousemove="panCollage(event)" onmouseup="endPanCollage(event)" onmouseleave="endPanCollage(event)" 
+                                        ontouchstart="startPanCollageTouch(event)" ontouchmove="panCollageTouch(event)" ontouchend="endPanCollage(event)"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="absolute bottom-6 right-6 sm:bottom-8 sm:right-8 z-20">
+                                <button onclick="downloadCollage()" id="btnDownloadCollage" class="px-5 py-3 sm:px-8 sm:py-4 bg-kama-800 text-white rounded-2xl shadow-2xl hover:bg-black hover:scale-105 transition-all font-bold flex items-center gap-3 border-2 border-white/20">
+                                    <i class="fa-solid fa-download text-lg"></i> <span class="hidden sm:inline">Download Karya (HD)</span>
+                                </button>
+                            </div>
+                            
                         </div>
                     </div>
                 </div>
@@ -2053,115 +2196,7 @@
         </div>
     </div>
 
-    <!-- UI PREMIUM COLLAGE MAKER (PHASE 3) -->
-    <div id="collageMakerModal" class="fixed inset-0 z-[100000] hidden bg-gray-900/90 backdrop-blur-md flex items-center justify-center opacity-0 transition-opacity duration-300">
-        <div class="bg-white w-full h-full sm:w-[95vw] sm:h-[90vh] sm:rounded-2xl flex flex-col overflow-hidden shadow-2xl scale-95 transition-transform duration-300" id="collageMakerContent">
-            <!-- Header -->
-            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 flex-shrink-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-fuchsia-100 text-fuchsia-600 flex items-center justify-center">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-gray-800 text-lg">Premium Grid Story</h3>
-                        <p class="text-xs text-gray-500">Pamerkan portofolio Anda ke Instagram</p>
-                    </div>
-                </div>
-                <button onclick="closeCollageMaker()" class="text-gray-400 hover:text-gray-800 bg-white shadow-sm border border-gray-200 w-9 h-9 rounded-full flex items-center justify-center transition-all">
-                    <i class="fa-solid fa-times text-lg"></i>
-                </button>
-            </div>
-
-            <!-- Body -->
-            <div class="flex flex-col sm:flex-row flex-1 overflow-hidden bg-gray-100">
-                <!-- Left Sidebar: Controls -->
-                <div class="w-full sm:w-80 bg-white border-r border-gray-200 p-5 overflow-y-auto custom-scrollbar flex-shrink-0 flex flex-col gap-6">
-                    
-                    <!-- 1. Pilih Foto -->
-                    <div>
-                        <h4 class="text-sm font-bold text-gray-700 mb-3 flex justify-between items-center">
-                            <span>1. Pilih Foto (Maks 4)</span>
-                            <span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded-md" id="collagePhotoCount">0/4</span>
-                        </h4>
-                        <div class="grid grid-cols-3 gap-2" id="collagePhotoPicker">
-                            <div class="text-xs text-gray-400 text-center col-span-3 py-4">Memuat foto...</div>
-                        </div>
-                    </div>
-
-                    <hr class="border-gray-100">
-
-                    <!-- 2. Pengaturan Rasio -->
-                    <div>
-                        <h4 class="text-sm font-bold text-gray-700 mb-3">2. Rasio Kanvas</h4>
-                        <div class="grid grid-cols-4 gap-2">
-                            <button onclick="setCollageRatio('1:1')" class="ratio-btn border-2 border-gray-200 rounded-lg p-2 flex flex-col items-center justify-center gap-1 hover:border-fuchsia-300 hover:bg-fuchsia-50 transition-colors" data-ratio="1:1">
-                                <div class="w-6 h-6 border-2 border-current rounded-sm"></div>
-                                <span class="text-[10px] font-semibold text-gray-600">Feed</span>
-                            </button>
-                            <button onclick="setCollageRatio('4:5')" class="ratio-btn border-2 border-gray-200 rounded-lg p-2 flex flex-col items-center justify-center gap-1 hover:border-fuchsia-300 hover:bg-fuchsia-50 transition-colors" data-ratio="4:5">
-                                <div class="w-5 h-[26px] border-2 border-current rounded-sm"></div>
-                                <span class="text-[10px] font-semibold text-gray-600">Portrait</span>
-                            </button>
-                            <button onclick="setCollageRatio('9:16')" class="ratio-btn border-2 border-fuchsia-500 bg-fuchsia-50 text-fuchsia-600 rounded-lg p-2 flex flex-col items-center justify-center gap-1 transition-colors" data-ratio="9:16">
-                                <div class="w-4 h-7 border-2 border-current rounded-sm"></div>
-                                <span class="text-[10px] font-semibold text-current">Story</span>
-                            </button>
-                            <button onclick="setCollageRatio('16:9')" class="ratio-btn border-2 border-gray-200 rounded-lg p-2 flex flex-col items-center justify-center gap-1 hover:border-fuchsia-300 hover:bg-fuchsia-50 transition-colors" data-ratio="16:9">
-                                <div class="w-7 h-4 border-2 border-current rounded-sm"></div>
-                                <span class="text-[10px] font-semibold text-gray-600">YT/X</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <hr class="border-gray-100">
-
-                    <!-- 3. Typography Engine -->
-                    <div>
-                        <h4 class="text-sm font-bold text-gray-700 mb-3">3. Typography & Teks</h4>
-                        
-                        <div class="space-y-3">
-                            <div>
-                                <label class="text-[11px] text-gray-500 font-semibold mb-1 block">Teks Kolase</label>
-                                <input type="text" id="collageText" value="Our Moments" oninput="requestRenderCollage()" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:border-fuchsia-500 outline-none transition-colors">
-                            </div>
-                            
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="text-[11px] text-gray-500 font-semibold mb-1 block">Font Style</label>
-                                    <select id="collageFont" onchange="requestRenderCollage()" class="w-full text-sm border border-gray-200 rounded-lg px-2 py-2 focus:border-fuchsia-500 outline-none">
-                                        <option value="Playfair Display">Playfair</option>
-                                        <option value="Montserrat">Montserrat</option>
-                                        <option value="Cormorant Garamond">Cormorant</option>
-                                        <option value="Inter">Inter</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="text-[11px] text-gray-500 font-semibold mb-1 block">Warna Teks</label>
-                                    <input type="color" id="collageTextColor" value="#2a2a2a" oninput="requestRenderCollage()" class="w-full h-[38px] rounded-lg cursor-pointer border border-gray-200 p-1">
-                                </div>
-                            </div>
-                        </div>
-                        <p class="text-[10px] text-gray-400 mt-2">*Tips: Geser foto di dalam kanvas untuk mengatur posisi potong (cropping).</p>
-                    </div>
-                </div>
-
-                <!-- Right Canvas Preview -->
-                <div class="flex-1 bg-gray-100 flex items-center justify-center relative overflow-hidden p-6 select-none" id="collageCanvasWrapper">
-                    <div id="collageInteractiveArea" class="relative shadow-2xl transition-all duration-300 bg-white flex-shrink-0" style="width: 360px; height: 640px;">
-                        <canvas id="collageCanvas" class="w-full h-full absolute inset-0 touch-none pointer-events-none"></canvas>
-                        <!-- Interactive Overlays (Pan Areas) -->
-                        <div id="collageOverlays" class="absolute inset-0 z-10 w-full h-full cursor-move touch-none" onmousedown="startPanCollage(event)" onmousemove="panCollage(event)" onmouseup="endPanCollage(event)" onmouseleave="endPanCollage(event)" ontouchstart="startPanCollageTouch(event)" ontouchmove="panCollageTouch(event)" ontouchend="endPanCollage(event)"></div>
-                    </div>
-                    
-                    <div class="absolute bottom-6 right-6">
-                        <button onclick="downloadCollage()" id="btnDownloadCollage" class="px-6 py-3 bg-gray-900 text-white rounded-xl shadow-xl hover:bg-black hover:scale-105 transition-all font-bold flex items-center gap-2">
-                            <i class="fa-solid fa-download"></i> Download Karya
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- OLD COLLAGE MODAL REMOVED - NOW IN TAB -->
 
     <script>
         console.log("App Initialized: Safe UI Elements with Lottie Loader");
@@ -3203,6 +3238,7 @@
                     '/projects': 'projects',
                     '/users': 'users',
                     '/status': 'status',
+                    '/collage': 'collage',
                     '/admin-feedback': 'admin-feedback',
                     '/panduan': 'panduan',
                     '/feedback': 'feedback'
@@ -3243,7 +3279,7 @@
                     for (var p = 0; p < photoCols.length; p++) { if (photoCols[p] && photoCols[p].classList) photoCols[p].classList.remove('hidden'); } // Tampilkan khusus fotografer
 
                     // Buka tab sesuai link, jika link tidak dikenali, kembali ke projects
-                    var validPhotoTabs = ['projects', 'status', 'panduan', 'feedback'];
+                    var validPhotoTabs = ['projects', 'status', 'panduan', 'feedback', 'collage'];
                     if (currentTab === 'sortirlokal') {
                         showView('local-sorter-view');
                     } else {
@@ -3500,6 +3536,7 @@
             var sectionFeedback = document.getElementById('section-feedback');
             var sectionAdminFeedback = document.getElementById('section-admin-feedback');
             var sectionPengaturan = document.getElementById('section-pengaturan');
+            var sectionCollage = document.getElementById('section-collage');
 
             if (sectionDash && sectionDash.classList) { sectionDash.classList.remove('flex'); sectionDash.classList.add('hidden'); }
             if (sectionProj && sectionProj.classList) { sectionProj.classList.remove('flex'); sectionProj.classList.add('hidden'); }
@@ -3509,6 +3546,7 @@
             if (sectionFeedback && sectionFeedback.classList) { sectionFeedback.classList.remove('flex'); sectionFeedback.classList.add('hidden'); }
             if (sectionAdminFeedback && sectionAdminFeedback.classList) { sectionAdminFeedback.classList.remove('flex'); sectionAdminFeedback.classList.add('hidden'); }
             if (sectionPengaturan && sectionPengaturan.classList) { sectionPengaturan.classList.remove('flex'); sectionPengaturan.classList.add('hidden'); }
+            if (sectionCollage && sectionCollage.classList) { sectionCollage.classList.remove('flex'); sectionCollage.classList.add('hidden'); }
 
             // FIX: Matikan robot setiap kali pindah menu agar hemat memori
             clearInterval(autoRefreshInterval);
@@ -3544,6 +3582,9 @@
                 // secara diam-diam. Menghapus ini mencegah aplikasi menembak server 2x lipat.
             } else if (tabId === 'panduan') {
                 if (sectionPanduan) { sectionPanduan.classList.remove('hidden'); sectionPanduan.classList.add('flex'); }
+            } else if (tabId === 'collage') {
+                if (sectionCollage) { sectionCollage.classList.remove('hidden'); sectionCollage.classList.add('flex'); }
+                if (typeof loadCollageProjectsList === 'function') loadCollageProjectsList();
             } else if (tabId === 'feedback') {
                 if (sectionFeedback) { sectionFeedback.classList.remove('hidden'); sectionFeedback.classList.add('flex'); }
                 loadAdminFeedback();
@@ -6209,340 +6250,521 @@
 
     <!-- SCRIPT PREMIUM COLLAGE MAKER (PHASE 3) -->
     <script>
-        let collageState = {
-            photos: [],
-            selected: [],
-            ratio: '9:16', 
-            text: 'Our Moments',
-            font: 'Playfair Display',
-            color: '#2a2a2a',
-            panOffsets: [ {x:0,y:0}, {x:0,y:0}, {x:0,y:0}, {x:0,y:0} ],
-            loadedImages: [],
-            activePanIndex: -1,
-            isPanning: false,
-            startX: 0,
-            startY: 0
-        };
+        // ==========================================
+// PREMIUM COLLAGE ENGINE V2 (FASE 4)
+// ==========================================
 
-        async function openCollageMaker(projectName, projectToken) {
-            var modal = document.getElementById('collageMakerModal');
-            var content = document.getElementById('collageMakerContent');
-            modal.classList.remove('hidden');
-            setTimeout(function() {
-                modal.classList.remove('opacity-0');
-                content.classList.remove('scale-95');
-            }, 10);
+let collageState = {
+    photos: [],       // All photos in project
+    selected: [],     // Selected URLs
+    templateId: 'grid', // Selected template
+    
+    // Canvas config
+    canvasW: 1080,
+    canvasH: 1920,
+    unit: 'px',
+    
+    // Typography
+    textMain: 'VIBRANCE',
+    textSub: 'Apurva & Punya',
+    font: 'Playfair Display',
+    color: '#2a2a2a',
+    
+    // Panning & Interaction
+    panOffsets: [], // Array of {x,y,zoom}
+    loadedImages: [], // Cached Image objects
+    activePanIndex: -1,
+    isPanning: false,
+    startX: 0,
+    startY: 0
+};
 
-            document.getElementById('collagePhotoPicker').innerHTML = '<div class="text-xs text-gray-400 text-center col-span-3 py-4"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat foto...</div>';
-            collageState.selected = [];
-            collageState.photos = [];
-            collageState.panOffsets = [ {x:0,y:0}, {x:0,y:0}, {x:0,y:0}, {x:0,y:0} ];
-            
-            try {
-                const response = await fetch(API_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'getProjectForClient', token: projectToken })
-                });
-                const res = await response.json();
-                if (res.status === 'success' && res.data.success) {
-                    let selFiles = [];
-                    try { selFiles = JSON.parse(res.data.project.selectedFiles || "[]"); } catch(e){}
-                    
-                    if(selFiles.length === 0) {
-                        document.getElementById('collagePhotoPicker').innerHTML = '<div class="text-xs text-red-400 text-center col-span-3 py-4 font-bold">Klien belum memilih foto satupun.</div>';
-                        return;
-                    }
-                    
-                    collageState.photos = selFiles;
-                    renderCollagePhotoPicker();
-                } else {
-                    document.getElementById('collagePhotoPicker').innerHTML = '<div class="text-xs text-red-400 text-center col-span-3 py-4">Gagal memuat data.</div>';
-                }
-            } catch(e) {
-                document.getElementById('collagePhotoPicker').innerHTML = '<div class="text-xs text-red-400 text-center col-span-3 py-4">Koneksi terputus.</div>';
-            }
-        }
+// --- TEMPLATE REGISTRY ---
+const collageTemplates = {
+    'grid': {
+        name: 'Smart Masonry Grid',
+        icon: 'fa-table-cells',
+        maxPhotos: 16,
+        calculateLayout: function(w, h, count) {
+            // Auto grid based on count
+            let boxes = [];
+            let spacing = 20;
+            let padding = 40;
+            let contentW = w - (padding * 2);
+            let contentH = h - (padding * 2) - 100; // Leave bottom for text
 
-        function renderCollagePhotoPicker() {
-            let container = document.getElementById('collagePhotoPicker');
-            container.innerHTML = '';
-            
-            collageState.photos.forEach((photo, idx) => {
-                let div = document.createElement('div');
-                let isSelected = collageState.selected.includes(photo.url);
-                div.className = "relative aspect-square bg-gray-200 rounded-lg overflow-hidden cursor-pointer border-2 transition-all " + (isSelected ? "border-fuchsia-500 opacity-100" : "border-transparent opacity-60 hover:opacity-100");
-                
-                let thumbUrl = photo.url.replace('=s0', '=w300');
-                
-                div.innerHTML = `
-                    <img src="${thumbUrl}" class="w-full h-full object-cover">
-                    ${isSelected ? '<div class="absolute inset-0 bg-fuchsia-500/20 flex items-center justify-center"><i class="fa-solid fa-check text-white drop-shadow-md text-xl"></i></div>' : ''}
-                `;
-                
-                div.onclick = function() {
-                    let selIdx = collageState.selected.indexOf(photo.url);
-                    if (selIdx > -1) {
-                        collageState.selected.splice(selIdx, 1);
-                    } else {
-                        if(collageState.selected.length >= 4) {
-                            Swal.fire({toast: true, position: 'top', icon: 'warning', text: 'Maksimal 4 foto untuk kolase.', showConfirmButton: false, timer: 2000});
-                            return;
-                        }
-                        collageState.selected.push(photo.url);
-                    }
-                    document.getElementById('collagePhotoCount').innerText = collageState.selected.length + "/4";
-                    renderCollagePhotoPicker(); 
-                    requestRenderCollage(); 
-                };
-                
-                container.appendChild(div);
-            });
-        }
-
-        function closeCollageMaker() {
-            var modal = document.getElementById('collageMakerModal');
-            var content = document.getElementById('collageMakerContent');
-            modal.classList.add('opacity-0');
-            content.classList.add('scale-95');
-            setTimeout(function() {
-                modal.classList.add('hidden');
-                let canvas = document.getElementById('collageCanvas');
-                let ctx = canvas.getContext('2d');
-                ctx.clearRect(0,0,canvas.width,canvas.height);
-            }, 300);
-        }
-
-        function setCollageRatio(ratio) {
-            collageState.ratio = ratio;
-            document.querySelectorAll('.ratio-btn').forEach(btn => {
-                if(btn.dataset.ratio === ratio) {
-                    btn.classList.add('border-fuchsia-500', 'bg-fuchsia-50', 'text-fuchsia-600');
-                    btn.classList.remove('border-gray-200', 'text-gray-600');
-                    btn.querySelector('span').classList.replace('text-gray-600', 'text-current');
-                } else {
-                    btn.classList.remove('border-fuchsia-500', 'bg-fuchsia-50', 'text-fuchsia-600');
-                    btn.classList.add('border-gray-200', 'text-gray-600');
-                    btn.querySelector('span').classList.replace('text-current', 'text-gray-600');
-                }
-            });
-            
-            let ia = document.getElementById('collageInteractiveArea');
-            if(ratio === '9:16') { ia.style.width = '360px'; ia.style.height = '640px'; }
-            if(ratio === '4:5') { ia.style.width = '400px'; ia.style.height = '500px'; }
-            if(ratio === '1:1') { ia.style.width = '450px'; ia.style.height = '450px'; }
-            if(ratio === '16:9') { ia.style.width = '640px'; ia.style.height = '360px'; }
-            
-            requestRenderCollage();
-        }
-
-        let renderCollageDebounce = null;
-        function requestRenderCollage() {
-            if(renderCollageDebounce) clearTimeout(renderCollageDebounce);
-            renderCollageDebounce = setTimeout(renderCollagePreview, 150);
-        }
-
-        async function renderCollagePreview() {
-            collageState.text = document.getElementById('collageText').value;
-            collageState.font = document.getElementById('collageFont').value;
-            collageState.color = document.getElementById('collageTextColor').value;
-            
-            let canvas = document.getElementById('collageCanvas');
-            let ctx = canvas.getContext('2d');
-            
-            let baseWidth = 1080;
-            let baseHeight = 1080;
-            
-            if(collageState.ratio === '9:16') { baseHeight = 1920; }
-            if(collageState.ratio === '4:5') { baseHeight = 1350; }
-            if(collageState.ratio === '16:9') { baseHeight = 608; }
-            
-            canvas.width = baseWidth;
-            canvas.height = baseHeight;
-            
-            ctx.fillStyle = '#F4F4F0'; 
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            if(collageState.selected.length === 0) {
-                ctx.fillStyle = '#cccccc';
-                ctx.font = '30px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText('Pilih foto di sebelah kiri', canvas.width/2, canvas.height/2);
-                document.getElementById('collageOverlays').innerHTML = '';
-                return;
-            }
-
-            let promises = collageState.selected.map(url => {
-                return new Promise((resolve) => {
-                    let img = new Image();
-                    img.crossOrigin = "Anonymous";
-                    img.onload = () => resolve(img);
-                    img.onerror = () => resolve(null);
-                    img.src = url.replace('=s0', '=w1000'); 
-                });
-            });
-            
-            let imgs = await Promise.all(promises);
-            collageState.loadedImages = imgs.filter(i => i !== null);
-            
-            let count = collageState.loadedImages.length;
-            let layoutBoxes = [];
-            
-            let padding = 60;
-            let spacing = 30;
-            let textSpace = 200; 
-            let contentH = canvas.height - padding - textSpace;
-            let contentW = canvas.width - padding*2;
-            
-            if(count === 1) {
-                layoutBoxes.push({ x: padding, y: padding, w: contentW, h: contentH });
-            } 
-            else if(count === 2) {
-                if(collageState.ratio === '16:9' || collageState.ratio === '1:1') {
-                    let boxW = (contentW - spacing) / 2;
-                    layoutBoxes.push({ x: padding, y: padding, w: boxW, h: contentH });
-                    layoutBoxes.push({ x: padding + boxW + spacing, y: padding, w: boxW, h: contentH });
-                } else {
-                    let boxH = (contentH - spacing) / 2;
-                    layoutBoxes.push({ x: padding, y: padding, w: contentW, h: boxH });
-                    layoutBoxes.push({ x: padding, y: padding + boxH + spacing, w: contentW, h: boxH });
-                }
-            }
-            else if(count === 3) {
+            if (count === 1) {
+                boxes.push({ x: padding, y: padding, w: contentW, h: contentH });
+            } else if (count === 2) {
                 let boxH = (contentH - spacing) / 2;
-                layoutBoxes.push({ x: padding, y: padding, w: contentW, h: boxH }); 
+                boxes.push({ x: padding, y: padding, w: contentW, h: boxH });
+                boxes.push({ x: padding, y: padding + boxH + spacing, w: contentW, h: boxH });
+            } else if (count === 3) {
+                let boxH = (contentH - spacing) / 2;
+                boxes.push({ x: padding, y: padding, w: contentW, h: boxH });
                 let bottomW = (contentW - spacing) / 2;
-                layoutBoxes.push({ x: padding, y: padding + boxH + spacing, w: bottomW, h: boxH }); 
-                layoutBoxes.push({ x: padding + bottomW + spacing, y: padding + boxH + spacing, w: bottomW, h: boxH }); 
-            }
-            else if(count === 4) {
+                boxes.push({ x: padding, y: padding + boxH + spacing, w: bottomW, h: boxH });
+                boxes.push({ x: padding + bottomW + spacing, y: padding + boxH + spacing, w: bottomW, h: boxH });
+            } else {
+                // Generic Grid 2 Columns
+                let rows = Math.ceil(count / 2);
                 let boxW = (contentW - spacing) / 2;
-                let boxH = (contentH - spacing) / 2;
-                layoutBoxes.push({ x: padding, y: padding, w: boxW, h: boxH }); 
-                layoutBoxes.push({ x: padding + boxW + spacing, y: padding, w: boxW, h: boxH }); 
-                layoutBoxes.push({ x: padding, y: padding + boxH + spacing, w: boxW, h: boxH }); 
-                layoutBoxes.push({ x: padding + boxW + spacing, y: padding + boxH + spacing, w: boxW, h: boxH }); 
+                let boxH = (contentH - (spacing * (rows-1))) / rows;
+                for(let i=0; i<count; i++) {
+                    let r = Math.floor(i / 2);
+                    let c = i % 2;
+                    // If last item in odd count, span full width
+                    if (i === count - 1 && count % 2 !== 0) {
+                        boxes.push({ x: padding, y: padding + (r * (boxH + spacing)), w: contentW, h: boxH });
+                    } else {
+                        boxes.push({ x: padding + (c * (boxW + spacing)), y: padding + (r * (boxH + spacing)), w: boxW, h: boxH });
+                    }
+                }
             }
-
-            let overlayHtml = '';
-            for(let i=0; i<count; i++) {
-                let img = collageState.loadedImages[i];
-                let box = layoutBoxes[i];
-                
-                let scale = Math.max(box.w / img.width, box.h / img.height);
-                let drawW = img.width * scale;
-                let drawH = img.height * scale;
-                
-                let drawX = box.x + (box.w - drawW) / 2;
-                let drawY = box.y + (box.h - drawH) / 2;
-                
-                drawX += collageState.panOffsets[i].x;
-                drawY += collageState.panOffsets[i].y;
-                
-                let minX = box.x + box.w - drawW;
-                let maxX = box.x;
-                let minY = box.y + box.h - drawH;
-                let maxY = box.y;
-                
-                drawX = Math.max(minX, Math.min(maxX, drawX));
-                drawY = Math.max(minY, Math.min(maxY, drawY));
-                
-                collageState.panOffsets[i].x = drawX - (box.x + (box.w - drawW) / 2);
-                collageState.panOffsets[i].y = drawY - (box.y + (box.h - drawH) / 2);
-                
-                ctx.save();
-                ctx.beginPath();
-                ctx.rect(box.x, box.y, box.w, box.h);
-                ctx.clip();
-                ctx.drawImage(img, drawX, drawY, drawW, drawH);
-                ctx.restore();
-                
-                let pctX = (box.x / canvas.width) * 100;
-                let pctY = (box.y / canvas.height) * 100;
-                let pctW = (box.w / canvas.width) * 100;
-                let pctH = (box.h / canvas.height) * 100;
-                
-                overlayHtml += `<div data-idx="${i}" class="absolute pointer-events-auto" style="left:${pctX}%; top:${pctY}%; width:${pctW}%; height:${pctH}%;"></div>`;
-            }
-            
-            document.getElementById('collageOverlays').innerHTML = overlayHtml;
-
+            return boxes;
+        },
+        drawText: function(ctx, w, h) {
             ctx.fillStyle = collageState.color;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
+            let textY = h - 60;
             
-            ctx.font = `600 60px "${collageState.font}", serif, sans-serif`;
-            let textY = canvas.height - (textSpace / 2);
-            ctx.fillText(collageState.text, canvas.width/2, textY - 20);
+            ctx.font = `800 50px "${collageState.font}", serif, sans-serif`;
+            ctx.fillText(collageState.textMain, w/2, textY - 25);
             
-            let brandText = window.appBranding && window.appBranding.name ? window.appBranding.name : "Kama Creative";
             ctx.font = `400 24px "Inter", sans-serif`;
-            ctx.globalAlpha = 0.5;
-            ctx.fillText(brandText, canvas.width/2, textY + 40);
+            ctx.globalAlpha = 0.6;
+            ctx.fillText(collageState.textSub, w/2, textY + 25);
             ctx.globalAlpha = 1.0;
         }
-
-        // --- PANNING LOGIC ---
-        function getEventPos(e) {
-            if(e.touches && e.touches.length > 0) return {x: e.touches[0].clientX, y: e.touches[0].clientY};
-            return {x: e.clientX, y: e.clientY};
-        }
-
-        function handlePanStart(e) {
-            if(!e.target.dataset.idx) return;
-            collageState.activePanIndex = parseInt(e.target.dataset.idx);
-            collageState.isPanning = true;
-            let pos = getEventPos(e);
-            collageState.startX = pos.x;
-            collageState.startY = pos.y;
-        }
-
-        function handlePanMove(e) {
-            if(!collageState.isPanning || collageState.activePanIndex === -1) return;
-            let pos = getEventPos(e);
-            let dx = pos.x - collageState.startX;
-            let dy = pos.y - collageState.startY;
+    },
+    'vibrance': {
+        name: 'Vibrance (Modern Blocks)',
+        icon: 'fa-border-all',
+        maxPhotos: 5,
+        calculateLayout: function(w, h, count) {
+            let padding = 80;
+            let boxes = [];
+            // Specific 5-photo layout mimicking "Eli Meyer Studio"
+            if (count >= 1) boxes.push({x: w*0.45, y: padding, w: w*0.45, h: h*0.35}); // Top Right Main
+            if (count >= 2) boxes.push({x: padding, y: h*0.2, w: w*0.35, h: h*0.25}); // Top Left Small
+            if (count >= 3) boxes.push({x: padding, y: h*0.48, w: w*0.45, h: h*0.35}); // Bottom Left Main
+            if (count >= 4) boxes.push({x: w*0.58, y: h*0.45, w: w*0.35, h: h*0.25}); // Middle Right Small
+            if (count >= 5) boxes.push({x: w*0.5, y: h*0.75, w: w*0.35, h: h*0.20}); // Bottom Right Small
             
-            let domRect = document.getElementById('collageInteractiveArea').getBoundingClientRect();
-            let canvas = document.getElementById('collageCanvas');
-            let scaleX = canvas.width / domRect.width;
-            let scaleY = canvas.height / domRect.height;
+            return boxes;
+        },
+        drawText: function(ctx, w, h) {
+            // Text is bottom left
+            ctx.fillStyle = collageState.color;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'bottom';
             
-            collageState.panOffsets[collageState.activePanIndex].x += dx * scaleX;
-            collageState.panOffsets[collageState.activePanIndex].y += dy * scaleY;
+            ctx.font = `500 36px "${collageState.font}", serif, sans-serif`;
+            ctx.fillText(collageState.textMain.split('').join('  '), 80, h - 80);
             
-            collageState.startX = pos.x;
-            collageState.startY = pos.y;
+            ctx.font = `300 24px "Inter", sans-serif`;
+            ctx.globalAlpha = 0.6;
+            ctx.fillText(collageState.textSub.split('').join('  '), 100, h - 40);
+            ctx.globalAlpha = 1.0;
             
-            renderCollagePreview();
+            // Draw decorative beige blocks (signature of Vibrance)
+            ctx.fillStyle = '#e8dfd8'; // Beige
+            ctx.fillRect(w*0.35, padding, w*0.08, h*0.15); // Top dec block
+            ctx.fillRect(padding, h - 150, w*0.35, 30); // Bottom dec block
         }
-
-        function handlePanEnd() {
-            collageState.isPanning = false;
-            collageState.activePanIndex = -1;
+    },
+    'memories': {
+        name: 'The Old Memories',
+        icon: 'fa-film',
+        maxPhotos: 3,
+        calculateLayout: function(w, h, count) {
+            let boxes = [];
+            // 3-photo cinematic
+            if (count >= 1) boxes.push({x: 0, y: 0, w: w, h: h*0.33});
+            if (count >= 2) boxes.push({x: 0, y: h*0.33, w: w, h: h*0.34});
+            if (count >= 3) boxes.push({x: 0, y: h*0.67, w: w, h: h*0.33});
+            return boxes;
+        },
+        drawText: function(ctx, w, h) {
+            // White overlapping text in center
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Add dark gradient overlay for text readability
+            let grad = ctx.createLinearGradient(0, h/2 - 100, 0, h/2 + 100);
+            grad.addColorStop(0, 'rgba(0,0,0,0)');
+            grad.addColorStop(0.5, 'rgba(0,0,0,0.6)');
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, h/2 - 150, w, 300);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `italic 700 80px "${collageState.font}", serif`;
+            ctx.fillText(collageState.textMain, w/2, h/2 - 20);
+            
+            ctx.font = `300 24px "Inter", sans-serif`;
+            ctx.letterSpacing = "10px";
+            ctx.fillText(collageState.textSub.toUpperCase(), w/2, h/2 + 50);
         }
+    }
+};
 
-        function startPanCollage(e) { handlePanStart(e); }
-        function panCollage(e) { handlePanMove(e); }
-        function endPanCollage(e) { handlePanEnd(); }
-        function startPanCollageTouch(e) { handlePanStart(e); }
-        function panCollageTouch(e) { handlePanMove(e); e.preventDefault(); }
+// --- INITIALIZATION ---
+function switchCollageSidebar(tab) {
+    document.getElementById('tab-c-templates').classList.replace(tab === 'templates' ? 'border-transparent' : 'border-fuchsia-500', tab === 'templates' ? 'border-fuchsia-500' : 'border-transparent');
+    document.getElementById('tab-c-templates').classList.replace(tab === 'templates' ? 'text-gray-400' : 'text-fuchsia-600', tab === 'templates' ? 'text-fuchsia-600' : 'text-gray-400');
+    
+    document.getElementById('tab-c-photos').classList.replace(tab === 'photos' ? 'border-transparent' : 'border-fuchsia-500', tab === 'photos' ? 'border-fuchsia-500' : 'border-transparent');
+    document.getElementById('tab-c-photos').classList.replace(tab === 'photos' ? 'text-gray-400' : 'text-fuchsia-600', tab === 'photos' ? 'text-fuchsia-600' : 'text-gray-400');
+    
+    document.getElementById('c-panel-templates').className = tab === 'templates' ? 'space-y-6 block' : 'hidden';
+    document.getElementById('c-panel-photos').className = tab === 'photos' ? 'space-y-4 block' : 'hidden';
+}
 
-        // --- DOWNLOAD ---
-        function downloadCollage() {
-            if(collageState.selected.length === 0) {
-                Swal.fire({toast: true, position: 'top', icon: 'error', text: 'Pilih minimal 1 foto.', showConfirmButton: false, timer: 2000});
+function loadCollageProjectsList() {
+    let sel = document.getElementById('collageProjectSelector');
+    if (!sel) return;
+    
+    // We get projects from the localStorage cache (populated by Dashboard)
+    let cachedStr = localStorage.getItem('ps.projectsCache');
+    let projects = [];
+    try { if (cachedStr) projects = JSON.parse(cachedStr); } catch(e){}
+    
+    let html = '<option value="">-- Pilih Project Klien --</option>';
+    projects.forEach(p => {
+        html += `<option value="${p.token}">${p.clientName || p.name} (${p.projectDate})</option>`;
+    });
+    sel.innerHTML = html;
+    
+    renderTemplateGrid();
+}
+
+async function loadCollageProjectData() {
+    let token = document.getElementById('collageProjectSelector').value;
+    if (!token) {
+        document.getElementById('collagePhotoPicker').innerHTML = '<div class="text-xs text-gray-400 text-center col-span-3 py-4 italic">Pilih project terlebih dahulu di atas.</div>';
+        collageState.photos = [];
+        collageState.selected = [];
+        return;
+    }
+    
+    document.getElementById('collagePhotoPicker').innerHTML = '<div class="text-xs text-gray-400 text-center col-span-3 py-4"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat foto project...</div>';
+    switchCollageSidebar('photos');
+    
+    try {
+        // Use getProjectForClient to get the MASTER config
+        const response = await fetch(API_ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'getProjectForClient', token: token })
+        });
+        const res = await response.json();
+        
+        if (res.status === 'success' && res.data.success) {
+            let config = {};
+            try { config = JSON.parse(res.data.project.config || "{}"); } catch(e){}
+            
+            let allPhotos = [];
+            // Parse all folders and subfolders
+            function extractPhotos(folder) {
+                if(folder.images) folder.images.forEach(img => allPhotos.push(img));
+                if(folder.subfolders) folder.subfolders.forEach(sub => extractPhotos(sub));
+            }
+            extractPhotos(config);
+            
+            if(allPhotos.length === 0) {
+                document.getElementById('collagePhotoPicker').innerHTML = '<div class="text-xs text-red-400 text-center col-span-3 py-4 font-bold">Tidak ada foto ditemukan di project ini.</div>';
                 return;
             }
-            let canvas = document.getElementById('collageCanvas');
-            let dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-            let a = document.createElement('a');
-            a.href = dataUrl;
-            a.download = `GridStory-${new Date().getTime()}.jpg`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            
+            collageState.photos = allPhotos;
+            collageState.selected = [];
+            renderCollagePhotoPicker();
+        } else {
+            document.getElementById('collagePhotoPicker').innerHTML = '<div class="text-xs text-red-400 text-center col-span-3 py-4">Gagal memuat data.</div>';
         }
+    } catch(e) {
+        document.getElementById('collagePhotoPicker').innerHTML = '<div class="text-xs text-red-400 text-center col-span-3 py-4">Koneksi terputus.</div>';
+    }
+}
+
+// --- UI RENDERING ---
+function renderTemplateGrid() {
+    let html = '';
+    for(let id in collageTemplates) {
+        let t = collageTemplates[id];
+        let isSel = collageState.templateId === id;
+        html += `
+            <div onclick="selectCollageTemplate('${id}')" class="border-2 rounded-xl p-3 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${isSel ? 'border-fuchsia-500 bg-fuchsia-50 text-fuchsia-600 shadow-md' : 'border-gray-200 hover:border-fuchsia-300 hover:bg-gray-50 text-gray-500'}">
+                <i class="fa-solid ${t.icon} text-2xl"></i>
+                <span class="text-[10px] font-bold text-center leading-tight">${t.name}</span>
+            </div>
+        `;
+    }
+    document.getElementById('collageTemplateGrid').innerHTML = html;
+}
+
+function selectCollageTemplate(id) {
+    collageState.templateId = id;
+    renderTemplateGrid();
+    requestRenderCollage();
+}
+
+function applyCustomCanvasSize() {
+    let w = parseFloat(document.getElementById('cWidth').value) || 10;
+    let h = parseFloat(document.getElementById('cHeight').value) || 15;
+    let unit = document.getElementById('cUnit').value;
+    
+    collageState.unit = unit;
+    
+    // Convert to PX (300 DPI baseline for print, or direct px)
+    let pxW = w;
+    let pxH = h;
+    
+    if (unit === 'cm') {
+        pxW = Math.round(w * 118.11); // 300 DPI = 118.11 px/cm
+        pxH = Math.round(h * 118.11);
+    } else if (unit === 'in') {
+        pxW = Math.round(w * 300); // 300 DPI
+        pxH = Math.round(h * 300);
+    }
+    
+    // Safety cap to prevent browser crash
+    if (pxW > 4000) pxW = 4000;
+    if (pxH > 4000) pxH = 4000;
+    if (pxW < 100) pxW = 100;
+    if (pxH < 100) pxH = 100;
+    
+    collageState.canvasW = pxW;
+    collageState.canvasH = pxH;
+    
+    Swal.fire({toast:true, position:'top', icon:'success', text:`Kanvas diubah ke ${pxW}x${pxH} px`, showConfirmButton:false, timer:1500});
+    requestRenderCollage();
+}
+
+function renderCollagePhotoPicker() {
+    let container = document.getElementById('collagePhotoPicker');
+    container.innerHTML = '';
+    
+    document.getElementById('cSelectedCount').innerText = collageState.selected.length;
+    
+    collageState.photos.forEach((photo) => {
+        let div = document.createElement('div');
+        let isSelected = collageState.selected.includes(photo.url);
+        div.className = "relative aspect-square bg-gray-200 rounded-lg overflow-hidden cursor-pointer border-2 transition-all " + (isSelected ? "border-fuchsia-500 opacity-100 shadow-md scale-95" : "border-transparent opacity-70 hover:opacity-100 hover:scale-105");
+        
+        // Use a small thumbnail for fast UI
+        let thumbUrl = photo.url.replace('=s0', '=w300');
+        
+        div.innerHTML = `
+            <img src="${thumbUrl}" class="w-full h-full object-cover">
+            ${isSelected ? '<div class="absolute inset-0 bg-fuchsia-500/30 flex items-center justify-center backdrop-blur-[1px]"><i class="fa-solid fa-check text-white drop-shadow-md text-2xl"></i></div>' : ''}
+        `;
+        
+        div.onclick = function() {
+            let selIdx = collageState.selected.indexOf(photo.url);
+            if (selIdx > -1) {
+                collageState.selected.splice(selIdx, 1);
+            } else {
+                if(collageState.selected.length >= 16) {
+                    Swal.fire({toast: true, position: 'top', icon: 'warning', text: 'Soft Limit 16 foto tercapai.', showConfirmButton: false, timer: 2000});
+                    return;
+                }
+                collageState.selected.push(photo.url);
+            }
+            renderCollagePhotoPicker();
+            requestRenderCollage(); 
+        };
+        
+        container.appendChild(div);
+    });
+}
+
+// --- CANVAS ENGINE ---
+let renderCollageTimeout = null;
+function requestRenderCollage() {
+    clearTimeout(renderCollageTimeout);
+    renderCollageTimeout = setTimeout(renderCollagePreview, 300);
+}
+
+async function renderCollagePreview() {
+    const canvas = document.getElementById('collageCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    // Sync Text inputs
+    collageState.textMain = document.getElementById('collageTextMain').value;
+    collageState.textSub = document.getElementById('collageTextSub').value;
+    collageState.font = document.getElementById('collageFont').value;
+    collageState.color = document.getElementById('collageTextColor').value;
+    
+    let w = collageState.canvasW;
+    let h = collageState.canvasH;
+    canvas.width = w;
+    canvas.height = h;
+    
+    // Scale UI viewer based on true canvas dimension ratio
+    let interactiveArea = document.getElementById('collageInteractiveArea');
+    let viewerMaxH = 600;
+    let viewerMaxW = document.getElementById('collageCanvasWrapper').clientWidth - 40;
+    
+    let scale = Math.min(viewerMaxW / w, viewerMaxH / h);
+    interactiveArea.style.width = (w * scale) + 'px';
+    interactiveArea.style.height = (h * scale) + 'px';
+    
+    // Clear
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+    
+    let count = collageState.selected.length;
+    if (count === 0) {
+        ctx.fillStyle = '#f3f4f6';
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = `400 ${Math.max(20, w*0.04)}px "Inter", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText("Pilih foto untuk memulai...", w/2, h/2);
+        document.getElementById('collageOverlays').innerHTML = '';
+        return;
+    }
+    
+    let tpl = collageTemplates[collageState.templateId];
+    if (count > tpl.maxPhotos) count = tpl.maxPhotos; // Crop processing array to template max
+    
+    // Load missing images
+    for(let i=0; i<count; i++) {
+        let url = collageState.selected[i];
+        if(!collageState.loadedImages[i] || collageState.loadedImages[i]._url !== url) {
+            let img = new Image();
+            img.crossOrigin = "anonymous";
+            // Use w1500 for high-res collage, instead of full s0 to save RAM
+            await new Promise((resolve) => {
+                img.onload = resolve;
+                img.onerror = resolve;
+                img.src = url.replace('=s0', '=w1500'); 
+            });
+            img._url = url;
+            collageState.loadedImages[i] = img;
+            // Reset pan offset for new image
+            collageState.panOffsets[i] = {x:0, y:0};
+        }
+    }
+    
+    let layoutBoxes = tpl.calculateLayout(w, h, count);
+    let overlayHtml = '';
+    
+    for(let i=0; i<count; i++) {
+        if (!layoutBoxes[i]) continue;
+        let img = collageState.loadedImages[i];
+        let box = layoutBoxes[i];
+        
+        let imgScale = Math.max(box.w / img.width, box.h / img.height);
+        let drawW = img.width * imgScale;
+        let drawH = img.height * imgScale;
+        
+        let drawX = box.x + (box.w - drawW) / 2;
+        let drawY = box.y + (box.h - drawH) / 2;
+        
+        // Apply panning
+        if (!collageState.panOffsets[i]) collageState.panOffsets[i] = {x:0,y:0};
+        drawX += collageState.panOffsets[i].x;
+        drawY += collageState.panOffsets[i].y;
+        
+        // Clamp panning so background doesn't show
+        let minX = box.x + box.w - drawW;
+        let maxX = box.x;
+        let minY = box.y + box.h - drawH;
+        let maxY = box.y;
+        
+        drawX = Math.max(minX, Math.min(maxX, drawX));
+        drawY = Math.max(minY, Math.min(maxY, drawY));
+        
+        // Save clamped value
+        collageState.panOffsets[i].x = drawX - (box.x + (box.w - drawW) / 2);
+        collageState.panOffsets[i].y = drawY - (box.y + (box.h - drawH) / 2);
+        
+        // Draw
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(box.x, box.y, box.w, box.h);
+        ctx.clip();
+        ctx.drawImage(img, drawX, drawY, drawW, drawH);
+        ctx.restore();
+        
+        // Create interactive overlay for panning
+        let pctX = (box.x / w) * 100;
+        let pctY = (box.y / h) * 100;
+        let pctW = (box.w / w) * 100;
+        let pctH = (box.h / h) * 100;
+        
+        overlayHtml += `<div data-idx="${i}" class="absolute pointer-events-auto" style="left:${pctX}%; top:${pctY}%; width:${pctW}%; height:${pctH}%;"></div>`;
+    }
+    
+    document.getElementById('collageOverlays').innerHTML = overlayHtml;
+    
+    // Draw Text / Watermark
+    if(tpl.drawText) tpl.drawText(ctx, w, h);
+}
+
+// --- PANNING INTERACTION LOGIC ---
+function getEventPos(e) {
+    if(e.touches && e.touches.length > 0) return {x: e.touches[0].clientX, y: e.touches[0].clientY};
+    return {x: e.clientX, y: e.clientY};
+}
+function handlePanStart(e) {
+    if(!e.target.dataset.idx) return;
+    collageState.activePanIndex = parseInt(e.target.dataset.idx);
+    collageState.isPanning = true;
+    let pos = getEventPos(e);
+    collageState.startX = pos.x;
+    collageState.startY = pos.y;
+}
+function handlePanMove(e) {
+    if(!collageState.isPanning || collageState.activePanIndex === -1) return;
+    let pos = getEventPos(e);
+    let dx = pos.x - collageState.startX;
+    let dy = pos.y - collageState.startY;
+    
+    let domRect = document.getElementById('collageInteractiveArea').getBoundingClientRect();
+    let canvas = document.getElementById('collageCanvas');
+    let scaleX = canvas.width / domRect.width;
+    let scaleY = canvas.height / domRect.height;
+    
+    collageState.panOffsets[collageState.activePanIndex].x += dx * scaleX;
+    collageState.panOffsets[collageState.activePanIndex].y += dy * scaleY;
+    
+    collageState.startX = pos.x;
+    collageState.startY = pos.y;
+    renderCollagePreview();
+}
+function handlePanEnd() {
+    collageState.isPanning = false;
+    collageState.activePanIndex = -1;
+}
+function startPanCollage(e) { handlePanStart(e); }
+function panCollage(e) { handlePanMove(e); }
+function endPanCollage(e) { handlePanEnd(); }
+function startPanCollageTouch(e) { handlePanStart(e); }
+function panCollageTouch(e) { handlePanMove(e); e.preventDefault(); }
+
+// --- DOWNLOAD EXPORT ---
+function downloadCollage() {
+    if(collageState.selected.length === 0) {
+        Swal.fire({toast: true, position: 'top', icon: 'error', text: 'Pilih minimal 1 foto.', showConfirmButton: false, timer: 2000});
+        return;
+    }
+    let canvas = document.getElementById('collageCanvas');
+    let dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+    let a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `PremiumCollage-${new Date().getTime()}.jpg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
     </script>
 </body>
 
