@@ -1362,12 +1362,24 @@
         <div class="w-full sm:w-[320px] bg-white border-r border-gray-200 flex-shrink-0 flex flex-col h-[40vh] sm:h-auto overflow-hidden z-10">
             <!-- Tabs -->
             <div class="flex border-b border-gray-100 bg-gray-50 shrink-0 overflow-x-auto custom-scrollbar">
+                <button onclick="switchCollageSidebar('templates')" id="tab-c-templates" class="flex-1 px-2 py-3 text-[10px] font-black uppercase tracking-wider border-b-2 border-transparent text-gray-400 hover:text-black transition-colors whitespace-nowrap"><i class="fa-solid fa-border-all mb-1 block text-lg"></i>Layout</button>
                 <button onclick="switchCollageSidebar('photos')" id="tab-c-photos" class="flex-1 px-2 py-3 text-[10px] font-black uppercase tracking-wider border-b-2 border-black text-black transition-colors whitespace-nowrap"><i class="fa-regular fa-images mb-1 block text-lg"></i>Layers</button>
                 <button onclick="switchCollageSidebar('background')" id="tab-c-background" class="flex-1 px-2 py-3 text-[10px] font-black uppercase tracking-wider border-b-2 border-transparent text-gray-400 hover:text-black transition-colors whitespace-nowrap"><i class="fa-solid fa-fill-drip mb-1 block text-lg"></i>Canvas</button>
             </div>
 
             <div class="flex-1 overflow-y-auto custom-scrollbar p-5 pb-16">
                 
+                <!-- TAB: Template Layout -->
+                <div id="c-panel-templates" class="hidden space-y-6 fade-in">
+                    <div>
+                        <h4 class="text-[10px] font-bold text-gray-400 mb-3 uppercase tracking-wider flex items-center justify-between">Pilih Layout <span class="bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded text-[8px]">Auto-Fill</span></h4>
+                        <div class="grid grid-cols-2 gap-3" id="collageTemplateGrid">
+                            <!-- Di-render oleh JS -->
+                        </div>
+                        <p class="text-[9px] text-gray-400 mt-2 italic">Tips: Setelah memilih layout, Anda tetap bisa membesarkan atau menggeser foto secara bebas!</p>
+                    </div>
+                </div>
+
                 <!-- TAB: Photos & Layers -->
                 <div id="c-panel-photos" class="space-y-5 block fade-in">
                     
@@ -6306,9 +6318,100 @@ let collageState = {
     queue: []
 };
 
+// --- TEMPLATES ---
+const collageTemplates = {
+    'grid': {
+        name: 'Smart Grid',
+        previewHtml: '<div class="w-full h-full bg-gray-200 border border-gray-300 rounded grid grid-cols-2 gap-1 p-1"><div class="bg-gray-400 rounded-sm"></div><div class="bg-gray-400 rounded-sm"></div><div class="bg-gray-400 rounded-sm"></div><div class="bg-gray-400 rounded-sm"></div></div>',
+        maxPhotos: 4,
+        calculateLayout: function(w, h, count) {
+            let boxes = [];
+            let spacing = 20; let padding = 40;
+            let contentW = w - (padding * 2);
+            let contentH = h - (padding * 2); 
+            if (count === 1) { boxes.push({ x: padding, y: padding, w: contentW, h: contentH }); }
+            else if (count === 2) {
+                let boxH = (contentH - spacing) / 2;
+                boxes.push({ x: padding, y: padding, w: contentW, h: boxH });
+                boxes.push({ x: padding, y: padding + boxH + spacing, w: contentW, h: boxH });
+            } else if (count === 3) {
+                let boxH = (contentH - spacing) / 2;
+                boxes.push({ x: padding, y: padding, w: contentW, h: boxH });
+                let bottomW = (contentW - spacing) / 2;
+                boxes.push({ x: padding, y: padding + boxH + spacing, w: bottomW, h: boxH });
+                boxes.push({ x: padding + bottomW + spacing, y: padding + boxH + spacing, w: bottomW, h: boxH });
+            } else {
+                let boxW = (contentW - spacing) / 2;
+                let boxH = (contentH - spacing) / 2;
+                boxes.push({ x: padding, y: padding, w: boxW, h: boxH });
+                boxes.push({ x: padding + boxW + spacing, y: padding, w: boxW, h: boxH });
+                boxes.push({ x: padding, y: padding + boxH + spacing, w: boxW, h: boxH });
+                boxes.push({ x: padding + boxW + spacing, y: padding + boxH + spacing, w: boxW, h: boxH });
+            }
+            return boxes;
+        }
+    },
+    'mandy': {
+        name: 'Mandy (Save Date)',
+        previewHtml: '<div class="w-full h-full bg-white border border-gray-300 rounded grid grid-cols-2 grid-rows-2 p-1 gap-1"><div class="bg-gray-400 col-span-2 row-span-1"></div><div class="bg-gray-400"></div><div class="bg-gray-400"></div></div>',
+        maxPhotos: 3,
+        calculateLayout: function(w, h, count) {
+            let padding = 50; let spacing = 20; let boxes = [];
+            let wC = w - (padding*2);
+            let hC = h - (padding*2);
+            if (count >= 1) boxes.push({x: padding, y: padding, w: wC, h: hC*0.6});
+            if (count >= 2) boxes.push({x: padding, y: padding + hC*0.6 + spacing, w: (wC-spacing)/2, h: hC*0.4 - spacing});
+            if (count >= 3) boxes.push({x: padding + (wC-spacing)/2 + spacing, y: padding + hC*0.6 + spacing, w: (wC-spacing)/2, h: hC*0.4 - spacing});
+            return boxes;
+        }
+    },
+    'larsons': {
+        name: 'The Larsons',
+        previewHtml: '<div class="w-full h-full bg-white border border-gray-300 rounded p-2 flex flex-col gap-1 items-center justify-center"><div class="w-3/4 h-1/3 bg-gray-400"></div><div class="w-1/2 h-1/4 bg-gray-400"></div></div>',
+        maxPhotos: 4,
+        calculateLayout: function(w, h, count) {
+            let boxes = [];
+            let mX = w * 0.15; let mY = h * 0.2;
+            let iW = w - (mX*2); let iH = h - (mY*2);
+            if(count === 1) boxes.push({x:mX, y:mY, w:iW, h:iH});
+            else if(count === 2) {
+                boxes.push({x:mX, y:mY, w:iW, h: iH*0.48});
+                boxes.push({x:mX, y:mY + iH*0.52, w:iW, h: iH*0.48});
+            } else {
+                boxes.push({x:mX, y:mY, w:iW*0.6, h:iH*0.6});
+                if(count>=2) boxes.push({x:mX + iW*0.62, y:mY, w:iW*0.38, h:iH*0.28});
+                if(count>=3) boxes.push({x:mX + iW*0.62, y:mY + iH*0.32, w:iW*0.38, h:iH*0.28});
+                if(count>=4) boxes.push({x:mX, y:mY + iH*0.62, w:iW*0.48, h:iH*0.38});
+            }
+            return boxes;
+        }
+    },
+    'tony': {
+        name: 'Tony Wedding',
+        previewHtml: '<div class="w-full h-full bg-white border border-gray-300 rounded p-2 flex gap-1 items-center"><div class="w-1/3 h-2/3 bg-gray-400"></div><div class="w-1/3 h-full bg-gray-400"></div><div class="w-1/3 h-2/3 bg-gray-400"></div></div>',
+        maxPhotos: 3,
+        calculateLayout: function(w, h, count) {
+            let boxes = [];
+            let pX = 60; let pY = 150; let space = 20;
+            let cW = w - (pX*2);
+            if(count === 1) boxes.push({x:pX, y:pY, w:cW, h:h-(pY*2)});
+            else if(count === 2) {
+                boxes.push({x:pX, y:pY, w:(cW-space)/2, h:h-(pY*2)});
+                boxes.push({x:pX+(cW-space)/2+space, y:pY, w:(cW-space)/2, h:h-(pY*2)});
+            } else {
+                let bW = (cW-(space*2))/3;
+                boxes.push({x:pX, y:pY+50, w:bW, h:h-(pY*2)-100});
+                boxes.push({x:pX+bW+space, y:pY, w:bW, h:h-(pY*2)});
+                boxes.push({x:pX+(bW*2)+(space*2), y:pY+50, w:bW, h:h-(pY*2)-100});
+            }
+            return boxes;
+        }
+    }
+};
+
 // --- INITIALIZATION ---
 function switchCollageSidebar(tab) {
-    let tabs = ['templates', 'background', 'text', 'photos'];
+    let tabs = ['templates', 'background', 'photos'];
     tabs.forEach(t => {
         let btn = document.getElementById('tab-c-' + t);
         let panel = document.getElementById('c-panel-' + t);
@@ -6345,6 +6448,7 @@ function loadCollageProjectsList() {
     });
     sel.innerHTML = html;
     
+    renderTemplateGrid();
     updateBackgroundConfig(); 
     requestRenderCollage();
 }
@@ -6420,6 +6524,78 @@ function renderCollagePhotoPicker() {
         };
         container.appendChild(div);
     });
+}
+
+function renderTemplateGrid() {
+    let container = document.getElementById('collageTemplateGrid');
+    if (!container) return;
+    let html = '';
+    for(let id in collageTemplates) {
+        let t = collageTemplates[id];
+        html += `
+            <div onclick="applyCollageTemplate('${id}')" class="border-2 rounded-xl p-2 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all border-gray-100 hover:border-black hover:bg-gray-50 text-gray-500">
+                <div class="w-12 h-16 pointer-events-none opacity-80">${t.previewHtml}</div>
+                <span class="text-[9px] font-bold text-center leading-tight truncate w-full px-1">${t.name}</span>
+            </div>
+        `;
+    }
+    container.innerHTML = html;
+}
+
+function applyCollageTemplate(id) {
+    let t = collageTemplates[id];
+    if(!t) return;
+    
+    // Auto fill photos based on currently selected or top photos
+    let count = t.maxPhotos;
+    if (collageState.photos.length < count) count = collageState.photos.length;
+    if (count === 0) {
+        Swal.fire({toast:true, position:'top', icon:'warning', text:'Pilih/Upload foto terlebih dahulu!', showConfirmButton:false, timer:2000});
+        return;
+    }
+    
+    // Clear existing layers
+    collageState.layers = [];
+    collageState.activeLayerId = null;
+    
+    let boxes = t.calculateLayout(collageState.canvasW, collageState.canvasH, count);
+    
+    boxes.forEach((box, i) => {
+        let photo = collageState.photos[i];
+        let url = photo.url;
+        let thumbUrl = url.includes('blob:') ? url : url.replace('=s0', '=w800');
+        
+        let img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = function() {
+            imageCache[url] = img;
+            
+            // Calculate scale to "cover" the box
+            let scaleW = box.w / img.width;
+            let scaleH = box.h / img.height;
+            let scale = Math.max(scaleW, scaleH); // Cover
+            
+            let layer = {
+                id: 'layer_tpl_' + i + '_' + new Date().getTime(),
+                url: url,
+                origW: img.width,
+                origH: img.height,
+                x: box.x + box.w/2, // Center of box
+                y: box.y + box.h/2,
+                w: img.width,
+                h: img.height,
+                scale: scale,
+                rotation: 0,
+                zIndex: i
+            };
+            collageState.layers.push(layer);
+            requestRenderCollage();
+        };
+        img.src = thumbUrl;
+    });
+    
+    switchCollageSidebar('photos');
+    Swal.fire({toast:true, position:'top', icon:'success', text:'Layout Diterapkan!', showConfirmButton:false, timer:1500});
 }
 
 function addPhotoLayer(url) {
@@ -6716,13 +6892,16 @@ function endDragLayer() {
     document.removeEventListener('touchend', endDragLayer);
 }
 
-// --- HD EXPORT LOGIC ---
+// --- HD EXPORT LOGIC (3X MULTIPLIER) ---
 async function compositeFinalHDCanvas() {
-    Swal.fire({title: 'Memproses HD...', text: 'Mengunduh gambar resolusi tinggi.', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+    Swal.fire({title: 'Memproses 4K HD...', text: 'Mengunduh gambar resolusi tinggi (3X).', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+    
+    // 3X Export Scale for Ultra HD Print Quality
+    let exportScale = 3;
     
     let finalCanvas = document.createElement('canvas');
-    finalCanvas.width = collageState.canvasW; 
-    finalCanvas.height = collageState.canvasH;
+    finalCanvas.width = collageState.canvasW * exportScale; 
+    finalCanvas.height = collageState.canvasH * exportScale;
     let ctx = finalCanvas.getContext('2d');
     
     // BG
@@ -6737,7 +6916,7 @@ async function compositeFinalHDCanvas() {
         let s = Math.max(finalCanvas.width / img.width, finalCanvas.height / img.height);
         let dw = img.width * s; let dh = img.height * s;
         let dx = (finalCanvas.width - dw)/2; let dy = (finalCanvas.height - dh)/2;
-        ctx.filter = `blur(${collageState.bgBlur}px)`;
+        ctx.filter = `blur(${collageState.bgBlur * exportScale}px)`;
         ctx.drawImage(img, dx, dy, dw, dh);
         ctx.filter = 'none';
         ctx.globalAlpha = 1.0;
@@ -6748,16 +6927,16 @@ async function compositeFinalHDCanvas() {
     for(let i=0; i<sortedLayers.length; i++) {
         let layer = sortedLayers[i];
         
-        // FIX 2: Load ORIGINAL resolution (=s0) before drawing on HD canvas
         let hdUrl = layer.url.includes('blob:') ? layer.url : layer.url.replace(/=w\d+/, '=s0');
         let hdImg = new Image();
         hdImg.crossOrigin = "anonymous";
         await new Promise(r => { hdImg.onload=r; hdImg.onerror=r; hdImg.src=hdUrl; });
         
         ctx.save();
-        ctx.translate(layer.x, layer.y);
+        // Multiply translation and scale by exportScale
+        ctx.translate(layer.x * exportScale, layer.y * exportScale);
         ctx.rotate(layer.rotation * Math.PI / 180);
-        ctx.scale(layer.scale, layer.scale);
+        ctx.scale(layer.scale * exportScale, layer.scale * exportScale);
         ctx.drawImage(hdImg, -layer.w/2, -layer.h/2, layer.w, layer.h);
         ctx.restore();
     }
@@ -6768,7 +6947,7 @@ async function compositeFinalHDCanvas() {
         ctx.fillStyle = txt.color;
         ctx.textAlign = txt.align;
         ctx.textBaseline = 'middle';
-        ctx.font = `600 ${txt.size}px "${txt.font}", sans-serif`;
+        ctx.font = `600 ${txt.size * exportScale}px "${txt.font}", sans-serif`;
         let pxX = (txt.x / 100) * finalCanvas.width;
         let pxY = (txt.y / 100) * finalCanvas.height;
         ctx.translate(pxX, pxY);
