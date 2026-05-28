@@ -1835,7 +1835,14 @@
                                 </div>
                                 <div class="col-span-2">
                                     <label id="lbl-p-music" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Musik Latar / BGM (Opsional)</label>
-                                    <input type="url" id="p_music_url" placeholder="URL Musik MP3 (Contoh: https://.../lagu.mp3)" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-sm">
+                                    <p class="text-[9px] text-gray-400 mb-2">Upload file MP3 atau gunakan link. (Pastikan ekstensi valid)</p>
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <input type="file" id="p_music_file" accept=".mp3,audio/mpeg" class="w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border border-gray-200 rounded-lg p-1 bg-gray-50">
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[9px] font-bold text-gray-400 shrink-0">ATAU LINK:</span>
+                                        <input type="url" id="p_music_url" placeholder="URL Musik MP3 (Contoh: https://.../lagu.mp3)" class="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-[11px]">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -4064,7 +4071,7 @@
                     '<button onclick="editPasswordPrompt(\'' + row.ID + '\', \'' + safeJSName + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-yellow-50 text-yellow-600 hover:bg-yellow-100 hover:text-yellow-700 transition-colors flex items-center justify-center text-xs font-semibold border border-yellow-200" title="Edit Password">' +
                     '<i class="fa-solid fa-key sm:mr-1.5"></i> <span class="hidden sm:inline">Password</span>' +
                     '</button>' +
-                    '<button onclick="deleteProjectPrompt(\'' + row.ID + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-800 transition-colors flex items-center justify-center text-xs font-semibold border border-red-200" title="Hapus Project">' +
+                    '<button onclick="deleteProject(\'' + row.ID + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-800 transition-colors flex items-center justify-center text-xs font-semibold border border-red-200" title="Hapus Project">' +
                     '<i class="fa-solid fa-trash-can sm:mr-1.5"></i> <span class="hidden sm:inline">' + (localStorage.getItem('ps_lang') === 'en' ? 'Delete' : 'Hapus') + '</span>' +
                     '</button>' +
                     '</div>' +
@@ -4266,6 +4273,22 @@
                 extraPrice: document.getElementById('p_extra_price') ? document.getElementById('p_extra_price').value : 0,
                 musicUrl: document.getElementById('p_music_url') ? document.getElementById('p_music_url').value.trim() : ''
             };
+
+            var musicFileEl = document.getElementById('p_music_file');
+            if (musicFileEl && musicFileEl.files && musicFileEl.files.length > 0) {
+                var file = musicFileEl.files[0];
+                if (file.size > 10 * 1024 * 1024) { // Max 10MB
+                    Swal.fire('File Terlalu Besar', 'Maksimal ukuran file musik adalah 10MB', 'error');
+                    return;
+                }
+                const base64Str = await new Promise((resolve) => {
+                    var reader = new FileReader();
+                    reader.onload = function (e) { resolve(e.target.result.split(',')[1]); };
+                    reader.readAsDataURL(file);
+                });
+                formData.musicBase64 = base64Str;
+                formData.musicFileName = file.name;
+            }
 
             setButtonState('btnCreate', true, 'Membuat Link...');
             startLoading("Mempersiapkan Link...");
@@ -4759,6 +4782,9 @@
             clientState.maxFoto = projectData.maxFoto;
             clientState.driveLink = projectData.driveLink;
             clientState.categories = projectData.categories || [];
+            clientState.clientLayout = projectData.clientLayout || 'masonry';
+            clientState.extraPrice = projectData.extraPrice || 0;
+            clientState.musicUrl = projectData.musicUrl || '';
 
             // LOAD PILIHAN LAMA DARI DATABASE (AUTO-RESUME)
             try {
@@ -4819,10 +4845,13 @@
                 bgmContainer.classList.remove('hidden');
                 bgmAudio.src = clientState.musicUrl;
                 // Attempt autoplay
-                bgmAudio.play().catch(function(e) {
-                    // Autoplay blocked, wait for user interaction
-                    console.log("Autoplay blocked, wait for interaction");
-                });
+                var playPromise = bgmAudio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        var btnIcon = document.querySelector('#btn-toggle-bgm i');
+                        if (btnIcon) btnIcon.className = 'fa-solid fa-music animate-spin';
+                    }).catch(() => { });
+                }
             } else {
                 bgmContainer.classList.add('hidden');
                 bgmAudio.pause();
@@ -5293,12 +5322,12 @@
             var icon = btn.querySelector('i');
             if (audio.paused) {
                 audio.play();
-                icon.className = 'fa-solid fa-music';
+                icon.className = 'fa-solid fa-music animate-spin';
                 btn.classList.replace('bg-gray-100', 'bg-pink-50');
                 btn.classList.replace('text-gray-500', 'text-pink-500');
             } else {
                 audio.pause();
-                icon.className = 'fa-solid fa-volume-xmark';
+                icon.className = 'fa-solid fa-music';
                 btn.classList.replace('bg-pink-50', 'bg-gray-100');
                 btn.classList.replace('text-pink-500', 'text-gray-500');
             }
