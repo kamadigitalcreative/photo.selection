@@ -1365,6 +1365,7 @@
                 <button onclick="switchCollageSidebar('templates')" id="tab-c-templates" class="flex-1 px-2 py-3 text-[10px] font-black uppercase tracking-wider border-b-2 border-transparent text-gray-400 hover:text-black transition-colors whitespace-nowrap"><i class="fa-solid fa-border-all mb-1 block text-lg"></i>Layout</button>
                 <button onclick="switchCollageSidebar('photos')" id="tab-c-photos" class="flex-1 px-2 py-3 text-[10px] font-black uppercase tracking-wider border-b-2 border-black text-black transition-colors whitespace-nowrap"><i class="fa-regular fa-images mb-1 block text-lg"></i>Layers</button>
                 <button onclick="switchCollageSidebar('background')" id="tab-c-background" class="flex-1 px-2 py-3 text-[10px] font-black uppercase tracking-wider border-b-2 border-transparent text-gray-400 hover:text-black transition-colors whitespace-nowrap"><i class="fa-solid fa-fill-drip mb-1 block text-lg"></i>Canvas</button>
+                <button onclick="switchCollageSidebar('texts')" id="tab-c-texts" class="flex-1 px-2 py-3 text-[10px] font-black uppercase tracking-wider border-b-2 border-transparent text-gray-400 hover:text-black transition-colors whitespace-nowrap"><i class="fa-solid fa-font mb-1 block text-lg"></i>Teks</button>
             </div>
 
             <div class="flex-1 overflow-y-auto custom-scrollbar p-5 pb-16">
@@ -1472,6 +1473,27 @@
                         </div>
                     </div>
 
+                </div>
+                </div>
+                
+                <!-- TAB: Texts -->
+                <div id="c-panel-texts" class="hidden space-y-5 fade-in">
+                    <div>
+                        <h4 class="text-[10px] font-bold text-gray-400 mb-3 uppercase tracking-wider">Tambah Teks</h4>
+                        <input type="text" id="cTextValue" placeholder="Ketik sesuatu..." class="w-full text-sm p-3 bg-gray-50 border border-gray-200 rounded-lg mb-3">
+                        <div class="flex gap-3 mb-4">
+                            <input type="color" id="cTextColor" value="#000000" class="w-12 h-10 border-0 p-0 rounded cursor-pointer">
+                            <select id="cTextFont" class="flex-1 text-sm border border-gray-200 bg-gray-50 rounded-lg px-3">
+                                <option value="Arial">Arial</option>
+                                <option value="Times New Roman">Serif</option>
+                                <option value="Courier New">Monospace</option>
+                                <option value="Impact">Impact</option>
+                                <option value="Brush Script MT">Cursive</option>
+                            </select>
+                        </div>
+                        <button onclick="addTextLayer()" class="w-full bg-black text-white text-xs font-bold py-3 rounded-lg hover:bg-gray-800 transition-colors">Tambahkan ke Canvas</button>
+                    </div>
+                    <p class="text-[9px] text-gray-400 mt-2 italic">Teks bisa digeser dan di-zoom (resize) seperti foto. Hapus dengan icon silang.</p>
                 </div>
             </div>
         </div>
@@ -6322,6 +6344,13 @@ let collageState = {
 
 // --- TEMPLATES ---
 const collageTemplates = {
+    'smart_auto': {
+        name: 'Smart Auto',
+        previewHtml: '<div class="w-full h-full bg-blue-100 border border-blue-300 rounded flex flex-col items-center justify-center text-blue-500 font-black text-[9px] text-center leading-tight">SMART<br>AUTO</div>',
+        maxPhotos: 0,
+        isSmartAuto: true,
+        calculateLayout: function(w, h, count) { return []; }
+    },
     'grid': {
         name: 'Smart Grid',
         previewHtml: '<div class="w-full h-full bg-gray-200 border border-gray-300 rounded grid grid-cols-2 gap-1 p-1"><div class="bg-gray-400 rounded-sm"></div><div class="bg-gray-400 rounded-sm"></div><div class="bg-gray-400 rounded-sm"></div><div class="bg-gray-400 rounded-sm"></div></div>',
@@ -6437,7 +6466,7 @@ const collageTemplates = {
 
 // --- INITIALIZATION ---
 function switchCollageSidebar(tab) {
-    let tabs = ['templates', 'background', 'photos'];
+    let tabs = ['templates', 'background', 'photos', 'texts'];
     tabs.forEach(t => {
         let btn = document.getElementById('tab-c-' + t);
         let panel = document.getElementById('c-panel-' + t);
@@ -6585,11 +6614,20 @@ function applyCollageTemplate(id) {
     let t = collageTemplates[id];
     if(!t) return;
     
+    collageState.currentTemplateId = id;
     let count = t.maxPhotos;
     
     // Clear existing layers
     collageState.layers = [];
     collageState.activeLayerId = null;
+    collageState.smartAutoPhotos = [];
+    
+    if (t.isSmartAuto) {
+        requestRenderCollage();
+        switchCollageSidebar('photos');
+        Swal.fire({toast:true, position:'top', icon:'info', text:'Smart Auto Aktif! Klik foto untuk menyusun otomatis.', showConfirmButton:false, timer:4000});
+        return;
+    }
     
     let boxes = t.calculateLayout(collageState.canvasW, collageState.canvasH, count);
     
@@ -6623,6 +6661,14 @@ function applyCollageTemplate(id) {
 }
 
 function addPhotoLayer(url) {
+    let t = collageTemplates[collageState.currentTemplateId];
+    if (t && t.isSmartAuto) {
+        if(!collageState.smartAutoPhotos) collageState.smartAutoPhotos = [];
+        collageState.smartAutoPhotos.push(url);
+        recalculateSmartAutoLayout();
+        return;
+    }
+
     let activeLayer = collageState.layers.find(l => l.id === collageState.activeLayerId);
     
     // Load image to get aspect ratio
@@ -6687,11 +6733,129 @@ function addPhotoLayer(url) {
     img.src = thumbUrl;
 }
 
+function recalculateSmartAutoLayout() {
+    let count = collageState.smartAutoPhotos.length;
+    if (count === 0) return;
+    
+    let w = collageState.canvasW;
+    let h = collageState.canvasH;
+    let space = 20; // Default spacing
+    let boxes = [];
+    
+    let cols = Math.ceil(Math.sqrt(count));
+    let rows = Math.ceil(count / cols);
+    
+    let boxW = (w - (space * (cols + 1))) / cols;
+    let boxH = (h - (space * (rows + 1))) / rows;
+    
+    for(let i=0; i<count; i++) {
+        let r = Math.floor(i / cols);
+        let c = i % cols;
+        boxes.push({
+            x: space + c * (boxW + space),
+            y: space + r * (boxH + space),
+            w: boxW,
+            h: boxH
+        });
+    }
+    
+    collageState.layers = [];
+    collageState.activeLayerId = null;
+    
+    collageState.smartAutoPhotos.forEach((photoUrl, i) => {
+        let box = boxes[i];
+        let img = new Image();
+        img.crossOrigin = "anonymous";
+        let thumbUrl = photoUrl.includes('blob:') ? photoUrl : photoUrl.replace('=s0', '=w800');
+        img.onload = function() {
+            imageCache[photoUrl] = img;
+            let scaleW = box.w / img.width;
+            let scaleH = box.h / img.height;
+            let scale = Math.max(scaleW, scaleH);
+            
+            let layer = {
+                id: 'layer_smart_' + i + '_' + new Date().getTime(),
+                isPlaceholder: false,
+                isFrame: true,
+                url: photoUrl,
+                x: box.x + box.w/2,
+                y: box.y + box.h/2,
+                w: box.w,
+                h: box.h,
+                scale: 1,
+                rotation: 0,
+                photoOffsetX: 0,
+                photoOffsetY: 0,
+                photoScale: scale,
+                photoOrigW: img.width,
+                photoOrigH: img.height,
+                zIndex: i
+            };
+            collageState.layers.push(layer);
+            requestRenderCollage();
+        };
+        img.src = thumbUrl;
+    });
+}
+
 function removeActiveLayer() {
     if (!collageState.activeLayerId) return;
-    collageState.layers = collageState.layers.filter(l => l.id !== collageState.activeLayerId);
-    collageState.activeLayerId = null;
+    let idx = collageState.layers.findIndex(l => l.id === collageState.activeLayerId);
+    if(idx !== -1) {
+        let layer = collageState.layers[idx];
+        let t = collageTemplates[collageState.currentTemplateId];
+        
+        if (layer.isFrame && (!t || !t.isSmartAuto)) {
+            // Fix: Just clear the frame, do not delete the box
+            layer.url = '';
+            layer.isPlaceholder = true;
+            layer.photoOffsetX = 0;
+            layer.photoOffsetY = 0;
+            layer.photoScale = 1;
+        } else {
+            // Delete completely
+            if (t && t.isSmartAuto) {
+                let pIdx = collageState.smartAutoPhotos.indexOf(layer.url);
+                if(pIdx !== -1) collageState.smartAutoPhotos.splice(pIdx, 1);
+                collageState.layers.splice(idx, 1);
+                collageState.activeLayerId = null;
+                recalculateSmartAutoLayout();
+                return;
+            }
+            collageState.layers.splice(idx, 1);
+            collageState.activeLayerId = null;
+        }
+    }
     requestRenderCollage();
+}
+
+function addTextLayer() {
+    let txt = document.getElementById('cTextValue').value;
+    if(!txt) {
+        Swal.fire({toast:true, position:'top', icon:'warning', text:'Ketik teks terlebih dahulu!', showConfirmButton:false, timer:2000});
+        return;
+    }
+    let color = document.getElementById('cTextColor').value;
+    let font = document.getElementById('cTextFont').value;
+    
+    let layer = {
+        id: 'layer_txt_' + new Date().getTime(),
+        isText: true,
+        text: txt,
+        color: color,
+        font: font,
+        x: collageState.canvasW / 2,
+        y: collageState.canvasH / 2,
+        w: 600, // Interactive hit box width
+        h: 200, // Interactive hit box height
+        scale: 1,
+        rotation: 0,
+        zIndex: collageState.layers.length
+    };
+    collageState.layers.push(layer);
+    collageState.activeLayerId = layer.id;
+    requestRenderCollage();
+    document.getElementById('cTextValue').value = '';
 }
 
 function clearAllLayers() {
@@ -6879,8 +7043,14 @@ function updateInteractiveOverlays(viewScale) {
     sortedLayers.forEach(layer => {
         let pxX = layer.x * viewScale;
         let pxY = layer.y * viewScale;
-        let pxW = layer.w * layer.scale * viewScale;
-        let pxH = layer.h * layer.scale * viewScale;
+        let pxW, pxH;
+        if (layer.isText) {
+            pxW = layer.w * layer.scale * viewScale;
+            pxH = layer.h * layer.scale * viewScale;
+        } else {
+            pxW = layer.w * layer.scale * viewScale;
+            pxH = layer.h * layer.scale * viewScale;
+        }
         
         let isActive = collageState.activeLayerId === layer.id;
         
@@ -7045,6 +7215,13 @@ async function compositeFinalHDCanvas() {
         if (layer.isPlaceholder) {
             ctx.fillStyle = '#e5e7eb';
             ctx.fillRect(-layer.w/2, -layer.h/2, layer.w, layer.h);
+        } else if (layer.isText) {
+            ctx.fillStyle = layer.color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            let fontSize = 150; 
+            ctx.font = `bold ${fontSize}px "${layer.font}"`;
+            ctx.fillText(layer.text, 0, 0);
         } else if (layer.isFrame) {
             let hdUrl = layer.url.includes('blob:') ? layer.url : layer.url.replace(/=w\d+/, '=s0');
             let hdImg = new Image();
