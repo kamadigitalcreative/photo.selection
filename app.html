@@ -4166,7 +4166,6 @@
                 var safePass = row['Password Client'] ? escapeHTML(String(row['Password Client'])) : "(tanpa password)";
 
                 // --- PENGAMAN TOMBOL ONCLICK ---
-                // Mencegah tanda kutip dari input hacker merusak fungsi JS
                 var safeJSName = rawName.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
                 var isUserAdmin = currentUser && currentUser.role === 'Admin';
@@ -4174,7 +4173,12 @@
                 var safeOwner = typeof escapeHTML === 'function' ? escapeHTML(ownerRaw) : ownerRaw.replace(/</g, "&lt;").replace(/>/g, "&gt;");
                 var ownerHtml = isUserAdmin ? '<td class="p-4 sm:px-6 admin-only-col"><span class="bg-indigo-50 text-indigo-700 text-xs px-2 py-1 rounded border border-indigo-100"><i class="fa-solid fa-user-astronaut mr-1"></i>' + safeOwner + '</span></td>' : '<td class="admin-only-col hidden"></td>';
 
-                var gridBtnHtml = '';
+                var isWmOn = row['UseWatermark'] === true || row['UseWatermark'] === 'TRUE' || row['UseWatermark'] === 1;
+                var wmBtnClass = isWmOn ? "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 hover:text-blue-800" : "bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100 hover:text-gray-600";
+                var wmIcon = isWmOn ? "fa-droplet" : "fa-droplet-slash";
+                var wmBtnHtml = '<button onclick="toggleWatermarkStatus(\'' + row.ID + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg transition-colors flex items-center justify-center text-xs font-semibold border ' + wmBtnClass + '" title="Watermark On/Off">' +
+                    '<i class="fa-solid ' + wmIcon + ' sm:mr-1.5"></i> <span class="hidden sm:inline">Watermark</span>' +
+                    '</button>';
 
                 tr.innerHTML =
                     '<td class="p-3 sm:px-6 max-w-[140px] sm:max-w-xs">' +
@@ -4188,7 +4192,8 @@
                     '</td>' +
                     '<td class="p-3 sm:px-6 text-xs text-gray-500 font-medium hidden sm:table-cell">' + dateFull + '</td>' +
                     '<td class="p-3 sm:px-6 text-right">' +
-                    '<div class="flex items-center justify-end gap-1.5 sm:gap-2">' +
+                    '<div class="flex items-center justify-end gap-1.5 sm:gap-2 flex-wrap">' +
+                    wmBtnHtml +
                     '<button onclick="copyProjectInfo(\'' + safeJSName + '\', \'' + displayLink + '\', \'' + safePass + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-gray-50 text-gray-700 hover:bg-gray-200 hover:text-kama-800 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200" title="Copy Link">' +
                     '<i class="fa-regular fa-copy sm:mr-1.5"></i> <span class="hidden sm:inline">Copy</span>' +
                     '</button>' +
@@ -4546,6 +4551,43 @@
                 btn.innerHTML = originalHtml;
                 btn.disabled = false;
                 Swal.fire('Error!', 'Gagal terhubung ke server', 'error');
+            });
+        }
+
+        function toggleWatermarkStatus(id) {
+            Swal.fire({
+                title: 'Ubah Status Watermark?',
+                text: 'Klien akan melihat/tidak melihat tombol Download sesuai status watermark.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3b82f6',
+                confirmButtonText: 'Ya, Ubah'
+            }).then(async function (result) {
+                if (result.isConfirmed) {
+                    startLoading("Menyimpan...");
+                    try {
+                        const response = await fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                action: 'toggleProjectWatermark',
+                                id: id,
+                                currentUser: currentUser
+                            })
+                        });
+                        const res = await response.json();
+                        endLoading();
+                        if (res.status === 'success' && res.data && res.data.success) {
+                            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Berhasil diubah', showConfirmButton: false, timer: 2000 });
+                            loadDataProjects(); // Refresh tabel
+                        } else {
+                            Swal.fire('Gagal', res.message || res.data?.message || 'Gagal mengubah watermark', 'error');
+                        }
+                    } catch (err) {
+                        endLoading();
+                        Swal.fire('Error', 'Koneksi terputus', 'error');
+                    }
+                }
             });
         }
 
