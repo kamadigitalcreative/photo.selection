@@ -4966,20 +4966,37 @@
             if (clientState.musicUrl && clientState.musicUrl.trim() !== '') {
                 bgmContainer.classList.remove('hidden');
                 var finalAudioUrl = clientState.musicUrl;
-                if (finalAudioUrl.includes('export=view')) {
-                    finalAudioUrl = finalAudioUrl.replace('export=view', 'export=download');
-                }
-                if (finalAudioUrl.includes('drive.google.com')) {
-                    finalAudioUrl = finalAudioUrl.replace('drive.google.com', 'docs.google.com');
-                }
-                bgmAudio.src = finalAudioUrl;
-                // Attempt autoplay
-                var playPromise = bgmAudio.play();
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        var btnIcon = document.querySelector('#btn-toggle-bgm i');
-                        if (btnIcon) btnIcon.className = 'fa-solid fa-music animate-spin';
-                    }).catch(() => { });
+                var urlParams = finalAudioUrl.match(/id=([-\w]{25,})/);
+                if (urlParams && urlParams[1]) {
+                    fetch(API_ENDPOINT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'getAudioData', fileId: urlParams[1] })
+                    }).then(res => res.json()).then(res => {
+                        if (res.status === 'success' && res.base64) {
+                            bgmAudio.src = res.base64;
+                            var playPromise = bgmAudio.play();
+                            if (playPromise !== undefined) {
+                                playPromise.then(() => {
+                                    var btnIcon = document.querySelector('#btn-toggle-bgm i');
+                                    if (btnIcon) btnIcon.className = 'fa-solid fa-music animate-spin';
+                                    var btn = document.getElementById('btn-toggle-bgm');
+                                    if (btn) { btn.classList.remove('bg-gray-100', 'text-gray-500'); btn.classList.add('bg-pink-50', 'text-pink-500'); }
+                                }).catch(() => { });
+                            }
+                        }
+                    }).catch(err => console.log('BGM load error:', err));
+                } else {
+                    bgmAudio.src = finalAudioUrl;
+                    var playPromise = bgmAudio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => {
+                            var btnIcon = document.querySelector('#btn-toggle-bgm i');
+                            if (btnIcon) btnIcon.className = 'fa-solid fa-music animate-spin';
+                            var btn = document.getElementById('btn-toggle-bgm');
+                            if (btn) { btn.classList.remove('bg-gray-100', 'text-gray-500'); btn.classList.add('bg-pink-50', 'text-pink-500'); }
+                        }).catch(() => { });
+                    }
                 }
             } else {
                 bgmContainer.classList.add('hidden');
