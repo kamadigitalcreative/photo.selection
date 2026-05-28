@@ -1826,17 +1826,34 @@
                             <input type="url" id="p_target_folder" autocomplete="new-password" placeholder="URL Folder untuk menyimpan hasil pilihan klien..." class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-sm">
                         </div>
                         <div>
-                            <label
-                                class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">WhatsApp
-                                Fotografer <span class="text-red-500">*</span></label>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">WhatsApp Fotografer <span class="text-red-500">*</span></label>
                             <div class="relative">
-                                <span class="absolute left-4 top-2.5 text-gray-400 text-sm"><i
-                                        class="fa-brands fa-whatsapp"></i></span>
-                                <input type="number" id="p_wa" autocomplete="new-password" name="prevent_autofill_wa"
-                                    required placeholder="628..."
-                                    class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-sm">
+                                <span class="absolute left-4 top-2.5 text-gray-400 text-sm"><i class="fa-brands fa-whatsapp"></i></span>
+                                <input type="number" id="p_wa" autocomplete="new-password" name="prevent_autofill_wa" required placeholder="628..." class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-sm">
                             </div>
                         </div>
+                        
+                        <!-- NEW PHASE 12 FIELDS -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Layout Galeri Klien</label>
+                                <select id="p_client_layout" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-sm">
+                                    <option value="masonry">Pinterest (Masonry)</option>
+                                    <option value="horizontal">Filmstrip (Horizontal)</option>
+                                    <option value="slideshow">Cinematic (Slideshow)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Harga Extra Foto (Rp)</label>
+                                <input type="number" id="p_extra_price" min="0" placeholder="0 = Gratis/Blokir" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-sm">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Background Music URL (Opsional)</label>
+                            <input type="url" id="p_music_url" placeholder="https://domain.com/music.mp3" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-sm">
+                        </div>
+                        <!-- END PHASE 12 FIELDS -->
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label
@@ -2098,6 +2115,13 @@
                     <p class="text-[11px] sm:text-xs text-gray-500 truncate" id="gallery-subtitle">Pilih maksimal <span
                             id="gallery-max" class="font-semibold text-kama-800">0</span> foto</p>
                 </div>
+            </div>
+            
+            <div id="bgm-player-container" class="hidden shrink-0 flex items-center justify-center mr-3">
+                <audio id="bgm-audio" loop></audio>
+                <button id="btn-toggle-bgm" onclick="toggleBGM()" class="w-8 h-8 rounded-full bg-pink-50 text-pink-500 hover:bg-pink-100 flex items-center justify-center transition-colors shadow-sm" title="Toggle Music">
+                    <i class="fa-solid fa-music"></i>
+                </button>
             </div>
             <div
                 class="shrink-0 flex items-center gap-3 sm:gap-4 bg-white border border-slate-200 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
@@ -4129,26 +4153,14 @@
 
             let wrpWm = document.getElementById('wrapper-watermark');
             if (wrpWm) {
-                let isWmEnabled = window.globalConfigObj && (window.globalConfigObj['Global_Watermark'] === true || window.globalConfigObj['Global_Watermark'] === 'TRUE' || window.globalConfigObj['Global_Watermark'] === 'true');
-                if (window.globalConfigObj && !isWmEnabled) {
-                    wrpWm.classList.add('hidden');
-                    wrpWm.classList.remove('flex');
-                } else {
-                    wrpWm.classList.remove('hidden');
-                    wrpWm.classList.add('flex');
-                }
+                wrpWm.classList.remove('hidden');
+                wrpWm.classList.add('flex');
             }
 
             let wrpCat = document.getElementById('wrapper-multicategory');
             if (wrpCat) {
-                let isCatEnabled = window.globalConfigObj && (window.globalConfigObj['Global_MultiCategory'] === true || window.globalConfigObj['Global_MultiCategory'] === 'TRUE' || window.globalConfigObj['Global_MultiCategory'] === 'true');
-                if (window.globalConfigObj && !isCatEnabled) {
-                    wrpCat.classList.add('hidden');
-                    wrpCat.classList.remove('flex');
-                } else {
-                    wrpCat.classList.remove('hidden');
-                    wrpCat.classList.add('flex');
-                }
+                wrpCat.classList.remove('hidden');
+                wrpCat.classList.add('flex');
             }
 
             // Reset category builder
@@ -4237,7 +4249,8 @@
                 finalMaxFoto = totalQuota; // Use the sum of category quotas as global max
             }
 
-            var formData = {
+            let formData = {
+                action: 'createProject',
                 namaClient: pNama ? pNama.value.trim() : '',
                 driveLink: pDrive ? pDrive.value.trim() : '',
                 targetFolder: pTarget ? pTarget.value.trim() : '',
@@ -4245,7 +4258,10 @@
                 maxFoto: finalMaxFoto,
                 passwordClient: pPass ? pPass.value.trim() : '',
                 useWatermark: pWatermark ? pWatermark.checked : false,
-                categories: categoriesData
+                categories: categoriesData,
+                clientLayout: document.getElementById('p_client_layout') ? document.getElementById('p_client_layout').value : 'masonry',
+                extraPrice: document.getElementById('p_extra_price') ? document.getElementById('p_extra_price').value : 0,
+                musicUrl: document.getElementById('p_music_url') ? document.getElementById('p_music_url').value.trim() : ''
             };
 
             setButtonState('btnCreate', true, 'Membuat Link...');
@@ -4793,6 +4809,23 @@
             var gTitle = document.getElementById('gallery-title');
             if (gTitle) gTitle.innerText = folderName || clientState.namaClient;
 
+            // SETUP BGM PLAYER
+            var bgmContainer = document.getElementById('bgm-player-container');
+            var bgmAudio = document.getElementById('bgm-audio');
+            if (clientState.musicUrl && clientState.musicUrl.trim() !== '') {
+                bgmContainer.classList.remove('hidden');
+                bgmAudio.src = clientState.musicUrl;
+                // Attempt autoplay
+                bgmAudio.play().catch(function(e) {
+                    // Autoplay blocked, wait for user interaction
+                    console.log("Autoplay blocked, wait for interaction");
+                });
+            } else {
+                bgmContainer.classList.add('hidden');
+                bgmAudio.pause();
+                bgmAudio.src = '';
+            }
+
             var btnBack = document.getElementById('btn-back-folder');
             if (btnBack) {
                 if (clientState.folderHistory.length > 0) {
@@ -5080,7 +5113,24 @@
             var container = document.getElementById('gallery-container');
             var emptyState = document.getElementById('gallery-empty');
 
-            if (container) container.innerHTML = '';
+            if (container) {
+                container.innerHTML = '';
+                
+                // RESET KELAS LAYOUT
+                container.className = 'max-w-[1600px] mx-auto';
+                
+                // TERAPKAN LAYOUT SESUAI PHASE 12
+                if (clientState.clientLayout === 'masonry') {
+                    container.classList.add('columns-2', 'sm:columns-3', 'md:columns-4', 'lg:columns-5', 'gap-4', 'space-y-4', 'p-4');
+                } else if (clientState.clientLayout === 'horizontal') {
+                    container.classList.add('flex', 'overflow-x-auto', 'snap-x', 'snap-mandatory', 'gap-4', 'p-4', 'hide-scrollbar', 'items-center', 'h-full');
+                } else if (clientState.clientLayout === 'slideshow') {
+                    container.classList.add('flex', 'overflow-x-auto', 'snap-x', 'snap-mandatory', 'hide-scrollbar', 'h-full');
+                } else {
+                    // Default Grid
+                    container.classList.add('gallery-grid', 'p-4');
+                }
+            }
 
             var hasFolders = clientState.currentContent.folders && clientState.currentContent.folders.length > 0;
             var hasImages = clientState.currentContent.images && clientState.currentContent.images.length > 0;
@@ -5111,7 +5161,20 @@
 
             if (hasImages) {
                 clientState.currentContent.images.forEach(function (imgData, index) {
-                    var card = document.createElement('div'); card.className = "photo-card group"; card.dataset.filename = imgData.name;
+                    var card = document.createElement('div');
+                    
+                    // PENYESUAIAN CSS LAYOUT PHASE 12
+                    if (clientState.clientLayout === 'masonry') {
+                        card.className = "photo-card group break-inside-avoid mb-4";
+                    } else if (clientState.clientLayout === 'horizontal') {
+                        card.className = "photo-card group shrink-0 snap-center w-[80vw] sm:w-[400px] h-auto max-h-[80vh]";
+                    } else if (clientState.clientLayout === 'slideshow') {
+                        card.className = "photo-card group shrink-0 snap-center w-full h-full flex items-center justify-center bg-black";
+                    } else {
+                        card.className = "photo-card group"; 
+                    }
+                    
+                    card.dataset.filename = imgData.name;
 
                     var isSelected = clientState.selectedImages.some(function (sel) {
                         return sel.name === imgData.name && sel.folder === clientState.currentFolderName;
@@ -5178,12 +5241,32 @@
                 
                 // Normal Select
                 if (clientState.galleryMode !== 'download' && clientState.selectedImages.length >= clientState.maxFoto) {
-                    Swal.fire({ title: (isEn ? 'Limit Reached' : 'Batas Pilihan'), text: (isEn ? 'Maximum ' : 'Maksimal ') + clientState.maxFoto + (isEn ? ' photos.' : ' foto.'), icon: 'info', confirmButtonColor: '#1e1e2d' });
-                    return;
+                    if (clientState.extraPrice > 0) {
+                        let extraCount = (clientState.selectedImages.length - clientState.maxFoto) + 1;
+                        let extraFee = extraCount * clientState.extraPrice;
+                        Swal.fire({
+                            title: (isEn ? 'Extra Photo' : 'Foto Tambahan'),
+                            html: (isEn ? 'You have exceeded the quota. This extra photo will cost ' : 'Anda telah melampaui kuota. Tambahan foto ini dikenakan biaya ') + '<b>Rp ' + clientState.extraPrice.toLocaleString('id-ID') + '</b>.<br><br>' + 
+                                  (isEn ? 'Total Extra Fee: ' : 'Total Biaya Tambahan: ') + '<b>Rp ' + extraFee.toLocaleString('id-ID') + '</b>.<br><br>' +
+                                  (isEn ? 'Continue selecting?' : 'Lanjutkan memilih?'),
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: (isEn ? 'Yes, Add' : 'Ya, Tambahkan'),
+                            cancelButtonText: (isEn ? 'Cancel' : 'Batal'),
+                            confirmButtonColor: '#1e1e2d'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                performSelectionData(cardElement, filename, url, 'Default', btnPilih, isEn);
+                            }
+                        });
+                        return;
+                    } else {
+                        Swal.fire({ title: (isEn ? 'Limit Reached' : 'Batas Pilihan'), text: (isEn ? 'Maximum ' : 'Maksimal ') + clientState.maxFoto + (isEn ? ' photos.' : ' foto.'), icon: 'info', confirmButtonColor: '#1e1e2d' });
+                        return;
+                    }
                 }
-                clientState.selectedImages.push({ name: filename, folder: clientState.currentFolderName, url: url, category: 'Default' });
-                if (cardElement && cardElement.classList) cardElement.classList.add('selected');
-                if (btnPilih && clientState.galleryMode !== 'download') btnPilih.innerHTML = '<i class="fa-solid fa-check"></i> ' + (isEn ? 'Deselect' : 'Batal');
+                
+                performSelectionData(cardElement, filename, url, 'Default', btnPilih, isEn);
             } else {
                 // DESELECT
                 clientState.selectedImages.splice(index, 1);
@@ -5195,6 +5278,35 @@
             // --- FIX PC/LAPTOP: Tembak status tiap kali foto dipilih/dihapus ---
             var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
             // CEGAH KEBOCORAN DATA: Jangan simpan pilihan ke database jika sedang Mode Download
+            if (!isSubmitted && clientState.galleryMode !== 'download') {
+                pingClientStatus('Sedang Memilih');
+            }
+        }
+        
+        // BGM Toggle Function
+        window.toggleBGM = function() {
+            var audio = document.getElementById('bgm-audio');
+            var btn = document.getElementById('btn-toggle-bgm');
+            var icon = btn.querySelector('i');
+            if (audio.paused) {
+                audio.play();
+                icon.className = 'fa-solid fa-music';
+                btn.classList.replace('bg-gray-100', 'bg-pink-50');
+                btn.classList.replace('text-gray-500', 'text-pink-500');
+            } else {
+                audio.pause();
+                icon.className = 'fa-solid fa-volume-xmark';
+                btn.classList.replace('bg-pink-50', 'bg-gray-100');
+                btn.classList.replace('text-pink-500', 'text-gray-500');
+            }
+        };
+        
+        function performSelectionData(cardElement, filename, url, category, btnPilih, isEn) {
+            clientState.selectedImages.push({ name: filename, folder: clientState.currentFolderName, url: url, category: category });
+            if (cardElement && cardElement.classList) cardElement.classList.add('selected');
+            if (btnPilih && clientState.galleryMode !== 'download') btnPilih.innerHTML = '<i class="fa-solid fa-check"></i> ' + (isEn ? 'Deselect' : 'Batal');
+            updateClientCounterUI();
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
             if (!isSubmitted && clientState.galleryMode !== 'download') {
                 pingClientStatus('Sedang Memilih');
             }
@@ -5226,17 +5338,10 @@
                 
                 if (!isFull) {
                     btn.onclick = function() {
-                        clientState.selectedImages.push({ name: filename, folder: clientState.currentFolderName, url: url, category: cat.name });
-                        
                         var btnPilih = cardElement ? cardElement.querySelector('.btn-pilih-foto') : null;
-                        if (cardElement && cardElement.classList) cardElement.classList.add('selected');
-                        if (btnPilih && clientState.galleryMode !== 'download') btnPilih.innerHTML = '<i class="fa-solid fa-check"></i> ' + (isEn ? 'Deselect' : 'Batal');
-                        
-                        updateClientCounterUI();
-                        
-                        var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
-                        if (!isSubmitted && clientState.galleryMode !== 'download') pingClientStatus('Sedang Memilih');
-                        
+                        document.getElementById('categorySelectorModal').classList.add('hidden');
+                        document.getElementById('categorySelectorModal').classList.remove('flex');
+                        performSelectionData(cardElement, filename, url, cat.name, btnPilih, isEn);
                         closeCategorySelector();
                     };
                 }
@@ -5345,6 +5450,17 @@
                     for (var i = 0; i < sorted.length; i++) { text += (i + 1) + ". " + sorted[i] + "\n"; }
                     text += "\n";
                 }
+            }
+
+            if (clientState.extraPrice > 0 && clientState.selectedImages.length > clientState.maxFoto) {
+                var extraCount = clientState.selectedImages.length - clientState.maxFoto;
+                var extraFee = extraCount * clientState.extraPrice;
+                var isEn = localStorage.getItem('ps_lang') === 'en';
+                text += "💰 *" + (isEn ? "EXTRA PHOTO CHARGE" : "TAGIHAN FOTO TAMBAHAN") + "*\n";
+                text += (isEn ? "Quota: " : "Kuota: ") + clientState.maxFoto + "\n";
+                text += (isEn ? "Total Selected: " : "Total Dipilih: ") + clientState.selectedImages.length + "\n";
+                text += (isEn ? "Extra Photo: " : "Kelebihan: ") + extraCount + " x Rp " + clientState.extraPrice.toLocaleString('id-ID') + "\n";
+                text += (isEn ? "Total Extra Fee: " : "Total Biaya Tambahan: ") + "*Rp " + extraFee.toLocaleString('id-ID') + "*\n\n";
             }
 
             text += "Terima kasih.";
