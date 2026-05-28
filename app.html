@@ -1790,12 +1790,12 @@
                                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-sm">
                         </div>
                         <div>
-                            <label
-                                class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Google
-                                Drive Link <span class="text-red-500">*</span></label>
-                            <input type="url" id="p_drive" autocomplete="new-password" name="prevent_autofill_drive"
-                                required placeholder="https://drive.google.com/..."
-                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-sm text-blue-600">
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Google Drive Link <span class="text-red-500">*</span></label>
+                            <input type="url" id="p_drive" autocomplete="new-password" name="prevent_autofill_drive" required placeholder="https://drive.google.com/..." class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-sm text-blue-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Folder Tujuan Pilihan (Opsional)</label>
+                            <input type="url" id="p_target_folder" autocomplete="new-password" placeholder="URL Folder untuk menyimpan hasil pilihan klien..." class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-sm">
                         </div>
                         <div>
                             <label
@@ -4180,6 +4180,7 @@
             e.preventDefault();
             var pNama = document.getElementById('p_nama');
             var pDrive = document.getElementById('p_drive');
+            var pTarget = document.getElementById('p_target_folder');
             var pWa = document.getElementById('p_wa');
             var pMax = document.getElementById('p_max');
             var pPass = document.getElementById('p_pass');
@@ -4211,6 +4212,7 @@
             var formData = {
                 namaClient: pNama ? pNama.value.trim() : '',
                 driveLink: pDrive ? pDrive.value.trim() : '',
+                targetFolder: pTarget ? pTarget.value.trim() : '',
                 nomorWA: pWa ? pWa.value.trim() : '',
                 maxFoto: finalMaxFoto,
                 passwordClient: pPass ? pPass.value.trim() : '',
@@ -6595,14 +6597,20 @@ function applyCollageTemplate(id) {
         let layer = {
             id: 'layer_tpl_' + i + '_' + new Date().getTime(),
             isPlaceholder: true,
+            isFrame: true, // Fixed frame mode
             placeholderNumber: i + 1,
             url: '',
             x: box.x + box.w/2,
             y: box.y + box.h/2,
             w: box.w,
             h: box.h,
-            scale: 1,
-            rotation: 0,
+            scale: 1, // Scale of the frame (usually locked)
+            rotation: 0, // Rotation of the frame
+            photoOffsetX: 0, // Internal photo translation X
+            photoOffsetY: 0, // Internal photo translation Y
+            photoScale: 1, // Internal photo zoom
+            photoOrigW: 0,
+            photoOrigH: 0,
             zIndex: i
         };
         collageState.layers.push(layer);
@@ -6626,22 +6634,32 @@ function addPhotoLayer(url) {
         imageCache[url] = img; // Cache it
         
         if (activeLayer && activeLayer.isPlaceholder) {
-            // Fill Placeholder
-            let targetW = activeLayer.w * activeLayer.scale;
-            let targetH = activeLayer.h * activeLayer.scale;
-            let scaleW = targetW / img.width;
-            let scaleH = targetH / img.height;
+            // Fill Frame (Clipping Mask)
+            let scaleW = activeLayer.w / img.width;
+            let scaleH = activeLayer.h / img.height;
+            let scale = Math.max(scaleW, scaleH); // Cover mode
+            
+            activeLayer.url = url;
+            activeLayer.photoOrigW = img.width;
+            activeLayer.photoOrigH = img.height;
+            activeLayer.photoScale = scale;
+            activeLayer.photoOffsetX = 0;
+            activeLayer.photoOffsetY = 0;
+            activeLayer.isPlaceholder = false;
+        } else if (activeLayer && activeLayer.isFrame) {
+            // Replace photo inside existing Frame
+            let scaleW = activeLayer.w / img.width;
+            let scaleH = activeLayer.h / img.height;
             let scale = Math.max(scaleW, scaleH);
             
             activeLayer.url = url;
-            activeLayer.origW = img.width;
-            activeLayer.origH = img.height;
-            activeLayer.w = img.width;
-            activeLayer.h = img.height;
-            activeLayer.scale = scale;
-            activeLayer.isPlaceholder = false;
+            activeLayer.photoOrigW = img.width;
+            activeLayer.photoOrigH = img.height;
+            activeLayer.photoScale = scale;
+            activeLayer.photoOffsetX = 0;
+            activeLayer.photoOffsetY = 0;
         } else {
-            // Normal Add
+            // Normal Freeform Add
             let targetW = collageState.canvasW * 0.5; 
             let scale = targetW / img.width;
             let targetH = img.height * scale;
@@ -6650,6 +6668,7 @@ function addPhotoLayer(url) {
                 id: 'layer_' + new Date().getTime(),
                 url: url,
                 isPlaceholder: false,
+                isFrame: false,
                 origW: img.width,
                 origH: img.height,
                 x: collageState.canvasW / 2, // Center
@@ -6781,7 +6800,30 @@ function renderCollagePreview() {
             ctx.textBaseline = 'middle';
             ctx.font = 'bold 80px sans-serif';
             ctx.fillText(layer.placeholderNumber, 0, 0);
+        } else if (layer.isFrame) {
+            // --- FRAME / CLIPPING MASK MODE ---
+            let img = imageCache[layer.url];
+            if(img) {
+                // 1. Draw frame background
+                ctx.fillStyle = '#f3f4f6';
+                ctx.fillRect(-layer.w/2, -layer.h/2, layer.w, layer.h);
+                
+                // 2. Create clipping path
+                ctx.beginPath();
+                ctx.rect(-layer.w/2, -layer.h/2, layer.w, layer.h);
+                ctx.clip();
+                
+                // 3. Draw internal photo
+                let drawW = layer.photoOrigW * layer.photoScale;
+                let drawH = layer.photoOrigH * layer.photoScale;
+                // Center the photo + add offsets
+                let drawX = (-drawW/2) + layer.photoOffsetX;
+                let drawY = (-drawH/2) + layer.photoOffsetY;
+                
+                ctx.drawImage(img, drawX, drawY, drawW, drawH);
+            }
         } else {
+            // --- FREEFORM MODE ---
             let img = imageCache[layer.url];
             if(img) {
                 ctx.drawImage(img, -layer.w/2, -layer.h/2, layer.w, layer.h);
@@ -6894,6 +6936,9 @@ function startDragLayer(e, id, mode) {
     collageState.startX = pos.x; collageState.startY = pos.y;
     collageState.initX = layer.x; collageState.initY = layer.y;
     collageState.initScale = layer.scale;
+    collageState.initPhotoOffsetX = layer.photoOffsetX || 0;
+    collageState.initPhotoOffsetY = layer.photoOffsetY || 0;
+    collageState.initPhotoScale = layer.photoScale || 1;
     
     document.addEventListener('mousemove', dragLayer);
     document.addEventListener('mouseup', endDragLayer);
@@ -6919,17 +6964,30 @@ function dragLayer(e) {
     let viewScale = collageState.canvasW / canvasRect.width;
     
     if (collageState.dragMode === 'move') {
-        layer.x = collageState.initX + (dx * viewScale);
-        layer.y = collageState.initY + (dy * viewScale);
+        if (layer.isFrame) {
+            // Move internal photo
+            layer.photoOffsetX = collageState.initPhotoOffsetX + (dx * viewScale);
+            layer.photoOffsetY = collageState.initPhotoOffsetY + (dy * viewScale);
+        } else {
+            layer.x = collageState.initX + (dx * viewScale);
+            layer.y = collageState.initY + (dy * viewScale);
+        }
     } else if (collageState.dragMode.startsWith('scale')) {
-        // Simple uniform scaling based on Y drag
-        let scaleFactor = (layer.h * layer.scale + (dy * viewScale)) / (layer.h * layer.scale);
+        let baseHeight = layer.isFrame ? (layer.photoOrigH * layer.photoScale) : (layer.h * layer.scale);
+        if (!baseHeight || baseHeight === 0) baseHeight = 100;
+        
+        let scaleFactor = (baseHeight + (dy * viewScale)) / baseHeight;
         if (collageState.dragMode === 'scale_tl' || collageState.dragMode === 'scale_tr') {
-            scaleFactor = (layer.h * layer.scale - (dy * viewScale)) / (layer.h * layer.scale);
+            scaleFactor = (baseHeight - (dy * viewScale)) / baseHeight;
         }
         
-        let newScale = collageState.initScale * scaleFactor;
-        if (newScale > 0.1) layer.scale = newScale;
+        if (layer.isFrame) {
+            let newScale = collageState.initPhotoScale * scaleFactor;
+            if (newScale > 0.01) layer.photoScale = newScale;
+        } else {
+            let newScale = collageState.initScale * scaleFactor;
+            if (newScale > 0.01) layer.scale = newScale;
+        }
     }
     
     requestRenderCollage();
@@ -6987,6 +7045,22 @@ async function compositeFinalHDCanvas() {
         if (layer.isPlaceholder) {
             ctx.fillStyle = '#e5e7eb';
             ctx.fillRect(-layer.w/2, -layer.h/2, layer.w, layer.h);
+        } else if (layer.isFrame) {
+            let hdUrl = layer.url.includes('blob:') ? layer.url : layer.url.replace(/=w\d+/, '=s0');
+            let hdImg = new Image();
+            hdImg.crossOrigin = "anonymous";
+            await new Promise(r => { hdImg.onload=r; hdImg.onerror=r; hdImg.src=hdUrl; });
+            
+            ctx.beginPath();
+            ctx.rect(-layer.w/2, -layer.h/2, layer.w, layer.h);
+            ctx.clip();
+            
+            let drawW = layer.photoOrigW * layer.photoScale;
+            let drawH = layer.photoOrigH * layer.photoScale;
+            let drawX = (-drawW/2) + layer.photoOffsetX;
+            let drawY = (-drawH/2) + layer.photoOffsetY;
+            
+            ctx.drawImage(hdImg, drawX, drawY, drawW, drawH);
         } else {
             let hdUrl = layer.url.includes('blob:') ? layer.url : layer.url.replace(/=w\d+/, '=s0');
             let hdImg = new Image();
