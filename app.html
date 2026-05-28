@@ -119,13 +119,14 @@
 
         /* Phase 2: Watermark Dinamis */
         .has-watermark .photo-card::after,
-        .has-watermark #imageViewer::after {
+        .has-watermark #viewerImageContainer::after {
             content: "";
             position: absolute;
             inset: 0;
             pointer-events: none;
             background-image: var(--watermark-bg);
-            background-repeat: repeat;
+            background-position: center;
+            background-repeat: no-repeat;
             z-index: 100;
         }
 
@@ -1966,7 +1967,7 @@
             <i class="fa-solid fa-chevron-right text-xl sm:text-2xl"></i>
         </button>
 
-        <div class="relative max-w-full max-h-[85vh] flex flex-col items-center justify-center overflow-hidden"
+        <div id="viewerImageContainer" class="relative max-w-full max-h-[85vh] flex flex-col items-center justify-center overflow-hidden"
             onclick="event.stopPropagation()">
             <img id="viewerImage" src="" onwheel="handleViewerWheel(event)" onmousedown="startDragViewer(event)"
                 onmousemove="dragViewer(event)" onmouseup="endDragViewer()" onmouseleave="endDragViewer()"
@@ -4314,15 +4315,11 @@
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             
-            // Text stroke (outline) for better visibility on white images
-            ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
-            ctx.lineWidth = 3;
-            ctx.strokeText(brandName, 0, 0);
+            // Draw text without outline
             ctx.fillText(brandName, 0, 0);
             
             // Add a smaller sub-text
             ctx.font = '600 12px "Inter", sans-serif';
-            ctx.strokeText('CONFIDENTIAL', 0, 30);
             ctx.fillText('CONFIDENTIAL', 0, 30);
 
             const dataURL = canvas.toDataURL('image/png');
