@@ -6331,9 +6331,7 @@ let collageState = {
     activeLayerId: null,
     
     // Texts
-    texts: [
-        { id: 1, text: 'VIBRANCE', font: 'Playfair Display', color: '#2a2a2a', x: 50, y: 80, align: 'center', size: 50 }
-    ],
+    texts: [],
     
     // Dragging State
     dragMode: null, // 'move', 'scale_tl', 'scale_tr', 'scale_bl', 'scale_br', 'rotate', 'move_text'
@@ -6992,6 +6990,15 @@ function renderCollagePreview() {
             ctx.textBaseline = 'middle';
             ctx.font = 'bold 80px sans-serif';
             ctx.fillText(layer.placeholderNumber, 0, 0);
+        } else if (layer.isText) {
+            // --- TEXT LAYER MODE ---
+            ctx.fillStyle = layer.color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            // Determine a good font size based on the layer's interactive height or scale.
+            // Using 150px base to match the HD export.
+            ctx.font = `bold 150px "${layer.font}"`;
+            ctx.fillText(layer.text, 0, 0);
         } else if (layer.isFrame) {
             // --- FRAME / CLIPPING MASK MODE ---
             let img = imageCache[layer.url];
@@ -7023,23 +7030,6 @@ function renderCollagePreview() {
         }
         ctx.restore();
     });
-    
-    // Draw Texts
-    collageState.texts.forEach(txt => {
-        ctx.save();
-        ctx.fillStyle = txt.color;
-        ctx.textAlign = txt.align;
-        ctx.textBaseline = 'middle';
-        ctx.font = `600 ${txt.size}px "${txt.font}", sans-serif`;
-        
-        let pxX = (txt.x / 100) * w;
-        let pxY = (txt.y / 100) * h;
-        
-        ctx.translate(pxX, pxY);
-        ctx.fillText(txt.text, 0, 0);
-        ctx.restore();
-    });
-    
     // Draw Carousel Splitting Lines
     if (collageState.isCarousel && collageState.carouselScreens > 1) {
         ctx.save();
@@ -7337,21 +7327,6 @@ async function compositeFinalHDCanvas() {
         }
         ctx.restore();
     }
-    
-    // Texts
-    collageState.texts.forEach(txt => {
-        ctx.save();
-        ctx.fillStyle = txt.color;
-        ctx.textAlign = txt.align;
-        ctx.textBaseline = 'middle';
-        ctx.font = `600 ${txt.size * exportScale}px "${txt.font}", sans-serif`;
-        let pxX = (txt.x / 100) * finalCanvas.width;
-        let pxY = (txt.y / 100) * finalCanvas.height;
-        ctx.translate(pxX, pxY);
-        ctx.fillText(txt.text, 0, 0);
-        ctx.restore();
-    });
-    
     Swal.close();
     return finalCanvas;
 }
