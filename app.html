@@ -5697,6 +5697,11 @@
                 text += (isEn ? "Total Extra Fee: " : "Total Biaya Tambahan: ") + "*Rp " + extraFee.toLocaleString('id-ID') + "*\n\n";
             }
 
+            if (proofUrl) {
+                var isEn = localStorage.getItem('ps_lang') === 'en';
+                text += "🧾 *" + (isEn ? "PAYMENT PROOF" : "BUKTI PEMBAYARAN") + "*\n" + proofUrl + "\n\n";
+            }
+
             text += "Terima kasih.";
             return text;
         }
