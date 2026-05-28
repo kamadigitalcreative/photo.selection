@@ -4580,7 +4580,25 @@
                         endLoading();
                         if (res.status === 'success' && res.data && res.data.success) {
                             Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Berhasil diubah', showConfirmButton: false, timer: 2000 });
-                            loadDataProjects(); // Refresh tabel
+                            
+                            // UPDATE CACHE LOKAL SECARA INSTAN AGAR WARNA TOMBOL BERUBAH DETIK ITU JUGA
+                            var cacheKey = 'ps_cache_projects_' + (currentUser ? currentUser.username : 'guest');
+                            var cachedProjectsStr = localStorage.getItem(cacheKey);
+                            if (cachedProjectsStr) {
+                                try {
+                                    var projs = JSON.parse(cachedProjectsStr);
+                                    for (var i = 0; i < projs.length; i++) {
+                                        if (projs[i].ID === id) {
+                                            projs[i]['UseWatermark'] = res.data.newValue;
+                                            break;
+                                        }
+                                    }
+                                    localStorage.setItem(cacheKey, JSON.stringify(projs));
+                                    renderProjectsTable(projs);
+                                } catch(e) {}
+                            }
+                            
+                            loadDataProjects(); // Sinkronisasi background
                         } else {
                             Swal.fire('Gagal', res.message || res.data?.message || 'Gagal mengubah watermark', 'error');
                         }
