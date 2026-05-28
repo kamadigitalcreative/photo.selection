@@ -6891,6 +6891,13 @@ function applyCustomCanvasSize() {
     
     collageState.canvasW = pxW; collageState.canvasH = pxH;
     
+    // Update the DOM container size to match resolution
+    let area = document.getElementById('collageInteractiveArea');
+    if (area) {
+        area.style.width = pxW + 'px';
+        area.style.height = pxH + 'px';
+    }
+    
     // Handle Carousel Mode
     collageState.isCarousel = document.getElementById('cCarouselToggle') && document.getElementById('cCarouselToggle').checked;
     if(collageState.isCarousel) {
