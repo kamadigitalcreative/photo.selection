@@ -117,6 +117,18 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
+        /* Phase 2: Watermark Dinamis */
+        .has-watermark .photo-card::after,
+        .has-watermark #imageViewer::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image: var(--watermark-bg);
+            background-repeat: repeat;
+            z-index: 100;
+        }
+
         /* PREMIUM UI UPGRADES (Landing Page Match) */
         .glass-header {
             background: rgba(255, 255, 255, 0.9);
@@ -1635,6 +1647,24 @@
                                         onclick="togglePasswordVisibility('p_pass', this)"></i>
                                 </div>
                             </div>
+                        </div>
+                        </div>
+
+                        <!-- UI WATERMARK DINAMIS (PHASE 2) -->
+                        <div id="wrapper-watermark" class="mt-2 flex items-center justify-between p-3 bg-blue-50/50 border border-blue-100 rounded-xl hidden">
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                                    <i class="fa-solid fa-droplet text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800 text-xs">Keamanan Watermark</h4>
+                                    <p class="text-[10px] text-gray-500 leading-tight mt-0.5">Tampilkan watermark logo Anda di setiap foto klien.</p>
+                                </div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
+                                <input type="checkbox" class="sr-only peer" id="p_watermark" checked>
+                                <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
                         </div>
                     </div>
                 </form>
@@ -3792,6 +3822,17 @@
             var content = document.getElementById('modalCreateContent');
             if (modal && modal.classList) { modal.classList.remove('hidden'); modal.classList.remove('opacity-0'); }
             if (content && content.classList) content.classList.remove('scale-95');
+
+            let wrpWm = document.getElementById('wrapper-watermark');
+            if (wrpWm) {
+                if (currentUser && (currentUser.fiturWatermark === true || currentUser.role === 'Admin')) {
+                    wrpWm.classList.remove('hidden');
+                    wrpWm.classList.add('flex');
+                } else {
+                    wrpWm.classList.add('hidden');
+                    wrpWm.classList.remove('flex');
+                }
+            }
         }
 
         function closeModalCreate() {
@@ -3809,13 +3850,15 @@
             var pWa = document.getElementById('p_wa');
             var pMax = document.getElementById('p_max');
             var pPass = document.getElementById('p_pass');
+            var pWatermark = document.getElementById('p_watermark');
 
             var formData = {
                 namaClient: pNama ? pNama.value.trim() : '',
                 driveLink: pDrive ? pDrive.value.trim() : '',
                 nomorWA: pWa ? pWa.value.trim() : '',
                 maxFoto: pMax ? pMax.value : '',
-                passwordClient: pPass ? pPass.value.trim() : ''
+                passwordClient: pPass ? pPass.value.trim() : '',
+                useWatermark: pWatermark ? pWatermark.checked : false
             };
 
             setButtonState('btnCreate', true, 'Membuat Link...');
@@ -3952,8 +3995,8 @@
             activeAccessUser = username;
             document.getElementById('ua-username').innerText = username;
             document.getElementById('ua-upsell').checked = (fUpsell === 'true' || fUpsell === true || fUpsell === 'TRUE');
-            document.getElementById('ua-grid').checked = (fGrid === 'true' || fGrid === true || fGrid === 'TRUE');
             document.getElementById('ua-watermark').checked = (fWatermark === 'true' || fWatermark === true || fWatermark === 'TRUE');
+            document.getElementById('ua-grid').checked = (fGrid === 'true' || fGrid === true || fGrid === 'TRUE');
             document.getElementById('ua-category').checked = (fCategory === 'true' || fCategory === true || fCategory === 'TRUE');
             
             let modal = document.getElementById('modalUserAccess');
@@ -4314,6 +4357,38 @@
             }
         }
 
+        // --- FUNGSI WATERMARK DINAMIS (PHASE 2) ---
+        function applyWatermark(brandName) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 300;
+            canvas.height = 300;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(-Math.PI / 4);
+            
+            ctx.font = 'bold 24px "Inter", sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Text stroke (outline) for better visibility on white images
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.lineWidth = 3;
+            ctx.strokeText(brandName, 0, 0);
+            ctx.fillText(brandName, 0, 0);
+            
+            // Add a smaller sub-text
+            ctx.font = '600 12px "Inter", sans-serif';
+            ctx.strokeText('CONFIDENTIAL', 0, 30);
+            ctx.fillText('CONFIDENTIAL', 0, 30);
+
+            const dataURL = canvas.toDataURL('image/png');
+            document.body.style.setProperty('--watermark-bg', `url(${dataURL})`);
+            document.body.classList.add('has-watermark');
+        }
+
         function processClientProjectData(projectData) {
             clientState.namaClient = projectData.namaClient;
             clientState.nomorWA = projectData.nomorWA;
@@ -4328,6 +4403,14 @@
             }
 
             clientState.folderHistory = [];
+
+            // Eksekusi Phase 2: Watermark Dinamis
+            if (projectData.watermarkEnabled) {
+                applyWatermark(projectData.brandName || 'Kama Creative');
+            } else {
+                document.body.classList.remove('has-watermark');
+                document.body.style.removeProperty('--watermark-bg');
+            }
 
             var gMax = document.getElementById('gallery-max');
             if (gMax) gMax.innerText = clientState.maxFoto;
@@ -5665,48 +5748,60 @@
         function renderCharts(data) {
             // Chart Trafik Pengunjung (Dummy Data menyesuaikan total views/visitors jika tidak ada time series)
             const ctxTraffic = document.getElementById('trafficChart');
+            const trafficData = [
+                Math.floor(data.visitors * 0.1), Math.floor(data.visitors * 0.2), 
+                Math.floor(data.visitors * 0.15), Math.floor(data.visitors * 0.25), 
+                Math.floor(data.visitors * 0.1), Math.floor(data.visitors * 0.05), 
+                Math.floor(data.visitors * 0.15)
+            ];
+
             if (ctxTraffic) {
-                if (trafficChartInstance) trafficChartInstance.destroy();
-                trafficChartInstance = new Chart(ctxTraffic, {
-                    type: 'line',
-                    data: {
-                        labels: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
-                        datasets: [{
-                            label: 'Pengunjung',
-                            data: [
-                                Math.floor(data.visitors * 0.1), Math.floor(data.visitors * 0.2), 
-                                Math.floor(data.visitors * 0.15), Math.floor(data.visitors * 0.25), 
-                                Math.floor(data.visitors * 0.1), Math.floor(data.visitors * 0.05), 
-                                Math.floor(data.visitors * 0.15)
-                            ],
-                            borderColor: '#8b5cf6',
-                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-                });
+                if (trafficChartInstance) {
+                    trafficChartInstance.data.datasets[0].data = trafficData;
+                    trafficChartInstance.update('none'); // Update without full re-animation to be seamless
+                } else {
+                    trafficChartInstance = new Chart(ctxTraffic, {
+                        type: 'line',
+                        data: {
+                            labels: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
+                            datasets: [{
+                                label: 'Pengunjung',
+                                data: trafficData,
+                                borderColor: '#8b5cf6',
+                                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                                borderWidth: 2,
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+                }
             }
 
             // Chart Status Fotografer
             const ctxStatus = document.getElementById('userStatusChart');
+            const statusData = [data.activeUsers || 0, data.inactiveUsers || 0, data.pendingUsers || 0];
+            
             if (ctxStatus) {
-                if (userStatusChartInstance) userStatusChartInstance.destroy();
-                userStatusChartInstance = new Chart(ctxStatus, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Aktif', 'Tidak Aktif', 'Tertunda'],
-                        datasets: [{
-                            data: [data.activeUsers || 0, data.inactiveUsers || 0, data.pendingUsers || 0],
-                            backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
-                            borderWidth: 0,
-                            hoverOffset: 4
-                        }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
-                });
+                if (userStatusChartInstance) {
+                    userStatusChartInstance.data.datasets[0].data = statusData;
+                    userStatusChartInstance.update('none');
+                } else {
+                    userStatusChartInstance = new Chart(ctxStatus, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Aktif', 'Tidak Aktif', 'Tertunda'],
+                            datasets: [{
+                                data: statusData,
+                                backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                                borderWidth: 0,
+                                hoverOffset: 4
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+                    });
+                }
             }
         }
 
