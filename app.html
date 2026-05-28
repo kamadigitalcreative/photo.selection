@@ -6899,6 +6899,34 @@ function applyCustomCanvasSize() {
         collageState.canvasW = pxW * collageState.carouselScreens;
     }
     
+    // Recalculate Layout if Template is active!
+    if (collageState.currentTemplateId) {
+        let t = collageTemplates[collageState.currentTemplateId];
+        if (t && t.isSmartAuto) {
+            recalculateSmartAutoLayout();
+        } else if (t) {
+            let frames = collageState.layers.filter(l => l.isFrame).sort((a,b) => a.placeholderNumber - b.placeholderNumber);
+            if (frames.length > 0) {
+                let boxes = t.calculateLayout(collageState.canvasW, collageState.canvasH, frames.length);
+                frames.forEach((frame, i) => {
+                    if (boxes[i]) {
+                        frame.x = boxes[i].x + boxes[i].w/2;
+                        frame.y = boxes[i].y + boxes[i].h/2;
+                        frame.w = boxes[i].w;
+                        frame.h = boxes[i].h;
+                        
+                        // Fix photo scaling to adapt to new box size
+                        if (!frame.isPlaceholder && frame.photoOrigW) {
+                            let scaleW = frame.w / frame.photoOrigW;
+                            let scaleH = frame.h / frame.photoOrigH;
+                            frame.photoScale = Math.max(scaleW, scaleH);
+                        }
+                    }
+                });
+            }
+        }
+    }
+    
     Swal.fire({toast:true, position:'top', icon:'success', text:`Kanvas: ${collageState.canvasW}x${collageState.canvasH} px`, showConfirmButton:false, timer:1500});
     requestRenderCollage();
     setTimeout(initWorkspace, 100);
