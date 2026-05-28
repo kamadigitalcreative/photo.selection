@@ -2023,6 +2023,7 @@
                     <i class="fa-solid fa-check"></i> <span>Pilih Foto</span>
                 </button>
             </div>
+        </div>
     </div>
 
     <!-- UI PEMILIH KATEGORI (BOTTOM SHEET - PHASE 3) -->
@@ -2049,7 +2050,6 @@
                     <!-- Buttons will be injected here -->
                 </div>
             </div>
-        </div>
         </div>
     </div>
 
@@ -3801,6 +3801,29 @@
 
         // --- PROJECTS LOGIC ---
         async function loadDataProjects() {
+            // Background fetch for Global Config so that Grid and Watermark buttons appear properly
+            if (!window.globalConfigObj) {
+                fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'getGlobalSettings', currentUser: currentUser })
+                }).then(r => r.json()).then(data => {
+                    if (data.status === 'success' && data.data) {
+                        let actualData = Array.isArray(data.data) ? data.data : (Array.isArray(data.data.data) ? data.data.data : null);
+                        if (actualData) {
+                            window.globalConfigObj = {};
+                            actualData.forEach(item => {
+                                if (item && item.Fitur) window.globalConfigObj[item.Fitur] = item.Status;
+                            });
+                            // Re-render table if projects are already cached and rendered
+                            var cKey = 'ps_cache_projects_' + (currentUser ? currentUser.username : 'guest');
+                            var cProj = localStorage.getItem(cKey);
+                            if (cProj) renderProjectsTable(JSON.parse(cProj));
+                        }
+                    }
+                }).catch(()=>{});
+            }
+
             // --- SECURITY PATCH: Laci memori dikunci spesifik menggunakan Username ---
             var cacheKey = 'ps_cache_projects_' + (currentUser ? currentUser.username : 'guest');
             var cachedProjects = localStorage.getItem(cacheKey);
@@ -5530,24 +5553,63 @@
 
             count.innerText = clientState.selectedImages.length;
             grid.innerHTML = '';
+            
+            var hasCategories = clientState.categories && clientState.categories.length > 0;
+            
+            if (hasCategories) {
+                var groupedCat = {};
+                clientState.selectedImages.forEach(function (img) {
+                    var cName = img.category || 'Default';
+                    if (!groupedCat[cName]) groupedCat[cName] = [];
+                    groupedCat[cName].push(img);
+                });
+                
+                var globalIndex = 0;
+                for (var c in groupedCat) {
+                    var headerDiv = document.createElement('div');
+                    headerDiv.className = "col-span-full mt-4 mb-1 px-4 py-2.5 bg-blue-50/70 border-l-4 border-blue-500 rounded-r-xl shadow-sm mx-1";
+                    headerDiv.innerHTML = '<h3 class="font-bold text-blue-800 text-sm sm:text-base uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-tag"></i> ' + c + '</h3>';
+                    grid.appendChild(headerDiv);
+                    
+                    groupedCat[c].forEach(function (img) {
+                        var card = document.createElement('div');
+                        card.className = "photo-card border border-gray-200 group mx-1 mb-2";
+                        var safeUrl = img.url || 'https://placehold.co/400x400?text=Memuat...';
+                        var shortName = img.name.length > 20 ? img.name.substring(0, 17) + '...' : img.name;
 
-            clientState.selectedImages.forEach(function (img, index) {
-                var card = document.createElement('div');
-                card.className = "photo-card border border-gray-200 group";
-                var safeUrl = img.url || 'https://placehold.co/400x400?text=Memuat...';
-                var shortName = img.name.length > 20 ? img.name.substring(0, 17) + '...' : img.name;
+                        card.innerHTML =
+                            '<div class="number-badge">' + (globalIndex + 1) + '</div>' +
+                            '<img src="' + safeUrl + '" alt="' + img.name + '" loading="lazy" referrerpolicy="no-referrer">' +
+                            '<div class="info-overlay pb-2">' +
+                            '<span class="filename-text w-full truncate mb-1" title="' + img.name + '">' + shortName + '</span>' +
+                            '<span class="text-[9px] text-gray-300 font-semibold bg-black/40 px-2 py-0.5 rounded inline-block self-start"><i class="fa-regular fa-folder-open mr-1"></i>' + img.folder + '</span>' +
+                            '</div>';
 
-                card.innerHTML =
-                    '<div class="number-badge">' + (index + 1) + '</div>' +
-                    '<img src="' + safeUrl + '" alt="' + img.name + '" loading="lazy" referrerpolicy="no-referrer">' +
-                    '<div class="info-overlay pb-2">' +
-                    '<span class="filename-text w-full truncate mb-1" title="' + img.name + '">' + shortName + '</span>' +
-                    '<span class="text-[9px] text-gray-300 font-semibold bg-black/40 px-2 py-0.5 rounded inline-block self-start"><i class="fa-regular fa-folder-open mr-1"></i>' + img.folder + '</span>' +
-                    '</div>';
+                        let currIndex = globalIndex;
+                        card.onclick = function (e) { openImageViewer(safeUrl, img.name, e, currIndex, clientState.selectedImages); };
+                        grid.appendChild(card);
+                        globalIndex++;
+                    });
+                }
+            } else {
+                clientState.selectedImages.forEach(function (img, index) {
+                    var card = document.createElement('div');
+                    card.className = "photo-card border border-gray-200 group";
+                    var safeUrl = img.url || 'https://placehold.co/400x400?text=Memuat...';
+                    var shortName = img.name.length > 20 ? img.name.substring(0, 17) + '...' : img.name;
 
-                card.onclick = function (e) { openImageViewer(safeUrl, img.name, e, index, clientState.selectedImages); };
-                grid.appendChild(card);
-            });
+                    card.innerHTML =
+                        '<div class="number-badge">' + (index + 1) + '</div>' +
+                        '<img src="' + safeUrl + '" alt="' + img.name + '" loading="lazy" referrerpolicy="no-referrer">' +
+                        '<div class="info-overlay pb-2">' +
+                        '<span class="filename-text w-full truncate mb-1" title="' + img.name + '">' + shortName + '</span>' +
+                        '<span class="text-[9px] text-gray-300 font-semibold bg-black/40 px-2 py-0.5 rounded inline-block self-start"><i class="fa-regular fa-folder-open mr-1"></i>' + img.folder + '</span>' +
+                        '</div>';
+
+                    card.onclick = function (e) { openImageViewer(safeUrl, img.name, e, index, clientState.selectedImages); };
+                    grid.appendChild(card);
+                });
+            }
 
             modal.classList.remove('hidden');
             setTimeout(function () { modal.classList.remove('opacity-0'); }, 10);
