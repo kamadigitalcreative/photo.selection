@@ -1499,14 +1499,12 @@
         </div>
 
         <!-- Right Canvas Workspace -->
-        <!-- Background grid pattern like Photoshop transparent layer -->
-        <div class="flex-1 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+CjxyZWN0IHdpZHRoPSI4IiBoZWlnaHQ9IjgiIGZpbGw9IiNlN2U3ZTciIC8+CjxyZWN0IHg9IjgiIHk9IjgiIHdpZHRoPSI4IiBoZWlnaHQ9IjgiIGZpbGw9IiNlN2U3ZTciIC8+Cjwvc3ZnPg==')] flex flex-col relative overflow-hidden" id="collageCanvasWrapper">
+        <div class="flex-1 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+CjxyZWN0IHdpZHRoPSI4IiBoZWlnaHQ9IjgiIGZpbGw9IiNlN2U3ZTciIC8+CjxyZWN0IHg9IjgiIHk9IjgiIHdpZHRoPSI4IiBoZWlnaHQ9IjgiIGZpbGw9IiNlN2U3ZTciIC8+Cjwvc3ZnPg==')] overflow-hidden relative cursor-grab" id="collageCanvasWrapper" onmousedown="startWorkspacePan(event)" onwheel="zoomWorkspaceScroll(event)">
             
-            <div class="flex-1 flex items-center justify-center p-4 sm:p-12 overflow-auto custom-scrollbar relative">
+            <div id="collageWorkspacePanner" class="absolute inset-0 flex items-center justify-center origin-center" style="transition: transform 0.05s linear;">
                 
                 <!-- Interactive Editor Area -->
-                <!-- The box that holds the canvas. Aspect ratio is perfectly matched by JS -->
-                <div id="collageInteractiveArea" class="relative shadow-[0_20px_50px_rgba(0,0,0,0.1)] transition-transform duration-200 bg-transparent mx-auto" style="width: 360px; height: 640px;">
+                <div id="collageInteractiveArea" class="relative shadow-[0_20px_50px_rgba(0,0,0,0.2)] bg-transparent mx-auto ring-1 ring-black/5" style="width: 1080px; height: 1080px;">
                     <!-- BG Layer -->
                     <div id="collageBackgroundLayer" class="absolute inset-0 z-0 overflow-hidden" style="background-color: #EFEFEF;"></div>
                     <!-- Graphics Layer -->
@@ -1516,6 +1514,15 @@
                     <div id="collageOverlays" class="absolute inset-0 z-20 w-full h-full touch-none overflow-visible"></div>
                 </div>
 
+            </div>
+            
+            <!-- Floating Controls -->
+            <div class="absolute bottom-6 right-6 flex items-center bg-white shadow-xl rounded-full px-4 py-2 gap-4 z-50 border border-gray-100">
+                <button onclick="zoomWorkspace(-0.1)" class="text-gray-400 hover:text-black transition-colors"><i class="fa-solid fa-minus"></i></button>
+                <span id="workspaceZoomDisplay" class="text-[10px] font-black text-gray-700 w-10 text-center select-none">100%</span>
+                <button onclick="zoomWorkspace(0.1)" class="text-gray-400 hover:text-black transition-colors"><i class="fa-solid fa-plus"></i></button>
+                <div class="w-px h-4 bg-gray-200"></div>
+                <button onclick="initWorkspace()" class="text-gray-400 hover:text-black text-[10px] font-black uppercase transition-colors" title="Fit to Screen">Fit</button>
             </div>
             
         </div>
@@ -6542,6 +6549,9 @@ async function loadCollageProjectData() {
                 
                 collageState.photos = allPhotos;
                 renderCollagePhotoPicker();
+                
+                // Init workspace after project load
+                setTimeout(initWorkspace, 100);
             } else {
                 document.getElementById('collagePhotoPicker').innerHTML = '<div class="text-xs text-gray-400 text-center col-span-3 py-4 italic">Project ini tidak memiliki link Google Drive.</div>';
             }
@@ -6892,6 +6902,7 @@ function applyCustomCanvasSize() {
     
     Swal.fire({toast:true, position:'top', icon:'success', text:`Kanvas: ${collageState.canvasW}x${collageState.canvasH} px`, showConfirmButton:false, timer:1500});
     requestRenderCollage();
+    setTimeout(initWorkspace, 100);
 }
 
 // --- RENDERING FREEFORM CANVAS ---
@@ -6909,23 +6920,6 @@ function renderCollagePreview() {
     let w = collageState.canvasW;
     let h = collageState.canvasH;
     canvas.width = w; canvas.height = h;
-    
-    // FIX 3: Auto-adjust Interactive Area Aspect Ratio so it NEVER stretches
-    let wrapper = document.getElementById('collageCanvasWrapper');
-    let interactiveArea = document.getElementById('collageInteractiveArea');
-    
-    // Max available space in the UI
-    let maxW = wrapper.clientWidth - 40;
-    let maxH = wrapper.clientHeight - 120;
-    
-    // Calculate fit scale
-    let scale = Math.min(maxW / w, maxH / h);
-    let viewW = w * scale;
-    let viewH = h * scale;
-    
-    interactiveArea.style.width = viewW + 'px';
-    interactiveArea.style.height = viewH + 'px';
-    interactiveArea.style.minWidth = '0'; // Remove forced min width
     
     // Background Layer setup
     let bgLayer = document.getElementById('collageBackgroundLayer');
@@ -7028,8 +7022,72 @@ function renderCollagePreview() {
         ctx.restore();
     }
     
-    // UPDATE INTERACTIVE OVERLAYS FOR EDITING
-    updateInteractiveOverlays(scale);
+    updateInteractiveOverlays(1); // 1 to 1 mapping, scaled by workspace CSS transform
+}
+
+// --- WORKSPACE PAN & ZOOM ---
+let collageWorkspace = { zoom: 1, panX: 0, panY: 0, isPanning: false, startX: 0, startY: 0 };
+
+function initWorkspace() {
+    let wrapper = document.getElementById('collageCanvasWrapper');
+    if(!wrapper) return;
+    let maxW = wrapper.clientWidth - 80;
+    let maxH = wrapper.clientHeight - 80;
+    let baseScale = Math.min(maxW / collageState.canvasW, maxH / collageState.canvasH);
+    
+    collageWorkspace.zoom = baseScale;
+    collageWorkspace.panX = 0;
+    collageWorkspace.panY = 0;
+    applyWorkspaceTransform();
+}
+
+function applyWorkspaceTransform() {
+    let panner = document.getElementById('collageWorkspacePanner');
+    if(!panner) return;
+    panner.style.transform = `translate(${collageWorkspace.panX}px, ${collageWorkspace.panY}px) scale(${collageWorkspace.zoom})`;
+    document.getElementById('workspaceZoomDisplay').innerText = Math.round(collageWorkspace.zoom * 100) + '%';
+}
+
+function zoomWorkspace(delta) {
+    collageWorkspace.zoom = Math.max(0.1, Math.min(5, collageWorkspace.zoom + delta));
+    applyWorkspaceTransform();
+}
+
+function zoomWorkspaceScroll(e) {
+    e.preventDefault();
+    let delta = e.deltaY > 0 ? -0.05 : 0.05;
+    collageWorkspace.zoom = Math.max(0.1, Math.min(5, collageWorkspace.zoom + delta));
+    applyWorkspaceTransform();
+}
+
+function startWorkspacePan(e) {
+    if(e.target.id === 'collageCanvasWrapper' || e.target.id === 'collageWorkspacePanner' || e.button === 1) {
+        e.preventDefault();
+        collageWorkspace.isPanning = true;
+        collageWorkspace.startX = e.clientX - collageWorkspace.panX;
+        collageWorkspace.startY = e.clientY - collageWorkspace.panY;
+        document.getElementById('collageCanvasWrapper').style.cursor = 'grabbing';
+        document.addEventListener('mousemove', panWorkspace);
+        document.addEventListener('mouseup', endWorkspacePan);
+    }
+}
+
+function panWorkspace(e) {
+    if(!collageWorkspace.isPanning) return;
+    collageWorkspace.panX = e.clientX - collageWorkspace.startX;
+    collageWorkspace.panY = e.clientY - collageWorkspace.startY;
+    applyWorkspaceTransform();
+}
+
+function endWorkspacePan() {
+    collageWorkspace.isPanning = false;
+    document.getElementById('collageCanvasWrapper').style.cursor = 'grab';
+    document.removeEventListener('mousemove', panWorkspace);
+    document.removeEventListener('mouseup', endWorkspacePan);
+}
+
+function fitWorkspace() {
+    initWorkspace();
 }
 
 // --- INTERACTIVE DRAG & DROP UI ---
@@ -7129,9 +7187,7 @@ function dragLayer(e) {
     let dy = pos.y - collageState.startY;
     
     // Convert screen pixels to canvas pixels
-    let wrapper = document.getElementById('collageInteractiveArea');
-    let canvasRect = wrapper.getBoundingClientRect();
-    let viewScale = collageState.canvasW / canvasRect.width;
+    let viewScale = 1 / collageWorkspace.zoom;
     
     if (collageState.dragMode === 'move') {
         if (layer.isFrame) {
