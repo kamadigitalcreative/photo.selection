@@ -4973,8 +4973,8 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ action: 'getAudioData', fileId: urlParams[1] })
                     }).then(res => res.json()).then(res => {
-                        if (res.status === 'success' && res.base64) {
-                            bgmAudio.src = res.base64;
+                        if (res.status === 'success' && res.data && res.data.base64) {
+                            bgmAudio.src = res.data.base64;
                             var playPromise = bgmAudio.play();
                             if (playPromise !== undefined) {
                                 playPromise.then(() => {
@@ -5469,6 +5469,10 @@
             var btn = document.getElementById('btn-toggle-bgm');
             var icon = btn.querySelector('i');
             if (audio.paused) {
+                if (!audio.src || audio.src === '' || audio.src.endsWith(window.location.pathname)) {
+                    Swal.fire({toast: true, position: 'top-end', icon: 'info', title: 'Sedang memuat audio, harap tunggu...', timer: 2000, showConfirmButton: false});
+                    return;
+                }
                 if (audio.readyState === 0) {
                     audio.load();
                 }
