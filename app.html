@@ -1501,10 +1501,10 @@
         <!-- Right Canvas Workspace -->
         <div class="flex-1 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+CjxyZWN0IHdpZHRoPSI4IiBoZWlnaHQ9IjgiIGZpbGw9IiNlN2U3ZTciIC8+CjxyZWN0IHg9IjgiIHk9IjgiIHdpZHRoPSI4IiBoZWlnaHQ9IjgiIGZpbGw9IiNlN2U3ZTciIC8+Cjwvc3ZnPg==')] overflow-hidden relative cursor-grab" id="collageCanvasWrapper" onmousedown="startWorkspacePan(event)" onwheel="zoomWorkspaceScroll(event)">
             
-            <div id="collageWorkspacePanner" class="absolute inset-0 flex items-center justify-center origin-center" style="transition: transform 0.05s linear;">
+            <div id="collageWorkspacePanner" class="absolute inset-0" style="overflow: visible;">
                 
                 <!-- Interactive Editor Area -->
-                <div id="collageInteractiveArea" class="relative shadow-[0_20px_50px_rgba(0,0,0,0.2)] bg-transparent mx-auto ring-1 ring-black/5" style="width: 1080px; height: 1080px;">
+                <div id="collageInteractiveArea" class="absolute top-1/2 left-1/2 shadow-[0_20px_50px_rgba(0,0,0,0.2)] bg-transparent ring-1 ring-black/5" style="width: 1080px; height: 1080px;">
                     <!-- BG Layer -->
                     <div id="collageBackgroundLayer" class="absolute inset-0 z-0 overflow-hidden" style="background-color: #EFEFEF;"></div>
                     <!-- Graphics Layer -->
@@ -7042,9 +7042,9 @@ function initWorkspace() {
 }
 
 function applyWorkspaceTransform() {
-    let panner = document.getElementById('collageWorkspacePanner');
-    if(!panner) return;
-    panner.style.transform = `translate(${collageWorkspace.panX}px, ${collageWorkspace.panY}px) scale(${collageWorkspace.zoom})`;
+    let area = document.getElementById('collageInteractiveArea');
+    if(!area) return;
+    area.style.transform = `translate(calc(-50% + ${collageWorkspace.panX}px), calc(-50% + ${collageWorkspace.panY}px)) scale(${collageWorkspace.zoom})`;
     document.getElementById('workspaceZoomDisplay').innerText = Math.round(collageWorkspace.zoom * 100) + '%';
 }
 
