@@ -1576,6 +1576,59 @@
             </form>
         </div>
     </div>
+    <div id="modalUserAccess"
+        class="fixed inset-0 bg-kama-900/40 backdrop-blur-sm flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[480px] transform transition-all duration-300 scale-95 flex flex-col"
+            id="modalUserAccessContent">
+            <div class="flex justify-between items-center p-5 sm:p-6 border-b border-gray-100">
+                <h3 class="font-bold text-lg text-kama-800">Atur Akses Fitur: <span id="ua-username" class="text-blue-600"></span></h3>
+                <button onclick="closeModalUserAccess()"
+                    class="text-gray-400 hover:text-kama-800 bg-gray-50 hover:bg-gray-100 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <div class="p-5 sm:p-6 overflow-y-auto">
+                <form id="formUserAccess" onsubmit="handleSaveUserAccess(event)">
+                    <div class="space-y-4">
+                        <label class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:bg-blue-50 transition-colors">
+                            <div>
+                                <h4 class="font-bold text-sm text-gray-800">Auto-Upsell (Jual Foto)</h4>
+                                <p class="text-xs text-gray-500">Izinkan fotografer menjual foto tambahan.</p>
+                            </div>
+                            <input type="checkbox" id="ua-upsell" class="w-5 h-5 text-blue-600 rounded">
+                        </label>
+                        <label class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:bg-blue-50 transition-colors">
+                            <div>
+                                <h4 class="font-bold text-sm text-gray-800">Keamanan Watermark</h4>
+                                <p class="text-xs text-gray-500">Izinkan fotografer menggunakan watermark dinamis.</p>
+                            </div>
+                            <input type="checkbox" id="ua-watermark" class="w-5 h-5 text-blue-600 rounded">
+                        </label>
+                        <label class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:bg-blue-50 transition-colors">
+                            <div>
+                                <h4 class="font-bold text-sm text-gray-800">Grid Sosmed (Kolase)</h4>
+                                <p class="text-xs text-gray-500">Izinkan fotografer menggunakan fitur grid.</p>
+                            </div>
+                            <input type="checkbox" id="ua-grid" class="w-5 h-5 text-blue-600 rounded">
+                        </label>
+                        <label class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:bg-blue-50 transition-colors">
+                            <div>
+                                <h4 class="font-bold text-sm text-gray-800">Multi-Kategori</h4>
+                                <p class="text-xs text-gray-500">Izinkan fotografer membuat grup folder pilihan.</p>
+                            </div>
+                            <input type="checkbox" id="ua-category" class="w-5 h-5 text-blue-600 rounded">
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="p-5 sm:p-6 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex gap-3 justify-end mt-auto">
+                <button type="button" onclick="closeModalUserAccess()"
+                    class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors">Batal</button>
+                <button type="submit" form="formUserAccess" id="btnSaveUserAccess"
+                    class="px-6 py-2.5 bg-kama-800 text-white text-sm font-bold rounded-xl hover:bg-kama-900 shadow-lg transition-all flex items-center justify-center">Simpan</button>
+            </div>
+        </div>
+    </div>
 
     <div id="modalCreate"
         class="fixed inset-0 bg-kama-900/40 backdrop-blur-sm flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300 p-4">
