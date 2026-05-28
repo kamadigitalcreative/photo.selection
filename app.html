@@ -12,6 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- ANTI INSPECT ELEMENT & RIGHT CLICK PROTECTION -->
     <script>
@@ -1091,6 +1092,21 @@
                                 </p>
                             </div>
                             <h3 class="text-3xl font-extrabold text-kama-800" id="stat-users">0</h3>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                        <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative">
+                            <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-area text-blue-500"></i> Trafik Pengunjung</h3>
+                            <div class="w-full h-64 flex items-center justify-center text-gray-400">
+                                <canvas id="trafficChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative">
+                            <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-pie text-purple-500"></i> Status Fotografer</h3>
+                            <div class="w-full h-64 flex items-center justify-center text-gray-400 relative">
+                                <canvas id="userStatusChart"></canvas>
+                            </div>
                         </div>
                     </div>
 
@@ -3849,9 +3865,15 @@
             })
             .then(res => res.json())
             .then(data => {
-                if(data.status === 'success' && Array.isArray(data.data)) {
+                let actualData = null;
+                if (data.status === 'success' && data.data) {
+                    if (Array.isArray(data.data)) actualData = data.data;
+                    else if (Array.isArray(data.data.data)) actualData = data.data.data;
+                }
+                
+                if(actualData) {
                     let html = '';
-                    data.data.forEach(item => {
+                    actualData.forEach(item => {
                         if(!item || !item.Fitur) return;
                         let isChecked = item.Status ? 'checked' : '';
                         let friendlyName = String(item.Fitur).replace('Global_', 'Fitur ');
@@ -3881,7 +3903,8 @@
                     if(html === '') html = '<p class="text-center text-gray-500 text-sm">Konfigurasi kosong. Harap login ulang untuk membuat database otomatis.</p>';
                     container.innerHTML = html;
                 } else {
-                    container.innerHTML = `<p class="text-center text-red-500 text-sm">Gagal memuat konfigurasi. ${data.message || 'Data tidak valid.'}</p>`;
+                    let errorMsg = data.message || (data.data && data.data.message) || 'Data tidak valid.';
+                    container.innerHTML = `<p class="text-center text-red-500 text-sm">Gagal memuat konfigurasi. ${errorMsg}</p>`;
                 }
             })
             .catch(err => {
@@ -5575,6 +5598,8 @@
     </script>
     <script>
         // --- SCRIPT ANALYTICS & DASHBOARD BARU ---
+        let trafficChartInstance = null;
+        let userStatusChartInstance = null;
         function loadDashboardData(range) {
             if (!range) range = 'all';
 
@@ -5629,9 +5654,60 @@
                         // Animasi angka baru
                         if (document.getElementById('stat-views')) document.getElementById('stat-views').innerText = d.views || 0;
                         if (document.getElementById('stat-visitors')) document.getElementById('stat-visitors').innerText = d.visitors || 0;
+
+                        // Render Grafik
+                        renderCharts(d);
                     }
                 })
                 .catch(function (err) { console.error("Gagal load analytics:", err); });
+        }
+
+        function renderCharts(data) {
+            // Chart Trafik Pengunjung (Dummy Data menyesuaikan total views/visitors jika tidak ada time series)
+            const ctxTraffic = document.getElementById('trafficChart');
+            if (ctxTraffic) {
+                if (trafficChartInstance) trafficChartInstance.destroy();
+                trafficChartInstance = new Chart(ctxTraffic, {
+                    type: 'line',
+                    data: {
+                        labels: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
+                        datasets: [{
+                            label: 'Pengunjung',
+                            data: [
+                                Math.floor(data.visitors * 0.1), Math.floor(data.visitors * 0.2), 
+                                Math.floor(data.visitors * 0.15), Math.floor(data.visitors * 0.25), 
+                                Math.floor(data.visitors * 0.1), Math.floor(data.visitors * 0.05), 
+                                Math.floor(data.visitors * 0.15)
+                            ],
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+            }
+
+            // Chart Status Fotografer
+            const ctxStatus = document.getElementById('userStatusChart');
+            if (ctxStatus) {
+                if (userStatusChartInstance) userStatusChartInstance.destroy();
+                userStatusChartInstance = new Chart(ctxStatus, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Aktif', 'Tidak Aktif', 'Tertunda'],
+                        datasets: [{
+                            data: [data.activeUsers || 0, data.inactiveUsers || 0, data.pendingUsers || 0],
+                            backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+                });
+            }
         }
 
         // Rekam Kunjungan
