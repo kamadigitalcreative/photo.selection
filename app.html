@@ -6583,13 +6583,7 @@ function applyCollageTemplate(id) {
     let t = collageTemplates[id];
     if(!t) return;
     
-    // Auto fill photos based on currently selected or top photos
     let count = t.maxPhotos;
-    if (collageState.photos.length < count) count = collageState.photos.length;
-    if (count === 0) {
-        Swal.fire({toast:true, position:'top', icon:'warning', text:'Pilih/Upload foto terlebih dahulu!', showConfirmButton:false, timer:2000});
-        return;
-    }
     
     // Clear existing layers
     collageState.layers = [];
@@ -6598,44 +6592,31 @@ function applyCollageTemplate(id) {
     let boxes = t.calculateLayout(collageState.canvasW, collageState.canvasH, count);
     
     boxes.forEach((box, i) => {
-        let photo = collageState.photos[i];
-        let url = photo.url;
-        let thumbUrl = url.includes('blob:') ? url : url.replace('=s0', '=w800');
-        
-        let img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = function() {
-            imageCache[url] = img;
-            
-            // Calculate scale to "cover" the box
-            let scaleW = box.w / img.width;
-            let scaleH = box.h / img.height;
-            let scale = Math.max(scaleW, scaleH); // Cover
-            
-            let layer = {
-                id: 'layer_tpl_' + i + '_' + new Date().getTime(),
-                url: url,
-                origW: img.width,
-                origH: img.height,
-                x: box.x + box.w/2, // Center of box
-                y: box.y + box.h/2,
-                w: img.width,
-                h: img.height,
-                scale: scale,
-                rotation: 0,
-                zIndex: i
-            };
-            collageState.layers.push(layer);
-            requestRenderCollage();
+        let layer = {
+            id: 'layer_tpl_' + i + '_' + new Date().getTime(),
+            isPlaceholder: true,
+            placeholderNumber: i + 1,
+            url: '',
+            x: box.x + box.w/2,
+            y: box.y + box.h/2,
+            w: box.w,
+            h: box.h,
+            scale: 1,
+            rotation: 0,
+            zIndex: i
         };
-        img.src = thumbUrl;
+        collageState.layers.push(layer);
     });
     
+    requestRenderCollage();
+    
     switchCollageSidebar('photos');
-    Swal.fire({toast:true, position:'top', icon:'success', text:'Layout Diterapkan!', showConfirmButton:false, timer:1500});
+    Swal.fire({toast:true, position:'top', icon:'info', text:'Layout Diterapkan! Klik kotak nomor pada kanvas, lalu pilih foto dari Layers.', showConfirmButton:false, timer:4000});
 }
 
 function addPhotoLayer(url) {
+    let activeLayer = collageState.layers.find(l => l.id === collageState.activeLayerId);
+    
     // Load image to get aspect ratio
     let img = new Image();
     img.crossOrigin = "anonymous";
@@ -6644,26 +6625,44 @@ function addPhotoLayer(url) {
     img.onload = function() {
         imageCache[url] = img; // Cache it
         
-        // Default size relative to canvas
-        let targetW = collageState.canvasW * 0.5; 
-        let scale = targetW / img.width;
-        let targetH = img.height * scale;
-        
-        let newLayer = {
-            id: 'layer_' + new Date().getTime(),
-            url: url,
-            origW: img.width,
-            origH: img.height,
-            x: collageState.canvasW / 2, // Center
-            y: collageState.canvasH / 2, // Center
-            w: targetW,
-            h: targetH,
-            scale: 1,
-            rotation: 0,
-            zIndex: collageState.layers.length
-        };
-        collageState.layers.push(newLayer);
-        collageState.activeLayerId = newLayer.id;
+        if (activeLayer && activeLayer.isPlaceholder) {
+            // Fill Placeholder
+            let targetW = activeLayer.w * activeLayer.scale;
+            let targetH = activeLayer.h * activeLayer.scale;
+            let scaleW = targetW / img.width;
+            let scaleH = targetH / img.height;
+            let scale = Math.max(scaleW, scaleH);
+            
+            activeLayer.url = url;
+            activeLayer.origW = img.width;
+            activeLayer.origH = img.height;
+            activeLayer.w = img.width;
+            activeLayer.h = img.height;
+            activeLayer.scale = scale;
+            activeLayer.isPlaceholder = false;
+        } else {
+            // Normal Add
+            let targetW = collageState.canvasW * 0.5; 
+            let scale = targetW / img.width;
+            let targetH = img.height * scale;
+            
+            let newLayer = {
+                id: 'layer_' + new Date().getTime(),
+                url: url,
+                isPlaceholder: false,
+                origW: img.width,
+                origH: img.height,
+                x: collageState.canvasW / 2, // Center
+                y: collageState.canvasH / 2, // Center
+                w: targetW,
+                h: targetH,
+                scale: 1,
+                rotation: 0,
+                zIndex: collageState.layers.length
+            };
+            collageState.layers.push(newLayer);
+            collageState.activeLayerId = newLayer.id;
+        }
         requestRenderCollage();
     };
     img.src = thumbUrl;
@@ -6763,16 +6762,31 @@ function renderCollagePreview() {
     let sortedLayers = [...collageState.layers].sort((a,b) => a.zIndex - b.zIndex);
     
     sortedLayers.forEach(layer => {
-        let img = imageCache[layer.url];
-        if(!img) return; // Wait until loaded
-        
         ctx.save();
         ctx.translate(layer.x, layer.y);
         ctx.rotate(layer.rotation * Math.PI / 180);
         ctx.scale(layer.scale, layer.scale);
         
-        // Draw image centered at 0,0
-        ctx.drawImage(img, -layer.w/2, -layer.h/2, layer.w, layer.h);
+        if (layer.isPlaceholder) {
+            ctx.fillStyle = '#e5e7eb';
+            ctx.fillRect(-layer.w/2, -layer.h/2, layer.w, layer.h);
+            
+            ctx.strokeStyle = '#9ca3af';
+            ctx.lineWidth = 4;
+            ctx.setLineDash([15, 15]);
+            ctx.strokeRect(-layer.w/2, -layer.h/2, layer.w, layer.h);
+            
+            ctx.fillStyle = '#9ca3af';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = 'bold 80px sans-serif';
+            ctx.fillText(layer.placeholderNumber, 0, 0);
+        } else {
+            let img = imageCache[layer.url];
+            if(img) {
+                ctx.drawImage(img, -layer.w/2, -layer.h/2, layer.w, layer.h);
+            }
+        }
         ctx.restore();
     });
     
@@ -6964,17 +6978,22 @@ async function compositeFinalHDCanvas() {
     for(let i=0; i<sortedLayers.length; i++) {
         let layer = sortedLayers[i];
         
-        let hdUrl = layer.url.includes('blob:') ? layer.url : layer.url.replace(/=w\d+/, '=s0');
-        let hdImg = new Image();
-        hdImg.crossOrigin = "anonymous";
-        await new Promise(r => { hdImg.onload=r; hdImg.onerror=r; hdImg.src=hdUrl; });
-        
         ctx.save();
         // Multiply translation and scale by exportScale
         ctx.translate(layer.x * exportScale, layer.y * exportScale);
         ctx.rotate(layer.rotation * Math.PI / 180);
         ctx.scale(layer.scale * exportScale, layer.scale * exportScale);
-        ctx.drawImage(hdImg, -layer.w/2, -layer.h/2, layer.w, layer.h);
+        
+        if (layer.isPlaceholder) {
+            ctx.fillStyle = '#e5e7eb';
+            ctx.fillRect(-layer.w/2, -layer.h/2, layer.w, layer.h);
+        } else {
+            let hdUrl = layer.url.includes('blob:') ? layer.url : layer.url.replace(/=w\d+/, '=s0');
+            let hdImg = new Image();
+            hdImg.crossOrigin = "anonymous";
+            await new Promise(r => { hdImg.onload=r; hdImg.onerror=r; hdImg.src=hdUrl; });
+            ctx.drawImage(hdImg, -layer.w/2, -layer.h/2, layer.w, layer.h);
+        }
         ctx.restore();
     }
     
