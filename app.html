@@ -4396,8 +4396,8 @@
             var musicFileEl = document.getElementById('p_music_file');
             if (musicFileEl && musicFileEl.files && musicFileEl.files.length > 0) {
                 var file = musicFileEl.files[0];
-                if (file.size > 10 * 1024 * 1024) { // Max 10MB
-                    Swal.fire('File Terlalu Besar', 'Maksimal ukuran file musik adalah 10MB', 'error');
+                if (file.size > 4 * 1024 * 1024) { // Max 4MB to prevent Apps Script payload limits
+                    Swal.fire('Ukuran Terlalu Besar', 'Maksimal ukuran file musik yang diupload langsung adalah 4 MB karena batasan server. Jika lagu Anda lebih besar, harap upload manual ke Google Drive Anda dan masukkan Link-nya di kolom bawah.', 'warning');
                     return;
                 }
                 const base64Str = await new Promise((resolve) => {
