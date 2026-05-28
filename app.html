@@ -2190,7 +2190,15 @@
         </header>
 
         <div class="scrollable-content relative" id="gallery-scroll-area">
-            <div id="gallery-container" class="gallery-grid max-w-[1600px] mx-auto"></div>
+            <!-- Nav Arrows for Horizontal Layout -->
+            <button id="nav-left-btn" class="hidden absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-50 w-10 h-10 sm:w-12 sm:h-12 bg-black/40 hover:bg-black/80 backdrop-blur-sm text-white rounded-full items-center justify-center transition-colors shadow-lg border border-white/20" onclick="scrollGallery(-1)">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button id="nav-right-btn" class="hidden absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-50 w-10 h-10 sm:w-12 sm:h-12 bg-black/40 hover:bg-black/80 backdrop-blur-sm text-white rounded-full items-center justify-center transition-colors shadow-lg border border-white/20" onclick="scrollGallery(1)">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+
+            <div id="gallery-container" class="gallery-grid max-w-[1600px] mx-auto scroll-smooth"></div>
             <div id="gallery-empty"
                 class="absolute inset-0 flex flex-col items-center justify-center hidden bg-gray-50">
                 <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-300 mb-4"><i
@@ -5060,6 +5068,14 @@
             }
         }
 
+        window.scrollGallery = function(direction) {
+            var container = document.getElementById('gallery-container');
+            if (container) {
+                var scrollAmount = window.innerWidth > 600 ? 500 : 300;
+                container.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+            }
+        };
+
         // Deklarasi global menggunakan window agar tidak hilang (Scoping Fix)
         window.currentViewerIndex = 0;
         window.viewerActiveList = [];
@@ -5319,6 +5335,17 @@
             }
             if (emptyState && emptyState.classList) emptyState.classList.add('hidden');
 
+            // Show/hide navigation arrows
+            var navLeft = document.getElementById('nav-left-btn');
+            var navRight = document.getElementById('nav-right-btn');
+            if (clientState.clientLayout === 'horizontal' || clientState.clientLayout === 'slideshow') {
+                if (navLeft) { navLeft.classList.remove('hidden'); navLeft.classList.add('flex'); }
+                if (navRight) { navRight.classList.remove('hidden'); navRight.classList.add('flex'); }
+            } else {
+                if (navLeft) { navLeft.classList.add('hidden'); navLeft.classList.remove('flex'); }
+                if (navRight) { navRight.classList.add('hidden'); navRight.classList.remove('flex'); }
+            }
+
             // Update Angka Total Foto di Header
             var totalHeader = document.getElementById('header-total-foto');
             if (totalHeader) totalHeader.innerText = clientState.currentContent.images.length;
@@ -5326,12 +5353,19 @@
             if (hasFolders) {
                 clientState.currentContent.folders.forEach(function (folder) {
                     var fCard = document.createElement('div');
-                    fCard.className = "photo-card bg-white flex flex-col items-center justify-center border border-gray-100 hover:border-blue-300 transition-colors shadow-sm cursor-pointer p-4 group";
+                    var baseClass = "photo-card bg-white flex flex-col items-center justify-center border border-gray-100 hover:border-blue-300 transition-colors shadow-sm cursor-pointer p-6 group break-inside-avoid ";
+                    
+                    if (clientState.clientLayout === 'horizontal' || clientState.clientLayout === 'slideshow') {
+                        fCard.className = baseClass + "shrink-0 snap-center w-48 h-48 sm:w-64 sm:h-64 mb-0 mx-2";
+                    } else {
+                        fCard.className = baseClass + "w-full aspect-square mb-4";
+                    }
+                    
                     fCard.onclick = function () { openSubFolder(folder.id, folder.name); };
 
                     fCard.innerHTML =
-                        '<div class="text-blue-500 mb-3 transform group-hover:scale-110 transition-transform"><i class="fa-solid fa-folder text-5xl opacity-90"></i></div>' +
-                        '<div class="font-bold text-kama-800 text-sm text-center w-full truncate px-2">' + folder.name + '</div>';
+                        '<div class="text-blue-500 mb-4 transform group-hover:scale-110 transition-transform"><i class="fa-solid fa-folder text-6xl sm:text-7xl opacity-90"></i></div>' +
+                        '<div class="font-bold text-kama-800 text-sm sm:text-base text-center w-full truncate px-3">' + folder.name + '</div>';
 
                     if (container) container.appendChild(fCard);
                 });
@@ -5418,34 +5452,6 @@
                 }
                 
                 // Normal Select
-                if (clientState.galleryMode !== 'download' && clientState.selectedImages.length >= clientState.maxFoto) {
-                    if (clientState.extraPrice > 0) {
-                        let extraCount = (clientState.selectedImages.length - clientState.maxFoto) + 1;
-                        let extraFee = extraCount * clientState.extraPrice;
-                        let paymentInfo = (typeof appBranding !== 'undefined' && appBranding.paymentInfo) ? `<div class="mt-3 p-3 bg-blue-50 text-blue-800 text-xs rounded-lg text-left whitespace-pre-wrap">${appBranding.paymentInfo}</div>` : '';
-                        
-                        Swal.fire({
-                            title: (isEn ? 'Extra Photo' : 'Foto Tambahan'),
-                            html: (isEn ? 'You have exceeded the quota. This extra photo will cost ' : 'Anda telah melampaui kuota. Tambahan foto ini dikenakan biaya ') + '<b>Rp ' + clientState.extraPrice.toLocaleString('id-ID') + '</b>.<br><br>' + 
-                                  (isEn ? 'Total Extra Fee: ' : 'Total Biaya Tambahan: ') + '<b>Rp ' + extraFee.toLocaleString('id-ID') + '</b>.<br><br>' +
-                                  (isEn ? 'Continue selecting?' : 'Lanjutkan memilih?') + paymentInfo,
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonText: (isEn ? 'Yes, Add' : 'Ya, Tambahkan'),
-                            cancelButtonText: (isEn ? 'Cancel' : 'Batal'),
-                            confirmButtonColor: '#1e1e2d'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                performSelectionData(cardElement, filename, url, 'Default', btnPilih, isEn);
-                            }
-                        });
-                        return;
-                    } else {
-                        Swal.fire({ title: (isEn ? 'Limit Reached' : 'Batas Pilihan'), text: (isEn ? 'Maximum ' : 'Maksimal ') + clientState.maxFoto + (isEn ? ' photos.' : ' foto.'), icon: 'info', confirmButtonColor: '#1e1e2d' });
-                        return;
-                    }
-                }
-                
                 performSelectionData(cardElement, filename, url, 'Default', btnPilih, isEn);
             } else {
                 // DESELECT
