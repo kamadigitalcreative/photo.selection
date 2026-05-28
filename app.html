@@ -3824,12 +3824,16 @@
 
             let wrpWm = document.getElementById('wrapper-watermark');
             if (wrpWm) {
-                if (globalConfig && (globalConfig.Global_Watermark === true || globalConfig.Global_Watermark === 'TRUE' || globalConfig.Global_Watermark === 'true')) {
-                    wrpWm.classList.remove('hidden');
-                    wrpWm.classList.add('flex');
-                } else {
+                let isWmEnabled = window.globalConfigObj && (window.globalConfigObj['Global_Watermark'] === true || window.globalConfigObj['Global_Watermark'] === 'TRUE' || window.globalConfigObj['Global_Watermark'] === 'true');
+                
+                // Jika tidak ada data global (misal belum ter-load), default true untuk amannya,
+                // tapi jika sudah ter-load dan false, maka sembunyikan.
+                if (window.globalConfigObj && !isWmEnabled) {
                     wrpWm.classList.add('hidden');
                     wrpWm.classList.remove('flex');
+                } else {
+                    wrpWm.classList.remove('hidden');
+                    wrpWm.classList.add('flex');
                 }
             }
         }
@@ -3914,9 +3918,12 @@
                 }
                 
                 if(actualData) {
+                    window.globalConfigObj = {}; // Simpan ke memory client
                     let html = '';
                     actualData.forEach(item => {
                         if(!item || !item.Fitur) return;
+                        window.globalConfigObj[item.Fitur] = item.Status;
+                        
                         let isChecked = item.Status ? 'checked' : '';
                         let friendlyName = String(item.Fitur).replace('Global_', 'Fitur ');
                         let icon = 'fa-star';
