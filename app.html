@@ -4100,12 +4100,12 @@
                 btn.innerHTML = originalHtml;
                 btn.disabled = false;
                 let data = res.data;
-                if(data.status === 'success') {
+                if(res.status === 'success' && data.success) {
                     closeModalUserAccess();
                     Swal.fire({ icon: 'success', title: 'Tersimpan!', text: 'Hak akses fitur fotografer berhasil diperbarui.', timer: 2000, showConfirmButton: false });
                     if(typeof loadDataUsers === 'function') loadDataUsers();
                 } else {
-                    Swal.fire('Gagal!', data.message || 'Terjadi kesalahan', 'error');
+                    Swal.fire('Gagal!', data.message || res.message || 'Terjadi kesalahan', 'error');
                 }
             })
             .catch(err => {
