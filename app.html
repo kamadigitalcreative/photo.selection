@@ -995,6 +995,11 @@
                         <span id="badge-global-notif"
                             class="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-bold min-w-[20px] h-[20px] flex items-center justify-center rounded-full border-2 border-white shadow-md hidden">0</span>
                     </button>
+                    <button onclick="openModalPayment()"
+                        class="text-green-500 hover:text-green-700 w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-green-200 bg-white flex items-center justify-center transition-colors shadow-sm"
+                        title="Pengaturan Pembayaran">
+                        <i class="fa-solid fa-money-check-dollar"></i>
+                    </button>
                     <button onclick="openModalSettings()"
                         class="text-gray-500 hover:text-kama-800 w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-gray-200 bg-white flex items-center justify-center transition-colors shadow-sm"
                         title="Pengaturan Brand">
@@ -4960,7 +4965,11 @@
             var bgmAudio = document.getElementById('bgm-audio');
             if (clientState.musicUrl && clientState.musicUrl.trim() !== '') {
                 bgmContainer.classList.remove('hidden');
-                bgmAudio.src = clientState.musicUrl;
+                var finalAudioUrl = clientState.musicUrl;
+                if (finalAudioUrl.includes('export=view')) {
+                    finalAudioUrl = finalAudioUrl.replace('export=view', 'export=download');
+                }
+                bgmAudio.src = finalAudioUrl;
                 // Attempt autoplay
                 var playPromise = bgmAudio.play();
                 if (playPromise !== undefined) {
