@@ -118,8 +118,7 @@
         }
 
         /* Phase 2: Watermark Dinamis */
-        .has-watermark .photo-card::after,
-        .has-watermark #viewerImageContainer::after {
+        .has-watermark .photo-card::after {
             content: "";
             position: absolute;
             inset: 0;
@@ -127,6 +126,18 @@
             background-image: var(--watermark-bg);
             background-position: center;
             background-repeat: no-repeat;
+            z-index: 100;
+        }
+
+        .has-watermark #viewerImageContainer::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image: var(--watermark-bg-large);
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: contain;
             z-index: 100;
         }
 
@@ -4324,6 +4335,30 @@
 
             const dataURL = canvas.toDataURL('image/png');
             document.body.style.setProperty('--watermark-bg', `url(${dataURL})`);
+            
+            // --- Large watermark for Fullscreen Viewer ---
+            const canvasLg = document.createElement('canvas');
+            const ctxLg = canvasLg.getContext('2d');
+            // Ukuran canvas lebih besar agar font juga membesar tanpa pecah
+            canvasLg.width = 1000;
+            canvasLg.height = 1000;
+            
+            ctxLg.clearRect(0, 0, canvasLg.width, canvasLg.height);
+            ctxLg.translate(canvasLg.width / 2, canvasLg.height / 2);
+            ctxLg.rotate(-Math.PI / 4);
+            
+            ctxLg.font = 'bold 80px "Inter", sans-serif';
+            ctxLg.fillStyle = 'rgba(255, 255, 255, 0.35)'; // Sedikit lebih transparan
+            ctxLg.textAlign = 'center';
+            ctxLg.textBaseline = 'middle';
+            ctxLg.fillText(brandName, 0, 0);
+            
+            ctxLg.font = '600 40px "Inter", sans-serif';
+            ctxLg.fillText('CONFIDENTIAL', 0, 100);
+
+            const dataURLLg = canvasLg.toDataURL('image/png');
+            document.body.style.setProperty('--watermark-bg-large', `url(${dataURLLg})`);
+            
             document.body.classList.add('has-watermark');
         }
 
