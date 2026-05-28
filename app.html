@@ -5452,6 +5452,33 @@
                 }
                 
                 // Normal Select
+                if (clientState.galleryMode !== 'download' && clientState.selectedImages.length >= clientState.maxFoto) {
+                    if (!clientState.agreedToExtraCharge) {
+                        var htmlText = '';
+                        if (clientState.extraPrice > 0) {
+                            htmlText = (isEn ? 'You have reached your quota. Any extra photo selected from now on will be charged <b>Rp ' : 'Kuota foto Anda sudah habis. Jika ingin memilih foto lebih dari kuota, Anda akan dikenakan biaya tambahan sebesar <b>Rp ') + clientState.extraPrice.toLocaleString('id-ID') + (isEn ? '</b> per photo.<br><br>Do you want to continue?' : '</b> per foto.<br><br>Apakah Anda ingin melanjutkan?');
+                        } else {
+                            htmlText = (isEn ? 'You have reached your quota. Continue selecting extra photos for free?' : 'Kuota foto Anda sudah habis. Apakah Anda ingin melanjutkan memilih foto tambahan secara gratis?');
+                        }
+                        
+                        Swal.fire({
+                            title: (isEn ? 'Quota Exceeded' : 'Kuota Habis'),
+                            html: htmlText,
+                            icon: 'info',
+                            showCancelButton: true,
+                            confirmButtonText: (isEn ? 'Yes, Continue' : 'Ya, Lanjutkan'),
+                            cancelButtonText: (isEn ? 'Cancel' : 'Batal'),
+                            confirmButtonColor: '#1e1e2d'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                clientState.agreedToExtraCharge = true;
+                                performSelectionData(cardElement, filename, url, 'Default', btnPilih, isEn);
+                            }
+                        });
+                        return;
+                    }
+                }
+
                 performSelectionData(cardElement, filename, url, 'Default', btnPilih, isEn);
             } else {
                 // DESELECT
