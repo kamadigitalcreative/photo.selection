@@ -5729,11 +5729,18 @@
             pingClientStatus('Selesai');
         }
 
+        var uploadedPaymentProofUrl = null;
+
         async function promptExtraPayment(actionType) {
             var extraCount = clientState.selectedImages.length - clientState.maxFoto;
             if (extraCount <= 0 || clientState.extraPrice <= 0) {
                 if (actionType === 'wa') sendToWA_Proceed(null);
                 else copyOnly_Proceed(null);
+                return;
+            }
+            if (uploadedPaymentProofUrl) {
+                if (actionType === 'wa') sendToWA_Proceed(uploadedPaymentProofUrl);
+                else copyOnly_Proceed(uploadedPaymentProofUrl);
                 return;
             }
 
@@ -5829,6 +5836,7 @@
             });
 
             if (uploadResult) {
+                uploadedPaymentProofUrl = uploadResult;
                 if (actionType === 'wa') sendToWA_Proceed(uploadResult);
                 else copyOnly_Proceed(uploadResult);
             }
