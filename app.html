@@ -1783,16 +1783,55 @@
                             autocomplete="new-password"
                             class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm">
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Info Pembayaran (Opsional)</label>
-                        <textarea id="set_brand_payment" rows="2" placeholder="BCA 123456789 a/n Kama Creative. Konfirmasi: 0812..." class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-sm resize-none"></textarea>
-                        <p class="text-[10px] text-gray-400 mt-1">Ditampilkan ke klien saat memilih lebih dari kuota.</p>
-                    </div>
                 </div>
                 <div class="mt-6 flex gap-3 justify-end">
                     <button type="button" onclick="closeModalSettings()"
                         class="px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors">Batal</button>
                     <button type="submit" id="btnSaveSettings"
+                        class="px-4 py-2 bg-kama-800 text-white text-sm font-semibold rounded-xl hover:bg-kama-900 shadow-md transition-colors relative flex items-center justify-center">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL PENGATURAN PEMBAYARAN -->
+    <div id="modalPaymentSettings"
+        class="fixed inset-0 bg-kama-900/40 backdrop-blur-sm flex items-center justify-center z-[55] hidden opacity-0 transition-opacity duration-300 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[400px] transform transition-all duration-300 scale-95 flex flex-col"
+            id="modalPaymentSettingsContent">
+            <div class="flex justify-between items-center p-5 border-b border-gray-100">
+                <h3 class="font-bold text-lg text-kama-800"><i class="fa-solid fa-money-check-dollar text-green-500 mr-2"></i>
+                    Info Pembayaran</h3>
+                <button onclick="closeModalPayment()"
+                    class="text-gray-400 hover:text-kama-800 bg-gray-50 hover:bg-gray-100 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <form id="formPaymentSettings" onsubmit="handleSavePayment(event)" autocomplete="off" class="p-5">
+                <div class="space-y-4">
+                    <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-100">
+                        <p class="text-[10px] text-blue-800 leading-relaxed"><i class="fa-solid fa-circle-info mr-1"></i> Data rekening Anda akan ditampilkan secara otomatis kepada Klien yang membeli foto ekstra agar mereka bisa melakukan transfer pembayaran.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5" id="lbl-bank-name">Nama Bank / e-Wallet</label>
+                        <input type="text" id="set_bank_name" placeholder="BCA / Mandiri / Dana" required
+                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5" id="lbl-bank-acc">Nomor Rekening / HP</label>
+                        <input type="text" id="set_bank_account" placeholder="1234567890" required
+                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5" id="lbl-bank-accname">Atas Nama</label>
+                        <input type="text" id="set_bank_account_name" placeholder="Nama Pemilik Rekening" required
+                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm font-medium">
+                    </div>
+                </div>
+                <div class="mt-6 flex gap-3 justify-end">
+                    <button type="button" onclick="closeModalPayment()" id="btn-cancel-pay"
+                        class="px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors">Batal</button>
+                    <button type="submit" id="btnSavePaymentSettings"
                         class="px-4 py-2 bg-kama-800 text-white text-sm font-semibold rounded-xl hover:bg-kama-900 shadow-md transition-colors relative flex items-center justify-center">Simpan</button>
                 </div>
             </form>
@@ -2413,10 +2452,16 @@
             setTx('#modalSettingsContent .text-\\[10px\\].font-bold.text-gray-400', 'ATAU PAKAI LINK', 'OR USE LINK');
             setLbl('#formSettings > div > div:nth-child(3) > label:nth-of-type(2)', 'URL Logo', 'Logo URL');
             setPh('#set_brand_logo', 'https://... (kosongkan jika upload file)', 'https://... (leave blank if upload file)');
-            setLbl('#formSettings > div > div:nth-child(4) > label', 'Info Pembayaran (Opsional)', 'Payment Info (Optional)');
-            setPh('#set_brand_payment', 'BCA 123456789 a/n Kama Creative. Konfirmasi: 0812...', 'Paypal / Bank Acc / e-Wallet. Confirm to: +62...');
             setTx('#formSettings .mt-6 button[type="button"]', 'Batal', 'Cancel'); // Khusus tombol bawah, tombol X aman!
             setTx('#btnSaveSettings', 'Simpan', 'Save');
+            
+            setTx('#modalPaymentSettingsContent h3', '<i class="fa-solid fa-money-check-dollar text-green-500 mr-2"></i> Info Pembayaran', '<i class="fa-solid fa-money-check-dollar text-green-500 mr-2"></i> Payment Info', true);
+            setTx('#modalPaymentSettingsContent .bg-blue-50\\/50 p', '<i class="fa-solid fa-circle-info mr-1"></i> Data rekening Anda akan ditampilkan secara otomatis kepada Klien yang membeli foto ekstra agar mereka bisa melakukan transfer pembayaran.', '<i class="fa-solid fa-circle-info mr-1"></i> Your bank details will be shown automatically to clients purchasing extra photos so they can make payment transfers.', true);
+            setTx('#lbl-bank-name', 'Nama Bank / e-Wallet', 'Bank Name / e-Wallet');
+            setTx('#lbl-bank-acc', 'Nomor Rekening / HP', 'Account Number / Phone');
+            setTx('#lbl-bank-accname', 'Atas Nama', 'Account Name');
+            setTx('#btn-cancel-pay', 'Batal', 'Cancel');
+            setTx('#btnSavePaymentSettings', 'Simpan', 'Save');
 
             // Pengaturan Peringatan Admin di Modal Settings
             var pInfo = document.querySelector('#formSettings .bg-blue-50 p');
@@ -3009,9 +3054,6 @@
             var brandFileEl = document.getElementById('set_brand_file');
             if (brandFileEl) brandFileEl.value = '';
 
-            var brandPaymentEl = document.getElementById('set_brand_payment');
-            if (brandPaymentEl) brandPaymentEl.value = appBranding.paymentInfo || currentUser?.brandPayment || '';
-
             var modal = document.getElementById('modalSettings');
             if (modal) { modal.classList.remove('hidden'); modal.classList.remove('opacity-0'); }
 
@@ -3027,16 +3069,76 @@
             setTimeout(function () { if (modal) modal.classList.add('hidden'); }, 300);
         }
 
+        function openModalPayment() {
+            if (typeof isAccountExpired === 'function' && isAccountExpired()) {
+                showExpiredAlert();
+                return;
+            }
+            if (typeof isDemoAccount === 'function' && isDemoAccount()) {
+                Swal.fire('Akses Ditolak', 'Akun Demo tidak dapat mengubah pengaturan ini.', 'warning');
+                return;
+            }
+            
+            document.getElementById('set_bank_name').value = currentUser?.bankName || '';
+            document.getElementById('set_bank_account').value = currentUser?.bankAccount || '';
+            document.getElementById('set_bank_account_name').value = currentUser?.bankAccountName || '';
+
+            var modal = document.getElementById('modalPaymentSettings');
+            if (modal) { modal.classList.remove('hidden'); modal.classList.remove('opacity-0'); }
+            var content = document.getElementById('modalPaymentSettingsContent');
+            if (content) { content.classList.remove('scale-95'); }
+        }
+
+        function closeModalPayment() {
+            var modal = document.getElementById('modalPaymentSettings');
+            var content = document.getElementById('modalPaymentSettingsContent');
+            if (modal) modal.classList.add('opacity-0');
+            if (content) content.classList.add('scale-95');
+            setTimeout(function () { if (modal) modal.classList.add('hidden'); }, 300);
+        }
+
+        async function handleSavePayment(e) {
+            e.preventDefault();
+            var bName = document.getElementById('set_bank_name').value.trim();
+            var bAcc = document.getElementById('set_bank_account').value.trim();
+            var bAccName = document.getElementById('set_bank_account_name').value.trim();
+
+            startLoading("Menyimpan Pengaturan...");
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'savePaymentSettings', username: currentUser.username, bankName: bName, bankAccount: bAcc, bankAccountName: bAccName })
+                });
+                const res = await response.json();
+                endLoading();
+                if (res.status === 'success' && res.data.success) {
+                    if (currentUser) {
+                        currentUser.bankName = res.data.bankName;
+                        currentUser.bankAccount = res.data.bankAccount;
+                        currentUser.bankAccountName = res.data.bankAccountName;
+                        localStorage.setItem('ps_user', JSON.stringify(currentUser));
+                    }
+                    closeModalPayment();
+                    Swal.fire({ icon: 'success', title: (localStorage.getItem('ps_lang') === 'en' ? 'Saved' : 'Tersimpan'), timer: 1500, showConfirmButton: false });
+                    loadDataProjects();
+                } else {
+                    Swal.fire('Error', res.message || res.data.message, 'error');
+                }
+            } catch (err) {
+                endLoading();
+                Swal.fire('Error', err.message, 'error');
+            }
+        }
+
         async function handleSaveSettings(e) {
             e.preventDefault();
             var fileInput = document.getElementById('set_brand_file');
             var brandNameEl = document.getElementById('set_brand_name');
             var brandLogoEl = document.getElementById('set_brand_logo');
-            var brandPaymentEl = document.getElementById('set_brand_payment');
 
             var nameInput = brandNameEl ? (brandNameEl.value.trim() || 'Kama Creative') : 'Kama Creative';
             var logoUrlInput = brandLogoEl ? brandLogoEl.value.trim() : '';
-            var paymentInput = brandPaymentEl ? brandPaymentEl.value.trim() : '';
 
             // --- AUTO-PARSER GOOGLE DRIVE LINK ---
             if (logoUrlInput && logoUrlInput.includes('drive.google.com')) {
@@ -3063,7 +3165,7 @@
                         const res = await response.json();
                         endLoading();
                         if (res.status === 'success' && res.data.success) {
-                            finishSaveSettings(nameInput, res.data.url, paymentInput);
+                            finishSaveSettings(nameInput, res.data.url);
                         } else {
                             Swal.fire('Upload Gagal', res.message || res.data.message, 'error');
                         }
@@ -3074,28 +3176,26 @@
                 };
                 reader.readAsDataURL(file);
             } else {
-                finishSaveSettings(nameInput, logoUrlInput, paymentInput);
+                finishSaveSettings(nameInput, logoUrlInput);
             }
         }
 
-        async function finishSaveSettings(name, logo, payment) {
+        async function finishSaveSettings(name, logo) {
             startLoading("Menyimpan Pengaturan...");
             try {
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'saveBrandSettings', username: currentUser.username, brandName: name, brandLogo: logo, brandPayment: payment })
+                    body: JSON.stringify({ action: 'saveBrandSettings', username: currentUser.username, brandName: name, brandLogo: logo })
                 });
                 const res = await response.json();
                 endLoading();
                 if (res.status === 'success' && res.data.success) {
                     appBranding.name = res.data.brandName;
                     appBranding.logo = res.data.brandLogo;
-                    appBranding.paymentInfo = res.data.brandPayment || '';
                     if (currentUser) {
                         currentUser.brandName = res.data.brandName;
                         currentUser.brandLogo = res.data.brandLogo;
-                        currentUser.brandPayment = res.data.brandPayment || '';
                         localStorage.setItem('ps_user', JSON.stringify(currentUser));
                     }
                     applyBranding();
@@ -4799,7 +4899,9 @@
             clientState.clientLayout = projectData.clientLayout || 'masonry';
             clientState.extraPrice = projectData.extraPrice || 0;
             clientState.musicUrl = projectData.musicUrl || '';
-            appBranding.paymentInfo = projectData.brandPaymentInfo || '';
+            clientState.bankName = projectData.bankName || '';
+            clientState.bankAccount = projectData.bankAccount || '';
+            clientState.bankAccountName = projectData.bankAccountName || '';
 
             // LOAD PILIHAN LAMA DARI DATABASE (AUTO-RESUME)
             try {
@@ -5338,10 +5440,19 @@
             var btn = document.getElementById('btn-toggle-bgm');
             var icon = btn.querySelector('i');
             if (audio.paused) {
-                audio.play();
-                icon.className = 'fa-solid fa-music animate-spin';
-                btn.classList.replace('bg-gray-100', 'bg-pink-50');
-                btn.classList.replace('text-gray-500', 'text-pink-500');
+                var playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        icon.className = 'fa-solid fa-music animate-spin';
+                        btn.classList.replace('bg-gray-100', 'bg-pink-50');
+                        btn.classList.replace('text-gray-500', 'text-pink-500');
+                    }).catch(error => {
+                        console.log('Autoplay blocked:', error);
+                        icon.className = 'fa-solid fa-music';
+                        btn.classList.replace('bg-pink-50', 'bg-gray-100');
+                        btn.classList.replace('text-pink-500', 'text-gray-500');
+                    });
+                }
             } else {
                 audio.pause();
                 icon.className = 'fa-solid fa-music';
@@ -5503,8 +5614,8 @@
             });
         }
 
-        function formatSelectedText() {
-            if (clientState.selectedImages.length === 0) return null;
+        function formatSelectedText(proofUrl = null) {
+            var isEn = (localStorage.getItem('ps_lang') === 'en');
             var text = "Halo, ini dari *" + clientState.namaClient + "*.\nBerikut daftar foto pilihan kami (" + clientState.selectedImages.length + "/" + clientState.maxFoto + "):\n\n";
 
             if (clientState.categories && clientState.categories.length > 0) {
@@ -5556,7 +5667,11 @@
         var hasClientSubmitted = false; // Penanda apakah klien sudah selesai
 
         function copyOnly() {
-            var text = formatSelectedText();
+            promptExtraPayment('copy');
+        }
+
+        function copyOnly_Proceed(proofUrl) {
+            var text = formatSelectedText(proofUrl);
             if (!text) { Swal.fire({ title: 'Kosong', text: 'Pilih foto terlebih dahulu.', icon: 'info', confirmButtonColor: '#1e1e2d' }); return; }
             doCopyText(text, 'Daftar foto siap dipaste.');
             hasClientSubmitted = true;
@@ -5564,13 +5679,122 @@
         }
 
         function sendToWA() {
-            var text = formatSelectedText();
+            promptExtraPayment('wa');
+        }
+
+        function sendToWA_Proceed(proofUrl) {
+            var text = formatSelectedText(proofUrl);
             if (!text) { Swal.fire({ title: 'Kosong', text: 'Pilih foto terlebih dahulu.', icon: 'info', confirmButtonColor: '#1e1e2d' }); return; }
             var noWa = clientState.nomorWA.replace(/\D/g, '');
             if (noWa.indexOf('0') === 0) noWa = '62' + noWa.substring(1);
             window.open("https://wa.me/" + noWa + "?text=" + encodeURIComponent(text), '_blank');
             hasClientSubmitted = true;
             pingClientStatus('Selesai');
+        }
+
+        async function promptExtraPayment(actionType) {
+            var extraCount = clientState.selectedImages.length - clientState.maxFoto;
+            if (extraCount <= 0 || clientState.extraPrice <= 0) {
+                if (actionType === 'wa') sendToWA_Proceed(null);
+                else copyOnly_Proceed(null);
+                return;
+            }
+
+            var totalFee = extraCount * clientState.extraPrice;
+            var isEn = (localStorage.getItem('ps_lang') === 'en');
+            
+            var bankInfoHtml = `
+                <div class="bg-gray-50 border border-gray-200 p-4 rounded-xl text-left mb-4 mt-2 shadow-sm">
+                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2 border-b border-gray-200 pb-2"><i class="fa-solid fa-building-columns mr-1"></i> Transfer Ke:</p>
+                    <div class="space-y-1.5 text-sm">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-500">Bank/e-Wallet</span>
+                            <span class="font-bold text-dark text-right">${clientState.bankName || '-'}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-500">Nomor Rekening</span>
+                            <span class="font-bold text-blue-600 cursor-pointer hover:underline text-right" onclick="doCopyText('${clientState.bankAccount}', 'Nomor Rekening dicopy')">${clientState.bankAccount || '-'} <i class="fa-regular fa-copy ml-1"></i></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-500">Atas Nama</span>
+                            <span class="font-bold text-dark text-right">${clientState.bankAccountName || '-'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            var titleStr = isEn ? 'Extra Photos Payment' : 'Pembayaran Foto Ekstra';
+            var htmlStr = `
+                <div class="text-sm text-gray-600 mb-2">
+                    ${isEn ? 'You selected' : 'Anda memilih'} <b class="text-red-500">${extraCount}</b> ${isEn ? 'extra photos. Total fee to pay:' : 'foto ekstra. Total tagihan:'}
+                </div>
+                <div class="text-2xl font-black text-green-600 mb-2">
+                    Rp ${totalFee.toLocaleString('id-ID')}
+                </div>
+                ${bankInfoHtml}
+                <div class="text-left">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">${isEn ? 'Upload Transfer Proof (Image)' : 'Upload Bukti Transfer (Gambar)'}</label>
+                    <input type="file" id="proof_upload" accept="image/*" class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 border border-gray-200 rounded-lg p-1 bg-white cursor-pointer" required>
+                </div>
+            `;
+
+            const { value: uploadResult } = await Swal.fire({
+                title: '<i class="fa-solid fa-file-invoice-dollar text-green-500"></i> ' + titleStr,
+                html: htmlStr,
+                showCancelButton: true,
+                confirmButtonText: isEn ? '<i class="fa-solid fa-cloud-arrow-up"></i> Upload & Submit' : '<i class="fa-solid fa-cloud-arrow-up"></i> Upload & Selesai',
+                cancelButtonText: isEn ? 'Cancel' : 'Batal',
+                confirmButtonColor: '#10b981',
+                showLoaderOnConfirm: true,
+                allowOutsideClick: false,
+                preConfirm: async () => {
+                    const fileInput = document.getElementById('proof_upload');
+                    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                        Swal.showValidationMessage(isEn ? 'Please select an image file as proof' : 'Silakan pilih gambar bukti transfer');
+                        return false;
+                    }
+                    const file = fileInput.files[0];
+                    if(file.size > 5 * 1024 * 1024) {
+                         Swal.showValidationMessage(isEn ? 'File too large (Max 5MB)' : 'Ukuran file terlalu besar (Maks 5MB)');
+                         return false;
+                    }
+                    
+                    try {
+                        const base64Data = await new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = () => resolve(reader.result.split(',')[1]);
+                            reader.onerror = error => reject(error);
+                            reader.readAsDataURL(file);
+                        });
+                        
+                        const response = await fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                action: 'uploadPaymentProof',
+                                base64Data: base64Data,
+                                filename: file.name,
+                                clientName: clientState.namaClient,
+                                projectFolderName: clientState.namaClient
+                            })
+                        });
+                        const result = await response.json();
+                        if(result.status === 'success' && result.data.success) {
+                            return result.data.url;
+                        } else {
+                            throw new Error(result.message || 'Upload failed');
+                        }
+                    } catch (error) {
+                        Swal.showValidationMessage(`Upload failed: ${error}`);
+                        return false;
+                    }
+                }
+            });
+
+            if (uploadResult) {
+                if (actionType === 'wa') sendToWA_Proceed(uploadResult);
+                else copyOnly_Proceed(uploadResult);
+            }
         }
 
         // Pendeteksi Klien Keluar / Pindah Aplikasi (HP & PC)
