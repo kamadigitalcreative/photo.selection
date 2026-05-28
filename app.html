@@ -1328,210 +1328,162 @@
                     </div>
                 </div>
 
-                <!-- SECTION: PREMIUM COLLAGE (FASE 5 - ULTIMATE) -->
-<div id="section-collage" class="hidden flex-1 flex-col fade-in h-full bg-gray-50 relative">
+                <!-- SECTION: PREMIUM COLLAGE (FASE 6 - SCRL FREEFORM) -->
+<div id="section-collage" class="hidden flex-1 flex-col fade-in h-full bg-[#f8f9fa] relative">
     <!-- Header Bar -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-white border-b border-gray-100 shrink-0 gap-4">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 sm:p-4 bg-white border-b border-gray-100 shrink-0 gap-4">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-fuchsia-100 text-fuchsia-600 flex items-center justify-center shadow-sm border border-fuchsia-200">
-                <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <div class="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center shadow-sm">
+                <i class="fa-solid fa-layer-group"></i>
             </div>
             <div>
-                <h2 class="text-xl font-bold text-gray-800 leading-none">Premium Collage <span class="bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white text-[10px] px-2 py-0.5 rounded-full ml-2 align-top uppercase tracking-wider">Ultimate</span></h2>
-                <p class="text-xs text-gray-500 mt-1">Design tool setara aplikasi pro</p>
+                <h2 class="text-lg font-black text-gray-900 tracking-tight leading-none">Freeform Editor</h2>
+                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Inspired by SCRL & Unfold</p>
             </div>
         </div>
         <div class="flex w-full sm:w-auto items-center gap-3">
-            <button onclick="downloadAllCollagesInQueue()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-2 shadow-sm">
-                <i class="fa-solid fa-file-zipper"></i> Download Batch (ZIP)
-            </button>
             <!-- Project Selector -->
             <div class="relative w-full sm:w-56">
                 <i class="fa-solid fa-folder-open absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                <select id="collageProjectSelector" onchange="loadCollageProjectData()" class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-fuchsia-500 outline-none text-sm appearance-none font-semibold text-gray-700 cursor-pointer transition-colors shadow-sm">
+                <select id="collageProjectSelector" onchange="loadCollageProjectData()" class="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-black outline-none text-xs font-bold text-gray-700 cursor-pointer transition-colors shadow-sm appearance-none">
                     <option value="">-- Pilih Project Klien --</option>
                 </select>
                 <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
             </div>
+            <button onclick="downloadCollage()" class="bg-black hover:bg-gray-800 text-white text-xs font-bold px-5 py-2.5 rounded-lg transition-colors flex items-center gap-2 shadow-md">
+                <i class="fa-solid fa-download"></i> Export HD
+            </button>
         </div>
     </div>
 
     <!-- Split Screen Workspace -->
     <div class="flex flex-col sm:flex-row flex-1 overflow-hidden relative">
         <!-- Left Sidebar: Controls -->
-        <div class="w-full sm:w-[340px] bg-white border-r border-gray-200 flex-shrink-0 flex flex-col h-[40vh] sm:h-auto overflow-hidden shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10">
-            <!-- Tabs untuk sidebar -->
+        <div class="w-full sm:w-[320px] bg-white border-r border-gray-200 flex-shrink-0 flex flex-col h-[40vh] sm:h-auto overflow-hidden z-10">
+            <!-- Tabs -->
             <div class="flex border-b border-gray-100 bg-gray-50 shrink-0 overflow-x-auto custom-scrollbar">
-                <button onclick="switchCollageSidebar('templates')" id="tab-c-templates" class="flex-none px-4 py-3 text-xs font-bold border-b-2 border-fuchsia-500 text-fuchsia-600 transition-colors whitespace-nowrap"><i class="fa-solid fa-layer-group mr-1.5"></i>Template</button>
-                <button onclick="switchCollageSidebar('background')" id="tab-c-background" class="flex-none px-4 py-3 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition-colors whitespace-nowrap"><i class="fa-solid fa-fill-drip mr-1.5"></i>Background</button>
-                <button onclick="switchCollageSidebar('text')" id="tab-c-text" class="flex-none px-4 py-3 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition-colors whitespace-nowrap"><i class="fa-solid fa-t mr-1.5"></i>Teks</button>
-                <button onclick="switchCollageSidebar('photos')" id="tab-c-photos" class="flex-none px-4 py-3 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition-colors whitespace-nowrap"><i class="fa-regular fa-images mr-1.5"></i>Foto</button>
+                <button onclick="switchCollageSidebar('photos')" id="tab-c-photos" class="flex-1 px-2 py-3 text-[10px] font-black uppercase tracking-wider border-b-2 border-black text-black transition-colors whitespace-nowrap"><i class="fa-regular fa-images mb-1 block text-lg"></i>Layers</button>
+                <button onclick="switchCollageSidebar('background')" id="tab-c-background" class="flex-1 px-2 py-3 text-[10px] font-black uppercase tracking-wider border-b-2 border-transparent text-gray-400 hover:text-black transition-colors whitespace-nowrap"><i class="fa-solid fa-fill-drip mb-1 block text-lg"></i>Canvas</button>
             </div>
 
             <div class="flex-1 overflow-y-auto custom-scrollbar p-5 pb-16">
-                <!-- TAB: Template -->
-                <div id="c-panel-templates" class="space-y-6 block fade-in">
-                    <!-- Templates -->
+                
+                <!-- TAB: Photos & Layers -->
+                <div id="c-panel-photos" class="space-y-5 block fade-in">
+                    
                     <div>
-                        <h4 class="text-[10px] font-bold text-gray-500 mb-3 uppercase tracking-wider flex items-center justify-between">Pilih Desain <span class="bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded text-[8px]">Auto Layout</span></h4>
-                        <div class="grid grid-cols-2 gap-3" id="collageTemplateGrid">
-                            <!-- Di-render oleh JS -->
+                        <button onclick="document.getElementById('cLocalUploader').click()" class="w-full py-3 bg-gray-100 text-black border border-gray-200 hover:bg-gray-200 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload Foto Lokal
+                        </button>
+                        <input type="file" id="cLocalUploader" accept="image/*" multiple class="hidden" onchange="handleLocalPhotosUpload(event)">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Photo Pool</h4>
+                            <span class="text-[10px] font-bold bg-gray-100 px-2 py-1 rounded text-gray-600">Klik untuk tambah layer</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto custom-scrollbar p-1" id="collagePhotoPicker">
+                            <div class="text-xs text-gray-400 text-center col-span-3 py-4 italic">Kosong.</div>
                         </div>
                     </div>
                     
                     <hr class="border-gray-100">
                     
-                    <!-- Canvas Size -->
                     <div>
-                        <h4 class="text-[10px] font-bold text-gray-500 mb-3 uppercase tracking-wider">Custom Canvas Size</h4>
-                        <div class="flex gap-2 items-center mb-3">
-                            <input type="number" id="cWidth" placeholder="W" value="10" class="w-full text-xs border border-gray-200 rounded px-3 py-2 outline-none focus:border-fuchsia-500 text-center font-mono">
-                            <span class="text-xs text-gray-400">x</span>
-                            <input type="number" id="cHeight" placeholder="H" value="15" class="w-full text-xs border border-gray-200 rounded px-3 py-2 outline-none focus:border-fuchsia-500 text-center font-mono">
-                            <select id="cUnit" class="text-xs border border-gray-200 rounded px-2 py-2 outline-none bg-white font-mono focus:border-fuchsia-500">
-                                <option value="cm">cm</option>
-                                <option value="in">in</option>
-                                <option value="px">px</option>
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Active Layers</h4>
+                            <button onclick="clearAllLayers()" class="text-[10px] text-red-500 font-bold hover:underline">Hapus Semua</button>
+                        </div>
+                        <p class="text-[10px] text-gray-500 leading-tight bg-gray-50 p-2 border border-gray-100 rounded-lg">
+                            <i class="fa-solid fa-hand-pointer mr-1"></i> Sentuh foto di atas kanvas untuk menggeser, memutar, atau mengubah ukurannya.
+                        </p>
+                    </div>
+
+                </div>
+
+                <!-- TAB: Canvas Settings -->
+                <div id="c-panel-background" class="hidden space-y-6 fade-in">
+                    
+                    <!-- Seamless Carousel Feature -->
+                    <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
+                        <h4 class="text-xs font-black text-indigo-900 mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-panorama"></i> Seamless Carousel Mode
+                        </h4>
+                        <p class="text-[10px] text-indigo-700 mb-3 leading-relaxed">
+                            Buat foto menyambung sempurna ala SCRL untuk Instagram.
+                        </p>
+                        <div class="flex items-center gap-3 mb-2">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="cCarouselToggle" class="sr-only peer" onchange="applyCustomCanvasSize()">
+                                <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                            </label>
+                            <span class="text-xs font-bold text-gray-700">Aktifkan Carousel</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-gray-600">Jumlah Slide:</span>
+                            <select id="cCarouselScreens" onchange="applyCustomCanvasSize()" class="text-xs border border-indigo-200 rounded px-2 py-1 outline-none font-bold text-indigo-700">
+                                <option value="2">2 Slide</option>
+                                <option value="3" selected>3 Slide</option>
+                                <option value="4">4 Slide</option>
+                                <option value="5">5 Slide</option>
                             </select>
                         </div>
-                        <button onclick="applyCustomCanvasSize()" class="w-full bg-gray-50 text-gray-600 hover:text-gray-800 hover:bg-gray-100 text-xs font-bold py-2 rounded-lg transition-colors border border-gray-200">Ubah Resolusi Kanvas</button>
                     </div>
-                </div>
 
-                <!-- TAB: Background -->
-                <div id="c-panel-background" class="hidden space-y-6 fade-in">
                     <div>
-                        <h4 class="text-[10px] font-bold text-gray-500 mb-3 uppercase tracking-wider">Warna Dasar</h4>
-                        <div class="flex items-center gap-3">
-                            <input type="color" id="cBgColor" value="#F4F4F0" oninput="updateBackgroundConfig()" class="w-12 h-12 rounded-xl cursor-pointer border border-gray-200 p-0 shadow-sm">
-                            <div class="text-xs text-gray-500 font-mono" id="cBgColorHex">#F4F4F0</div>
+                        <h4 class="text-[10px] font-bold text-gray-400 mb-3 uppercase tracking-wider">Rasio / Ukuran 1 Slide</h4>
+                        <div class="grid grid-cols-2 gap-2 mb-3">
+                            <button onclick="document.getElementById('cWidth').value=1080;document.getElementById('cHeight').value=1920;document.getElementById('cUnit').value='px';applyCustomCanvasSize()" class="py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold hover:bg-gray-100 transition-colors">9:16 (IG Story)</button>
+                            <button onclick="document.getElementById('cWidth').value=1080;document.getElementById('cHeight').value=1350;document.getElementById('cUnit').value='px';applyCustomCanvasSize()" class="py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold hover:bg-gray-100 transition-colors">4:5 (IG Feed)</button>
+                            <button onclick="document.getElementById('cWidth').value=1080;document.getElementById('cHeight').value=1080;document.getElementById('cUnit').value='px';applyCustomCanvasSize()" class="py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold hover:bg-gray-100 transition-colors">1:1 (Square)</button>
                         </div>
+                        <div class="flex gap-2 items-center">
+                            <input type="number" id="cWidth" value="1080" class="w-full text-xs border border-gray-200 rounded px-2 py-2 outline-none font-mono text-center">
+                            <span class="text-xs font-bold text-gray-300">X</span>
+                            <input type="number" id="cHeight" value="1350" class="w-full text-xs border border-gray-200 rounded px-2 py-2 outline-none font-mono text-center">
+                            <select id="cUnit" class="text-xs border border-gray-200 rounded px-1 py-2 outline-none bg-white font-mono">
+                                <option value="px">px</option>
+                                <option value="cm">cm</option>
+                            </select>
+                        </div>
+                        <button onclick="applyCustomCanvasSize()" class="w-full mt-2 bg-black text-white text-xs font-bold py-2.5 rounded-lg transition-all hover:bg-gray-800">Terapkan Ukuran</button>
                     </div>
                     
                     <hr class="border-gray-100">
                     
                     <div>
-                        <h4 class="text-[10px] font-bold text-gray-500 mb-3 uppercase tracking-wider">Gambar Latar (Opsional)</h4>
-                        
-                        <div class="flex gap-2 mb-3">
-                            <button onclick="document.getElementById('cBgImageUploader').click()" class="flex-1 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-xs font-bold text-gray-600 transition-colors">
-                                <i class="fa-solid fa-upload mr-1"></i> Upload Latar
-                            </button>
-                            <button onclick="removeBackgroundImage()" class="px-3 py-2 bg-red-50 hover:bg-red-100 border border-red-100 rounded-lg text-xs font-bold text-red-500 transition-colors" title="Hapus Latar">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
-                        <input type="file" id="cBgImageUploader" accept="image/*" class="hidden" onchange="handleBgImageUpload(event)">
-                        
-                        <div id="cBgPreviewContainer" class="hidden aspect-video bg-gray-100 rounded-lg border border-gray-200 mb-4 overflow-hidden relative">
-                            <img id="cBgPreview" src="" class="w-full h-full object-cover">
-                        </div>
-
-                        <!-- Opacity & Blur Slider -->
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-[10px] text-gray-500 font-semibold mb-1 flex justify-between">Transparansi Latar <span id="cBgOpacityVal">100%</span></label>
-                                <input type="range" id="cBgOpacity" min="0" max="100" value="100" oninput="updateBackgroundConfig()" class="w-full accent-fuchsia-500 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                            </div>
-                            <div>
-                                <label class="text-[10px] text-gray-500 font-semibold mb-1 flex justify-between">Efek Blur <span id="cBgBlurVal">0px</span></label>
-                                <input type="range" id="cBgBlur" min="0" max="50" value="0" oninput="updateBackgroundConfig()" class="w-full accent-fuchsia-500 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                            </div>
+                        <h4 class="text-[10px] font-bold text-gray-400 mb-3 uppercase tracking-wider">Warna Dasar</h4>
+                        <div class="flex items-center gap-3 mb-4">
+                            <input type="color" id="cBgColor" value="#EFEFEF" oninput="updateBackgroundConfig()" class="w-10 h-10 rounded cursor-pointer border-0 p-0 shadow-sm">
+                            <div class="text-xs text-gray-500 font-mono font-bold" id="cBgColorHex">#EFEFEF</div>
                         </div>
                     </div>
-                </div>
 
-                <!-- TAB: Teks (Multi-Typography) -->
-                <div id="c-panel-text" class="hidden space-y-4 fade-in">
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Daftar Teks</h4>
-                        <button onclick="addTextLayer()" class="text-xs bg-fuchsia-50 text-fuchsia-600 hover:bg-fuchsia-100 px-3 py-1 rounded-md font-bold transition-colors">
-                            <i class="fa-solid fa-plus mr-1"></i>Tambah
-                        </button>
-                    </div>
-                    
-                    <div id="cTextLayersContainer" class="space-y-3">
-                        <!-- Rendered Text Items -->
-                    </div>
-                    
-                    <div class="bg-blue-50 border border-blue-100 p-3 rounded-lg flex items-start gap-2 mt-4">
-                        <i class="fa-solid fa-circle-info text-blue-500 mt-0.5 text-xs"></i>
-                        <p class="text-[10px] text-blue-800 leading-tight">
-                            <strong>Tips Posisi:</strong> Anda bisa menggeser (drag) teks langsung di atas kanvas pratinjau.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- TAB: Photos (Local & Project) -->
-                <div id="c-panel-photos" class="hidden space-y-4 fade-in">
-                    <button onclick="document.getElementById('cLocalUploader').click()" class="w-full py-2.5 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-lg text-xs font-bold shadow-sm hover:scale-[1.02] transition-transform">
-                        <i class="fa-solid fa-folder-plus mr-1.5"></i>Pilih File Galeri / Laptop
-                    </button>
-                    <input type="file" id="cLocalUploader" accept="image/*" multiple class="hidden" onchange="handleLocalPhotosUpload(event)">
-                    
-                    <div class="flex items-center gap-2">
-                        <hr class="flex-1 border-gray-100">
-                        <span class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Atau Dari Project</span>
-                        <hr class="flex-1 border-gray-100">
-                    </div>
-
-                    <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg flex items-start gap-2">
-                        <i class="fa-solid fa-triangle-exclamation text-yellow-600 mt-0.5 text-xs"></i>
-                        <p class="text-[10px] text-yellow-700 leading-tight">
-                            <strong>Limit 16 Foto.</strong> Pilih foto dari project atau galeri hp Anda.
-                        </p>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-bold text-gray-600">Dipilih: <span id="cSelectedCount" class="text-fuchsia-600 font-black text-sm">0</span>/16</span>
-                        <button onclick="clearSelectedPhotos()" class="text-[10px] text-red-500 font-bold hover:underline">Clear</button>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2" id="collagePhotoPicker">
-                        <div class="text-xs text-gray-400 text-center col-span-3 py-4 italic">Kosong.</div>
-                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Right Canvas Workspace -->
-        <div class="flex-1 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZjNmM2YzIiAvPgo8cmVjdCB4PSI0IiB5PSI0IiB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZjNmM2YzIiAvPgo8L3N2Zz4=')] flex flex-col relative overflow-hidden" id="collageCanvasWrapper">
+        <!-- Background grid pattern like Photoshop transparent layer -->
+        <div class="flex-1 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+CjxyZWN0IHdpZHRoPSI4IiBoZWlnaHQ9IjgiIGZpbGw9IiNlN2U3ZTciIC8+CjxyZWN0IHg9IjgiIHk9IjgiIHdpZHRoPSI4IiBoZWlnaHQ9IjgiIGZpbGw9IiNlN2U3ZTciIC8+Cjwvc3ZnPg==')] flex flex-col relative overflow-hidden" id="collageCanvasWrapper">
             
-            <div class="flex-1 flex items-center justify-center p-4 sm:p-10 overflow-auto custom-scrollbar relative">
-                <!-- Interactive Canvas Area -->
-                <div id="collageInteractiveArea" class="relative shadow-2xl transition-all duration-300 bg-transparent shrink-0 mx-auto" style="width: 360px; height: 640px; min-width: 360px;">
-                    <!-- The Background Layer -->
-                    <div id="collageBackgroundLayer" class="absolute inset-0 z-0 overflow-hidden" style="background-color: #F4F4F0;"></div>
-                    <!-- The Canvas (Photos & Templates Lines) -->
+            <div class="flex-1 flex items-center justify-center p-4 sm:p-12 overflow-auto custom-scrollbar relative">
+                
+                <!-- Interactive Editor Area -->
+                <!-- The box that holds the canvas. Aspect ratio is perfectly matched by JS -->
+                <div id="collageInteractiveArea" class="relative shadow-[0_20px_50px_rgba(0,0,0,0.1)] transition-transform duration-200 bg-transparent mx-auto" style="width: 360px; height: 640px;">
+                    <!-- BG Layer -->
+                    <div id="collageBackgroundLayer" class="absolute inset-0 z-0 overflow-hidden" style="background-color: #EFEFEF;"></div>
+                    <!-- Graphics Layer -->
                     <canvas id="collageCanvas" class="w-full h-full absolute inset-0 z-10 touch-none pointer-events-none"></canvas>
                     
-                    <!-- Overlays for Photos Panning -->
-                    <div id="collageOverlays" class="absolute inset-0 z-20 w-full h-full touch-none" 
-                        onmousedown="startPanCollage(event)" onmousemove="panCollage(event)" onmouseup="endPanCollage(event)" onmouseleave="endPanCollage(event)" 
-                        ontouchstart="startPanCollageTouch(event)" ontouchmove="panCollageTouch(event)" ontouchend="endPanCollage(event)"></div>
-                        
-                    <!-- Text Overlay Layer (Draggable) -->
-                    <div id="collageTextOverlays" class="absolute inset-0 z-30 w-full h-full pointer-events-none"></div>
+                    <!-- Interaction Overlays (Drag & Resize Handles) -->
+                    <div id="collageOverlays" class="absolute inset-0 z-20 w-full h-full touch-none overflow-visible"></div>
                 </div>
+
             </div>
             
-            <!-- Bottom Action Bar (Queue) -->
-            <div class="absolute bottom-0 left-0 w-full bg-white/90 backdrop-blur-md border-t border-gray-200 p-4 flex items-center justify-between z-40 transform transition-transform" id="collageActionBar">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-gray-100 rounded-lg flex flex-col items-center justify-center border border-gray-200">
-                        <span class="text-xs font-bold text-gray-400">ANTRE</span>
-                        <span id="queueCount" class="text-lg font-black text-indigo-600 leading-none">0</span>
-                    </div>
-                    <div class="text-xs text-gray-500 hidden sm:block">Desain tersimpan di keranjang.<br>Download secara massal.</div>
-                </div>
-                
-                <div class="flex gap-3">
-                    <button onclick="saveCollageToQueue()" class="px-4 py-2.5 sm:px-6 sm:py-3 bg-white text-gray-700 border border-gray-300 rounded-xl shadow-sm hover:bg-gray-50 transition-all font-bold flex items-center gap-2 text-xs sm:text-sm">
-                        <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Simpan ke Keranjang</span>
-                    </button>
-                    <button onclick="downloadCollage()" class="px-4 py-2.5 sm:px-6 sm:py-3 bg-gray-900 text-white rounded-xl shadow-md hover:bg-black hover:-translate-y-0.5 transition-all font-bold flex items-center gap-2 text-xs sm:text-sm">
-                        <i class="fa-solid fa-download"></i> Download Langsung
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -6314,15 +6266,13 @@
     <!-- SCRIPT PREMIUM COLLAGE MAKER (PHASE 3) -->
     <script>
         // ==========================================
-// PREMIUM COLLAGE ENGINE V3 (FASE 5 - ULTIMATE)
+// PREMIUM COLLAGE ENGINE V4 (FREEFORM SCRL/UNFOLD EDITION)
 // ==========================================
 
 let collageState = {
     photos: [],       // All photos (from project or local upload)
-    selected: [],     // Selected photo URLs or object URLs
-    templateId: 'grid', 
     
-    // Canvas
+    // Canvas dimensions (aspect ratio)
     canvasW: 1080,
     canvasH: 1920,
     unit: 'px',
@@ -6330,160 +6280,30 @@ let collageState = {
     // Background
     bgType: 'color', // 'color' or 'image'
     bgColor: '#F4F4F0',
-    bgImage: null, // object URL or data URL
-    bgOpacity: 100, // 0-100
-    bgBlur: 0, // 0-50 px
+    bgImage: null, 
+    bgOpacity: 100, 
+    bgBlur: 0, 
     
-    // Multi-Typography
+    // Layers (Freeform Photos)
+    layers: [], // { id, url, x, y, w, h, scale, rotation, zIndex, isSelected }
+    activeLayerId: null,
+    
+    // Texts
     texts: [
-        { id: 1, text: 'VIBRANCE', font: 'Playfair Display', color: '#2a2a2a', x: 50, y: 80, align: 'center', size: 50 },
-        { id: 2, text: 'Apurva & Punya', font: 'Inter', color: '#888888', x: 50, y: 86, align: 'center', size: 24 }
+        { id: 1, text: 'VIBRANCE', font: 'Playfair Display', color: '#2a2a2a', x: 50, y: 80, align: 'center', size: 50 }
     ],
     
-    // Panning (Photos)
-    panOffsets: [], 
-    loadedImages: [], 
-    activePanIndex: -1,
-    isPanningPhoto: false,
+    // Dragging State
+    dragMode: null, // 'move', 'scale_tl', 'scale_tr', 'scale_bl', 'scale_br', 'rotate', 'move_text'
     startX: 0, startY: 0,
+    initX: 0, initY: 0, initScale: 1, initRotation: 0,
     
-    // Text Dragging
-    activeTextId: null,
-    isDraggingText: false,
-    textStartX: 0, textStartY: 0,
+    // Carousel Mode
+    isCarousel: false,
+    carouselScreens: 3, // 1 to 5
     
-    // Batch Export
-    queue: [] // Array of dataURLs
-};
-
-// --- TEMPLATES ---
-const collageTemplates = {
-    'grid': {
-        name: 'Smart Masonry Grid',
-        previewHtml: '<div class="w-full h-full bg-gray-200 border border-gray-300 rounded grid grid-cols-2 gap-1 p-1"><div class="bg-gray-400 rounded-sm"></div><div class="bg-gray-400 rounded-sm"></div><div class="bg-gray-400 rounded-sm"></div><div class="bg-gray-400 rounded-sm"></div></div>',
-        maxPhotos: 16,
-        calculateLayout: function(w, h, count) {
-            let boxes = [];
-            let spacing = 20; let padding = 40;
-            let contentW = w - (padding * 2);
-            let contentH = h - (padding * 2); 
-            if (count === 1) { boxes.push({ x: padding, y: padding, w: contentW, h: contentH }); }
-            else if (count === 2) {
-                let boxH = (contentH - spacing) / 2;
-                boxes.push({ x: padding, y: padding, w: contentW, h: boxH });
-                boxes.push({ x: padding, y: padding + boxH + spacing, w: contentW, h: boxH });
-            } else if (count === 3) {
-                let boxH = (contentH - spacing) / 2;
-                boxes.push({ x: padding, y: padding, w: contentW, h: boxH });
-                let bottomW = (contentW - spacing) / 2;
-                boxes.push({ x: padding, y: padding + boxH + spacing, w: bottomW, h: boxH });
-                boxes.push({ x: padding + bottomW + spacing, y: padding + boxH + spacing, w: bottomW, h: boxH });
-            } else {
-                let rows = Math.ceil(count / 2);
-                let boxW = (contentW - spacing) / 2;
-                let boxH = (contentH - (spacing * (rows-1))) / rows;
-                for(let i=0; i<count; i++) {
-                    let r = Math.floor(i / 2); let c = i % 2;
-                    if (i === count - 1 && count % 2 !== 0) {
-                        boxes.push({ x: padding, y: padding + (r * (boxH + spacing)), w: contentW, h: boxH });
-                    } else {
-                        boxes.push({ x: padding + (c * (boxW + spacing)), y: padding + (r * (boxH + spacing)), w: boxW, h: boxH });
-                    }
-                }
-            }
-            return boxes;
-        }
-    },
-    'vibrance': {
-        name: 'Vibrance',
-        previewHtml: '<div class="w-full h-full bg-[#F4F4F0] border border-gray-300 rounded relative"><div class="absolute top-1 right-1 w-[40%] h-[40%] bg-gray-400"></div><div class="absolute top-[20%] left-1 w-[35%] h-[30%] bg-gray-400"></div><div class="absolute bottom-[10%] left-1 w-[40%] h-[35%] bg-gray-400"></div></div>',
-        maxPhotos: 5,
-        calculateLayout: function(w, h, count) {
-            let padding = 80; let boxes = [];
-            if (count >= 1) boxes.push({x: w*0.45, y: padding, w: w*0.45, h: h*0.35});
-            if (count >= 2) boxes.push({x: padding, y: h*0.2, w: w*0.35, h: h*0.25});
-            if (count >= 3) boxes.push({x: padding, y: h*0.48, w: w*0.45, h: h*0.35});
-            if (count >= 4) boxes.push({x: w*0.58, y: h*0.45, w: w*0.35, h: h*0.25});
-            if (count >= 5) boxes.push({x: w*0.5, y: h*0.75, w: w*0.35, h: h*0.20});
-            return boxes;
-        },
-        drawOverlay: function(ctx, w, h) {
-            ctx.fillStyle = '#e8dfd8'; // Beige decoration
-            ctx.fillRect(w*0.35, 80, w*0.08, h*0.15); 
-            ctx.fillRect(80, h - 150, w*0.35, 30); 
-        }
-    },
-    'mandy': {
-        name: 'Save The Date (Mandy)',
-        previewHtml: '<div class="w-full h-full bg-white border border-gray-300 rounded grid grid-cols-2 grid-rows-2 p-1 gap-1"><div class="bg-gray-400 col-span-2 row-span-1"></div><div class="bg-gray-400"></div><div class="bg-gray-400"></div></div>',
-        maxPhotos: 3,
-        calculateLayout: function(w, h, count) {
-            let padding = 50; let spacing = 20; let boxes = [];
-            let wC = w - (padding*2);
-            let hC = h - (padding*2);
-            if (count >= 1) boxes.push({x: padding, y: padding, w: wC, h: hC*0.6});
-            if (count >= 2) boxes.push({x: padding, y: padding + hC*0.6 + spacing, w: (wC-spacing)/2, h: hC*0.4 - spacing});
-            if (count >= 3) boxes.push({x: padding + (wC-spacing)/2 + spacing, y: padding + hC*0.6 + spacing, w: (wC-spacing)/2, h: hC*0.4 - spacing});
-            return boxes;
-        }
-    },
-    'larsons': {
-        name: 'The Larsons',
-        previewHtml: '<div class="w-full h-full bg-white border border-gray-300 rounded p-2 flex flex-col gap-1 items-center justify-center"><div class="w-3/4 h-1/3 bg-gray-400"></div><div class="w-1/2 h-1/4 bg-gray-400"></div></div>',
-        maxPhotos: 5,
-        calculateLayout: function(w, h, count) {
-            let boxes = [];
-            // Centered masonry with huge margins
-            let mX = w * 0.15; let mY = h * 0.2;
-            let iW = w - (mX*2); let iH = h - (mY*2);
-            
-            if(count === 1) boxes.push({x:mX, y:mY, w:iW, h:iH});
-            else if(count === 2) {
-                boxes.push({x:mX, y:mY, w:iW, h: iH*0.48});
-                boxes.push({x:mX, y:mY + iH*0.52, w:iW, h: iH*0.48});
-            }
-            else {
-                // 3 to 5 photos complex center
-                boxes.push({x:mX, y:mY, w:iW*0.6, h:iH*0.6}); // main left
-                if(count>=2) boxes.push({x:mX + iW*0.62, y:mY, w:iW*0.38, h:iH*0.28});
-                if(count>=3) boxes.push({x:mX + iW*0.62, y:mY + iH*0.32, w:iW*0.38, h:iH*0.28});
-                if(count>=4) boxes.push({x:mX, y:mY + iH*0.62, w:iW*0.48, h:iH*0.38});
-                if(count>=5) boxes.push({x:mX + iW*0.5, y:mY + iH*0.62, w:iW*0.5, h:iH*0.38});
-            }
-            return boxes;
-        }
-    },
-    'tony': {
-        name: 'Tony Wedding',
-        previewHtml: '<div class="w-full h-full bg-white border border-gray-300 rounded p-2 flex gap-1 items-center"><div class="w-1/3 h-2/3 bg-gray-400"></div><div class="w-1/3 h-full bg-gray-400"></div><div class="w-1/3 h-2/3 bg-gray-400"></div></div>',
-        maxPhotos: 3,
-        calculateLayout: function(w, h, count) {
-            let boxes = [];
-            let pX = 60; let pY = 150; let space = 20;
-            let cW = w - (pX*2);
-            if(count === 1) boxes.push({x:pX, y:pY, w:cW, h:h-(pY*2)});
-            else if(count === 2) {
-                boxes.push({x:pX, y:pY, w:(cW-space)/2, h:h-(pY*2)});
-                boxes.push({x:pX+(cW-space)/2+space, y:pY, w:(cW-space)/2, h:h-(pY*2)});
-            } else if (count >= 3) {
-                // 3 columns, middle is taller
-                let bW = (cW-(space*2))/3;
-                boxes.push({x:pX, y:pY+50, w:bW, h:h-(pY*2)-100});
-                boxes.push({x:pX+bW+space, y:pY, w:bW, h:h-(pY*2)});
-                boxes.push({x:pX+(bW*2)+(space*2), y:pY+50, w:bW, h:h-(pY*2)-100});
-            }
-            return boxes;
-        },
-        drawOverlay: function(ctx, w, h) {
-            // Draw a thin line border around the middle section
-            ctx.strokeStyle = '#aaaaaa';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(w/2 - 100, h - 100);
-            ctx.lineTo(w/2 + 100, h - 100);
-            ctx.stroke();
-        }
-    }
+    // Queue
+    queue: []
 };
 
 // --- INITIALIZATION ---
@@ -6492,16 +6312,18 @@ function switchCollageSidebar(tab) {
     tabs.forEach(t => {
         let btn = document.getElementById('tab-c-' + t);
         let panel = document.getElementById('c-panel-' + t);
-        if (t === tab) {
-            btn.classList.replace('border-transparent', 'border-fuchsia-500');
-            btn.classList.replace('text-gray-400', 'text-fuchsia-600');
-            panel.classList.remove('hidden');
-            panel.classList.add('block');
-        } else {
-            btn.classList.replace('border-fuchsia-500', 'border-transparent');
-            btn.classList.replace('text-fuchsia-600', 'text-gray-400');
-            panel.classList.add('hidden');
-            panel.classList.remove('block');
+        if (btn && panel) {
+            if (t === tab) {
+                btn.classList.replace('border-transparent', 'border-fuchsia-500');
+                btn.classList.replace('text-gray-400', 'text-fuchsia-600');
+                panel.classList.remove('hidden');
+                panel.classList.add('block');
+            } else {
+                btn.classList.replace('border-fuchsia-500', 'border-transparent');
+                btn.classList.replace('text-fuchsia-600', 'text-gray-400');
+                panel.classList.add('hidden');
+                panel.classList.remove('block');
+            }
         }
     });
 }
@@ -6510,9 +6332,10 @@ function loadCollageProjectsList() {
     let sel = document.getElementById('collageProjectSelector');
     if (!sel) return;
     
-    // FIX: cache key
-    let uid = currentUser ? currentUser.id : '';
-    let cachedStr = localStorage.getItem('ps_projects_' + uid);
+    // FIX 1: Correct cache key
+    let uname = currentUser ? currentUser.username : 'guest';
+    let cacheKey = 'ps_cache_projects_' + uname;
+    let cachedStr = localStorage.getItem(cacheKey);
     let projects = [];
     try { if (cachedStr) projects = JSON.parse(cachedStr); } catch(e){}
     
@@ -6522,9 +6345,7 @@ function loadCollageProjectsList() {
     });
     sel.innerHTML = html;
     
-    renderTemplateGrid();
-    renderTextLayersList();
-    updateBackgroundConfig(); // sync UI
+    updateBackgroundConfig(); 
     requestRenderCollage();
 }
 
@@ -6553,7 +6374,6 @@ async function loadCollageProjectData() {
             extractPhotos(config);
             
             collageState.photos = allPhotos;
-            collageState.selected = [];
             renderCollagePhotoPicker();
         }
     } catch(e) {}
@@ -6567,46 +6387,89 @@ function handleLocalPhotosUpload(e) {
     for(let i=0; i<files.length; i++) {
         let f = files[i];
         let url = URL.createObjectURL(f);
-        // Add to front of photos array
         collageState.photos.unshift({url: url, id: 'local_'+new Date().getTime()+'_'+i, isLocal: true});
-        // Auto select if under limit
-        if (collageState.selected.length < 16) {
-            collageState.selected.push(url);
-        }
     }
     switchCollageSidebar('photos');
     renderCollagePhotoPicker();
-    requestRenderCollage();
 }
 
-function clearSelectedPhotos() {
-    collageState.selected = [];
-    renderCollagePhotoPicker();
-    requestRenderCollage();
-}
+// --- LAYERS ENGINE (SCRL STYLE) ---
+let imageCache = {}; // Cache to avoid reloading HD images
 
-// --- UI RENDERING ---
-function renderTemplateGrid() {
-    let html = '';
-    for(let id in collageTemplates) {
-        let t = collageTemplates[id];
-        let isSel = collageState.templateId === id;
-        html += `
-            <div onclick="selectCollageTemplate('${id}')" class="border-2 rounded-xl p-2 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${isSel ? 'border-fuchsia-500 bg-fuchsia-50 text-fuchsia-600 shadow-md scale-105 z-10' : 'border-gray-100 hover:border-fuchsia-300 hover:bg-gray-50 text-gray-500'}">
-                <div class="w-12 h-16 pointer-events-none opacity-80">${t.previewHtml}</div>
-                <span class="text-[9px] font-bold text-center leading-tight truncate w-full px-1">${t.name}</span>
+function renderCollagePhotoPicker() {
+    let container = document.getElementById('collagePhotoPicker');
+    container.innerHTML = '';
+    
+    collageState.photos.forEach((photo) => {
+        let div = document.createElement('div');
+        div.className = "relative aspect-square bg-gray-200 rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:opacity-80 transition-all group";
+        
+        // Thumb for picker
+        let thumbUrl = photo.isLocal ? photo.url : photo.url.replace('=s0', '=w300');
+        
+        div.innerHTML = `
+            <img src="${thumbUrl}" class="w-full h-full object-cover">
+            ${photo.isLocal ? '<div class="absolute bottom-1 right-1 bg-black/50 text-white text-[8px] px-1 rounded">Lokal</div>' : ''}
+            <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <i class="fa-solid fa-plus text-white text-xl"></i>
             </div>
         `;
-    }
-    document.getElementById('collageTemplateGrid').innerHTML = html;
+        
+        div.onclick = function() {
+            addPhotoLayer(photo.url);
+        };
+        container.appendChild(div);
+    });
 }
 
-function selectCollageTemplate(id) {
-    collageState.templateId = id;
-    renderTemplateGrid();
+function addPhotoLayer(url) {
+    // Load image to get aspect ratio
+    let img = new Image();
+    img.crossOrigin = "anonymous";
+    let thumbUrl = url.includes('blob:') ? url : url.replace('=s0', '=w800'); // Load mid-res for preview
+    
+    img.onload = function() {
+        imageCache[url] = img; // Cache it
+        
+        // Default size relative to canvas
+        let targetW = collageState.canvasW * 0.5; 
+        let scale = targetW / img.width;
+        let targetH = img.height * scale;
+        
+        let newLayer = {
+            id: 'layer_' + new Date().getTime(),
+            url: url,
+            origW: img.width,
+            origH: img.height,
+            x: collageState.canvasW / 2, // Center
+            y: collageState.canvasH / 2, // Center
+            w: targetW,
+            h: targetH,
+            scale: 1,
+            rotation: 0,
+            zIndex: collageState.layers.length
+        };
+        collageState.layers.push(newLayer);
+        collageState.activeLayerId = newLayer.id;
+        requestRenderCollage();
+    };
+    img.src = thumbUrl;
+}
+
+function removeActiveLayer() {
+    if (!collageState.activeLayerId) return;
+    collageState.layers = collageState.layers.filter(l => l.id !== collageState.activeLayerId);
+    collageState.activeLayerId = null;
     requestRenderCollage();
 }
 
+function clearAllLayers() {
+    collageState.layers = [];
+    collageState.activeLayerId = null;
+    requestRenderCollage();
+}
+
+// --- CANVAS SETTINGS ---
 function applyCustomCanvasSize() {
     let w = parseFloat(document.getElementById('cWidth').value) || 10;
     let h = parseFloat(document.getElementById('cHeight').value) || 15;
@@ -6615,6 +6478,7 @@ function applyCustomCanvasSize() {
     collageState.unit = unit;
     let pxW = w; let pxH = h;
     
+    // FIX 3: Aspect ratio dynamically
     if (unit === 'cm') { pxW = Math.round(w * 118.11); pxH = Math.round(h * 118.11); } 
     else if (unit === 'in') { pxW = Math.round(w * 300); pxH = Math.round(h * 300); }
     
@@ -6622,134 +6486,27 @@ function applyCustomCanvasSize() {
     if (pxW < 100) pxW = 100; if (pxH < 100) pxH = 100;
     
     collageState.canvasW = pxW; collageState.canvasH = pxH;
-    Swal.fire({toast:true, position:'top', icon:'success', text:`Kanvas: ${pxW}x${pxH} px`, showConfirmButton:false, timer:1500});
-    requestRenderCollage();
-}
-
-function renderCollagePhotoPicker() {
-    let container = document.getElementById('collagePhotoPicker');
-    container.innerHTML = '';
-    document.getElementById('cSelectedCount').innerText = collageState.selected.length;
     
-    collageState.photos.forEach((photo) => {
-        let div = document.createElement('div');
-        let isSelected = collageState.selected.includes(photo.url);
-        div.className = "relative aspect-square bg-gray-200 rounded-lg overflow-hidden cursor-pointer border-2 transition-all " + (isSelected ? "border-fuchsia-500 opacity-100 shadow-md scale-95" : "border-transparent opacity-70 hover:opacity-100");
-        
-        let thumbUrl = photo.isLocal ? photo.url : photo.url.replace('=s0', '=w300');
-        
-        div.innerHTML = `
-            <img src="${thumbUrl}" class="w-full h-full object-cover">
-            ${photo.isLocal ? '<div class="absolute bottom-1 right-1 bg-black/50 text-white text-[8px] px-1 rounded">Lokal</div>' : ''}
-            ${isSelected ? '<div class="absolute inset-0 bg-fuchsia-500/30 flex items-center justify-center"><i class="fa-solid fa-check text-white drop-shadow-md text-2xl"></i></div>' : ''}
-        `;
-        
-        div.onclick = function() {
-            let selIdx = collageState.selected.indexOf(photo.url);
-            if (selIdx > -1) {
-                collageState.selected.splice(selIdx, 1);
-            } else {
-                if(collageState.selected.length >= 16) {
-                    Swal.fire({toast: true, position: 'top', icon: 'warning', text: 'Maksimal 16 foto.', showConfirmButton: false, timer: 2000});
-                    return;
-                }
-                collageState.selected.push(photo.url);
-            }
-            renderCollagePhotoPicker();
-            requestRenderCollage(); 
-        };
-        container.appendChild(div);
-    });
-}
-
-// --- BACKGROUND LOGIC ---
-function updateBackgroundConfig() {
-    collageState.bgColor = document.getElementById('cBgColor').value;
-    document.getElementById('cBgColorHex').innerText = collageState.bgColor.toUpperCase();
-    collageState.bgOpacity = document.getElementById('cBgOpacity').value;
-    document.getElementById('cBgOpacityVal').innerText = collageState.bgOpacity + '%';
-    collageState.bgBlur = document.getElementById('cBgBlur').value;
-    document.getElementById('cBgBlurVal').innerText = collageState.bgBlur + 'px';
+    // Handle Carousel Mode
+    collageState.isCarousel = document.getElementById('cCarouselToggle') && document.getElementById('cCarouselToggle').checked;
+    if(collageState.isCarousel) {
+        collageState.carouselScreens = parseInt(document.getElementById('cCarouselScreens').value) || 3;
+        // Make canvas X times wider!
+        collageState.canvasW = pxW * collageState.carouselScreens;
+    }
     
+    Swal.fire({toast:true, position:'top', icon:'success', text:`Kanvas: ${collageState.canvasW}x${collageState.canvasH} px`, showConfirmButton:false, timer:1500});
     requestRenderCollage();
 }
 
-function handleBgImageUpload(e) {
-    if(e.target.files && e.target.files[0]) {
-        let url = URL.createObjectURL(e.target.files[0]);
-        collageState.bgImage = url;
-        collageState.bgType = 'image';
-        document.getElementById('cBgPreviewContainer').classList.remove('hidden');
-        document.getElementById('cBgPreview').src = url;
-        requestRenderCollage();
-    }
-}
-function removeBackgroundImage() {
-    collageState.bgImage = null;
-    collageState.bgType = 'color';
-    document.getElementById('cBgPreviewContainer').classList.add('hidden');
-    document.getElementById('cBgImageUploader').value = '';
-    requestRenderCollage();
-}
-
-// --- MULTI-TEXT LOGIC ---
-function renderTextLayersList() {
-    let container = document.getElementById('cTextLayersContainer');
-    let html = '';
-    collageState.texts.forEach((txt, i) => {
-        html += `
-            <div class="border border-gray-200 rounded-lg p-3 bg-white shadow-sm relative group">
-                <button onclick="removeTextLayer(${txt.id})" class="absolute top-2 right-2 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-xmark"></i></button>
-                <input type="text" value="${txt.text}" oninput="updateText(${txt.id}, 'text', this.value)" class="w-full text-sm font-bold border-none outline-none mb-2" placeholder="Teks...">
-                <div class="grid grid-cols-2 gap-2">
-                    <select onchange="updateText(${txt.id}, 'font', this.value)" class="text-xs border border-gray-200 rounded px-1 py-1 outline-none">
-                        <option value="Playfair Display" ${txt.font==='Playfair Display'?'selected':''}>Playfair</option>
-                        <option value="Inter" ${txt.font==='Inter'?'selected':''}>Inter</option>
-                        <option value="Dancing Script" ${txt.font==='Dancing Script'?'selected':''}>Dancing</option>
-                        <option value="Montserrat" ${txt.font==='Montserrat'?'selected':''}>Montserrat</option>
-                    </select>
-                    <div class="flex items-center gap-1">
-                        <input type="color" value="${txt.color}" oninput="updateText(${txt.id}, 'color', this.value)" class="w-6 h-6 p-0 border-0 rounded cursor-pointer">
-                        <input type="number" value="${txt.size}" oninput="updateText(${txt.id}, 'size', this.value)" class="flex-1 text-xs border border-gray-200 rounded px-1 outline-none" title="Ukuran Font">
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-    container.innerHTML = html;
-}
-
-function addTextLayer() {
-    let newId = new Date().getTime();
-    collageState.texts.push({
-        id: newId, text: 'Teks Baru', font: 'Inter', color: '#000000',
-        x: 50, y: 50, align: 'center', size: 40
-    });
-    renderTextLayersList();
-    requestRenderCollage();
-}
-function removeTextLayer(id) {
-    collageState.texts = collageState.texts.filter(t => t.id !== id);
-    renderTextLayersList();
-    requestRenderCollage();
-}
-function updateText(id, key, val) {
-    let txt = collageState.texts.find(t => t.id === id);
-    if(txt) {
-        if(key === 'size') txt[key] = parseFloat(val) || 20;
-        else txt[key] = val;
-    }
-    requestRenderCollage();
-}
-
-// --- CANVAS ENGINE ---
+// --- RENDERING FREEFORM CANVAS ---
 let renderCollageTimeout = null;
 function requestRenderCollage() {
     clearTimeout(renderCollageTimeout);
-    renderCollageTimeout = setTimeout(renderCollagePreview, 100);
+    renderCollageTimeout = setTimeout(renderCollagePreview, 50);
 }
 
-async function renderCollagePreview() {
+function renderCollagePreview() {
     const canvas = document.getElementById('collageCanvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -6758,15 +6515,24 @@ async function renderCollagePreview() {
     let h = collageState.canvasH;
     canvas.width = w; canvas.height = h;
     
-    // Scale UI viewer
+    // FIX 3: Auto-adjust Interactive Area Aspect Ratio so it NEVER stretches
+    let wrapper = document.getElementById('collageCanvasWrapper');
     let interactiveArea = document.getElementById('collageInteractiveArea');
-    let viewerMaxH = document.getElementById('collageCanvasWrapper').clientHeight - 120;
-    let viewerMaxW = document.getElementById('collageCanvasWrapper').clientWidth - 40;
-    let scale = Math.min(viewerMaxW / w, viewerMaxH / h);
-    interactiveArea.style.width = (w * scale) + 'px';
-    interactiveArea.style.height = (h * scale) + 'px';
     
-    // Setup Background HTML layer (for preview)
+    // Max available space in the UI
+    let maxW = wrapper.clientWidth - 40;
+    let maxH = wrapper.clientHeight - 120;
+    
+    // Calculate fit scale
+    let scale = Math.min(maxW / w, maxH / h);
+    let viewW = w * scale;
+    let viewH = h * scale;
+    
+    interactiveArea.style.width = viewW + 'px';
+    interactiveArea.style.height = viewH + 'px';
+    interactiveArea.style.minWidth = '0'; // Remove forced min width
+    
+    // Background Layer setup
     let bgLayer = document.getElementById('collageBackgroundLayer');
     bgLayer.style.backgroundColor = collageState.bgColor;
     if(collageState.bgImage) {
@@ -6779,248 +6545,282 @@ async function renderCollagePreview() {
     // Clear canvas
     ctx.clearRect(0, 0, w, h);
     
-    let count = collageState.selected.length;
-    let tpl = collageTemplates[collageState.templateId];
-    if (count > tpl.maxPhotos) count = tpl.maxPhotos;
+    // Draw Layers (Photos)
+    // Sort by Z-Index
+    let sortedLayers = [...collageState.layers].sort((a,b) => a.zIndex - b.zIndex);
     
-    // Preload images
-    for(let i=0; i<count; i++) {
-        let url = collageState.selected[i];
-        if(!collageState.loadedImages[i] || collageState.loadedImages[i]._url !== url) {
-            let img = new Image();
-            img.crossOrigin = "anonymous";
-            await new Promise((resolve) => {
-                img.onload = resolve; img.onerror = resolve;
-                img.src = url.includes('blob:') ? url : url.replace('=s0', '=w1500'); 
-            });
-            img._url = url;
-            collageState.loadedImages[i] = img;
-            collageState.panOffsets[i] = {x:0, y:0};
-        }
-    }
-    
-    let layoutBoxes = tpl.calculateLayout(w, h, count);
-    let overlayHtml = '';
-    
-    for(let i=0; i<count; i++) {
-        if (!layoutBoxes[i]) continue;
-        let img = collageState.loadedImages[i];
-        let box = layoutBoxes[i];
-        
-        let imgScale = Math.max(box.w / img.width, box.h / img.height);
-        let drawW = img.width * imgScale;
-        let drawH = img.height * imgScale;
-        
-        let drawX = box.x + (box.w - drawW) / 2;
-        let drawY = box.y + (box.h - drawH) / 2;
-        
-        if (!collageState.panOffsets[i]) collageState.panOffsets[i] = {x:0,y:0};
-        drawX += collageState.panOffsets[i].x; drawY += collageState.panOffsets[i].y;
-        
-        let minX = box.x + box.w - drawW; let maxX = box.x;
-        let minY = box.y + box.h - drawH; let maxY = box.y;
-        drawX = Math.max(minX, Math.min(maxX, drawX));
-        drawY = Math.max(minY, Math.min(maxY, drawY));
-        collageState.panOffsets[i].x = drawX - (box.x + (box.w - drawW) / 2);
-        collageState.panOffsets[i].y = drawY - (box.y + (box.h - drawH) / 2);
+    sortedLayers.forEach(layer => {
+        let img = imageCache[layer.url];
+        if(!img) return; // Wait until loaded
         
         ctx.save();
-        ctx.beginPath();
-        ctx.rect(box.x, box.y, box.w, box.h);
-        ctx.clip();
-        ctx.drawImage(img, drawX, drawY, drawW, drawH);
-        ctx.restore();
+        ctx.translate(layer.x, layer.y);
+        ctx.rotate(layer.rotation * Math.PI / 180);
+        ctx.scale(layer.scale, layer.scale);
         
-        let pctX = (box.x / w) * 100; let pctY = (box.y / h) * 100;
-        let pctW = (box.w / w) * 100; let pctH = (box.h / h) * 100;
-        overlayHtml += `<div data-idx="${i}" class="absolute pointer-events-auto" style="left:${pctX}%; top:${pctY}%; width:${pctW}%; height:${pctH}%;"></div>`;
-    }
+        // Draw image centered at 0,0
+        ctx.drawImage(img, -layer.w/2, -layer.h/2, layer.w, layer.h);
+        ctx.restore();
+    });
     
-    if(tpl.drawOverlay) tpl.drawOverlay(ctx, w, h);
-    document.getElementById('collageOverlays').innerHTML = overlayHtml;
-    
-    // Draw Texts (both in Canvas for final, and Overlay for interaction)
-    let textOverlayHtml = '';
+    // Draw Texts
     collageState.texts.forEach(txt => {
-        // Draw to Canvas
+        ctx.save();
         ctx.fillStyle = txt.color;
         ctx.textAlign = txt.align;
         ctx.textBaseline = 'middle';
         ctx.font = `600 ${txt.size}px "${txt.font}", sans-serif`;
+        
         let pxX = (txt.x / 100) * w;
         let pxY = (txt.y / 100) * h;
-        ctx.fillText(txt.text, pxX, pxY);
         
-        // Draw to Interactive HTML
-        textOverlayHtml += `
-            <div data-textid="${txt.id}" class="absolute pointer-events-auto cursor-move select-none" 
-                 style="left:${txt.x}%; top:${txt.y}%; transform: translate(-50%, -50%); 
-                        color:${txt.color}; font-family:'${txt.font}'; font-size:${txt.size * scale}px; 
-                        white-space:nowrap; font-weight:600; text-shadow: 0 0 2px rgba(255,255,255,0.5);"
-                 onmousedown="startDragText(event, ${txt.id})" ontouchstart="startDragTextTouch(event, ${txt.id})">
-                 ${txt.text}
+        ctx.translate(pxX, pxY);
+        ctx.fillText(txt.text, 0, 0);
+        ctx.restore();
+    });
+    
+    // Draw Carousel Splitting Lines
+    if (collageState.isCarousel && collageState.carouselScreens > 1) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+        ctx.setLineDash([10, 15]);
+        ctx.lineWidth = 4;
+        let screenW = w / collageState.carouselScreens;
+        for(let i=1; i<collageState.carouselScreens; i++) {
+            ctx.beginPath();
+            ctx.moveTo(screenW * i, 0);
+            ctx.lineTo(screenW * i, h);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+    
+    // UPDATE INTERACTIVE OVERLAYS FOR EDITING
+    updateInteractiveOverlays(scale);
+}
+
+// --- INTERACTIVE DRAG & DROP UI ---
+function updateInteractiveOverlays(viewScale) {
+    let overlayContainer = document.getElementById('collageOverlays');
+    let html = '';
+    
+    // For each layer, draw a bounding box if active, or invisible hit box if not
+    let sortedLayers = [...collageState.layers].sort((a,b) => a.zIndex - b.zIndex);
+    
+    sortedLayers.forEach(layer => {
+        let pxX = layer.x * viewScale;
+        let pxY = layer.y * viewScale;
+        let pxW = layer.w * layer.scale * viewScale;
+        let pxH = layer.h * layer.scale * viewScale;
+        
+        let isActive = collageState.activeLayerId === layer.id;
+        
+        html += `
+            <div data-id="${layer.id}" 
+                 class="absolute cursor-move select-none ${isActive ? 'border-2 border-fuchsia-500 z-50' : 'z-40 hover:border-2 hover:border-white/50'}"
+                 style="left:${pxX}px; top:${pxY}px; width:${pxW}px; height:${pxH}px; transform: translate(-50%, -50%) rotate(${layer.rotation}deg);"
+                 onmousedown="startDragLayer(event, '${layer.id}', 'move')" ontouchstart="startDragLayerTouch(event, '${layer.id}', 'move')">
+                 
+                 ${isActive ? `
+                     <!-- Scale Handles -->
+                     <div class="absolute -top-3 -left-3 w-6 h-6 bg-white border border-gray-300 rounded-full shadow cursor-nwse-resize" onmousedown="startDragLayer(event, '${layer.id}', 'scale_tl')" ontouchstart="startDragLayerTouch(event, '${layer.id}', 'scale_tl')"></div>
+                     <div class="absolute -top-3 -right-3 w-6 h-6 bg-white border border-gray-300 rounded-full shadow cursor-nesw-resize" onmousedown="startDragLayer(event, '${layer.id}', 'scale_tr')" ontouchstart="startDragLayerTouch(event, '${layer.id}', 'scale_tr')"></div>
+                     <div class="absolute -bottom-3 -left-3 w-6 h-6 bg-white border border-gray-300 rounded-full shadow cursor-nesw-resize" onmousedown="startDragLayer(event, '${layer.id}', 'scale_bl')" ontouchstart="startDragLayerTouch(event, '${layer.id}', 'scale_bl')"></div>
+                     <div class="absolute -bottom-3 -right-3 w-6 h-6 bg-white border border-gray-300 rounded-full shadow cursor-nwse-resize" onmousedown="startDragLayer(event, '${layer.id}', 'scale_br')" ontouchstart="startDragLayerTouch(event, '${layer.id}', 'scale_br')"></div>
+                     
+                     <!-- Delete Button -->
+                     <div class="absolute -top-8 right-0 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center cursor-pointer shadow hover:bg-red-600" onmousedown="removeActiveLayer(); event.stopPropagation();" ontouchstart="removeActiveLayer(); event.stopPropagation();"><i class="fa-solid fa-xmark text-xs"></i></div>
+                 ` : ''}
             </div>
         `;
     });
-    document.getElementById('collageTextOverlays').innerHTML = textOverlayHtml;
+    
+    // Add invisible background click to deselect
+    html = `<div class="absolute inset-0 z-0" onmousedown="deselectLayers()" ontouchstart="deselectLayers()"></div>` + html;
+    
+    overlayContainer.innerHTML = html;
 }
 
-// --- DRAG & PAN EVENTS ---
+function deselectLayers() {
+    collageState.activeLayerId = null;
+    requestRenderCollage();
+}
+
 function getEventPos(e) {
     if(e.touches && e.touches.length > 0) return {x: e.touches[0].clientX, y: e.touches[0].clientY};
     return {x: e.clientX, y: e.clientY};
 }
-function startPanCollage(e) {
-    if(!e.target.dataset.idx) return;
-    collageState.activePanIndex = parseInt(e.target.dataset.idx);
-    collageState.isPanningPhoto = true;
-    let pos = getEventPos(e);
-    collageState.startX = pos.x; collageState.startY = pos.y;
-}
-function panCollage(e) {
-    if(collageState.isDraggingText) { panText(e); return; }
-    if(!collageState.isPanningPhoto || collageState.activePanIndex === -1) return;
-    let pos = getEventPos(e);
-    let dx = pos.x - collageState.startX; let dy = pos.y - collageState.startY;
-    
-    let domRect = document.getElementById('collageInteractiveArea').getBoundingClientRect();
-    let scaleX = collageState.canvasW / domRect.width;
-    let scaleY = collageState.canvasH / domRect.height;
-    
-    collageState.panOffsets[collageState.activePanIndex].x += dx * scaleX;
-    collageState.panOffsets[collageState.activePanIndex].y += dy * scaleY;
-    collageState.startX = pos.x; collageState.startY = pos.y;
-    renderCollagePreview();
-}
-function endPanCollage(e) {
-    collageState.isPanningPhoto = false; collageState.activePanIndex = -1;
-    if(collageState.isDraggingText) endDragText();
-}
-function startPanCollageTouch(e) { startPanCollage(e); }
-function panCollageTouch(e) { panCollage(e); e.preventDefault(); }
 
-// TEXT DRAGGING
-function startDragText(e, id) {
-    collageState.activeTextId = id;
-    collageState.isDraggingText = true;
+function startDragLayer(e, id, mode) {
+    e.stopPropagation(); e.preventDefault();
+    collageState.activeLayerId = id;
+    collageState.dragMode = mode;
+    
+    let layer = collageState.layers.find(l => l.id === id);
+    if(!layer) return;
+    
+    // Bring to front
+    let maxZ = Math.max(...collageState.layers.map(l => l.zIndex), 0);
+    layer.zIndex = maxZ + 1;
+    
     let pos = getEventPos(e);
-    collageState.textStartX = pos.x; collageState.textStartY = pos.y;
-    e.stopPropagation();
+    collageState.startX = pos.x; collageState.startY = pos.y;
+    collageState.initX = layer.x; collageState.initY = layer.y;
+    collageState.initScale = layer.scale;
+    
+    document.addEventListener('mousemove', dragLayer);
+    document.addEventListener('mouseup', endDragLayer);
+    requestRenderCollage(); // to show active bounding box immediately
 }
-function startDragTextTouch(e, id) { startDragText(e, id); }
-function panText(e) {
-    if(!collageState.isDraggingText || !collageState.activeTextId) return;
+function startDragLayerTouch(e, id, mode) {
+    startDragLayer(e, id, mode);
+    document.addEventListener('touchmove', dragLayer, {passive:false});
+    document.addEventListener('touchend', endDragLayer);
+}
+
+function dragLayer(e) {
+    if(!collageState.dragMode || !collageState.activeLayerId) return;
     let pos = getEventPos(e);
-    let dx = pos.x - collageState.textStartX; let dy = pos.y - collageState.textStartY;
+    let layer = collageState.layers.find(l => l.id === collageState.activeLayerId);
     
-    let domRect = document.getElementById('collageInteractiveArea').getBoundingClientRect();
-    let pctX = (dx / domRect.width) * 100;
-    let pctY = (dy / domRect.height) * 100;
+    let dx = pos.x - collageState.startX;
+    let dy = pos.y - collageState.startY;
     
-    let txt = collageState.texts.find(t => t.id === collageState.activeTextId);
-    if(txt) {
-        txt.x += pctX; txt.y += pctY;
+    // Convert screen pixels to canvas pixels
+    let wrapper = document.getElementById('collageInteractiveArea');
+    let canvasRect = wrapper.getBoundingClientRect();
+    let viewScale = collageState.canvasW / canvasRect.width;
+    
+    if (collageState.dragMode === 'move') {
+        layer.x = collageState.initX + (dx * viewScale);
+        layer.y = collageState.initY + (dy * viewScale);
+    } else if (collageState.dragMode.startsWith('scale')) {
+        // Simple uniform scaling based on Y drag
+        let scaleFactor = (layer.h * layer.scale + (dy * viewScale)) / (layer.h * layer.scale);
+        if (collageState.dragMode === 'scale_tl' || collageState.dragMode === 'scale_tr') {
+            scaleFactor = (layer.h * layer.scale - (dy * viewScale)) / (layer.h * layer.scale);
+        }
+        
+        let newScale = collageState.initScale * scaleFactor;
+        if (newScale > 0.1) layer.scale = newScale;
     }
     
-    collageState.textStartX = pos.x; collageState.textStartY = pos.y;
-    renderCollagePreview();
-}
-function endDragText() {
-    collageState.isDraggingText = false; collageState.activeTextId = null;
+    requestRenderCollage();
 }
 
-// --- EXPORT & BATCH LOGIC ---
-async function compositeFinalCanvas() {
-    // We need to merge background layer and canvas layer to a single dataURL
+function endDragLayer() {
+    collageState.dragMode = null;
+    document.removeEventListener('mousemove', dragLayer);
+    document.removeEventListener('mouseup', endDragLayer);
+    document.removeEventListener('touchmove', dragLayer);
+    document.removeEventListener('touchend', endDragLayer);
+}
+
+// --- HD EXPORT LOGIC ---
+async function compositeFinalHDCanvas() {
+    Swal.fire({title: 'Memproses HD...', text: 'Mengunduh gambar resolusi tinggi.', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+    
     let finalCanvas = document.createElement('canvas');
-    finalCanvas.width = collageState.canvasW; finalCanvas.height = collageState.canvasH;
+    finalCanvas.width = collageState.canvasW; 
+    finalCanvas.height = collageState.canvasH;
     let ctx = finalCanvas.getContext('2d');
     
-    // Draw bg color
+    // BG
     ctx.fillStyle = collageState.bgColor;
     ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
     
-    // Draw bg image if any
     if (collageState.bgImage) {
         ctx.globalAlpha = collageState.bgOpacity / 100;
         let img = new Image();
+        img.crossOrigin = "anonymous";
         await new Promise(r => { img.onload=r; img.onerror=r; img.src=collageState.bgImage; });
-        // Implement basic cover
         let s = Math.max(finalCanvas.width / img.width, finalCanvas.height / img.height);
         let dw = img.width * s; let dh = img.height * s;
         let dx = (finalCanvas.width - dw)/2; let dy = (finalCanvas.height - dh)/2;
-        // Blur is hard in canvas 2d without filter support, fallback to globalAlpha
         ctx.filter = `blur(${collageState.bgBlur}px)`;
         ctx.drawImage(img, dx, dy, dw, dh);
         ctx.filter = 'none';
         ctx.globalAlpha = 1.0;
-    } else {
-        // Opacity of color? Usually just solid
     }
     
-    // Draw foreground canvas (photos and text)
-    let fgCanvas = document.getElementById('collageCanvas');
-    ctx.drawImage(fgCanvas, 0, 0);
-    
-    return finalCanvas.toDataURL('image/jpeg', 0.95);
-}
-
-async function saveCollageToQueue() {
-    if(collageState.selected.length === 0) {
-        Swal.fire({toast: true, position: 'top', icon: 'warning', text: 'Kanvas kosong.', showConfirmButton: false, timer: 2000});
-        return;
+    // Draw HD Layers
+    let sortedLayers = [...collageState.layers].sort((a,b) => a.zIndex - b.zIndex);
+    for(let i=0; i<sortedLayers.length; i++) {
+        let layer = sortedLayers[i];
+        
+        // FIX 2: Load ORIGINAL resolution (=s0) before drawing on HD canvas
+        let hdUrl = layer.url.includes('blob:') ? layer.url : layer.url.replace(/=w\d+/, '=s0');
+        let hdImg = new Image();
+        hdImg.crossOrigin = "anonymous";
+        await new Promise(r => { hdImg.onload=r; hdImg.onerror=r; hdImg.src=hdUrl; });
+        
+        ctx.save();
+        ctx.translate(layer.x, layer.y);
+        ctx.rotate(layer.rotation * Math.PI / 180);
+        ctx.scale(layer.scale, layer.scale);
+        ctx.drawImage(hdImg, -layer.w/2, -layer.h/2, layer.w, layer.h);
+        ctx.restore();
     }
-    let dataUrl = await compositeFinalCanvas();
-    collageState.queue.push(dataUrl);
-    document.getElementById('queueCount').innerText = collageState.queue.length;
-    Swal.fire({toast:true, position:'top', icon:'success', text:'Disimpan ke keranjang!', showConfirmButton:false, timer:1500});
+    
+    // Texts
+    collageState.texts.forEach(txt => {
+        ctx.save();
+        ctx.fillStyle = txt.color;
+        ctx.textAlign = txt.align;
+        ctx.textBaseline = 'middle';
+        ctx.font = `600 ${txt.size}px "${txt.font}", sans-serif`;
+        let pxX = (txt.x / 100) * finalCanvas.width;
+        let pxY = (txt.y / 100) * finalCanvas.height;
+        ctx.translate(pxX, pxY);
+        ctx.fillText(txt.text, 0, 0);
+        ctx.restore();
+    });
+    
+    Swal.close();
+    return finalCanvas;
 }
 
 async function downloadCollage() {
-    if(collageState.selected.length === 0) return;
-    let dataUrl = await compositeFinalCanvas();
-    let a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = `PremiumCollage-${new Date().getTime()}.jpg`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-}
-
-async function downloadAllCollagesInQueue() {
-    if (collageState.queue.length === 0) {
-        Swal.fire({icon: 'info', text: 'Keranjang masih kosong.'});
-        return;
-    }
+    if(collageState.layers.length === 0) return;
     
-    if (typeof JSZip === 'undefined') {
-        // Fallback: download one by one
-        for(let i=0; i<collageState.queue.length; i++) {
-            let a = document.createElement('a');
-            a.href = collageState.queue[i];
-            a.download = `Collage-${i+1}.jpg`;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            await new Promise(r => setTimeout(r, 500));
+    let hdCanvas = await compositeFinalHDCanvas();
+    
+    if (collageState.isCarousel && collageState.carouselScreens > 1) {
+        // Slice the carousel
+        let zip = new JSZip();
+        let folder = zip.folder("Kama_Carousel");
+        
+        let screenW = hdCanvas.width / collageState.carouselScreens;
+        for(let i=0; i<collageState.carouselScreens; i++) {
+            let sliceCanvas = document.createElement('canvas');
+            sliceCanvas.width = screenW; sliceCanvas.height = hdCanvas.height;
+            let sCtx = sliceCanvas.getContext('2d');
+            sCtx.drawImage(hdCanvas, i * screenW, 0, screenW, hdCanvas.height, 0, 0, screenW, hdCanvas.height);
+            
+            let dataUrl = sliceCanvas.toDataURL('image/jpeg', 0.95);
+            let base64Data = dataUrl.split(',')[1];
+            folder.file(`Slide_${i+1}.jpg`, base64Data, {base64: true});
         }
-        collageState.queue = [];
-        document.getElementById('queueCount').innerText = 0;
-        return;
+        zip.generateAsync({type:"blob"}).then(function(content) {
+            saveAs(content, "Kama_Carousel_Seamless.zip");
+            Swal.fire({toast:true, position:'top', icon:'success', text:'Berhasil dipotong!', timer:2000});
+        });
+    } else {
+        // Single download
+        let dataUrl = hdCanvas.toDataURL('image/jpeg', 0.95);
+        let a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = `PremiumCollage-${new Date().getTime()}.jpg`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
     }
-    
-    let zip = new JSZip();
-    let folder = zip.folder("Kama_Premium_Collages");
-    
-    for(let i=0; i<collageState.queue.length; i++) {
-        let base64Data = collageState.queue[i].split(',')[1];
-        folder.file(`Collage_${i+1}.jpg`, base64Data, {base64: true});
-    }
-    
-    zip.generateAsync({type:"blob"}).then(function(content) {
-        saveAs(content, "Kama_Collages_Batch.zip");
-        collageState.queue = [];
-        document.getElementById('queueCount').innerText = 0;
-        Swal.fire({toast:true, position:'top', icon:'success', text:'Berhasil didownload ZIP!', showConfirmButton:false, timer:2000});
-    });
+}
+// ----------------------------------------------------
+// UI Bindings...
+function updateBackgroundConfig() {
+    if(document.getElementById('cBgColor')) collageState.bgColor = document.getElementById('cBgColor').value;
+    if(document.getElementById('cBgOpacity')) collageState.bgOpacity = document.getElementById('cBgOpacity').value;
+    if(document.getElementById('cBgBlur')) collageState.bgBlur = document.getElementById('cBgBlur').value;
+    requestRenderCollage();
 }
 
     </script>
