@@ -4416,6 +4416,22 @@
                 }
             }
 
+            // Lock Layout & Music
+            var inpLayout = document.getElementById('p_client_layout');
+            var inpMusicFile = document.getElementById('p_music_file');
+            var inpMusicUrl = document.getElementById('p_music_url');
+
+            if (inpLayout) inpLayout.disabled = !isPrem;
+            if (inpMusicFile) inpMusicFile.disabled = !isPrem;
+            if (inpMusicUrl) {
+                inpMusicUrl.disabled = !isPrem;
+                if (!isPrem) {
+                    inpMusicUrl.placeholder = 'Terkunci (Add-On PRO)';
+                } else {
+                    inpMusicUrl.placeholder = 'URL Musik MP3 (Contoh: https://.../lagu.mp3)';
+                }
+            }
+
             // Hapus event lama jika ada, lalu tambah event click untuk memunculkan alert jika terkunci
             var lockAction = function(e) {
                 if (!isPrem) {
@@ -4427,6 +4443,8 @@
             
             var wrpCat = document.getElementById('wrapper-multicategory');
             var wrpPrice = document.getElementById('p_extra_price');
+            var wrpMusic = inpMusicFile ? inpMusicFile.parentElement.parentElement : null;
+            var wrpLayout = inpLayout ? inpLayout.parentElement : null;
             
             if (wrpWm) {
                 wrpWm.onclick = lockAction;
@@ -4436,6 +4454,12 @@
             }
             if (wrpPrice && !isPrem) {
                 wrpPrice.parentElement.onclick = lockAction;
+            }
+            if (wrpMusic && !isPrem) {
+                wrpMusic.onclick = lockAction;
+            }
+            if (wrpLayout && !isPrem) {
+                wrpLayout.onclick = lockAction;
             }
 
             if (wrpCat) {
