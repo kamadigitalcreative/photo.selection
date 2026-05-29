@@ -949,8 +949,6 @@
                     <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback"
                         class="nav-tab admin-only-col hidden relative">Laporan Feedback <span id="badge-admin-feedback"
                             class="absolute -top-1.5 -right-2 bg-red-600 text-white text-[10px] font-bold min-w-[20px] h-[20px] flex items-center justify-center rounded-full border-2 border-white shadow-md hidden">0</span></button>
-                    <button onclick="switchAdminTab('pengaturan')" id="tab-pengaturan"
-                        class="nav-tab admin-only-col hidden text-purple-700 font-bold"><i class="fa-solid fa-sliders mr-1"></i> Global Settings</button>
                 </div>
 
                 <div class="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
@@ -1037,8 +1035,6 @@
                         class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center px-1 relative">Feedback
                         <span id="badge-admin-feedback-m"
                             class="absolute top-0.5 right-1 bg-red-600 text-white text-[9px] font-bold min-w-[16px] h-[16px] flex items-center justify-center rounded-full border border-white shadow-sm hidden">0</span></button>
-                    <button onclick="switchAdminTab('pengaturan')" id="tab-pengaturan-m"
-                        class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center px-1 text-purple-700 font-bold"><i class="fa-solid fa-sliders"></i></button>
                     <button onclick="handleLogout()"
                         class="nav-tab flex-1 text-xs py-2 text-center px-1 text-red-500 hover:text-red-700 font-bold"><i
                             class="fa-solid fa-arrow-right-from-bracket block mb-0.5 text-lg opacity-90"></i><span
@@ -1685,26 +1681,6 @@
                     <div id="admin-feedback-container" class="space-y-4 pb-8">
                         <div class="text-center py-10 text-gray-400 text-sm font-medium"><i
                                 class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat laporan...</div>
-                    </div>
-                </div>
-
-                <!-- SECTION PENGATURAN GLOBAL (ADMIN) -->
-                <div id="section-pengaturan" class="hidden flex-1 flex-col fade-in">
-                    <div class="mb-6">
-                        <h2 class="text-xl sm:text-2xl font-black text-kama-800 tracking-tight flex items-center gap-2"><i class="fa-solid fa-sliders text-purple-600"></i> Pengaturan Global</h2>
-                        <p class="text-xs sm:text-sm text-gray-500 mt-1 font-medium">Kendalikan fitur aplikasi (Feature Flags) secara global. Perubahan akan berlaku untuk seluruh tim fotografer.</p>
-                    </div>
-
-                    <div class="bg-white rounded-2xl border border-gray-200/60 shadow-sm p-4 sm:p-6 mb-6">
-                        <h3 class="font-bold text-gray-800 mb-4 border-b pb-2">Fitur Premium (Sistem Saklar)</h3>
-                        <div class="space-y-5" id="global-config-list">
-                            <div class="text-center py-6 text-gray-400 text-sm font-medium"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat konfigurasi...</div>
-                        </div>
-                        <div class="mt-6 pt-4 border-t flex justify-end">
-                            <button onclick="saveGlobalSettings()" id="btn-save-global-settings" class="bg-kama-800 hover:bg-kama-900 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all active:scale-95 flex items-center gap-2">
-                                <i class="fa-solid fa-floppy-disk"></i> Simpan Pengaturan
-                            </button>
-                        </div>
                     </div>
                 </div>
 
@@ -3758,7 +3734,6 @@
             var sectionPanduan = document.getElementById('section-panduan');
             var sectionFeedback = document.getElementById('section-feedback');
             var sectionAdminFeedback = document.getElementById('section-admin-feedback');
-            var sectionPengaturan = document.getElementById('section-pengaturan');
             var sectionCollage = document.getElementById('section-collage');
 
             if (sectionDash && sectionDash.classList) { sectionDash.classList.remove('flex'); sectionDash.classList.add('hidden'); }
@@ -3768,7 +3743,6 @@
             if (sectionPanduan && sectionPanduan.classList) { sectionPanduan.classList.remove('flex'); sectionPanduan.classList.add('hidden'); }
             if (sectionFeedback && sectionFeedback.classList) { sectionFeedback.classList.remove('flex'); sectionFeedback.classList.add('hidden'); }
             if (sectionAdminFeedback && sectionAdminFeedback.classList) { sectionAdminFeedback.classList.remove('flex'); sectionAdminFeedback.classList.add('hidden'); }
-            if (sectionPengaturan && sectionPengaturan.classList) { sectionPengaturan.classList.remove('flex'); sectionPengaturan.classList.add('hidden'); }
             if (sectionCollage && sectionCollage.classList) { sectionCollage.classList.remove('flex'); sectionCollage.classList.add('hidden'); }
 
             // FIX: Matikan robot setiap kali pindah menu agar hemat memori
@@ -3825,9 +3799,6 @@
                 if (bD) bD.classList.add('hidden'); if (bM) bM.classList.add('hidden');
                 lastNotifCount = 0;
                 fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'markFeedbackRead', type: 'admin', currentUser: currentUser }) }).catch(() => { });
-            } else if (tabId === 'pengaturan') {
-                if (sectionPengaturan && sectionPengaturan.classList) { sectionPengaturan.classList.remove('hidden'); sectionPengaturan.classList.add('flex'); }
-                if (typeof loadGlobalSettings === 'function') loadGlobalSettings();
             }
         }
 
@@ -4065,29 +4036,6 @@
 
         // --- PROJECTS LOGIC ---
         async function loadDataProjects() {
-            // Background fetch for Global Config so that Grid and Watermark buttons appear properly
-            if (!window.globalConfigObj) {
-                fetch(API_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'getGlobalSettings', currentUser: currentUser })
-                }).then(r => r.json()).then(data => {
-                    if (data.status === 'success' && data.data) {
-                        let actualData = Array.isArray(data.data) ? data.data : (Array.isArray(data.data.data) ? data.data.data : null);
-                        if (actualData) {
-                            window.globalConfigObj = {};
-                            actualData.forEach(item => {
-                                if (item && item.Fitur) window.globalConfigObj[item.Fitur] = item.Status;
-                            });
-                            // Re-render table if projects are already cached and rendered
-                            var cKey = 'ps_cache_projects_' + (currentUser ? currentUser.username : 'guest');
-                            var cProj = localStorage.getItem(cKey);
-                            if (cProj) renderProjectsTable(JSON.parse(cProj));
-                        }
-                    }
-                }).catch(()=>{});
-            }
-
             // --- SECURITY PATCH: Laci memori dikunci spesifik menggunakan Username ---
             var cacheKey = 'ps_cache_projects_' + (currentUser ? currentUser.username : 'guest');
             var cachedProjects = localStorage.getItem(cacheKey);
@@ -4455,108 +4403,6 @@
                 setButtonState('btnCreate', false, 'Generate Link');
                 Swal.fire('Error', err.message, 'error');
             }
-        }
-
-        // ==========================================
-        // FASE 1: GLOBAL SETTINGS
-        // ==========================================
-        function loadGlobalSettings() {
-            let container = document.getElementById('global-config-list');
-            if(!container) return;
-            container.innerHTML = '<div class="text-center py-6 text-gray-400 text-sm font-medium"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat konfigurasi...</div>';
-            
-            fetch(API_ENDPOINT, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'getGlobalSettings', currentUser: currentUser })
-            })
-            .then(res => res.json())
-            .then(data => {
-                let actualData = null;
-                if (data.status === 'success' && data.data) {
-                    if (Array.isArray(data.data)) actualData = data.data;
-                    else if (Array.isArray(data.data.data)) actualData = data.data.data;
-                }
-                
-                if(actualData) {
-                    window.globalConfigObj = {}; // Simpan ke memory client
-                    let html = '';
-                    actualData.forEach(item => {
-                        if(!item || !item.Fitur) return;
-                        window.globalConfigObj[item.Fitur] = item.Status;
-                        
-                        let isChecked = item.Status ? 'checked' : '';
-                        let friendlyName = String(item.Fitur).replace('Global_', 'Fitur ');
-                        let icon = 'fa-star';
-                        if(String(item.Fitur).includes('Watermark')) icon = 'fa-droplet';
-                        if(String(item.Fitur).includes('Upsell')) icon = 'fa-sack-dollar';
-                        if(String(item.Fitur).includes('Grid')) icon = 'fa-border-all';
-                        
-                        html += `
-                        <div class="flex items-center justify-between p-4 bg-gray-50 border rounded-xl hover:bg-gray-100 transition-colors">
-                            <div class="flex items-start gap-3">
-                                <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 shrink-0">
-                                    <i class="fa-solid ${icon}"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-kama-800 text-sm sm:text-base">${friendlyName}</h4>
-                                    <p class="text-xs text-gray-500 mt-0.5">${item.Keterangan || ''}</p>
-                                </div>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
-                                <input type="checkbox" class="sr-only peer config-toggle" data-fitur="${item.Fitur}" ${isChecked}>
-                                <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                            </label>
-                        </div>
-                        `;
-                    });
-                    if(html === '') html = '<p class="text-center text-gray-500 text-sm">Konfigurasi kosong. Harap login ulang untuk membuat database otomatis.</p>';
-                    container.innerHTML = html;
-                } else {
-                    let errorMsg = data.message || (data.data && data.data.message) || 'Data tidak valid.';
-                    container.innerHTML = `<p class="text-center text-red-500 text-sm">Gagal memuat konfigurasi. ${errorMsg}</p>`;
-                }
-            })
-            .catch(err => {
-                console.error("GlobalSettings Fetch Error:", err);
-                container.innerHTML = `<p class="text-center text-red-500 text-sm">Gagal terhubung ke server. (${err.message})</p>`;
-            });
-        }
-
-        function saveGlobalSettings() {
-            let toggles = document.querySelectorAll('.config-toggle');
-            let configData = {};
-            toggles.forEach(t => {
-                configData[t.dataset.fitur] = t.checked;
-            });
-            
-            let btn = document.getElementById('btn-save-global-settings');
-            let originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
-            btn.disabled = true;
-            
-            fetch(API_ENDPOINT, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'saveGlobalConfig', config: configData, currentUser: currentUser })
-            })
-            .then(res => res.json())
-            .then(data => {
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
-                if(data.status === 'success') {
-                    Swal.fire('Tersimpan!', 'Pengaturan global berhasil diperbarui.', 'success');
-                } else {
-                    Swal.fire('Gagal!', data.message || 'Terjadi kesalahan', 'error');
-                }
-            })
-            .catch(err => {
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
-                Swal.fire('Error!', 'Gagal terhubung ke server', 'error');
-            });
-        }
-
         function toggleWatermarkStatus(id) {
             Swal.fire({
                 title: 'Ubah Status Watermark?',
