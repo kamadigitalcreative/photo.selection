@@ -1912,7 +1912,67 @@
                                 </div>
                             </div>
                             
-                            <div class="grid grid-cols-1 gap-2 mt-1">
+                            <!-- KONTROL AKSES & DURASI -->
+                            <div class="mt-4 p-4 border border-gray-200 bg-white rounded-xl space-y-4">
+                                <div>
+                                    <h4 class="font-bold text-gray-800 text-sm mb-1"><i class="fa-solid fa-link text-gray-400 mr-2"></i>Menu utama di link client</h4>
+                                    <p class="text-[10px] text-gray-500 mb-3">Pilih menu dasar yang muncul saat client membuka link.</p>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                            <div>
+                                                <h5 class="text-xs font-bold text-gray-700">Pilih Foto</h5>
+                                                <p class="text-[9px] text-gray-500 mt-0.5">Client bisa memilih foto.</p>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
+                                                <input type="checkbox" class="sr-only peer" id="p_akses_pilih" checked>
+                                                <div class="w-8 h-4 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-500"></div>
+                                            </label>
+                                        </div>
+                                        <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                            <div>
+                                                <h5 class="text-xs font-bold text-gray-700"><i class="fa-solid fa-download text-blue-500 mr-1"></i>Download Foto</h5>
+                                                <p class="text-[9px] text-gray-500 mt-0.5">Client bisa unduh foto.</p>
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
+                                                <input type="checkbox" class="sr-only peer" id="p_akses_download" checked>
+                                                <div class="w-8 h-4 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-500"></div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="pt-3 border-t border-gray-100">
+                                    <h4 class="font-bold text-gray-800 text-sm mb-1"><i class="fa-solid fa-stopwatch text-rose-400 mr-2"></i>Durasi menu utama</h4>
+                                    <p class="text-[10px] text-gray-500 mb-3">Atur berapa lama menu pilih foto dan download foto bisa dipakai client.</p>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-gray-600 mb-1">Durasi Link Pilih Foto</label>
+                                            <select id="p_durasi_pilih" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-xs font-medium">
+                                                <option value="Selamanya">Selamanya</option>
+                                                <option value="1">1 hari</option>
+                                                <option value="3">3 hari</option>
+                                                <option value="5">5 hari</option>
+                                                <option value="7">7 hari</option>
+                                                <option value="14">14 hari</option>
+                                                <option value="30">30 hari</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-gray-600 mb-1">Durasi Link Download Foto</label>
+                                            <select id="p_durasi_download" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-kama-800 focus:ring-0 outline-none transition-all text-xs font-medium">
+                                                <option value="Selamanya">Selamanya</option>
+                                                <option value="1">1 hari</option>
+                                                <option value="3">3 hari</option>
+                                                <option value="5">5 hari</option>
+                                                <option value="7">7 hari</option>
+                                                <option value="14">14 hari</option>
+                                                <option value="30">30 hari</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 gap-2 mt-4">
                                 <!-- UI WATERMARK DINAMIS (PHASE 2) -->
                                 <div id="wrapper-watermark" class="flex items-center justify-between p-2.5 bg-blue-50/50 border border-blue-100 rounded-xl hidden">
                                     <div class="flex items-start gap-2.5">
@@ -4536,6 +4596,11 @@
             var pPass = document.getElementById('p_pass');
             var pWatermark = document.getElementById('p_watermark');
             var pUseCategory = document.getElementById('p_use_category');
+            
+            var pAksesPilih = document.getElementById('p_akses_pilih');
+            var pAksesDownload = document.getElementById('p_akses_download');
+            var pDurasiPilih = document.getElementById('p_durasi_pilih');
+            var pDurasiDownload = document.getElementById('p_durasi_download');
 
             let finalMaxFoto = pMax ? pMax.value : '';
             let categoriesData = [];
@@ -4571,7 +4636,11 @@
                 categories: categoriesData,
                 clientLayout: document.getElementById('p_client_layout') ? document.getElementById('p_client_layout').value : 'masonry',
                 extraPrice: document.getElementById('p_extra_price') ? document.getElementById('p_extra_price').value : 0,
-                musicUrl: document.getElementById('p_music_url') ? document.getElementById('p_music_url').value.trim() : ''
+                musicUrl: document.getElementById('p_music_url') ? document.getElementById('p_music_url').value.trim() : '',
+                aksesPilih: pAksesPilih ? pAksesPilih.checked : true,
+                aksesDownload: pAksesDownload ? pAksesDownload.checked : true,
+                durasiPilih: pDurasiPilih ? pDurasiPilih.value : 'Selamanya',
+                durasiDownload: pDurasiDownload ? pDurasiDownload.value : 'Selamanya'
             };
 
             var musicFileEl = document.getElementById('p_music_file');
@@ -5063,13 +5132,21 @@
             clientState.folderHistory = [];
 
             // Eksekusi Phase 2: Watermark Dinamis
-            var btnDownload = document.querySelector('#client-mode-view button[onclick="selectClientMode(\'download\')"]');
             if (projectData.watermarkEnabled) {
                 applyWatermark(projectData.brandName || 'Kama Creative');
-                if (btnDownload) btnDownload.classList.add('hidden');
             } else {
                 document.body.classList.remove('has-watermark');
                 document.body.style.removeProperty('--watermark-bg');
+            }
+
+            // Eksekusi Phase 13: Download Toggle Dinamis
+            clientState.isPilihActive = projectData.isPilihActive !== undefined ? projectData.isPilihActive : true;
+            clientState.isDownloadActive = projectData.isDownloadActive !== undefined ? projectData.isDownloadActive : true;
+
+            var btnDownload = document.querySelector('#client-mode-view button[onclick="selectClientMode(\'download\')"]');
+            if (!clientState.isDownloadActive) {
+                if (btnDownload) btnDownload.classList.add('hidden');
+            } else {
                 if (btnDownload) btnDownload.classList.remove('hidden');
             }
 
@@ -5577,11 +5654,23 @@
         }
 
         function toggleSelection(cardElement, filename, url) {
+            var isEn = localStorage.getItem('ps_lang') === 'en';
+
+            // --- PHASE 13: CEK AKSES PILIH FOTO ---
+            if (!clientState.isPilihActive) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: isEn ? 'Access Denied' : 'Akses Ditutup',
+                    text: isEn ? 'The photo selection period has ended or has been disabled by the photographer.' : 'Masa pemilihan foto telah berakhir atau dinonaktifkan oleh fotografer.',
+                    confirmButtonColor: '#2563eb'
+                });
+                return;
+            }
+
             var index = clientState.selectedImages.findIndex(function (sel) {
                 return sel.name === filename && sel.folder === clientState.currentFolderName;
             });
 
-            var isEn = localStorage.getItem('ps_lang') === 'en';
             var btnPilih = cardElement ? cardElement.querySelector('.btn-pilih-foto') : null;
 
             if (index === -1) {
@@ -5785,6 +5874,30 @@
             // Text Header UI Baru
             var headerTerpilih = document.getElementById('header-terpilih-foto');
             if (headerTerpilih) headerTerpilih.innerText = count;
+
+            var bottomBar = document.getElementById('bottom-bar');
+            
+            // --- PHASE 13: DISABLE SUBMIT BUTTON JIKA AKSES MATI ---
+            var btnSubmit = bottomBar ? bottomBar.querySelector('button') : null;
+            if (btnSubmit) {
+                if (!clientState.isPilihActive) {
+                    btnSubmit.disabled = true;
+                    btnSubmit.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    btnSubmit.disabled = false;
+                    btnSubmit.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
+
+            if (count > 0) {
+                if (bottomBar) {
+                    bottomBar.classList.remove('translate-y-full');
+                }
+            } else {
+                if (bottomBar) {
+                    bottomBar.classList.add('translate-y-full');
+                }
+            }
 
             var dot = document.getElementById('status-dot');
             if (dot && dot.classList && clientState.galleryMode !== 'download') {
