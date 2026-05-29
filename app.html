@@ -4121,8 +4121,10 @@
 
                     // 3. Update tabel & laci memori pribadi jika ada data baru
                     if (JSON.stringify(res.data.data) !== cachedProjects) {
-                        localStorage.setItem(cacheKey, JSON.stringify(res.data.data));
-                        renderProjectsTable(res.data.data);
+                        if (!window.pendingProjectUpdate || (Date.now() - window.pendingProjectUpdate > 6000)) {
+                            localStorage.setItem(cacheKey, JSON.stringify(res.data.data));
+                            renderProjectsTable(res.data.data);
+                        }
                     }
                 } else {
                     if (!cachedProjects) Swal.fire('Error', res.message || res.data.message, 'error');
@@ -4594,6 +4596,7 @@
                                         }
                                     }
                                     localStorage.setItem(cacheKey, JSON.stringify(projs));
+                                    window.pendingProjectUpdate = Date.now();
                                     renderProjectsTable(projs);
                                 } catch(e) {}
                             }
@@ -6651,7 +6654,14 @@
 
                         // --- 1. UPDATE DATA PROJECTS ---
                         if (resProjects && resProjects.success) {
-                            renderProjectsTable(resProjects.data);
+                            var cacheKey = 'ps_cache_projects_' + (currentUser ? currentUser.username : 'guest');
+                            var cachedProjectsStr = localStorage.getItem(cacheKey);
+                            if (!window.pendingProjectUpdate || (Date.now() - window.pendingProjectUpdate > 6000)) {
+                                if (JSON.stringify(resProjects.data) !== cachedProjectsStr) {
+                                    localStorage.setItem(cacheKey, JSON.stringify(resProjects.data));
+                                    renderProjectsTable(resProjects.data);
+                                }
+                            }
                             renderClientProgress(resProjects.data);
                         }
 
