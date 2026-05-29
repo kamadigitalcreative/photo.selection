@@ -2609,7 +2609,7 @@
                 title: 'Masa Aktif Habis 🔒',
                 html: `
                     <div class="text-left text-sm text-slate-600 space-y-3">
-                        <p>Akses fitur premium Anda (New Project, Sortir Lokal, Copy Teks, dan Edit Brand) dinonaktifkan sementara karena akun Anda telah melewati batas masa aktif langganan.</p>
+                        <p>Akses fitur premium Anda (Watermark, Kolase Premium, Ekstra Kategori, New Project, Sortir Lokal, Copy Teks, dan Edit Brand) dinonaktifkan sementara karena akun Anda telah melewati batas masa aktif langganan.</p>
                         <p class="font-bold text-slate-800 text-xs uppercase border-b pb-1 pt-1"><i class="fa-solid fa-wallet text-blue-500 mr-1"></i> Pilih Paket Perpanjangan Instan (Mayar):</p>
                         <div class="grid grid-cols-1 gap-2 pt-1">
                             <a href="https://kamacreative.myr.id/pl/paket-1-bulan-photo-selection" target="_blank" class="flex justify-between items-center bg-blue-50 border border-blue-200 hover:bg-blue-100 p-3 rounded-xl transition-all text-blue-700 font-bold shadow-sm">
@@ -3702,6 +3702,11 @@
         var userPingInterval = null; // Robot ping aktivitas user
 
         function switchAdminTab(tabId, skipHistory) {
+            if (tabId === 'collage' && typeof isAccountExpired === 'function' && isAccountExpired()) {
+                showExpiredAlert();
+                return;
+            }
+
             if (!skipHistory) { 
                 var urlMap = {
                     'dashboard': '/admin/dashboard',
@@ -4406,6 +4411,11 @@
         }
 
         function toggleWatermarkStatus(id) {
+            if (typeof isAccountExpired === 'function' && isAccountExpired()) {
+                showExpiredAlert();
+                return;
+            }
+
             Swal.fire({
                 title: 'Ubah Status Watermark?',
                 text: 'Klien akan melihat/tidak melihat tombol Download sesuai status watermark.',
