@@ -4175,7 +4175,7 @@
                 var safeOwner = typeof escapeHTML === 'function' ? escapeHTML(ownerRaw) : ownerRaw.replace(/</g, "&lt;").replace(/>/g, "&gt;");
                 var ownerHtml = isUserAdmin ? '<td class="p-4 sm:px-6 admin-only-col"><span class="bg-indigo-50 text-indigo-700 text-xs px-2 py-1 rounded border border-indigo-100"><i class="fa-solid fa-user-astronaut mr-1"></i>' + safeOwner + '</span></td>' : '<td class="admin-only-col hidden"></td>';
 
-                var isWmOn = row['UseWatermark'] === true || row['UseWatermark'] === 'TRUE' || row['UseWatermark'] === 1;
+                var isWmOn = row['UseWatermark'] === true || String(row['UseWatermark']).toUpperCase() === 'TRUE' || row['UseWatermark'] === 1;
                 var wmBtnClass = isWmOn ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800" : "bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:text-red-700";
                 var wmIcon = isWmOn ? "fa-droplet" : "fa-droplet-slash";
                 var wmText = isWmOn ? "Watermark ON" : "Watermark OFF";
