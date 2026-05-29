@@ -404,10 +404,11 @@
         }
 
         .nav-tab {
-            padding: 8px 16px;
+            padding: 6px 12px;
             border-radius: 8px;
             font-weight: 600;
-            font-size: 0.875rem;
+            font-size: 0.8125rem;
+            white-space: nowrap;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             color: #64748b;
@@ -920,18 +921,18 @@
         <header class="glass-header px-4 sm:px-6 py-3 flex flex-col sticky top-0 gap-y-3 z-40">
             <!-- Baris Atas (Logo, Tabs Desktop, dan Kontrol Kanan) -->
             <div class="flex justify-between items-center w-full">
-                <div class="flex items-center gap-2.5 shrink-0">
+                <div class="flex items-center gap-2 sm:gap-3 shrink-0">
                     <div
-                        class="brand-logo-container-sm w-8 h-8 bg-kama-800 text-white rounded-lg flex items-center justify-center shadow-sm overflow-hidden">
+                        class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-kama-800 to-kama-900 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0">
                         <i class="fa-solid fa-camera-retro text-sm"></i>
                     </div>
                     <h1
-                        class="font-bold text-lg text-kama-800 tracking-tight brand-name-text truncate max-w-[140px] sm:max-w-xs">
+                        class="font-bold text-base sm:text-lg text-kama-800 tracking-tight brand-name-text truncate max-w-[100px] sm:max-w-[180px]">
                         App Name</h1>
                 </div>
 
                 <div id="admin-nav-tabs"
-                    class="hidden sm:flex bg-slate-100/80 p-1.5 rounded-xl mx-auto shrink-0 border border-slate-200/50">
+                    class="hidden sm:flex bg-slate-100/80 p-1 rounded-xl mx-auto border border-slate-200/50 overflow-hidden">
                     <button onclick="switchAdminTab('dashboard')" id="tab-dashboard"
                         class="nav-tab admin-only-col hidden">Dashboard</button>
                     <button onclick="switchAdminTab('projects')" id="tab-projects"
@@ -940,17 +941,17 @@
                     <button onclick="switchAdminTab('panduan')" id="tab-panduan"
                         class="nav-tab photo-only-col hidden">Panduan</button>
                     <button onclick="switchAdminTab('premium-addon')" id="tab-premium-addon"
-                        class="nav-tab photo-only-col hidden"><i class="fa-solid fa-crown text-amber-500 mr-1"></i> Add-On PRO</button>
+                        class="nav-tab photo-only-col hidden"><i class="fa-solid fa-crown text-amber-500 mr-1.5"></i> Add-On PRO</button>
                     <button onclick="switchAdminTab('collage')" id="tab-collage"
-                        class="nav-tab photo-only-col hidden"><i class="fa-solid fa-wand-magic-sparkles text-fuchsia-500 mr-1"></i> Premium Collage</button>
+                        class="nav-tab photo-only-col hidden"><i class="fa-solid fa-wand-magic-sparkles text-fuchsia-500 mr-1.5"></i> Kolase</button>
                     <button onclick="switchAdminTab('feedback')" id="tab-feedback"
-                        class="nav-tab photo-only-col hidden relative">Kirim Saran <span id="badge-feedback"
-                            class="absolute -top-1.5 -right-2 bg-red-600 text-white text-[10px] font-bold min-w-[20px] h-[20px] flex items-center justify-center rounded-full border-2 border-white shadow-md hidden">0</span></button>
+                        class="nav-tab photo-only-col hidden relative">Saran <span id="badge-feedback"
+                            class="absolute -top-1.5 -right-1 bg-red-600 text-white text-[9px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full border-2 border-white shadow-sm hidden">0</span></button>
                     <button onclick="switchAdminTab('users')" id="tab-users"
-                        class="nav-tab admin-only-col hidden">Kelola Tim</button>
+                        class="nav-tab admin-only-col hidden">Tim</button>
                     <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback"
-                        class="nav-tab admin-only-col hidden relative">Laporan Feedback <span id="badge-admin-feedback"
-                            class="absolute -top-1.5 -right-2 bg-red-600 text-white text-[10px] font-bold min-w-[20px] h-[20px] flex items-center justify-center rounded-full border-2 border-white shadow-md hidden">0</span></button>
+                        class="nav-tab admin-only-col hidden relative">Laporan <span id="badge-admin-feedback"
+                            class="absolute -top-1.5 -right-1 bg-red-600 text-white text-[9px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full border-2 border-white shadow-sm hidden">0</span></button>
                 </div>
 
                 <div class="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
@@ -1016,33 +1017,32 @@
             <!-- Baris Bawah (Menu Tab Mobile) -->
             <div class="w-full flex sm:hidden">
                 <div id="admin-nav-tabs-mobile"
-                    class="flex bg-slate-100/80 p-1.5 rounded-xl w-full overflow-x-auto border border-slate-200/50">
+                    class="flex bg-slate-100/80 p-1 rounded-xl w-full border border-slate-200/50 justify-between">
                     <button onclick="switchAdminTab('dashboard')" id="tab-dashboard-m"
-                        class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center px-1">Dash</button>
+                        class="nav-tab flex-1 admin-only-col hidden text-[10px] py-1.5 text-center px-0.5">Dash</button>
                     <button onclick="switchAdminTab('projects')" id="tab-projects-m"
-                        class="nav-tab flex-1 active text-xs py-2 text-center px-1">Projects</button>
+                        class="nav-tab flex-1 active text-[10px] py-1.5 text-center px-0.5">Projects</button>
                     <button onclick="switchAdminTab('status')" id="tab-status-m"
-                        class="nav-tab flex-1 text-xs py-2 text-center px-1">Pantau</button>
+                        class="nav-tab flex-1 text-[10px] py-1.5 text-center px-0.5">Pantau</button>
                     <button onclick="switchAdminTab('panduan')" id="tab-panduan-m"
-                        class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1">Panduan</button>
+                        class="nav-tab flex-1 photo-only-col hidden text-[10px] py-1.5 text-center px-0.5"><i class="fa-solid fa-book"></i></button>
                     <button onclick="switchAdminTab('premium-addon')" id="tab-premium-addon-m"
-                        class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1"><i class="fa-solid fa-crown text-amber-500"></i> PRO</button>
+                        class="nav-tab flex-1 photo-only-col hidden text-[10px] py-1.5 text-center px-0.5"><i class="fa-solid fa-crown text-amber-500"></i> PRO</button>
                     <button onclick="switchAdminTab('collage')" id="tab-collage-m"
-                        class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1"><i class="fa-solid fa-wand-magic-sparkles text-fuchsia-500"></i></button>
+                        class="nav-tab flex-1 photo-only-col hidden text-[10px] py-1.5 text-center px-0.5"><i class="fa-solid fa-wand-magic-sparkles text-fuchsia-500"></i></button>
                     <button onclick="switchAdminTab('feedback')" id="tab-feedback-m"
-                        class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1 relative">Saran <span
+                        class="nav-tab flex-1 photo-only-col hidden text-[10px] py-1.5 text-center px-0.5 relative">Saran <span
                             id="badge-feedback-m"
-                            class="absolute top-0.5 right-1 bg-red-600 text-white text-[9px] font-bold min-w-[16px] h-[16px] flex items-center justify-center rounded-full border border-white shadow-sm hidden">0</span></button>
+                            class="absolute top-0 right-0 bg-red-600 text-white text-[8px] font-bold min-w-[14px] h-[14px] flex items-center justify-center rounded-full border border-white shadow-sm hidden">0</span></button>
                     <button onclick="switchAdminTab('users')" id="tab-users-m"
-                        class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center px-1">Tim</button>
+                        class="nav-tab flex-1 admin-only-col hidden text-[10px] py-1.5 text-center px-0.5">Tim</button>
                     <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback-m"
-                        class="nav-tab flex-1 admin-only-col hidden text-xs py-2 text-center px-1 relative">Feedback
+                        class="nav-tab flex-1 admin-only-col hidden text-[10px] py-1.5 text-center px-0.5 relative">Laporan
                         <span id="badge-admin-feedback-m"
-                            class="absolute top-0.5 right-1 bg-red-600 text-white text-[9px] font-bold min-w-[16px] h-[16px] flex items-center justify-center rounded-full border border-white shadow-sm hidden">0</span></button>
+                            class="absolute top-0 right-0 bg-red-600 text-white text-[8px] font-bold min-w-[14px] h-[14px] flex items-center justify-center rounded-full border border-white shadow-sm hidden">0</span></button>
                     <button onclick="handleLogout()"
-                        class="nav-tab flex-1 text-xs py-2 text-center px-1 text-red-500 hover:text-red-700 font-bold"><i
-                            class="fa-solid fa-arrow-right-from-bracket block mb-0.5 text-lg opacity-90"></i><span
-                            class="m-logout-txt">Keluar</span></button>
+                        class="nav-tab flex-1 text-[10px] py-1.5 text-center px-0.5 text-red-500 hover:text-red-700 font-bold"><i
+                            class="fa-solid fa-arrow-right-from-bracket"></i> Keluar</button>
                 </div>
             </div>
         </header>
