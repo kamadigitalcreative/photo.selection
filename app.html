@@ -939,6 +939,8 @@
                     <button onclick="switchAdminTab('status')" id="tab-status" class="nav-tab">Pantau Klien</button>
                     <button onclick="switchAdminTab('panduan')" id="tab-panduan"
                         class="nav-tab photo-only-col hidden">Panduan</button>
+                    <button onclick="switchAdminTab('premium-addon')" id="tab-premium-addon"
+                        class="nav-tab photo-only-col hidden text-yellow-600 font-bold bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200"><i class="fa-solid fa-crown mr-1"></i> Add-On PRO</button>
                     <button onclick="switchAdminTab('collage')" id="tab-collage"
                         class="nav-tab photo-only-col hidden text-fuchsia-600 font-bold"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Premium Collage</button>
                     <button onclick="switchAdminTab('feedback')" id="tab-feedback"
@@ -1023,6 +1025,8 @@
                         class="nav-tab flex-1 text-xs py-2 text-center px-1">Pantau</button>
                     <button onclick="switchAdminTab('panduan')" id="tab-panduan-m"
                         class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1">Panduan</button>
+                    <button onclick="switchAdminTab('premium-addon')" id="tab-premium-addon-m"
+                        class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1 text-yellow-600 font-bold bg-gradient-to-br from-yellow-50 to-amber-50 border-r border-yellow-200"><i class="fa-solid fa-crown"></i> PRO</button>
                     <button onclick="switchAdminTab('collage')" id="tab-collage-m"
                         class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1 text-fuchsia-600 font-bold"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
                     <button onclick="switchAdminTab('feedback')" id="tab-feedback-m"
@@ -1529,6 +1533,13 @@
     </div>
 </div>
 
+
+                <!-- SECTION PREMIUM ADD-ON -->
+                <div id="section-premium-addon" class="hidden flex-1 flex-col max-w-4xl mx-auto w-full">
+                    <div id="premium-addon-container" class="w-full">
+                        <!-- Konten akan dirender oleh JS -->
+                    </div>
+                </div>
 
                 <!-- SECTION PANDUAN -->
                 <div id="section-panduan" class="hidden flex-1 flex-col max-w-4xl mx-auto w-full">
@@ -2635,6 +2646,119 @@
             });
         }
 
+        function isPremiumAddon() {
+            if (!currentUser) return false;
+            if (currentUser.role === 'Admin') return true;
+            return currentUser.isPremiumAddon === true;
+        }
+
+        function showPremiumAlert() {
+            Swal.fire({
+                title: 'Add-On PRO Terkunci 🔒',
+                html: `
+                    <div class="text-left text-sm text-slate-600 space-y-3">
+                        <p>Fitur <b>Watermark, Kolase Premium, Multi-Kategori,</b> dan <b>Sistem Upsell Otomatis</b> adalah bagian dari modul <i>Add-On PRO</i>.</p>
+                        <p>Dapatkan semuanya hanya dengan berlangganan ekstra untuk melindungi karya Anda dan melipatgandakan penghasilan secara otomatis!</p>
+                        <div class="grid grid-cols-1 gap-2 pt-2">
+                            <a href="#" onclick="Swal.close(); switchAdminTab('premium-addon'); return false;" class="flex justify-between items-center bg-yellow-50 border border-yellow-200 hover:bg-yellow-100 p-3 rounded-xl transition-all text-yellow-700 font-bold shadow-sm">
+                                <span><i class="fa-solid fa-crown mr-1.5"></i> Lihat Detail Add-On PRO</span>
+                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            </a>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                cancelButtonText: 'Nanti Saja',
+                showConfirmButton: false,
+                customClass: { popup: 'rounded-2xl border border-gray-100 shadow-2xl' }
+            });
+        }
+
+        function renderPremiumAddonPage() {
+            var container = document.getElementById('premium-addon-container');
+            if (!container) return;
+
+            if (isPremiumAddon()) {
+                container.innerHTML = `
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-3xl p-8 border border-green-200 shadow-sm text-center">
+                        <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-green-500 text-4xl">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <h2 class="text-2xl font-black text-slate-800 mb-2">Langganan PRO Aktif</h2>
+                        <p class="text-slate-600 max-w-md mx-auto mb-6">Terima kasih telah berlangganan! Semua fitur premium seperti Watermark, Kolase, Multi-Kategori, dan Sistem Upsell sudah terbuka dan siap digunakan untuk meroketkan cuan Anda.</p>
+                        <button onclick="switchAdminTab('projects')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2.5 px-6 rounded-full transition-colors shadow-md">
+                            Mulai Buat Project
+                        </button>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 rounded-3xl p-6 sm:p-10 border border-amber-200 shadow-lg text-center relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 rotate-12 pointer-events-none">
+                            <i class="fa-solid fa-crown text-9xl text-amber-500"></i>
+                        </div>
+                        
+                        <span class="inline-block bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-black px-3 py-1 rounded-full mb-6 shadow-sm uppercase tracking-wider">
+                            PENAWARAN SPESIAL
+                        </span>
+                        
+                        <h2 class="text-3xl sm:text-4xl font-black text-slate-800 mb-4 leading-tight">
+                            Tingkatkan Pendapatan & Lindungi Karya Anda dengan <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">Add-On PRO</span>
+                        </h2>
+                        
+                        <p class="text-slate-600 text-sm sm:text-base max-w-xl mx-auto mb-8">
+                            Ubah galeri seleksi biasa menjadi <b>mesin pencetak uang otomatis</b> dan tampil jauh lebih profesional di mata klien VIP Anda.
+                        </p>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto mb-8 text-left">
+                            <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                                <div class="w-10 h-10 bg-green-100 text-green-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-sack-dollar"></i></div>
+                                <h3 class="font-bold text-slate-800 text-sm mb-1">Sistem Upsell Otomatis</h3>
+                                <p class="text-xs text-slate-500 leading-relaxed">Klien mau pilih foto lebih dari jatah? Sistem otomatis menghitung tagihannya. Cuan ekstra tanpa repot nagih!</p>
+                            </div>
+                            <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                                <div class="w-10 h-10 bg-blue-100 text-blue-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-shield-halved"></i></div>
+                                <h3 class="font-bold text-slate-800 text-sm mb-1">Watermark Dinamis</h3>
+                                <p class="text-xs text-slate-500 leading-relaxed">Fotografer tenang, karya aman. Bagikan galeri sebelum pelunasan tanpa takut foto discreenshot/dicuri.</p>
+                            </div>
+                            <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                                <div class="w-10 h-10 bg-fuchsia-100 text-fuchsia-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                                <h3 class="font-bold text-slate-800 text-sm mb-1">Kolase Premium 1-Klik</h3>
+                                <p class="text-xs text-slate-500 leading-relaxed">Bikin bahan teaser sosial media estetik secara instan tanpa perlu repot buka Photoshop sama sekali.</p>
+                            </div>
+                            <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                                <div class="w-10 h-10 bg-purple-100 text-purple-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-layer-group"></i></div>
+                                <h3 class="font-bold text-slate-800 text-sm mb-1">Multi-Kategori Album</h3>
+                                <p class="text-xs text-slate-500 leading-relaxed">Pisahkan foto Akad, Resepsi, dan Siraman dalam satu link elegan yang memukau klien Anda.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-2xl shadow-sm max-w-xl mx-auto border border-amber-100">
+                            <p class="text-xs text-amber-600 font-bold uppercase mb-2">Pilih Paket Langganan Add-On:</p>
+                            <div class="flex flex-col gap-3">
+                                <a href="https://kamacreative.myr.id/pl/add-on-pro-photo-selection-1-bulan" target="_blank" class="flex justify-between items-center bg-white border-2 border-slate-200 hover:border-amber-400 p-3 rounded-xl transition-all text-slate-700 hover:text-amber-700 font-bold group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-4 h-4 rounded-full border-2 border-slate-300 group-hover:border-amber-500"></div>
+                                        <span>Paket 1 Bulan</span>
+                                    </div>
+                                    <span class="text-sm">Rp 49.000</span>
+                                </a>
+                                <a href="https://kamacreative.myr.id/pl/add-on-pro-photo-selection-1-tahun" target="_blank" class="flex justify-between items-center bg-amber-50 border-2 border-amber-500 p-3 rounded-xl transition-all text-amber-800 font-bold relative overflow-hidden group hover:bg-amber-100">
+                                    <div class="absolute -right-6 top-1 bg-red-500 text-white text-[9px] font-black py-0.5 px-6 rotate-45 shadow-sm">HEMAT 40%</div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-4 h-4 rounded-full border-2 border-amber-500 bg-amber-500 shadow-[inset_0_0_0_2px_white]"></div>
+                                        <span class="relative z-10">Paket 1 Tahun <span class="bg-red-100 text-red-600 text-[10px] px-1.5 py-0.5 rounded ml-1 border border-red-200">BEST DEAL</span></span>
+                                    </div>
+                                    <span class="text-sm relative z-10">Rp 349.000</span>
+                                </a>
+                            </div>
+                            <p class="text-[10px] text-gray-400 mt-4"><i class="fa-solid fa-info-circle"></i> Dengan modal Rp 49rb/bulan, jika ada 1 klien saja yang tergoda <b>Sistem Upsell</b>, Anda sudah langsung balik modal!</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
         // --- MESIN DETEKSI & AUTO-LOGIN AKUN DEMO ---
         window.addEventListener('DOMContentLoaded', function () {
             if (window.location.search.includes('demo=true')) {
@@ -3702,9 +3826,13 @@
         var userPingInterval = null; // Robot ping aktivitas user
 
         function switchAdminTab(tabId, skipHistory) {
-            if (tabId === 'collage' && typeof isAccountExpired === 'function' && isAccountExpired()) {
-                showExpiredAlert();
-                return;
+            if (tabId === 'collage') {
+                if (typeof isAccountExpired === 'function' && isAccountExpired()) {
+                    showExpiredAlert(); return;
+                }
+                if (typeof isPremiumAddon === 'function' && !isPremiumAddon()) {
+                    showPremiumAlert(); return;
+                }
             }
 
             if (!skipHistory) { 
@@ -3715,6 +3843,7 @@
                     'status': '/client/monitoring',
                     'admin-feedback': '/reports/feedback',
                     'panduan': '/docs/guide',
+                    'premium-addon': '/admin/premium-addon',
                     'feedback': '/support/feedback',
                     'pengaturan': '/admin/settings'
                 };
@@ -3739,6 +3868,7 @@
             var sectionPanduan = document.getElementById('section-panduan');
             var sectionFeedback = document.getElementById('section-feedback');
             var sectionAdminFeedback = document.getElementById('section-admin-feedback');
+            var sectionPremiumAddon = document.getElementById('section-premium-addon');
             var sectionCollage = document.getElementById('section-collage');
 
             if (sectionDash && sectionDash.classList) { sectionDash.classList.remove('flex'); sectionDash.classList.add('hidden'); }
@@ -3748,6 +3878,7 @@
             if (sectionPanduan && sectionPanduan.classList) { sectionPanduan.classList.remove('flex'); sectionPanduan.classList.add('hidden'); }
             if (sectionFeedback && sectionFeedback.classList) { sectionFeedback.classList.remove('flex'); sectionFeedback.classList.add('hidden'); }
             if (sectionAdminFeedback && sectionAdminFeedback.classList) { sectionAdminFeedback.classList.remove('flex'); sectionAdminFeedback.classList.add('hidden'); }
+            if (sectionPremiumAddon && sectionPremiumAddon.classList) { sectionPremiumAddon.classList.remove('flex'); sectionPremiumAddon.classList.add('hidden'); }
             if (sectionCollage && sectionCollage.classList) { sectionCollage.classList.remove('flex'); sectionCollage.classList.add('hidden'); }
 
             // FIX: Matikan robot setiap kali pindah menu agar hemat memori
@@ -3804,6 +3935,9 @@
                 if (bD) bD.classList.add('hidden'); if (bM) bM.classList.add('hidden');
                 lastNotifCount = 0;
                 fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'markFeedbackRead', type: 'admin', currentUser: currentUser }) }).catch(() => { });
+            } else if (tabId === 'premium-addon') {
+                if (sectionPremiumAddon && sectionPremiumAddon.classList) { sectionPremiumAddon.classList.remove('hidden'); sectionPremiumAddon.classList.add('flex'); }
+                renderPremiumAddonPage();
             }
         }
 
@@ -4255,7 +4389,55 @@
                 wrpWm.classList.add('flex');
             }
 
-            let wrpCat = document.getElementById('wrapper-multicategory');
+            // --- PREMIUM ADDON LOCKS ---
+            var isPrem = typeof isPremiumAddon === 'function' ? isPremiumAddon() : false;
+            var inpWm = document.getElementById('p_watermark');
+            var inpCat = document.getElementById('p_use_category');
+            var inpPrice = document.getElementById('p_extra_price');
+            
+            if (inpWm) {
+                inpWm.disabled = !isPrem;
+                if (!isPrem) inpWm.checked = false;
+            }
+            if (inpCat) {
+                inpCat.disabled = !isPrem;
+                if (!isPrem) {
+                    inpCat.checked = false;
+                    if (typeof toggleCategoryUI === 'function') toggleCategoryUI();
+                }
+            }
+            if (inpPrice) {
+                inpPrice.disabled = !isPrem;
+                if (!isPrem) {
+                    inpPrice.value = '';
+                    inpPrice.placeholder = 'Terkunci (Add-On PRO)';
+                } else {
+                    inpPrice.placeholder = '0 = Gratis';
+                }
+            }
+
+            // Hapus event lama jika ada, lalu tambah event click untuk memunculkan alert jika terkunci
+            var lockAction = function(e) {
+                if (!isPrem) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (typeof showPremiumAlert === 'function') showPremiumAlert();
+                }
+            };
+            
+            var wrpCat = document.getElementById('wrapper-multicategory');
+            var wrpPrice = document.getElementById('p_extra_price');
+            
+            if (wrpWm) {
+                wrpWm.onclick = lockAction;
+            }
+            if (wrpCat) {
+                wrpCat.onclick = lockAction;
+            }
+            if (wrpPrice && !isPrem) {
+                wrpPrice.parentElement.onclick = lockAction;
+            }
+
             if (wrpCat) {
                 wrpCat.classList.remove('hidden');
                 wrpCat.classList.add('flex');
@@ -4413,6 +4595,10 @@
         function toggleWatermarkStatus(id) {
             if (typeof isAccountExpired === 'function' && isAccountExpired()) {
                 showExpiredAlert();
+                return;
+            }
+            if (typeof isPremiumAddon === 'function' && !isPremiumAddon()) {
+                showPremiumAlert();
                 return;
             }
 
