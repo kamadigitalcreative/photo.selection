@@ -940,9 +940,9 @@
                     <button onclick="switchAdminTab('panduan')" id="tab-panduan"
                         class="nav-tab photo-only-col hidden">Panduan</button>
                     <button onclick="switchAdminTab('premium-addon')" id="tab-premium-addon"
-                        class="nav-tab photo-only-col hidden text-yellow-600 font-bold bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200"><i class="fa-solid fa-crown mr-1"></i> Add-On PRO</button>
+                        class="nav-tab photo-only-col hidden"><i class="fa-solid fa-crown text-amber-500 mr-1"></i> Add-On PRO</button>
                     <button onclick="switchAdminTab('collage')" id="tab-collage"
-                        class="nav-tab photo-only-col hidden text-fuchsia-600 font-bold"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Premium Collage</button>
+                        class="nav-tab photo-only-col hidden"><i class="fa-solid fa-wand-magic-sparkles text-fuchsia-500 mr-1"></i> Premium Collage</button>
                     <button onclick="switchAdminTab('feedback')" id="tab-feedback"
                         class="nav-tab photo-only-col hidden relative">Kirim Saran <span id="badge-feedback"
                             class="absolute -top-1.5 -right-2 bg-red-600 text-white text-[10px] font-bold min-w-[20px] h-[20px] flex items-center justify-center rounded-full border-2 border-white shadow-md hidden">0</span></button>
@@ -1026,9 +1026,9 @@
                     <button onclick="switchAdminTab('panduan')" id="tab-panduan-m"
                         class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1">Panduan</button>
                     <button onclick="switchAdminTab('premium-addon')" id="tab-premium-addon-m"
-                        class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1 text-yellow-600 font-bold bg-gradient-to-br from-yellow-50 to-amber-50 border-r border-yellow-200"><i class="fa-solid fa-crown"></i> PRO</button>
+                        class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1"><i class="fa-solid fa-crown text-amber-500"></i> PRO</button>
                     <button onclick="switchAdminTab('collage')" id="tab-collage-m"
-                        class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1 text-fuchsia-600 font-bold"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+                        class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1"><i class="fa-solid fa-wand-magic-sparkles text-fuchsia-500"></i></button>
                     <button onclick="switchAdminTab('feedback')" id="tab-feedback-m"
                         class="nav-tab flex-1 photo-only-col hidden text-xs py-2 text-center px-1 relative">Saran <span
                             id="badge-feedback-m"
@@ -4263,7 +4263,7 @@
                 var ownerHtml = isUserAdmin ? '<td class="p-4 sm:px-6 admin-only-col"><span class="bg-indigo-50 text-indigo-700 text-xs px-2 py-1 rounded border border-indigo-100"><i class="fa-solid fa-user-astronaut mr-1"></i>' + safeOwner + '</span></td>' : '<td class="admin-only-col hidden"></td>';
 
                 var isWmOn = row['UseWatermark'] === true || String(row['UseWatermark']).toUpperCase() === 'TRUE' || row['UseWatermark'] === 1;
-                var wmBtnClass = isWmOn ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800" : "bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:text-red-700";
+                var wmBtnClass = isWmOn ? "bg-green-50/50 text-green-700 border-green-200 hover:bg-green-100 hover:border-green-300" : "bg-white text-gray-400 border-gray-200 hover:bg-gray-50 hover:text-gray-700";
                 var wmIcon = isWmOn ? "fa-droplet" : "fa-droplet-slash";
                 var wmText = isWmOn ? "Watermark ON" : "Watermark OFF";
                 var wmBtnHtml = '<button onclick="toggleWatermarkStatus(\'' + row.ID + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg transition-colors flex items-center justify-center text-xs font-semibold border ' + wmBtnClass + '" title="' + wmText + '">' +
@@ -4284,16 +4284,16 @@
                     '<td class="p-3 sm:px-6 text-right">' +
                     '<div class="flex items-center justify-end gap-1.5 sm:gap-2 flex-wrap">' +
                     wmBtnHtml +
-                    '<button onclick="copyProjectInfo(\'' + safeJSName + '\', \'' + displayLink + '\', \'' + safePass + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-gray-50 text-gray-700 hover:bg-gray-200 hover:text-kama-800 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200" title="Copy Link">' +
+                    '<button onclick="copyProjectInfo(\'' + safeJSName + '\', \'' + displayLink + '\', \'' + safePass + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-white text-gray-600 hover:bg-gray-50 hover:text-kama-800 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200" title="Copy Link">' +
                     '<i class="fa-regular fa-copy sm:mr-1.5"></i> <span class="hidden sm:inline">Copy</span>' +
                     '</button>' +
-                    '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 transition-colors flex items-center justify-center text-xs font-semibold border border-blue-200" title="Lihat Galeri">' +
+                    '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-white text-blue-600 hover:bg-blue-50 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200 hover:border-blue-200" title="Lihat Galeri">' +
                     '<i class="fa-regular fa-eye sm:mr-1.5"></i> <span class="hidden sm:inline">' + (localStorage.getItem('ps_lang') === 'en' ? 'View' : 'Lihat') + '</span>' +
                     '</button>' +
-                    '<button onclick="editPasswordPrompt(\'' + row.ID + '\', \'' + safeJSName + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-yellow-50 text-yellow-600 hover:bg-yellow-100 hover:text-yellow-700 transition-colors flex items-center justify-center text-xs font-semibold border border-yellow-200" title="Edit Password">' +
+                    '<button onclick="editPasswordPrompt(\'' + row.ID + '\', \'' + safeJSName + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-white text-amber-500 hover:bg-amber-50 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200 hover:border-amber-200" title="Edit Password">' +
                     '<i class="fa-solid fa-key sm:mr-1.5"></i> <span class="hidden sm:inline">Password</span>' +
                     '</button>' +
-                    '<button onclick="deleteProject(\'' + row.ID + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-800 transition-colors flex items-center justify-center text-xs font-semibold border border-red-200" title="Hapus Project">' +
+                    '<button onclick="deleteProject(\'' + row.ID + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-white text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200 hover:border-red-200" title="Hapus Project">' +
                     '<i class="fa-solid fa-trash-can sm:mr-1.5"></i> <span class="hidden sm:inline">' + (localStorage.getItem('ps_lang') === 'en' ? 'Delete' : 'Hapus') + '</span>' +
                     '</button>' +
                     '</div>' +
