@@ -4597,8 +4597,7 @@
                                     renderProjectsTable(projs);
                                 } catch(e) {}
                             }
-                            
-                            loadDataProjects(); // Sinkronisasi background
+                            setTimeout(loadDataProjects, 3000); // Sinkronisasi background (delay untuk Google Sheets)
                         } else {
                             Swal.fire('Gagal', res.message || res.data?.message || 'Gagal mengubah watermark', 'error');
                         }
