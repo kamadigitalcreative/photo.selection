@@ -923,7 +923,7 @@
             <div class="flex justify-between items-center w-full">
                 <div class="flex items-center gap-2 sm:gap-3 shrink-0">
                     <div
-                        class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-kama-800 to-kama-900 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0">
+                        class="brand-logo-container-sm w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-kama-800 to-kama-900 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0 overflow-hidden">
                         <i class="fa-solid fa-camera-retro text-sm"></i>
                     </div>
                     <h1
@@ -4421,14 +4421,24 @@
             var inpMusicFile = document.getElementById('p_music_file');
             var inpMusicUrl = document.getElementById('p_music_url');
 
-            if (inpLayout) inpLayout.disabled = !isPrem;
-            if (inpMusicFile) inpMusicFile.disabled = !isPrem;
+            if (inpLayout) {
+                inpLayout.disabled = !isPrem;
+                if (!isPrem) inpLayout.classList.add('pointer-events-none');
+                else inpLayout.classList.remove('pointer-events-none');
+            }
+            if (inpMusicFile) {
+                inpMusicFile.disabled = !isPrem;
+                if (!isPrem) inpMusicFile.classList.add('pointer-events-none');
+                else inpMusicFile.classList.remove('pointer-events-none');
+            }
             if (inpMusicUrl) {
                 inpMusicUrl.disabled = !isPrem;
                 if (!isPrem) {
                     inpMusicUrl.placeholder = 'Terkunci (Add-On PRO)';
+                    inpMusicUrl.classList.add('pointer-events-none');
                 } else {
                     inpMusicUrl.placeholder = 'URL Musik MP3 (Contoh: https://.../lagu.mp3)';
+                    inpMusicUrl.classList.remove('pointer-events-none');
                 }
             }
 
