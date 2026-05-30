@@ -117,6 +117,19 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+            font-family: 'Inter', sans-serif;
+            color: #0f172a;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
         /* Phase 2: Watermark Dinamis */
         .has-watermark .photo-card::after {
             content: "";
@@ -932,25 +945,25 @@
                 </div>
 
                 <div id="admin-nav-tabs"
-                    class="hidden sm:flex bg-slate-100/80 p-1 rounded-xl mx-auto border border-slate-200/50 overflow-hidden">
+                    class="hidden sm:flex bg-slate-100/80 p-1 rounded-xl mx-auto border border-slate-200/50 overflow-x-auto hide-scrollbar whitespace-nowrap space-x-1 max-w-full">
                     <button onclick="switchAdminTab('dashboard')" id="tab-dashboard"
-                        class="nav-tab admin-only-col hidden">Dashboard</button>
+                        class="nav-tab flex-shrink-0 admin-only-col hidden">Dashboard</button>
                     <button onclick="switchAdminTab('projects')" id="tab-projects"
-                        class="nav-tab active">Projects</button>
-                    <button onclick="switchAdminTab('status')" id="tab-status" class="nav-tab">Pantau Klien</button>
+                        class="nav-tab flex-shrink-0 active">Projects</button>
+                    <button onclick="switchAdminTab('status')" id="tab-status" class="nav-tab flex-shrink-0">Pantau Klien</button>
                     <button onclick="switchAdminTab('panduan')" id="tab-panduan"
-                        class="nav-tab photo-only-col hidden">Panduan</button>
+                        class="nav-tab flex-shrink-0 photo-only-col hidden">Panduan</button>
                     <button onclick="switchAdminTab('premium-addon')" id="tab-premium-addon"
-                        class="nav-tab photo-only-col hidden"><i class="fa-solid fa-crown text-amber-500 mr-1.5"></i> Add-On PRO</button>
+                        class="nav-tab flex-shrink-0 photo-only-col hidden"><i class="fa-solid fa-crown text-amber-500 mr-1.5"></i> Add-On PRO</button>
                     <button onclick="switchAdminTab('collage')" id="tab-collage"
-                        class="nav-tab photo-only-col hidden"><i class="fa-solid fa-wand-magic-sparkles text-fuchsia-500 mr-1.5"></i> Kolase</button>
+                        class="nav-tab flex-shrink-0 photo-only-col hidden"><i class="fa-solid fa-wand-magic-sparkles text-fuchsia-500 mr-1.5"></i> Kolase</button>
                     <button onclick="switchAdminTab('feedback')" id="tab-feedback"
-                        class="nav-tab photo-only-col hidden relative">Saran <span id="badge-feedback"
+                        class="nav-tab flex-shrink-0 photo-only-col hidden relative">Saran <span id="badge-feedback"
                             class="absolute -top-1.5 -right-1 bg-red-600 text-white text-[9px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full border-2 border-white shadow-sm hidden">0</span></button>
                     <button onclick="switchAdminTab('users')" id="tab-users"
-                        class="nav-tab admin-only-col hidden">Tim</button>
+                        class="nav-tab flex-shrink-0 admin-only-col hidden">Tim</button>
                     <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback"
-                        class="nav-tab admin-only-col hidden relative">Laporan <span id="badge-admin-feedback"
+                        class="nav-tab flex-shrink-0 admin-only-col hidden relative">Laporan <span id="badge-admin-feedback"
                             class="absolute -top-1.5 -right-1 bg-red-600 text-white text-[9px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full border-2 border-white shadow-sm hidden">0</span></button>
                 </div>
 
@@ -1015,33 +1028,33 @@
             </div>
 
             <!-- Baris Bawah (Menu Tab Mobile) -->
-            <div class="w-full flex sm:hidden">
+            <div class="w-full flex sm:hidden overflow-hidden">
                 <div id="admin-nav-tabs-mobile"
-                    class="flex bg-slate-100/80 p-1 rounded-xl w-full border border-slate-200/50 justify-between">
+                    class="flex bg-slate-100/80 p-1 rounded-xl w-full border border-slate-200/50 overflow-x-auto hide-scrollbar whitespace-nowrap gap-1">
                     <button onclick="switchAdminTab('dashboard')" id="tab-dashboard-m"
-                        class="nav-tab flex-1 admin-only-col hidden text-[10px] py-1.5 text-center px-0.5">Dash</button>
+                        class="nav-tab flex-shrink-0 min-w-[50px] admin-only-col hidden text-[10px] py-1.5 text-center px-3">Dash</button>
                     <button onclick="switchAdminTab('projects')" id="tab-projects-m"
-                        class="nav-tab flex-1 active text-[10px] py-1.5 text-center px-0.5">Projects</button>
+                        class="nav-tab flex-shrink-0 min-w-[50px] active text-[10px] py-1.5 text-center px-3">Projects</button>
                     <button onclick="switchAdminTab('status')" id="tab-status-m"
-                        class="nav-tab flex-1 text-[10px] py-1.5 text-center px-0.5">Pantau</button>
+                        class="nav-tab flex-shrink-0 min-w-[50px] text-[10px] py-1.5 text-center px-3">Pantau</button>
                     <button onclick="switchAdminTab('panduan')" id="tab-panduan-m"
-                        class="nav-tab flex-1 photo-only-col hidden text-[10px] py-1.5 text-center px-0.5"><i class="fa-solid fa-book"></i></button>
+                        class="nav-tab flex-shrink-0 min-w-[40px] photo-only-col hidden text-[10px] py-1.5 text-center px-3"><i class="fa-solid fa-book"></i></button>
                     <button onclick="switchAdminTab('premium-addon')" id="tab-premium-addon-m"
-                        class="nav-tab flex-1 photo-only-col hidden text-[10px] py-1.5 text-center px-0.5"><i class="fa-solid fa-crown text-amber-500"></i> PRO</button>
+                        class="nav-tab flex-shrink-0 min-w-[50px] photo-only-col hidden text-[10px] py-1.5 text-center px-3"><i class="fa-solid fa-crown text-amber-500"></i> PRO</button>
                     <button onclick="switchAdminTab('collage')" id="tab-collage-m"
-                        class="nav-tab flex-1 photo-only-col hidden text-[10px] py-1.5 text-center px-0.5"><i class="fa-solid fa-wand-magic-sparkles text-fuchsia-500"></i></button>
+                        class="nav-tab flex-shrink-0 min-w-[40px] photo-only-col hidden text-[10px] py-1.5 text-center px-3"><i class="fa-solid fa-wand-magic-sparkles text-fuchsia-500"></i></button>
                     <button onclick="switchAdminTab('feedback')" id="tab-feedback-m"
-                        class="nav-tab flex-1 photo-only-col hidden text-[10px] py-1.5 text-center px-0.5 relative">Saran <span
+                        class="nav-tab flex-shrink-0 min-w-[50px] photo-only-col hidden text-[10px] py-1.5 text-center px-3 relative">Saran <span
                             id="badge-feedback-m"
                             class="absolute top-0 right-0 bg-red-600 text-white text-[8px] font-bold min-w-[14px] h-[14px] flex items-center justify-center rounded-full border border-white shadow-sm hidden">0</span></button>
                     <button onclick="switchAdminTab('users')" id="tab-users-m"
-                        class="nav-tab flex-1 admin-only-col hidden text-[10px] py-1.5 text-center px-0.5">Tim</button>
+                        class="nav-tab flex-shrink-0 min-w-[50px] admin-only-col hidden text-[10px] py-1.5 text-center px-3">Tim</button>
                     <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback-m"
-                        class="nav-tab flex-1 admin-only-col hidden text-[10px] py-1.5 text-center px-0.5 relative">Laporan
+                        class="nav-tab flex-shrink-0 min-w-[50px] admin-only-col hidden text-[10px] py-1.5 text-center px-3 relative">Laporan
                         <span id="badge-admin-feedback-m"
                             class="absolute top-0 right-0 bg-red-600 text-white text-[8px] font-bold min-w-[14px] h-[14px] flex items-center justify-center rounded-full border border-white shadow-sm hidden">0</span></button>
                     <button onclick="handleLogout()"
-                        class="nav-tab flex-1 text-[10px] py-1.5 text-center px-0.5 text-red-500 hover:text-red-700 font-bold"><i
+                        class="nav-tab flex-shrink-0 min-w-[50px] text-[10px] py-1.5 text-center px-3 text-red-500 hover:text-red-700 font-bold"><i
                             class="fa-solid fa-arrow-right-from-bracket"></i> Keluar</button>
                 </div>
             </div>
