@@ -3655,10 +3655,19 @@
                     if (adminNavTabs && adminNavTabs.classList) { adminNavTabs.classList.add('hidden', 'sm:flex'); }
                     if (adminNavTabsMobile && adminNavTabsMobile.classList) adminNavTabsMobile.classList.remove('hidden');
                     for (var i = 0; i < adminCols.length; i++) { if (adminCols[i] && adminCols[i].classList) adminCols[i].classList.remove('hidden'); }
-                    for (var p = 0; p < photoCols.length; p++) { if (photoCols[p] && photoCols[p].classList) photoCols[p].classList.add('hidden'); } // Sembunyikan menu fotografer dari admin
+                    
+                    // Admin mendapatkan SEMUA fitur fotografer, namun khusus tab 'Saran' disembunyikan karena Admin sudah memiliki 'Laporan Feedback'
+                    for (var p = 0; p < photoCols.length; p++) { 
+                        if (photoCols[p] && photoCols[p].classList) {
+                            if (photoCols[p].id === 'tab-feedback' || photoCols[p].id === 'tab-feedback-m') {
+                                photoCols[p].classList.add('hidden');
+                            } else {
+                                photoCols[p].classList.remove('hidden');
+                            }
+                        }
+                    }
 
                     showView('admin-view');
-                    for (var p = 0; p < photoCols.length; p++) { if (photoCols[p] && photoCols[p].classList) photoCols[p].classList.add('hidden'); } // Sembunyikan menu fotografer dari admin
 
                     // Buka tab sesuai link, jika link tidak dikenali, kembali ke dashboard
                     var validAdminTabs = ['dashboard', 'projects', 'status', 'users', 'admin-feedback'];
