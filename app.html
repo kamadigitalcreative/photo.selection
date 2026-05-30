@@ -5220,7 +5220,7 @@
                         body: JSON.stringify({ action: 'getAudioData', fileId: urlParams[1] })
                     }).then(res => res.json()).then(res => {
                         if (res.status === 'success' && res.data && res.data.base64) {
-                            bgmAudio.src = res.data.base64;
+                            bgmAudio.src = 'data:' + (res.data.mimeType || 'audio/mpeg') + ';base64,' + res.data.base64;
                             var playPromise = bgmAudio.play();
                             if (playPromise !== undefined) {
                                 playPromise.then(() => {
