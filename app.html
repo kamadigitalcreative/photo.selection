@@ -912,7 +912,7 @@
     <div id="admin-view" class="view-section hidden h-screen bg-[#F9FAFB] overflow-hidden flex flex-row">
         
         <!-- SIDEBAR (DESKTOP) -->
-        <aside id="sidebar-desktop" class="hidden sm:flex flex-col w-[260px] bg-[#0A0F1C] text-white h-full relative z-50 shrink-0">
+        <aside id="sidebar-desktop" class="hidden sm:flex flex-col w-[220px] bg-[#0A0F1C] text-white h-full relative z-50 shrink-0">
             <!-- Brand Logo & Name -->
             <div class="p-6 flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full border border-gray-600 bg-gradient-to-br from-kama-800 to-kama-900 flex items-center justify-center shrink-0">
@@ -1000,7 +1000,7 @@
                     <i class="fa-solid fa-bars"></i>
                 </button>
                 
-                <div class="flex items-center w-full max-w-xl relative group">
+                <div id="global-search-container" class="flex items-center w-full max-w-xl relative group">
                     <i class="fa-solid fa-magnifying-glass absolute left-4 text-gray-400 group-focus-within:text-blue-500 transition-colors"></i>
                     <input type="text" id="global-search" class="w-full bg-gray-50 border border-gray-200 rounded-full pl-11 pr-4 py-2.5 text-sm outline-none focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all placeholder-gray-400 font-medium" placeholder="Cari project, klien, atau link...">
                 </div>
@@ -1722,6 +1722,26 @@
 
                             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                                 <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                                    <h4 class="font-bold text-gray-800"><i class="fa-solid fa-wallet mr-2 text-gray-400"></i> Data Pembayaran</h4>
+                                </div>
+                                <div class="p-6 space-y-5">
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Nama Bank / E-Wallet</label>
+                                        <input type="text" id="settings-bank-name" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="BCA / Mandiri / OVO">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Nomor Rekening / Virtual Account</label>
+                                        <input type="text" id="settings-bank-account" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="1234567890">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Atas Nama (Pemilik Rekening)</label>
+                                        <input type="text" id="settings-bank-owner" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="John Doe">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
                                     <h4 class="font-bold text-gray-800"><i class="fa-solid fa-sliders mr-2 text-gray-400"></i> Preferensi Aplikasi</h4>
                                 </div>
                                 <div class="p-6 space-y-5">
@@ -1906,7 +1926,7 @@
                 <div id="section-sortir-lokal" class="hidden flex-1 flex-col max-w-[1400px] mx-auto w-full pb-10">
                     
                     <!-- HEADER -->
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 pt-4">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-5 pt-0 mt-2">
                         <div>
                             <h2 class="text-2xl font-bold text-kama-800 tracking-tight">Sortir Lokal (Otomatis ZIP)</h2>
                             <p class="text-sm text-gray-500 mt-1">Pilih folder foto master, tempel daftar nama file klien, dan kami akan siapkan ZIP otomatis untuk Anda.</p>
@@ -2121,15 +2141,7 @@
                                     </div>
                                 </div>
 
-                                <!-- Security Notice -->
-                                <div class="bg-blue-50/50 border border-blue-100 rounded-2xl p-5 flex gap-3 shadow-sm">
-                                    <i class="fa-solid fa-wand-magic-sparkles text-blue-500 text-lg mt-0.5"></i>
-                                    <div>
-                                        <h4 class="text-xs font-bold text-blue-800">100% di perangkat Anda</h4>
-                                        <p class="text-[10px] text-blue-600/80 leading-relaxed mt-1">Semua proses dilakukan secara lokal di perangkat Anda. File tidak diunggah ke server manapun.</p>
-                                    </div>
-                                    <i class="fa-solid fa-shield-halved text-blue-200 text-2xl ml-auto mt-2"></i>
-                                </div>
+                                <!-- Removed Security Notice -->
 
                             </div>
                         </div>
@@ -2217,7 +2229,7 @@
         </main>
 
         <footer class="bg-white border-t border-gray-100 py-3 text-center text-[10px] text-gray-400">
-            Generated by <span class="font-medium text-gray-500">Kama Creative</span>
+            Generated by <span class="font-medium text-gray-500 brand-name-text">Kama Creative</span>
         </footer>
     </div>
 
@@ -4488,6 +4500,17 @@
             if (sectionSettings && sectionSettings.classList) { sectionSettings.classList.remove('flex'); sectionSettings.classList.add('hidden'); }
             if (sectionSortirLokal && sectionSortirLokal.classList) { sectionSortirLokal.classList.remove('flex'); sectionSortirLokal.classList.add('hidden'); }
 
+            var searchContainer = document.getElementById('global-search-container');
+            if (searchContainer) {
+                if (tabId === 'projects' || tabId === 'status') {
+                    searchContainer.classList.remove('hidden');
+                    searchContainer.classList.add('flex');
+                } else {
+                    searchContainer.classList.remove('flex');
+                    searchContainer.classList.add('hidden');
+                }
+            }
+
             // FIX: Matikan robot setiap kali pindah menu agar hemat memori
             clearInterval(autoRefreshInterval);
 
@@ -5122,9 +5145,17 @@
             var logoUrl = localStorage.getItem('ps_logo_url') || (typeof appBranding !== 'undefined' ? appBranding.logo : '');
             var lang = localStorage.getItem('ps_lang') || 'id';
             
+            var bankName = localStorage.getItem('ps_bank_name') || '';
+            var bankAccount = localStorage.getItem('ps_bank_account') || '';
+            var bankOwner = localStorage.getItem('ps_bank_owner') || '';
+            
             document.getElementById('settings-brand-name').value = brandName;
             document.getElementById('settings-logo-url').value = logoUrl;
             document.getElementById('settings-lang').value = lang;
+            
+            if (document.getElementById('settings-bank-name')) document.getElementById('settings-bank-name').value = bankName;
+            if (document.getElementById('settings-bank-account')) document.getElementById('settings-bank-account').value = bankAccount;
+            if (document.getElementById('settings-bank-owner')) document.getElementById('settings-bank-owner').value = bankOwner;
             
             if (logoUrl) {
                 document.getElementById('settings-avatar-preview').src = logoUrl;
@@ -5139,9 +5170,16 @@
             var logoUrl = document.getElementById('settings-logo-url').value;
             var lang = document.getElementById('settings-lang').value;
             
+            var bankName = document.getElementById('settings-bank-name') ? document.getElementById('settings-bank-name').value : '';
+            var bankAccount = document.getElementById('settings-bank-account') ? document.getElementById('settings-bank-account').value : '';
+            var bankOwner = document.getElementById('settings-bank-owner') ? document.getElementById('settings-bank-owner').value : '';
+            
             localStorage.setItem('ps_brand_name', brandName);
             localStorage.setItem('ps_logo_url', logoUrl);
             localStorage.setItem('ps_lang', lang);
+            localStorage.setItem('ps_bank_name', bankName);
+            localStorage.setItem('ps_bank_account', bankAccount);
+            localStorage.setItem('ps_bank_owner', bankOwner);
             
             if (typeof appBranding !== 'undefined') {
                 appBranding.name = brandName;
