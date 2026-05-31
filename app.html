@@ -905,7 +905,7 @@
         </div>
 
         <footer class="py-6 text-center text-xs text-gray-400 w-full shrink-0">
-            Powered by <span class="font-semibold text-gray-600">Kama Creative</span>
+            Made with ❤️ from <a href="https://www.instagram.com/kamadigitalcreative/" target="_blank" class="font-semibold text-gray-600 hover:text-blue-500 transition-colors">@kamacreative</a>
         </footer>
     </div>
 
@@ -1686,9 +1686,9 @@
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- Profil Pengguna -->
-                        <div class="md:col-span-1 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Profil Pengguna & Preferensi -->
+                        <div class="space-y-6">
                             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center">
                                 <div class="w-24 h-24 mx-auto bg-gray-100 rounded-full border-4 border-white shadow-md overflow-hidden relative mb-4">
                                     <img src="https://ui-avatars.com/api/?name=Studio&background=0D8ABC&color=fff" id="settings-avatar-preview" class="w-full h-full object-cover">
@@ -1699,10 +1699,33 @@
                                 <h3 class="font-bold text-gray-800 text-lg" id="settings-display-name">Studio Name</h3>
                                 <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-4">Fotografer PRO</p>
                             </div>
+                            
+                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                                    <h4 class="font-bold text-gray-800"><i class="fa-solid fa-sliders mr-2 text-gray-400"></i> Preferensi Aplikasi</h4>
+                                </div>
+                                <div class="p-6 space-y-5">
+                                    <div class="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('settings-lang').click()">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                                                <i class="fa-solid fa-language text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h5 class="font-bold text-sm text-gray-800">Bahasa Antarmuka</h5>
+                                                <p class="text-[11px] text-gray-500">Pilih bahasa untuk aplikasi.</p>
+                                            </div>
+                                        </div>
+                                        <select id="settings-lang" class="bg-gray-100 border-none rounded-lg px-3 py-2 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-200 cursor-pointer">
+                                            <option value="id">Indonesia</option>
+                                            <option value="en">English</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Form Pengaturan -->
-                        <div class="md:col-span-2 space-y-6">
+                        <div class="space-y-6">
                             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                                 <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
                                     <h4 class="font-bold text-gray-800"><i class="fa-solid fa-building mr-2 text-gray-400"></i> Identitas Brand</h4>
@@ -1736,29 +1759,6 @@
                                     <div>
                                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Atas Nama (Pemilik Rekening)</label>
                                         <input type="text" id="settings-bank-owner" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="John Doe">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                                    <h4 class="font-bold text-gray-800"><i class="fa-solid fa-sliders mr-2 text-gray-400"></i> Preferensi Aplikasi</h4>
-                                </div>
-                                <div class="p-6 space-y-5">
-                                    <div class="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('settings-lang').click()">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
-                                                <i class="fa-solid fa-language text-lg"></i>
-                                            </div>
-                                            <div>
-                                                <h5 class="font-bold text-sm text-gray-800">Bahasa Antarmuka</h5>
-                                                <p class="text-[11px] text-gray-500">Pilih bahasa untuk aplikasi.</p>
-                                            </div>
-                                        </div>
-                                        <select id="settings-lang" class="bg-gray-100 border-none rounded-lg px-3 py-2 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-200 cursor-pointer">
-                                            <option value="id">Indonesia</option>
-                                            <option value="en">English</option>
-                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -1923,7 +1923,7 @@
             </div>
 
                 <!-- SECTION SORTIR LOKAL -->
-                <div id="section-sortir-lokal" class="hidden flex-1 flex-col max-w-[1400px] mx-auto w-full pb-10">
+                <div id="section-sortir-lokal" class="hidden flex-1 flex-col max-w-[1400px] mx-auto w-full pb-10 -mt-6">
                     
                     <!-- HEADER -->
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-5 pt-0 mt-2">
@@ -2229,7 +2229,7 @@
         </main>
 
         <footer class="bg-white border-t border-gray-100 py-3 text-center text-[10px] text-gray-400">
-            Generated by <span class="font-medium text-gray-500 brand-name-text">Kama Creative</span>
+            Made with ❤️ from <a href="https://www.instagram.com/kamadigitalcreative/" target="_blank" class="font-medium text-gray-500 hover:text-blue-500 transition-colors">@kamacreative</a>
         </footer>
     </div>
 
@@ -2689,7 +2689,7 @@
             </div>
         </div>
         <footer class="py-6 text-center text-xs text-gray-400">
-            Powered by <span class="font-semibold text-gray-600">Kama Creative</span>
+            Made with ❤️ from <a href="https://www.instagram.com/kamadigitalcreative/" target="_blank" class="font-semibold text-gray-600 hover:text-blue-500 transition-colors">@kamacreative</a>
         </footer>
     </div>
 
@@ -2735,7 +2735,7 @@
             </div>
         </div>
         <footer class="py-6 text-center text-xs text-gray-400">
-            Powered by <span class="font-semibold text-gray-600">Kama Creative</span>
+            Made with ❤️ from <a href="https://www.instagram.com/kamadigitalcreative/" target="_blank" class="font-semibold text-gray-600 hover:text-blue-500 transition-colors">@kamacreative</a>
         </footer>
     </div>
 
