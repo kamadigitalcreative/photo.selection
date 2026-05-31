@@ -417,25 +417,35 @@
         }
 
         .nav-tab {
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.8125rem;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 0.875rem;
             white-space: nowrap;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s ease;
+            color: #9ca3af;
+            width: 100%;
+        }
+
+        .nav-tab i {
+            font-size: 1.125rem;
+            width: 24px;
+            text-align: center;
         }
 
         .nav-tab.active {
-            background-color: #ffffff;
-            color: #2563eb;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            background-color: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            font-weight: 600;
         }
 
         .nav-tab:not(.active):hover {
-            color: #0f172a;
-            background-color: rgba(255, 255, 255, 0.6);
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
         @media (max-width: 639px) {
@@ -930,138 +940,170 @@
         </footer>
     </div>
 
-    <div id="admin-view" class="view-section">
-        <header class="glass-header px-4 sm:px-6 py-3 flex flex-col sticky top-0 gap-y-3 z-40">
-            <!-- Baris Atas (Logo, Tabs Desktop, dan Kontrol Kanan) -->
-            <div class="flex justify-between items-center w-full">
-                <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-                    <div
-                        class="brand-logo-container-sm w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-kama-800 to-kama-900 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0 overflow-hidden">
-                        <i class="fa-solid fa-camera-retro text-sm"></i>
+    <div id="admin-view" class="view-section hidden h-screen bg-[#F9FAFB] overflow-hidden flex flex-row">
+        
+        <!-- SIDEBAR (DESKTOP) -->
+        <aside id="sidebar-desktop" class="hidden sm:flex flex-col w-[260px] bg-[#0A0F1C] text-white h-full relative z-50 shrink-0">
+            <!-- Brand Logo & Name -->
+            <div class="p-6 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full border border-gray-600 bg-gradient-to-br from-kama-800 to-kama-900 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-camera-retro text-white text-sm"></i>
+                </div>
+                <div class="flex flex-col">
+                    <h1 class="font-bold text-lg tracking-tight leading-tight truncate w-32 brand-name-text">App Name</h1>
+                    <span class="text-[9px] text-gray-400">Powered by Photo Selection</span>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav id="admin-nav-tabs" class="flex-1 px-4 py-2 flex flex-col gap-1 overflow-y-auto hide-scrollbar">
+                <button onclick="switchAdminTab('projects')" id="tab-projects" class="nav-tab active">
+                    <i class="fa-regular fa-folder"></i> Projects
+                </button>
+                <button onclick="switchAdminTab('status')" id="tab-status" class="nav-tab">
+                    <i class="fa-solid fa-headset"></i> Pantau Klien
+                </button>
+                <button onclick="switchAdminTab('sortir-lokal')" id="tab-sortir-lokal" class="nav-tab photo-only-col hidden">
+                    <i class="fa-solid fa-file-zipper"></i> Sortir Lokal
+                </button>
+                <button onclick="switchAdminTab('collage')" id="tab-collage" class="nav-tab photo-only-col hidden">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Kolase
+                </button>
+                <button onclick="switchAdminTab('panduan')" id="tab-panduan" class="nav-tab photo-only-col hidden">
+                    <i class="fa-solid fa-book-open"></i> Panduan
+                </button>
+
+                <!-- Separator -->
+                <div class="h-px bg-white/10 my-3 mx-2"></div>
+
+                <button onclick="switchAdminTab('premium-addon')" id="tab-premium-addon" class="nav-tab photo-only-col hidden">
+                    <i class="fa-solid fa-crown text-amber-500"></i> Add-On PRO
+                </button>
+                <button onclick="switchAdminTab('settings')" id="tab-settings" class="nav-tab photo-only-col hidden">
+                    <i class="fa-solid fa-gear"></i> Pengaturan
+                </button>
+                <button onclick="switchAdminTab('feedback')" id="tab-feedback" class="nav-tab photo-only-col hidden relative">
+                    <i class="fa-regular fa-circle-question"></i> Bantuan & Laporan
+                    <span id="badge-feedback" class="absolute right-4 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full hidden">0</span>
+                </button>
+
+                <!-- Admin Only (Hidden for Photographers) -->
+                <button onclick="switchAdminTab('dashboard')" id="tab-dashboard" class="nav-tab admin-only-col hidden">
+                    <i class="fa-solid fa-chart-pie"></i> Dashboard
+                </button>
+                <button onclick="switchAdminTab('users')" id="tab-users" class="nav-tab admin-only-col hidden">
+                    <i class="fa-solid fa-users"></i> Tim
+                </button>
+                <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback" class="nav-tab admin-only-col hidden relative">
+                    <i class="fa-solid fa-inbox"></i> Laporan
+                    <span id="badge-admin-feedback" class="absolute right-4 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full hidden">0</span>
+                </button>
+            </nav>
+
+            <!-- Bottom Upgrade Card -->
+            <div class="p-4 mt-auto">
+                <div class="bg-gradient-to-b from-[#1E293B] to-[#0F172A] rounded-2xl p-4 relative overflow-hidden group border border-white/10">
+                    <i class="fa-solid fa-crown absolute -right-4 -top-2 text-6xl text-white/5 group-hover:scale-110 transition-transform"></i>
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fa-solid fa-crown text-amber-500 text-lg drop-shadow-md"></i>
+                        <h3 class="font-bold text-white text-sm">Upgrade ke PRO</h3>
                     </div>
-                    <h1
-                        class="font-bold text-base sm:text-lg text-kama-800 tracking-tight brand-name-text truncate max-w-[100px] sm:max-w-[180px]">
-                        App Name</h1>
+                    <p class="text-[10px] text-gray-400 leading-relaxed mb-4">Unlock fitur premium untuk workflow yang lebih cepat dan profesional.</p>
+                    <button onclick="switchAdminTab('premium-addon')" class="w-full py-2 bg-transparent border border-gray-600 rounded-lg text-white text-[11px] hover:bg-white/10 transition-colors flex items-center justify-between px-3">
+                        Lihat Paket PRO <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT CONTAINER -->
+        <div class="flex-1 flex flex-col h-full overflow-hidden w-full relative">
+            
+            <!-- HEADER -->
+            <header class="bg-white border-b border-gray-200 px-4 sm:px-8 py-3 sm:py-4 flex items-center justify-between shrink-0 z-30">
+                <!-- Hamburger Menu Mobile (To be hooked up if needed) -->
+                <button id="btn-mobile-menu" onclick="document.getElementById('mobile-sidebar').classList.remove('-translate-x-full');" class="sm:hidden text-gray-500 hover:text-gray-800 text-xl mr-3">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                
+                <div class="flex items-center w-full max-w-xl relative group">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 text-gray-400 group-focus-within:text-blue-500 transition-colors"></i>
+                    <input type="text" id="global-search" class="w-full bg-gray-50 border border-gray-200 rounded-full pl-11 pr-4 py-2.5 text-sm outline-none focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all placeholder-gray-400 font-medium" placeholder="Cari project, klien, atau link...">
                 </div>
 
-                <div id="admin-nav-tabs"
-                    class="hidden sm:flex bg-slate-100/80 p-1 rounded-xl mx-auto border border-slate-200/50 overflow-x-auto hide-scrollbar whitespace-nowrap space-x-1 max-w-full">
-                    <button onclick="switchAdminTab('dashboard')" id="tab-dashboard"
-                        class="nav-tab flex-shrink-0 admin-only-col hidden">Dashboard</button>
-                    <button onclick="switchAdminTab('projects')" id="tab-projects"
-                        class="nav-tab flex-shrink-0 active">Projects</button>
-                    <button onclick="switchAdminTab('status')" id="tab-status" class="nav-tab flex-shrink-0">Pantau Klien</button>
-                    <button onclick="switchAdminTab('panduan')" id="tab-panduan"
-                        class="nav-tab flex-shrink-0 photo-only-col hidden">Panduan</button>
-                    <button onclick="switchAdminTab('premium-addon')" id="tab-premium-addon"
-                        class="nav-tab flex-shrink-0 photo-only-col hidden"><i class="fa-solid fa-crown text-amber-500 mr-1.5"></i> Add-On PRO</button>
-                    <button onclick="switchAdminTab('collage')" id="tab-collage"
-                        class="nav-tab flex-shrink-0 photo-only-col hidden"><i class="fa-solid fa-wand-magic-sparkles text-fuchsia-500 mr-1.5"></i> Kolase</button>
-                    <button onclick="switchAdminTab('feedback')" id="tab-feedback"
-                        class="nav-tab flex-shrink-0 photo-only-col hidden relative">Saran <span id="badge-feedback"
-                            class="absolute -top-1.5 -right-1 bg-red-600 text-white text-[9px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full border-2 border-white shadow-sm hidden">0</span></button>
-                    <button onclick="switchAdminTab('users')" id="tab-users"
-                        class="nav-tab flex-shrink-0 admin-only-col hidden">Tim</button>
-                    <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback"
-                        class="nav-tab flex-shrink-0 admin-only-col hidden relative">Laporan <span id="badge-admin-feedback"
-                            class="absolute -top-1.5 -right-1 bg-red-600 text-white text-[9px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full border-2 border-white shadow-sm hidden">0</span></button>
-                </div>
+                <div class="flex items-center gap-3 sm:gap-5 ml-auto shrink-0 pl-3">
+                    <!-- Notification -->
+                    <button onclick="openModalNotification()" class="relative text-gray-500 hover:text-kama-800 w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors">
+                        <i class="fa-regular fa-bell text-lg"></i>
+                        <span id="badge-global-notif" class="absolute top-2 right-2.5 bg-red-500 w-2 h-2 rounded-full hidden"></span>
+                    </button>
+                    
+                    <!-- PRO Badge -->
+                    <div id="badge-pro-status" class="hidden sm:flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full text-amber-700 font-bold text-[10px] tracking-wide uppercase shadow-sm">
+                        <i class="fa-solid fa-crown"></i> PRO PLAN
+                    </div>
 
-                <div class="flex items-center gap-1.5 sm:gap-3 overflow-x-auto hide-scrollbar ml-auto flex-nowrap pr-1">
-
-                    <!-- TOMBOL BAHASA DASHBOARD -->
-                    <div class="relative">
-                        <select id="dashLangSelector" onchange="changeLanguage(this.value)"
-                            class="appearance-none bg-white border border-gray-200 text-kama-800 text-[10px] sm:text-xs font-bold py-1.5 sm:py-2 pl-7 sm:pl-8 pr-2 sm:pr-3 rounded-lg focus:outline-none focus:border-kama-800 cursor-pointer shadow-sm hover:bg-gray-50 transition-colors">
-                            <option value="id">ID</option>
-                            <option value="en">EN</option>
-                        </select>
-                        <div
-                            class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 sm:pl-3 text-blue-500">
-                            <i class="fa-solid fa-earth-americas text-xs sm:text-sm"></i>
+                    <!-- Profile Dropdown Trigger -->
+                    <div class="flex items-center gap-3 pl-3 sm:pl-5 sm:border-l sm:border-gray-200 cursor-pointer group" onclick="handleLogout()">
+                        <div class="w-9 h-9 rounded-full bg-gray-200 overflow-hidden shrink-0 border border-gray-300 shadow-sm relative">
+                            <img src="https://ui-avatars.com/api/?name=User&background=random" id="profile-avatar" class="w-full h-full object-cover">
+                            <!-- Optional: green dot for online status -->
+                            <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
                         </div>
+                        <div class="hidden sm:flex flex-col">
+                            <span class="text-sm font-bold text-gray-800 leading-tight truncate max-w-[120px]" id="adminName">User</span>
+                            <span class="text-[10px] text-gray-500 uppercase tracking-wide font-semibold mt-0.5" id="adminRole">Fotografer</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-gray-400 text-xs ml-1 group-hover:text-gray-600 hidden sm:block"></i>
                     </div>
+                </div>
+            </header>
 
-                    <div class="wrapper scale-[0.4] origin-right" title="Dark Mode" id="theme-toggle-wrapper">
-                        <input type="checkbox" id="hide-checkbox">
-                        <label for="hide-checkbox" class="toggle">
-                            <span class="toggle-button">
-                                <span class="crater crater-1"></span><span class="crater crater-2"></span><span
-                                    class="crater crater-3"></span><span class="crater crater-4"></span><span
-                                    class="crater crater-5"></span><span class="crater crater-6"></span><span
-                                    class="crater crater-7"></span>
-                            </span>
-                            <span class="star star-1"></span><span class="star star-2"></span><span
-                                class="star star-3"></span><span class="star star-4"></span><span
-                                class="star star-5"></span><span class="star star-6"></span><span
-                                class="star star-7"></span><span class="star star-8"></span>
-                        </label>
+            <!-- MOBILE SIDEBAR OVERLAY -->
+            <div id="mobile-sidebar" class="fixed inset-y-0 left-0 w-[260px] bg-[#0A0F1C] text-white z-[60] transform -translate-x-full transition-transform duration-300 sm:hidden flex flex-col shadow-2xl">
+                <div class="p-4 flex justify-between items-center border-b border-white/10">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full border border-gray-600 bg-gradient-to-br from-kama-800 to-kama-900 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-camera-retro text-white text-xs"></i>
+                        </div>
+                        <h1 class="font-bold text-base tracking-tight truncate w-24 brand-name-text">App Name</h1>
                     </div>
-
-                    <div class="text-right mr-2 hidden sm:block">
-                        <p class="text-xs font-bold text-kama-800" id="adminName">User</p>
-                        <p class="text-[10px] text-gray-500" id="adminRole">Role</p>
-                    </div>
-                    <button onclick="openModalNotification()"
-                        class="relative text-gray-500 hover:text-kama-800 w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-gray-200 bg-white flex items-center justify-center transition-colors shadow-sm"
-                        title="Notifikasi">
-                        <i class="fa-regular fa-bell"></i>
-                        <span id="badge-global-notif"
-                            class="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-bold min-w-[20px] h-[20px] flex items-center justify-center rounded-full border-2 border-white shadow-md hidden">0</span>
-                    </button>
-                    <button onclick="openModalPayment()"
-                        class="text-green-500 hover:text-green-700 w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-green-200 bg-white flex items-center justify-center transition-colors shadow-sm"
-                        title="Pengaturan Pembayaran">
-                        <i class="fa-solid fa-money-check-dollar"></i>
-                    </button>
-                    <button onclick="openModalSettings()"
-                        class="text-gray-500 hover:text-kama-800 w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-gray-200 bg-white flex items-center justify-center transition-colors shadow-sm"
-                        title="Pengaturan Brand">
-                        <i class="fa-solid fa-gear"></i>
-                    </button>
-                    <button onclick="handleLogout()"
-                        class="text-red-500 hover:text-red-700 w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-red-100 bg-red-50 hidden sm:flex items-center justify-center transition-colors shadow-sm"
-                        title="Logout">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <button onclick="document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" class="text-gray-400 hover:text-white w-8 h-8 flex items-center justify-center">
+                        <i class="fa-solid fa-xmark text-xl"></i>
                     </button>
                 </div>
+                <nav id="admin-nav-tabs-mobile" class="flex-1 px-3 py-4 flex flex-col gap-1 overflow-y-auto">
+                    <!-- Cloned JS tabs will control this but we'll manually map IDs for the active class logic -->
+                    <button onclick="switchAdminTab('projects'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-projects-m" class="nav-tab active">
+                        <i class="fa-regular fa-folder"></i> Projects
+                    </button>
+                    <button onclick="switchAdminTab('status'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-status-m" class="nav-tab">
+                        <i class="fa-solid fa-headset"></i> Pantau Klien
+                    </button>
+                    <button onclick="switchAdminTab('sortir-lokal'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-sortir-lokal-m" class="nav-tab photo-only-col hidden">
+                        <i class="fa-solid fa-file-zipper"></i> Sortir Lokal
+                    </button>
+                    <button onclick="switchAdminTab('collage'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-collage-m" class="nav-tab photo-only-col hidden">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Kolase
+                    </button>
+                    <button onclick="switchAdminTab('panduan'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-panduan-m" class="nav-tab photo-only-col hidden">
+                        <i class="fa-solid fa-book-open"></i> Panduan
+                    </button>
+                    <div class="h-px bg-white/10 my-2 mx-2"></div>
+                    <button onclick="switchAdminTab('premium-addon'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-premium-addon-m" class="nav-tab photo-only-col hidden">
+                        <i class="fa-solid fa-crown text-amber-500"></i> Add-On PRO
+                    </button>
+                    <button onclick="switchAdminTab('settings'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-settings-m" class="nav-tab photo-only-col hidden">
+                        <i class="fa-solid fa-gear"></i> Pengaturan
+                    </button>
+                    <button onclick="switchAdminTab('feedback'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-feedback-m" class="nav-tab photo-only-col hidden">
+                        <i class="fa-regular fa-circle-question"></i> Bantuan & Laporan
+                    </button>
+                </nav>
             </div>
-
-            <!-- Baris Bawah (Menu Tab Mobile) -->
-            <div class="w-full flex sm:hidden overflow-hidden">
-                <div id="admin-nav-tabs-mobile"
-                    class="flex bg-slate-100/80 p-1 rounded-xl w-full border border-slate-200/50 overflow-x-auto hide-scrollbar whitespace-nowrap gap-1">
-                    <button onclick="switchAdminTab('dashboard')" id="tab-dashboard-m"
-                        class="nav-tab flex-shrink-0 min-w-[50px] admin-only-col hidden text-[10px] py-1.5 text-center px-3">Dash</button>
-                    <button onclick="switchAdminTab('projects')" id="tab-projects-m"
-                        class="nav-tab flex-shrink-0 min-w-[50px] active text-[10px] py-1.5 text-center px-3">Projects</button>
-                    <button onclick="switchAdminTab('status')" id="tab-status-m"
-                        class="nav-tab flex-shrink-0 min-w-[50px] text-[10px] py-1.5 text-center px-3">Pantau</button>
-                    <button onclick="switchAdminTab('panduan')" id="tab-panduan-m"
-                        class="nav-tab flex-shrink-0 min-w-[40px] photo-only-col hidden text-[10px] py-1.5 text-center px-3"><i class="fa-solid fa-book"></i></button>
-                    <button onclick="switchAdminTab('premium-addon')" id="tab-premium-addon-m"
-                        class="nav-tab flex-shrink-0 min-w-[50px] photo-only-col hidden text-[10px] py-1.5 text-center px-3"><i class="fa-solid fa-crown text-amber-500"></i> PRO</button>
-                    <button onclick="switchAdminTab('collage')" id="tab-collage-m"
-                        class="nav-tab flex-shrink-0 min-w-[40px] photo-only-col hidden text-[10px] py-1.5 text-center px-3"><i class="fa-solid fa-wand-magic-sparkles text-fuchsia-500"></i></button>
-                    <button onclick="switchAdminTab('feedback')" id="tab-feedback-m"
-                        class="nav-tab flex-shrink-0 min-w-[50px] photo-only-col hidden text-[10px] py-1.5 text-center px-3 relative">Saran <span
-                            id="badge-feedback-m"
-                            class="absolute top-0 right-0 bg-red-600 text-white text-[8px] font-bold min-w-[14px] h-[14px] flex items-center justify-center rounded-full border border-white shadow-sm hidden">0</span></button>
-                    <button onclick="switchAdminTab('users')" id="tab-users-m"
-                        class="nav-tab flex-shrink-0 min-w-[50px] admin-only-col hidden text-[10px] py-1.5 text-center px-3">Tim</button>
-                    <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback-m"
-                        class="nav-tab flex-shrink-0 min-w-[50px] admin-only-col hidden text-[10px] py-1.5 text-center px-3 relative">Laporan
-                        <span id="badge-admin-feedback-m"
-                            class="absolute top-0 right-0 bg-red-600 text-white text-[8px] font-bold min-w-[14px] h-[14px] flex items-center justify-center rounded-full border border-white shadow-sm hidden">0</span></button>
-                    <button onclick="handleLogout()"
-                        class="nav-tab flex-shrink-0 min-w-[50px] text-[10px] py-1.5 text-center px-3 text-red-500 hover:text-red-700 font-bold"><i
-                            class="fa-solid fa-arrow-right-from-bracket"></i> Keluar</button>
-                </div>
-            </div>
-        </header>
-
-        <main class="scrollable-content bg-kama-50 p-4 sm:p-8">
-            <div class="max-w-6xl mx-auto h-full flex flex-col">
+            
+            <main class="flex-1 overflow-y-auto scrollable-content bg-[#F9FAFB] p-4 sm:p-8">
+                <div class="max-w-[1400px] mx-auto h-full flex flex-col">
 
                 <div id="section-dashboard" class="hidden flex-1 flex-col">
                     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
@@ -2138,6 +2180,7 @@
                 </form>
             </div>
         </main>
+        </div> <!-- End of MAIN CONTENT CONTAINER -->
     </div>
 
     <div id="client-auth-view" class="view-section relative hero-pattern-bg">
