@@ -967,7 +967,7 @@
                             class="absolute -top-1.5 -right-1 bg-red-600 text-white text-[9px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full border-2 border-white shadow-sm hidden">0</span></button>
                 </div>
 
-                <div class="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
+                <div class="flex items-center gap-1.5 sm:gap-3 overflow-x-auto hide-scrollbar ml-auto flex-nowrap pr-1">
 
                     <!-- TOMBOL BAHASA DASHBOARD -->
                     <div class="relative">
@@ -1020,7 +1020,7 @@
                         <i class="fa-solid fa-gear"></i>
                     </button>
                     <button onclick="handleLogout()"
-                        class="text-red-500 hover:text-red-700 w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-red-100 bg-red-50 flex items-center justify-center transition-colors shadow-sm"
+                        class="text-red-500 hover:text-red-700 w-8 h-8 sm:w-9 sm:h-9 rounded-lg border border-red-100 bg-red-50 hidden sm:flex items-center justify-center transition-colors shadow-sm"
                         title="Logout">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i>
                     </button>
@@ -1212,7 +1212,7 @@
                     <div
                         class="bg-white rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-kama-100 flex-1 flex flex-col overflow-hidden">
                         <div class="table-container flex-1">
-                            <table class="w-full text-left border-collapse">
+                            <table class="w-full text-left border-collapse whitespace-nowrap">
                                 <thead class="bg-gray-50/50 sticky top-0 z-10 backdrop-blur-md">
                                     <tr>
                                         <th
@@ -1231,7 +1231,7 @@
                                             Quota
                                         </th>
                                         <th
-                                            class="p-3 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 hidden sm:table-cell">
+                                            class="p-3 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">
                                             <i
                                                 class="fa-regular fa-calendar-days text-gray-400 mr-1.5 hidden sm:inline"></i>
                                             Date
@@ -4371,29 +4371,28 @@
                     '</button>';
 
                 tr.innerHTML =
-                    '<td class="p-3 sm:px-6 max-w-[140px] sm:max-w-xs">' +
+                    '<td class="p-3 sm:px-6 max-w-[200px]">' +
                     '<div class="font-bold text-kama-800 truncate" title="' + safeHTMLName + '">' + safeHTMLName + '</div>' +
                     '<div class="text-[11px] text-blue-500 font-medium mt-0.5 truncate w-full" title="' + displayLink + '"><i class="fa-solid fa-link mr-1 opacity-50 hidden sm:inline"></i>' + displayedTokenOrLink + '</div>' +
-                    '<div class="text-[10px] text-gray-400 sm:hidden mt-1"><i class="fa-regular fa-clock mr-1"></i> ' + dateFull + '</div>' +
                     '</td>' +
                     ownerHtml +
                     '<td class="p-3 sm:px-6 text-center sm:text-left">' +
-                    '<span class="bg-gray-100 text-kama-800 text-[10px] sm:text-xs font-bold px-2 py-1 sm:px-2.5 rounded-md border border-gray-200 whitespace-nowrap">' + (row['Max Foto'] || 0) + ' pics</span>' +
+                    '<span class="bg-gray-100 text-kama-800 text-xs font-bold px-2.5 py-1 rounded-md border border-gray-200 whitespace-nowrap">' + (row['Max Foto'] || 0) + ' pics</span>' +
                     '</td>' +
-                    '<td class="p-3 sm:px-6 text-xs text-gray-500 font-medium hidden sm:table-cell">' + dateFull + '</td>' +
+                    '<td class="p-3 sm:px-6 text-xs text-gray-500 font-medium whitespace-nowrap">' + dateFull + '</td>' +
                     '<td class="p-3 sm:px-6 text-right">' +
-                    '<div class="flex items-center justify-end gap-1.5 sm:gap-2 flex-wrap">' +
-                    '<button onclick="copyProjectInfo(\'' + safeJSName + '\', \'' + displayLink + '\', \'' + safePass + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-white text-gray-600 hover:bg-gray-50 hover:text-kama-800 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200" title="Copy Link">' +
-                    '<i class="fa-regular fa-copy sm:mr-1.5"></i> <span class="hidden sm:inline">Copy</span>' +
+                    '<div class="flex items-center justify-end gap-1.5 sm:gap-2 flex-nowrap">' +
+                    '<button onclick="copyProjectInfo(\'' + safeJSName + '\', \'' + displayLink + '\', \'' + safePass + '\')" class="w-auto px-3 py-1.5 rounded-lg bg-white text-gray-600 hover:bg-gray-50 hover:text-kama-800 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200" title="Copy Link">' +
+                    '<i class="fa-regular fa-copy mr-1.5"></i> <span>Copy</span>' +
                     '</button>' +
-                    '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-white text-blue-600 hover:bg-blue-50 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200 hover:border-blue-200" title="Lihat Galeri">' +
-                    '<i class="fa-regular fa-eye sm:mr-1.5"></i> <span class="hidden sm:inline">' + (localStorage.getItem('ps_lang') === 'en' ? 'View' : 'Lihat') + '</span>' +
+                    '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="w-auto px-3 py-1.5 rounded-lg bg-white text-blue-600 hover:bg-blue-50 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200 hover:border-blue-200" title="Lihat Galeri">' +
+                    '<i class="fa-regular fa-eye mr-1.5"></i> <span>' + (localStorage.getItem('ps_lang') === 'en' ? 'View' : 'Lihat') + '</span>' +
                     '</button>' +
-                    '<button onclick="editPasswordPrompt(\'' + row.ID + '\', \'' + safeJSName + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-white text-amber-500 hover:bg-amber-50 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200 hover:border-amber-200" title="Edit Password">' +
-                    '<i class="fa-solid fa-key sm:mr-1.5"></i> <span class="hidden sm:inline">Password</span>' +
+                    '<button onclick="editPasswordPrompt(\'' + row.ID + '\', \'' + safeJSName + '\')" class="w-auto px-3 py-1.5 rounded-lg bg-white text-amber-500 hover:bg-amber-50 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200 hover:border-amber-200" title="Edit Password">' +
+                    '<i class="fa-solid fa-key mr-1.5"></i> <span>Password</span>' +
                     '</button>' +
-                    '<button onclick="deleteProject(\'' + row.ID + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg bg-white text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200 hover:border-red-200" title="Hapus Project">' +
-                    '<i class="fa-solid fa-trash-can sm:mr-1.5"></i> <span class="hidden sm:inline">' + (localStorage.getItem('ps_lang') === 'en' ? 'Delete' : 'Hapus') + '</span>' +
+                    '<button onclick="deleteProject(\'' + row.ID + '\')" class="w-auto px-3 py-1.5 rounded-lg bg-white text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200 hover:border-red-200" title="Hapus Project">' +
+                    '<i class="fa-solid fa-trash-can mr-1.5"></i> <span>' + (localStorage.getItem('ps_lang') === 'en' ? 'Delete' : 'Hapus') + '</span>' +
                     '</button>' +
                     '</div>' +
                     '</td>';
