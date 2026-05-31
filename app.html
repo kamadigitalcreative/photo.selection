@@ -3248,12 +3248,12 @@
                 showDemoSubscribeAlert();
                 return;
             }
-            window.history.pushState({ view: 'local-sorter-view' }, '', '/projects/sortirlokal');
+            try { window.history.pushState({ view: 'local-sorter-view' }, '', '/projects/sortirlokal'); } catch(e) {}
             showView('local-sorter-view');
         }
 
         function closeSortirLokal() {
-            window.history.pushState({ tab: 'projects' }, '', '/projects');
+            try { window.history.pushState({ tab: 'projects' }, '', '/projects'); } catch(e) {}
             showView('admin-view');
             switchAdminTab('projects', true);
         }
@@ -3807,7 +3807,7 @@
             var verifyForm = document.getElementById('verify-email-wrapper'); // BARU
             if (!loginForm || !regForm) return;
 
-            if (!skipHistory) { window.history.pushState({ auth: type }, '', '/' + type); }
+            if (!skipHistory) { try { window.history.pushState({ auth: type }, '', '/' + type); } catch(e){} }
 
             if (verifyForm && verifyForm.classList) verifyForm.classList.add('hidden'); // Sembunyikan pesan sukses
 
@@ -4172,7 +4172,7 @@
         }
 
         async function handleLogout() {
-            window.history.pushState({ auth: 'login' }, '', '/login'); // Arahkan ke login saat logout
+            try { window.history.pushState({ auth: 'login' }, '', '/login'); } catch(e){} // Arahkan ke login saat logout
             localStorage.removeItem('ps_user');
             sessionStorage.removeItem('ps_user');
             currentUser = null;
@@ -4230,7 +4230,7 @@
                     'pengaturan': '/admin/settings'
                 };
                 var targetUrl = urlMap[tabId] || ('/' + tabId);
-                window.history.pushState({ tab: tabId }, '', targetUrl); 
+                try { window.history.pushState({ tab: tabId }, '', targetUrl); } catch(e){}
             }
 
             var dTabs = document.querySelectorAll('#admin-nav-tabs .nav-tab');
