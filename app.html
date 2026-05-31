@@ -1269,7 +1269,7 @@
                     <div class="flex flex-col lg:flex-row gap-6 items-start h-full pb-8">
                         
                         <!-- Main Content: Project List -->
-                        <div class="flex-1 w-full flex flex-col min-h-[500px]">
+                        <div class="flex-1 w-full min-w-0 flex flex-col min-h-[500px]">
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                                 <div>
                                     <h2 class="text-xl font-bold text-gray-800">Daftar Project</h2>
@@ -4843,10 +4843,15 @@
             var statActive = 0, statSubmitted = 0, statReview = 0, statTotal = data ? data.length : 0;
             if(data) {
                 data.forEach(function(row) {
-                    statActive++; // Todo: implement actual status checking
+                    var s = row['Status Client'] || 'Belum Memilih';
+                    if (s === 'Selesai') statSubmitted++;
+                    else if (s === 'Sedang Memilih') statReview++;
+                    else statActive++;
                 });
             }
             if(document.getElementById('stat-active-projects')) document.getElementById('stat-active-projects').innerText = statActive;
+            if(document.getElementById('stat-submitted-projects')) document.getElementById('stat-submitted-projects').innerText = statSubmitted;
+            if(document.getElementById('stat-review-projects')) document.getElementById('stat-review-projects').innerText = statReview;
             if(document.getElementById('stat-total-links')) document.getElementById('stat-total-links').innerText = statTotal;
 
             if (!data || data.length === 0) {
@@ -4884,6 +4889,28 @@
                 var safePass = row['Password Client'] ? escapeHTML(String(row['Password Client'])) : "(tanpa password)";
                 var safeJSName = rawName.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
                 var maxFoto = row['Max Foto'] || 0;
+                var fotoTerpilih = parseInt(row['Foto Terpilih']) || 0;
+                var progressPct = maxFoto > 0 ? Math.min(100, Math.round((fotoTerpilih / maxFoto) * 100)) : 0;
+                var progressColor = progressPct >= 100 ? 'bg-green-500' : 'bg-blue-500';
+
+                var statusClient = row['Status Client'] || 'Belum Memilih';
+                var statusColor = 'gray';
+                var pulseHtml = '';
+                var statusDisplay = statusClient;
+                
+                if (statusClient === 'Selesai') {
+                    statusColor = 'blue';
+                    pulseHtml = '<i class="fa-solid fa-check-circle"></i>';
+                } else if (statusClient === 'Sedang Memilih') {
+                    statusColor = 'amber';
+                    pulseHtml = '<div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>';
+                } else {
+                    statusColor = 'green';
+                    pulseHtml = '<div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>';
+                    statusDisplay = 'Aktif';
+                }
+
+                var statusHtml = '<div class="bg-' + statusColor + '-50 text-' + statusColor + '-700 border border-' + statusColor + '-200 text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5">' + pulseHtml + statusDisplay + '</div>';
 
                 var card = document.createElement('div');
                 card.className = "bg-white border border-gray-200 rounded-2xl p-4 flex flex-col sm:flex-row gap-4 sm:items-center hover:shadow-md transition-shadow relative overflow-hidden group";
@@ -4909,9 +4936,11 @@
                     '<button onclick="deleteProject(\'' + row.ID + '\')" class="bg-white border border-gray-200 text-gray-400 hover:text-red-600 hover:border-red-300 hover:bg-red-50 w-9 h-9 flex items-center justify-center rounded-xl transition-colors shadow-sm" title="Hapus Project">' +
                     '<i class="fa-solid fa-trash-can"></i></button>';
 
+                var avatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(rawName) + '&background=random&size=128';
+
                 card.innerHTML = 
                     '<div class="flex gap-1 shrink-0 bg-gray-100 rounded-xl p-1 overflow-hidden h-[80px] w-[120px]">' +
-                    '<div class="w-2/3 h-full bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center"><i class="fa-solid fa-image text-gray-400 text-2xl"></i></div>' +
+                    '<div class="w-2/3 h-full bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center"><img src="' + avatarUrl + '" class="w-full h-full object-cover"></div>' +
                     '<div class="w-1/3 h-full flex flex-col gap-1">' +
                     '<div class="h-1/2 bg-gray-200 rounded-md overflow-hidden flex items-center justify-center"><i class="fa-solid fa-image text-gray-400 text-xs"></i></div>' +
                     '<div class="h-1/2 bg-gray-800 rounded-md flex items-center justify-center text-[10px] font-bold text-white">+' + maxFoto + '</div>' +
@@ -4925,12 +4954,11 @@
                     '</div>' +
                     
                     '<div class="shrink-0 flex items-center justify-end sm:justify-center w-full sm:w-[100px]">' +
-                    '<div class="bg-green-50 text-green-700 border border-green-200 text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5">' +
-                    '<div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>Aktif</div></div>' +
+                    statusHtml + '</div>' +
                     
                     '<div class="shrink-0 w-full sm:w-[140px] flex flex-col justify-center">' +
-                    '<div class="flex justify-between text-[11px] font-semibold text-gray-600 mb-1"><span>Quota Max</span><span class="text-gray-800">' + maxFoto + '</span></div>' +
-                    '<div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden"><div class="bg-blue-500 h-full rounded-full" style="width: 100%"></div></div></div>' +
+                    '<div class="flex justify-between text-[11px] font-semibold text-gray-600 mb-1"><span>Terpilih ' + fotoTerpilih + ' / ' + maxFoto + '</span><span class="text-gray-800">' + progressPct + '%</span></div>' +
+                    '<div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden"><div class="' + progressColor + ' h-full rounded-full transition-all duration-500" style="width: ' + progressPct + '%"></div></div></div>' +
                     
                     '<div class="shrink-0 flex items-center gap-1.5 w-full sm:w-auto mt-3 sm:mt-0 pt-3 sm:pt-0 border-t border-gray-100 sm:border-0 justify-end">' + actionHtml + '</div>';
                 
