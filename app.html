@@ -957,6 +957,21 @@
 
             <!-- Navigation Links -->
             <nav id="admin-nav-tabs" class="flex-1 px-4 py-2 flex flex-col gap-1 overflow-y-auto hide-scrollbar">
+                <!-- Admin Only -->
+                <button onclick="switchAdminTab('dashboard')" id="tab-dashboard" class="nav-tab admin-only-col hidden text-blue-300">
+                    <i class="fa-solid fa-chart-pie"></i> Dashboard Admin
+                </button>
+                <button onclick="switchAdminTab('users')" id="tab-users" class="nav-tab admin-only-col hidden text-blue-300">
+                    <i class="fa-solid fa-users"></i> Tim / Pengguna
+                </button>
+                <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback" class="nav-tab admin-only-col hidden relative text-blue-300">
+                    <i class="fa-solid fa-inbox"></i> Laporan Admin
+                    <span id="badge-admin-feedback" class="absolute right-4 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full hidden">0</span>
+                </button>
+
+                <div class="h-px bg-white/10 my-3 mx-2 admin-only-col hidden"></div>
+
+                <!-- Main Photographer Tools -->
                 <button onclick="switchAdminTab('projects')" id="tab-projects" class="nav-tab active">
                     <i class="fa-regular fa-folder"></i> Projects
                 </button>
@@ -969,34 +984,23 @@
                 <button onclick="switchAdminTab('collage')" id="tab-collage" class="nav-tab photo-only-col hidden">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> Kolase
                 </button>
-                <button onclick="switchAdminTab('panduan')" id="tab-panduan" class="nav-tab photo-only-col hidden">
-                    <i class="fa-solid fa-book-open"></i> Panduan
-                </button>
-
+                
                 <!-- Separator -->
                 <div class="h-px bg-white/10 my-3 mx-2"></div>
 
+                <!-- Secondary Tools -->
+                <button onclick="switchAdminTab('panduan')" id="tab-panduan" class="nav-tab photo-only-col hidden">
+                    <i class="fa-solid fa-book-open"></i> Panduan Penggunaan
+                </button>
                 <button onclick="switchAdminTab('premium-addon')" id="tab-premium-addon" class="nav-tab photo-only-col hidden">
                     <i class="fa-solid fa-crown text-amber-500"></i> Add-On PRO
                 </button>
                 <button onclick="switchAdminTab('settings')" id="tab-settings" class="nav-tab photo-only-col hidden">
-                    <i class="fa-solid fa-gear"></i> Pengaturan
+                    <i class="fa-solid fa-gear"></i> Pengaturan Studio
                 </button>
                 <button onclick="switchAdminTab('feedback')" id="tab-feedback" class="nav-tab photo-only-col hidden relative">
                     <i class="fa-regular fa-circle-question"></i> Bantuan & Laporan
                     <span id="badge-feedback" class="absolute right-4 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full hidden">0</span>
-                </button>
-
-                <!-- Admin Only (Hidden for Photographers) -->
-                <button onclick="switchAdminTab('dashboard')" id="tab-dashboard" class="nav-tab admin-only-col hidden">
-                    <i class="fa-solid fa-chart-pie"></i> Dashboard
-                </button>
-                <button onclick="switchAdminTab('users')" id="tab-users" class="nav-tab admin-only-col hidden">
-                    <i class="fa-solid fa-users"></i> Tim
-                </button>
-                <button onclick="switchAdminTab('admin-feedback')" id="tab-admin-feedback" class="nav-tab admin-only-col hidden relative">
-                    <i class="fa-solid fa-inbox"></i> Laporan
-                    <span id="badge-admin-feedback" class="absolute right-4 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full hidden">0</span>
                 </button>
             </nav>
 
@@ -1073,6 +1077,19 @@
                     </button>
                 </div>
                 <nav id="admin-nav-tabs-mobile" class="flex-1 px-3 py-4 flex flex-col gap-1 overflow-y-auto">
+                    <!-- Admin Only -->
+                    <button onclick="switchAdminTab('dashboard'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-dashboard-m" class="nav-tab admin-only-col hidden text-blue-300">
+                        <i class="fa-solid fa-chart-pie"></i> Dashboard Admin
+                    </button>
+                    <button onclick="switchAdminTab('users'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-users-m" class="nav-tab admin-only-col hidden text-blue-300">
+                        <i class="fa-solid fa-users"></i> Tim / Pengguna
+                    </button>
+                    <button onclick="switchAdminTab('admin-feedback'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-admin-feedback-m" class="nav-tab admin-only-col hidden text-blue-300">
+                        <i class="fa-solid fa-inbox"></i> Laporan Admin
+                    </button>
+
+                    <div class="h-px bg-white/10 my-2 mx-2 admin-only-col hidden"></div>
+
                     <!-- Cloned JS tabs will control this but we'll manually map IDs for the active class logic -->
                     <button onclick="switchAdminTab('projects'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-projects-m" class="nav-tab active">
                         <i class="fa-regular fa-folder"></i> Projects
@@ -1086,15 +1103,17 @@
                     <button onclick="switchAdminTab('collage'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-collage-m" class="nav-tab photo-only-col hidden">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> Kolase
                     </button>
-                    <button onclick="switchAdminTab('panduan'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-panduan-m" class="nav-tab photo-only-col hidden">
-                        <i class="fa-solid fa-book-open"></i> Panduan
-                    </button>
+                    
                     <div class="h-px bg-white/10 my-2 mx-2"></div>
+                    
+                    <button onclick="switchAdminTab('panduan'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-panduan-m" class="nav-tab photo-only-col hidden">
+                        <i class="fa-solid fa-book-open"></i> Panduan Penggunaan
+                    </button>
                     <button onclick="switchAdminTab('premium-addon'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-premium-addon-m" class="nav-tab photo-only-col hidden">
                         <i class="fa-solid fa-crown text-amber-500"></i> Add-On PRO
                     </button>
                     <button onclick="switchAdminTab('settings'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-settings-m" class="nav-tab photo-only-col hidden">
-                        <i class="fa-solid fa-gear"></i> Pengaturan
+                        <i class="fa-solid fa-gear"></i> Pengaturan Studio
                     </button>
                     <button onclick="switchAdminTab('feedback'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-feedback-m" class="nav-tab photo-only-col hidden">
                         <i class="fa-regular fa-circle-question"></i> Bantuan & Laporan
@@ -1233,61 +1252,116 @@
                     </div>
                 </div>
 
-                <div id="section-projects" class="flex-1 flex flex-col">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                        <div>
-                            <h2 class="text-xl font-bold text-kama-800">Projects Overview</h2>
-                            <p class="text-sm text-gray-500">Kelola akses galeri client Anda.</p>
+                <div id="section-projects" class="hidden flex-1 flex-col">
+                    
+                    <!-- 4 Metric Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
+                            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl shrink-0">
+                                <i class="fa-solid fa-camera"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Project Aktif</p>
+                                <h4 class="text-2xl font-bold text-gray-800 leading-none mt-1" id="stat-active-projects">0</h4>
+                            </div>
                         </div>
-                        <div class="flex gap-2 w-full sm:w-auto">
-                            <button onclick="openSortirLokal()"
-                                class="bg-white border border-gray-200 text-kama-800 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors shadow-sm text-sm font-semibold flex items-center justify-center gap-2 flex-1 sm:flex-none">
-                                <i class="fa-solid fa-folder-tree text-blue-500"></i> Sortir Lokal
-                            </button>
-                            <button onclick="openModalCreate()"
-                                class="bg-primary-600 text-white px-5 py-2.5 rounded-xl hover:bg-primary-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-sm font-semibold flex items-center gap-2 flex-1 sm:flex-none justify-center">
-                                <i class="fa-solid fa-plus"></i> New Project
-                            </button>
+                        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
+                            <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center text-xl shrink-0">
+                                <i class="fa-solid fa-check-circle"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Sudah Submit</p>
+                                <h4 class="text-2xl font-bold text-gray-800 leading-none mt-1" id="stat-submitted-projects">0</h4>
+                            </div>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
+                            <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl shrink-0">
+                                <i class="fa-solid fa-clock-rotate-left"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Menunggu Review</p>
+                                <h4 class="text-2xl font-bold text-gray-800 leading-none mt-1" id="stat-review-projects">0</h4>
+                            </div>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
+                            <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center text-xl shrink-0">
+                                <i class="fa-solid fa-link"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Link (Bulan Ini)</p>
+                                <h4 class="text-2xl font-bold text-gray-800 leading-none mt-1" id="stat-total-links">0</h4>
+                            </div>
                         </div>
                     </div>
 
-                    <div
-                        class="bg-white rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-kama-100 flex-1 flex flex-col overflow-hidden">
-                        <div class="table-container flex-1">
-                            <table class="w-full text-left border-collapse whitespace-nowrap">
-                                <thead class="bg-gray-50/50 sticky top-0 z-10 backdrop-blur-md">
-                                    <tr>
-                                        <th
-                                            class="p-3 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">
-                                            <i class="fa-solid fa-user-tag text-gray-400 mr-1.5 hidden sm:inline"></i>
-                                            Info
-                                        </th>
-                                        <th
-                                            class="p-3 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 admin-only-col hidden">
-                                            <i class="fa-solid fa-user-tie text-gray-400 mr-1.5 hidden sm:inline"></i>
-                                            Pemilik
-                                        </th>
-                                        <th
-                                            class="p-3 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 text-center sm:text-left">
-                                            <i class="fa-solid fa-images text-gray-400 mr-1.5 hidden sm:inline"></i>
-                                            Quota
-                                        </th>
-                                        <th
-                                            class="p-3 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">
-                                            <i
-                                                class="fa-regular fa-calendar-days text-gray-400 mr-1.5 hidden sm:inline"></i>
-                                            Date
-                                        </th>
-                                        <th
-                                            class="p-3 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 text-right">
-                                            <i class="fa-solid fa-sliders text-gray-400 mr-1.5 hidden sm:inline"></i>
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody id="projectTableBody" class="divide-y divide-gray-50 text-sm">
-                                </tbody>
-                            </table>
+                    <div class="flex flex-col lg:flex-row gap-6 items-start h-full pb-8">
+                        
+                        <!-- Main Content: Project List -->
+                        <div class="flex-1 w-full flex flex-col min-h-[500px]">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                                <div>
+                                    <h2 class="text-xl font-bold text-gray-800">Daftar Project</h2>
+                                </div>
+                                <div class="flex gap-2 w-full sm:w-auto">
+                                    <button onclick="openModalCreate()" class="bg-blue-600 text-white px-5 py-2 rounded-xl hover:bg-blue-700 transition-all shadow-md text-sm font-semibold flex items-center gap-2 justify-center w-full sm:w-auto">
+                                        <i class="fa-solid fa-plus"></i> Buat Project Baru
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Tab Filters -->
+                            <div class="flex gap-4 border-b border-gray-200 mb-4 overflow-x-auto hide-scrollbar">
+                                <button class="pb-3 border-b-2 border-blue-600 text-blue-600 font-semibold text-sm whitespace-nowrap px-1">Semua Project</button>
+                                <button class="pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm whitespace-nowrap px-1">Menunggu Klien</button>
+                                <button class="pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm whitespace-nowrap px-1">Selesai</button>
+                            </div>
+
+                            <!-- Project List Container (Replaces old table) -->
+                            <div id="projectTableBody" class="flex flex-col gap-3">
+                                <!-- Cards will be injected here by renderProjectsTable -->
+                            </div>
+                        </div>
+
+                        <!-- Right Sidebar: Quick Start & Help -->
+                        <div class="w-full lg:w-[320px] flex flex-col gap-4 shrink-0">
+                            
+                            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
+                                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <i class="fa-solid fa-rocket text-blue-500"></i> Mulai Cepat
+                                </h3>
+                                <div class="flex flex-col gap-4 relative before:content-[''] before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-blue-100">
+                                    <div class="flex gap-3 relative z-10">
+                                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0 border-2 border-white shadow-sm">1</div>
+                                        <div>
+                                            <h4 class="font-bold text-sm text-gray-800">Upload Foto Mentah</h4>
+                                            <p class="text-[11px] text-gray-500 mt-0.5 leading-relaxed">Upload folder berisi ratusan/ribuan foto mentah ke Google Drive.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-3 relative z-10">
+                                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0 border-2 border-white shadow-sm">2</div>
+                                        <div>
+                                            <h4 class="font-bold text-sm text-gray-800">Buat Link Project</h4>
+                                            <p class="text-[11px] text-gray-500 mt-0.5 leading-relaxed">Masukkan link folder Drive tadi, atur maksimal pilihan, dan bagikan ke klien.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-3 relative z-10">
+                                        <div class="w-8 h-8 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center font-bold text-sm shrink-0 border-2 border-white shadow-sm">3</div>
+                                        <div>
+                                            <h4 class="font-bold text-sm text-gray-400">Tunggu & Sortir</h4>
+                                            <p class="text-[11px] text-gray-400 mt-0.5 leading-relaxed">Klien memilih dari HP mereka. Anda bisa langsung sort lokal.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 shadow-sm p-5 relative overflow-hidden">
+                                <i class="fa-regular fa-life-ring absolute -right-4 -top-4 text-6xl text-blue-500/10"></i>
+                                <h3 class="font-bold text-blue-800 text-sm mb-1">Butuh bantuan?</h3>
+                                <p class="text-xs text-blue-600/80 mb-3 leading-relaxed">Tim kami siap membantu kendala Anda kapan saja.</p>
+                                <button onclick="switchAdminTab('feedback')" class="w-full bg-white border border-blue-200 text-blue-700 py-2 rounded-xl text-xs font-bold hover:bg-blue-50 transition-colors">
+                                    Hubungi Support
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1371,9 +1445,8 @@
                         </div>
                     </div>
 
-                    <div
-                        class="bg-white rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-kama-100 flex-1 flex flex-col overflow-hidden mb-6">
-                        <div class="p-4 border-b border-gray-100 bg-gray-50/50">
+                    <div class="bg-white rounded-2xl shadow-sm border border-kama-100 flex flex-col mb-6">
+                        <div class="p-4 border-b border-gray-100 bg-gray-50/50 rounded-t-2xl">
                             <div class="relative">
                                 <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-gray-400"></i>
                                 <input type="text" id="search-client-status" onkeyup="filterClientStatus()"
@@ -1381,7 +1454,7 @@
                                     class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:border-kama-800 focus:ring-1 focus:ring-kama-800 outline-none text-sm transition-colors shadow-sm">
                             </div>
                         </div>
-                        <div class="overflow-y-auto flex-1 p-4 bg-gray-50/30" id="client-status-container">
+                        <div class="p-4 bg-gray-50/30 min-h-[300px]" id="client-status-container">
                             <div class="text-center py-10 text-gray-400 text-sm font-medium"><i
                                     class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat data...</div>
                         </div>
@@ -4369,8 +4442,17 @@
             if (!tbody) return;
             tbody.innerHTML = '';
 
+            var statActive = 0, statSubmitted = 0, statReview = 0, statTotal = data ? data.length : 0;
+            if(data) {
+                data.forEach(function(row) {
+                    statActive++; // Todo: implement actual status checking
+                });
+            }
+            if(document.getElementById('stat-active-projects')) document.getElementById('stat-active-projects').innerText = statActive;
+            if(document.getElementById('stat-total-links')) document.getElementById('stat-total-links').innerText = statTotal;
+
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-gray-400 italic">Belum ada project.</td></tr>'; return;
+                tbody.innerHTML = '<div class="text-center p-8 text-gray-400 italic bg-white rounded-2xl border border-gray-100 shadow-sm">Belum ada project.</div>'; return;
             }
 
             data.forEach(function (row) {
@@ -4387,59 +4469,62 @@
                     : row.Token;
 
                 var dateStr = row['Dibuat Pada'] ? row['Dibuat Pada'].toString() : '-';
-                var dateFull = dateStr;
-                var tr = document.createElement('tr');
-                tr.className = "hover:bg-kama-50/50 transition-colors group";
-
-                // --- PENGAMAN TAMPILAN (ANTI-XSS) ---
                 var rawName = row['Nama Client'] || '-';
-                // Fallback darurat jika fungsi escapeHTML belum terbaca
                 var safeHTMLName = typeof escapeHTML === 'function' ? escapeHTML(rawName) : rawName.replace(/</g, "&lt;").replace(/>/g, "&gt;");
                 var safePass = row['Password Client'] ? escapeHTML(String(row['Password Client'])) : "(tanpa password)";
-
-                // --- PENGAMAN TOMBOL ONCLICK ---
                 var safeJSName = rawName.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                var maxFoto = row['Max Foto'] || 0;
+
+                var card = document.createElement('div');
+                card.className = "bg-white border border-gray-200 rounded-2xl p-4 flex flex-col sm:flex-row gap-4 sm:items-center hover:shadow-md transition-shadow relative overflow-hidden group";
 
                 var isUserAdmin = currentUser && currentUser.role === 'Admin';
                 var ownerRaw = row.Owner || '-';
                 var safeOwner = typeof escapeHTML === 'function' ? escapeHTML(ownerRaw) : ownerRaw.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                var ownerHtml = isUserAdmin ? '<td class="p-4 sm:px-6 admin-only-col"><span class="bg-indigo-50 text-indigo-700 text-xs px-2 py-1 rounded border border-indigo-100"><i class="fa-solid fa-user-astronaut mr-1"></i>' + safeOwner + '</span></td>' : '<td class="admin-only-col hidden"></td>';
+                var ownerBadge = isUserAdmin ? '<span class="bg-indigo-50 text-indigo-700 text-[10px] px-2 py-0.5 rounded-full font-bold ml-2"><i class="fa-solid fa-user-astronaut mr-1"></i>' + safeOwner + '</span>' : '';
 
                 var isWmOn = row['UseWatermark'] === true || String(row['UseWatermark']).toUpperCase() === 'TRUE' || row['UseWatermark'] === 1;
-                var wmBtnClass = isWmOn ? "bg-green-50/50 text-green-700 border-green-200 hover:bg-green-100 hover:border-green-300" : "bg-white text-gray-400 border-gray-200 hover:bg-gray-50 hover:text-gray-700";
+                var wmBtnClass = isWmOn ? "bg-green-50 text-green-600 border-green-200 hover:bg-green-100" : "bg-white text-gray-400 border-gray-200 hover:bg-gray-50 hover:text-gray-600";
                 var wmIcon = isWmOn ? "fa-droplet" : "fa-droplet-slash";
-                var wmText = isWmOn ? "Watermark ON" : "Watermark OFF";
-                var wmBtnHtml = '<button onclick="toggleWatermarkStatus(\'' + row.ID + '\')" class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg transition-colors flex items-center justify-center text-xs font-semibold border ' + wmBtnClass + '" title="' + wmText + '">' +
-                    '<i class="fa-solid ' + wmIcon + ' sm:mr-1.5"></i> <span class="hidden sm:inline">' + wmText + '</span>' +
-                    '</button>';
 
-                tr.innerHTML =
-                    '<td class="p-3 sm:px-6 max-w-[200px]">' +
-                    '<div class="font-bold text-kama-800 truncate" title="' + safeHTMLName + '">' + safeHTMLName + '</div>' +
-                    '<div class="text-[11px] text-blue-500 font-medium mt-0.5 truncate w-full" title="' + displayLink + '"><i class="fa-solid fa-link mr-1 opacity-50 hidden sm:inline"></i>' + displayedTokenOrLink + '</div>' +
-                    '</td>' +
-                    ownerHtml +
-                    '<td class="p-3 sm:px-6 text-center sm:text-left">' +
-                    '<span class="bg-gray-100 text-kama-800 text-xs font-bold px-2.5 py-1 rounded-md border border-gray-200 whitespace-nowrap">' + (row['Max Foto'] || 0) + ' pics</span>' +
-                    '</td>' +
-                    '<td class="p-3 sm:px-6 text-xs text-gray-500 font-medium whitespace-nowrap">' + dateFull + '</td>' +
-                    '<td class="p-3 sm:px-6 text-right">' +
-                    '<div class="flex items-center justify-end gap-1.5 sm:gap-2 flex-nowrap">' +
-                    '<button onclick="copyProjectInfo(\'' + safeJSName + '\', \'' + displayLink + '\', \'' + safePass + '\')" class="w-auto px-3 py-1.5 rounded-lg bg-white text-gray-600 hover:bg-gray-50 hover:text-kama-800 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200" title="Copy Link">' +
-                    '<i class="fa-regular fa-copy mr-1.5"></i> <span>Copy</span>' +
-                    '</button>' +
-                    '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="w-auto px-3 py-1.5 rounded-lg bg-white text-blue-600 hover:bg-blue-50 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200 hover:border-blue-200" title="Lihat Galeri">' +
-                    '<i class="fa-regular fa-eye mr-1.5"></i> <span>' + (localStorage.getItem('ps_lang') === 'en' ? 'View' : 'Lihat') + '</span>' +
-                    '</button>' +
-                    '<button onclick="editPasswordPrompt(\'' + row.ID + '\', \'' + safeJSName + '\')" class="w-auto px-3 py-1.5 rounded-lg bg-white text-amber-500 hover:bg-amber-50 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200 hover:border-amber-200" title="Edit Password">' +
-                    '<i class="fa-solid fa-key mr-1.5"></i> <span>Password</span>' +
-                    '</button>' +
-                    '<button onclick="deleteProject(\'' + row.ID + '\')" class="w-auto px-3 py-1.5 rounded-lg bg-white text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors flex items-center justify-center text-xs font-semibold border border-gray-200 hover:border-red-200" title="Hapus Project">' +
-                    '<i class="fa-solid fa-trash-can mr-1.5"></i> <span>' + (localStorage.getItem('ps_lang') === 'en' ? 'Delete' : 'Hapus') + '</span>' +
-                    '</button>' +
+                var actionHtml = 
+                    '<button onclick="copyProjectInfo(\'' + safeJSName + '\', \'' + displayLink + '\', \'' + safePass + '\')" class="bg-white border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-300 w-9 h-9 flex items-center justify-center rounded-xl transition-colors shadow-sm" title="Copy Link">' +
+                    '<i class="fa-regular fa-copy"></i></button>' +
+                    '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="bg-white border border-gray-200 text-gray-600 hover:text-green-600 hover:border-green-300 w-9 h-9 flex items-center justify-center rounded-xl transition-colors shadow-sm" title="Lihat Galeri">' +
+                    '<i class="fa-solid fa-arrow-up-right-from-square"></i></button>' +
+                    '<button onclick="editPasswordPrompt(\'' + row.ID + '\', \'' + safeJSName + '\')" class="bg-white border border-gray-200 text-gray-600 hover:text-amber-500 hover:border-amber-300 w-9 h-9 flex items-center justify-center rounded-xl transition-colors shadow-sm" title="Edit Password">' +
+                    '<i class="fa-solid fa-key"></i></button>' +
+                    '<button onclick="toggleWatermarkStatus(\'' + row.ID + '\')" class="border w-9 h-9 flex items-center justify-center rounded-xl transition-colors shadow-sm ' + wmBtnClass + '" title="Toggle Watermark">' +
+                    '<i class="fa-solid ' + wmIcon + '"></i></button>' +
+                    '<button onclick="deleteProject(\'' + row.ID + '\')" class="bg-white border border-gray-200 text-gray-400 hover:text-red-600 hover:border-red-300 hover:bg-red-50 w-9 h-9 flex items-center justify-center rounded-xl transition-colors shadow-sm" title="Hapus Project">' +
+                    '<i class="fa-solid fa-trash-can"></i></button>';
+
+                card.innerHTML = 
+                    '<div class="flex gap-1 shrink-0 bg-gray-100 rounded-xl p-1 overflow-hidden h-[80px] w-[120px]">' +
+                    '<div class="w-2/3 h-full bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center"><i class="fa-solid fa-image text-gray-400 text-2xl"></i></div>' +
+                    '<div class="w-1/3 h-full flex flex-col gap-1">' +
+                    '<div class="h-1/2 bg-gray-200 rounded-md overflow-hidden flex items-center justify-center"><i class="fa-solid fa-image text-gray-400 text-xs"></i></div>' +
+                    '<div class="h-1/2 bg-gray-800 rounded-md flex items-center justify-center text-[10px] font-bold text-white">+' + maxFoto + '</div>' +
+                    '</div></div>' +
+                    
+                    '<div class="flex-1 min-w-0 flex flex-col">' +
+                    '<div class="flex items-center gap-2 mb-1"><span class="bg-blue-50 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold">Project</span><span class="text-xs text-gray-400 font-medium">' + dateStr + '</span>' + ownerBadge + '</div>' +
+                    '<h3 class="font-bold text-gray-800 truncate text-base leading-tight">' + safeHTMLName + '</h3>' +
+                    '<p class="text-xs text-blue-600 mt-1 truncate"><i class="fa-solid fa-link mr-1"></i> ' + displayedTokenOrLink + '</p>' +
+                    '<p class="text-[10px] text-gray-500 mt-1"><i class="fa-solid fa-lock text-gray-400 mr-1"></i>' + safePass + '</p>' +
                     '</div>' +
-                    '</td>';
-                tbody.appendChild(tr);
+                    
+                    '<div class="shrink-0 flex items-center justify-end sm:justify-center w-full sm:w-[100px]">' +
+                    '<div class="bg-green-50 text-green-700 border border-green-200 text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5">' +
+                    '<div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>Aktif</div></div>' +
+                    
+                    '<div class="shrink-0 w-full sm:w-[140px] flex flex-col justify-center">' +
+                    '<div class="flex justify-between text-[11px] font-semibold text-gray-600 mb-1"><span>Quota Max</span><span class="text-gray-800">' + maxFoto + '</span></div>' +
+                    '<div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden"><div class="bg-blue-500 h-full rounded-full" style="width: 100%"></div></div></div>' +
+                    
+                    '<div class="shrink-0 flex items-center gap-1.5 w-full sm:w-auto mt-3 sm:mt-0 pt-3 sm:pt-0 border-t border-gray-100 sm:border-0 justify-end">' + actionHtml + '</div>';
+                
+                tbody.appendChild(card);
             });
         }
 
