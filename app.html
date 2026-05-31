@@ -65,27 +65,6 @@
         }, 2000);
     </script>
 
-    <div id="previewModal"
-        class="fixed inset-0 bg-white z-[9990] hidden flex flex-col transition-opacity duration-300 opacity-0">
-        <header
-            class="glass-header px-4 sm:px-6 py-3 flex justify-between items-center border-b border-gray-100 shrink-0">
-            <div class="flex items-center gap-3">
-                <button onclick="closePreviewSelected()"
-                    class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center justify-center transition-colors shadow-sm">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </button>
-                <h2 class="font-bold text-lg text-kama-800 tracking-tight">Preview Pilihan</h2>
-            </div>
-            <div
-                class="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg shadow-sm">
-                <span id="preview-count">0</span> Foto
-            </div>
-        </header>
-        <div class="flex-1 overflow-y-auto bg-kama-50 scrollable-content relative">
-            <div id="preview-grid" class="gallery-grid max-w-[1600px] mx-auto pb-8"></div>
-        </div>
-    </div>
-
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -4252,6 +4231,8 @@
             var sectionAdminFeedback = document.getElementById('section-admin-feedback');
             var sectionPremiumAddon = document.getElementById('section-premium-addon');
             var sectionCollage = document.getElementById('section-collage');
+            var sectionSettings = document.getElementById('section-settings');
+            var sectionSortirLokal = document.getElementById('section-sortir-lokal');
 
             if (sectionDash && sectionDash.classList) { sectionDash.classList.remove('flex'); sectionDash.classList.add('hidden'); }
             if (sectionProj && sectionProj.classList) { sectionProj.classList.remove('flex'); sectionProj.classList.add('hidden'); }
@@ -4262,6 +4243,8 @@
             if (sectionAdminFeedback && sectionAdminFeedback.classList) { sectionAdminFeedback.classList.remove('flex'); sectionAdminFeedback.classList.add('hidden'); }
             if (sectionPremiumAddon && sectionPremiumAddon.classList) { sectionPremiumAddon.classList.remove('flex'); sectionPremiumAddon.classList.add('hidden'); }
             if (sectionCollage && sectionCollage.classList) { sectionCollage.classList.remove('flex'); sectionCollage.classList.add('hidden'); }
+            if (sectionSettings && sectionSettings.classList) { sectionSettings.classList.remove('flex'); sectionSettings.classList.add('hidden'); }
+            if (sectionSortirLokal && sectionSortirLokal.classList) { sectionSortirLokal.classList.remove('flex'); sectionSortirLokal.classList.add('hidden'); }
 
             // FIX: Matikan robot setiap kali pindah menu agar hemat memori
             clearInterval(autoRefreshInterval);
