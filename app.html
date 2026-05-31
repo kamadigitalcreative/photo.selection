@@ -1901,6 +1901,319 @@
                 </div>
 
             </div>
+
+                <!-- SECTION SORTIR LOKAL -->
+                <div id="section-sortir-lokal" class="hidden flex-1 flex-col max-w-[1400px] mx-auto w-full pb-10">
+                    
+                    <!-- HEADER -->
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 pt-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-kama-800 tracking-tight">Sortir Lokal (Otomatis ZIP)</h2>
+                            <p class="text-sm text-gray-500 mt-1">Pilih folder foto master, tempel daftar nama file klien, dan kami akan siapkan ZIP otomatis untuk Anda.</p>
+                        </div>
+                        <div class="bg-blue-50 border border-blue-100 px-4 py-3 rounded-xl flex items-start gap-3 shadow-sm max-w-sm">
+                            <i class="fa-regular fa-star text-blue-500 text-lg mt-0.5"></i>
+                            <div>
+                                <h4 class="text-xs font-bold text-blue-800">Fitur Andalan untuk Fotografer</h4>
+                                <p class="text-[10px] text-blue-600/80 leading-relaxed mt-0.5">Hemat waktu, kurangi human error, fokus ke karya terbaik.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEPPER -->
+                    <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm mb-8 flex items-center justify-between overflow-x-auto hide-scrollbar gap-4">
+                        <!-- Step 1 -->
+                        <div class="flex items-center gap-3 shrink-0 opacity-100 transition-opacity" id="step1-indicator">
+                            <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm transition-colors" id="step1-circle">1</div>
+                            <div>
+                                <h4 class="text-sm font-bold text-gray-800">Pilih Folder Master</h4>
+                                <p class="text-[10px] text-gray-500">Pilih folder sumber foto Anda</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300 text-sm shrink-0"></i>
+                        <!-- Step 2 -->
+                        <div class="flex items-center gap-3 shrink-0 opacity-100 transition-opacity" id="step2-indicator">
+                            <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm transition-colors" id="step2-circle">2</div>
+                            <div>
+                                <h4 class="text-sm font-bold text-gray-800">Tempel List Foto Klien</h4>
+                                <p class="text-[10px] text-gray-500">Paste daftar nama/nomor file klien</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300 text-sm shrink-0"></i>
+                        <!-- Step 3 -->
+                        <div class="flex items-center gap-3 shrink-0 opacity-50 transition-opacity" id="step3-indicator">
+                            <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-sm transition-colors" id="step3-circle">3</div>
+                            <div>
+                                <h4 class="text-sm font-bold text-gray-800">Proses ZIP</h4>
+                                <p class="text-[10px] text-gray-500">Sistem menyiapkan & download ZIP</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="sortForm" onsubmit="handleProsesSorter(event)">
+                        <!-- GRID LAYOUT -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                            
+                            <!-- LEFT COLUMN (Main Action) -->
+                            <div class="lg:col-span-2 flex flex-col gap-6">
+                                
+                                <!-- Card 1: Pilih Folder -->
+                                <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                                    <div class="flex items-center gap-2 mb-4">
+                                        <h3 class="text-sm font-bold text-gray-800">1. Pilih Folder Master</h3>
+                                        <i class="fa-regular fa-circle-question text-gray-400 text-xs cursor-pointer hover:text-blue-500 transition-colors" title="Folder yang berisi semua foto asli"></i>
+                                    </div>
+                                    <div class="file-upload-wrapper w-full">
+                                        <button type="button" class="w-full bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-100 hover:border-blue-300 transition-all duration-200 group relative">
+                                            <i class="fa-regular fa-folder-open text-4xl text-blue-500 mb-3 block group-hover:scale-110 transition-transform"></i>
+                                            <span class="text-gray-800 font-bold text-sm">Klik untuk memilih / tambah Folder Master</span>
+                                            <p class="text-xs text-gray-400 mt-1">atau drag & drop folder di sini</p>
+                                            <input type="file" id="sourceDirectory" webkitdirectory directory multiple onchange="updateFolderInfo()" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                        </button>
+                                    </div>
+                                    <div id="folderInfo" class="mt-4 flex items-center gap-2 text-xs text-gray-500 font-medium">
+                                        <i class="fa-regular fa-folder text-gray-400"></i> Belum ada folder dipilih
+                                    </div>
+                                    <div id="folderInfoActive" class="mt-4 items-center justify-between text-sm bg-blue-50/50 p-3 rounded-lg border border-blue-100 hidden">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-check-circle text-blue-500"></i>
+                                            <span class="text-blue-900 font-bold"><span id="fileCount">0</span> file siap diproses.</span>
+                                        </div>
+                                        <button type="button" onclick="clearUploadedFiles()" class="text-red-500 hover:text-red-700 text-xs font-bold px-3 py-1.5 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-100">
+                                            Hapus
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Card 2: Paste List -->
+                                <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                                    <div class="flex items-center gap-2 mb-4">
+                                        <h3 class="text-sm font-bold text-gray-800">2. Tempel List Foto Klien</h3>
+                                        <i class="fa-regular fa-circle-question text-gray-400 text-xs cursor-pointer hover:text-blue-500 transition-colors" title="Paste list dari WhatsApp klien"></i>
+                                    </div>
+                                    <div class="relative">
+                                        <textarea id="targetNames" rows="8" oninput="updateLineCount()" class="w-full px-4 py-4 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all font-mono text-sm resize-y custom-scrollbar" placeholder="Contoh:&#10;1. DSC_0012.JPG&#10;2. DSC_0055.JPG&#10;3. DSC_0100.JPG&#10;..."></textarea>
+                                        <div class="absolute bottom-3 right-3 text-xs text-gray-400 font-medium bg-white/80 backdrop-blur px-2 py-1 rounded shadow-sm border border-gray-100"><span id="lineCount">0</span> baris</div>
+                                    </div>
+                                    <div class="mt-3 flex items-start gap-2 text-[11px] text-gray-500 bg-blue-50/30 p-2.5 rounded-lg border border-blue-50">
+                                        <i class="fa-solid fa-circle-info text-blue-400 mt-0.5"></i>
+                                        <p>Satu nama file per baris. Gunakan nama file lengkap termasuk ekstensi (contoh: DSC_0012.JPG)</p>
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="flex items-center gap-4 mt-2">
+                                    <button type="button" onclick="clearUploadedFiles(); document.getElementById('targetNames').value=''; updateLineCount();" class="px-6 py-3.5 bg-white border border-gray-200 text-gray-600 text-sm font-bold rounded-xl hover:bg-gray-50 hover:text-gray-800 transition-colors flex items-center gap-2 shadow-sm shrink-0">
+                                        <i class="fa-solid fa-rotate-right"></i> Reset
+                                    </button>
+                                    <button type="submit" id="btnProsesZIP" class="w-full py-3.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 shadow-[0_4px_12px_rgba(37,99,235,0.2)] hover:shadow-[0_6px_16px_rgba(37,99,235,0.3)] transition-all flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-file-zipper"></i> Proses & Download ZIP
+                                    </button>
+                                </div>
+
+                                <!-- Progress Area -->
+                                <div id="progressArea" class="hidden bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-inner mt-2">
+                                    <div class="flex justify-between items-center text-sm mb-3">
+                                        <span class="font-bold text-gray-800 flex items-center gap-2">
+                                            <i class="fa-solid fa-circle-notch fa-spin text-blue-500"></i>
+                                            <span id="progressStatus">Sistem sedang menyiapkan ZIP...</span>
+                                        </span>
+                                        <span class="font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded" id="progressPercent">0%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                        <div class="bg-blue-500 h-2 rounded-full transition-all duration-300" id="progressBar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- RIGHT COLUMN (Info & Summary) -->
+                            <div class="lg:col-span-1 flex flex-col gap-6">
+                                
+                                <!-- Card: Info & Panduan -->
+                                <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                                    <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                        <i class="fa-solid fa-book-open text-blue-500"></i> Informasi & Panduan
+                                    </h3>
+                                    
+                                    <div class="mb-5">
+                                        <h4 class="text-xs font-bold text-gray-600 mb-2">Format yang didukung</h4>
+                                        <div class="flex flex-wrap gap-1.5">
+                                            <span class="text-[10px] font-mono bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200">.JPG</span>
+                                            <span class="text-[10px] font-mono bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200">.JPEG</span>
+                                            <span class="text-[10px] font-mono bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200">.PNG</span>
+                                            <span class="text-[10px] font-mono bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200">.HEIC</span>
+                                            <span class="text-[10px] font-mono bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200">.CR2</span>
+                                            <span class="text-[10px] font-mono bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200">.ARW</span>
+                                            <span class="text-[10px] text-gray-400 px-1 py-1">+ lainnya</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <h4 class="text-xs font-bold text-gray-600 mb-2">Tips terbaik</h4>
+                                        <ul class="text-xs text-gray-500 space-y-2">
+                                            <li class="flex items-start gap-2">
+                                                <i class="fa-solid fa-check text-blue-500 mt-0.5"></i>
+                                                <span>Pastikan nama file sama persis (case sensitive).</span>
+                                            </li>
+                                            <li class="flex items-start gap-2">
+                                                <i class="fa-solid fa-check text-blue-500 mt-0.5"></i>
+                                                <span>Satu nama file per baris.</span>
+                                            </li>
+                                            <li class="flex items-start gap-2">
+                                                <i class="fa-solid fa-check text-blue-500 mt-0.5"></i>
+                                                <span>Gunakan <b class="text-blue-600">ekstensi file</b>.</span>
+                                            </li>
+                                            <li class="flex items-start gap-2">
+                                                <i class="fa-solid fa-check text-blue-500 mt-0.5"></i>
+                                                <span>Folder master tidak boleh dipindah saat proses.</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Card: Ringkasan Deteksi -->
+                                <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                                    <div class="flex items-center gap-2 mb-4">
+                                        <h3 class="text-sm font-bold text-gray-800">Ringkasan Deteksi</h3>
+                                        <i class="fa-regular fa-circle-question text-gray-400 text-xs cursor-pointer hover:text-blue-500 transition-colors" title="Deteksi real-time"></i>
+                                    </div>
+                                    
+                                    <div class="flex flex-col gap-3">
+                                        <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-xl">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-lg bg-green-100 text-green-600 flex items-center justify-center shrink-0">
+                                                    <i class="fa-solid fa-check-double text-xs"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs font-bold text-gray-700">Ditemukan</h4>
+                                                    <p class="text-[9px] text-gray-400 mt-0.5">File yang ditemukan di folder master</p>
+                                                </div>
+                                            </div>
+                                            <span class="text-lg font-black text-green-600" id="detect-found">0</span>
+                                        </div>
+                                        
+                                        <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-xl">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-lg bg-red-100 text-red-500 flex items-center justify-center shrink-0">
+                                                    <i class="fa-solid fa-ban text-xs"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs font-bold text-gray-700">Tidak Ditemukan</h4>
+                                                    <p class="text-[9px] text-gray-400 mt-0.5">File yang tidak ditemukan</p>
+                                                </div>
+                                            </div>
+                                            <span class="text-lg font-black text-red-500" id="detect-missing">0</span>
+                                        </div>
+                                        
+                                        <div class="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-xl">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-lg bg-blue-200 text-blue-700 flex items-center justify-center shrink-0">
+                                                    <i class="fa-solid fa-box-archive text-xs"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 class="text-xs font-bold text-blue-900">Siap Diproses</h4>
+                                                    <p class="text-[9px] text-blue-600/70 mt-0.5">File yang akan dikemas ke ZIP</p>
+                                                </div>
+                                            </div>
+                                            <span class="text-lg font-black text-blue-700" id="detect-ready">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Security Notice -->
+                                <div class="bg-blue-50/50 border border-blue-100 rounded-2xl p-5 flex gap-3 shadow-sm">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-blue-500 text-lg mt-0.5"></i>
+                                    <div>
+                                        <h4 class="text-xs font-bold text-blue-800">100% di perangkat Anda</h4>
+                                        <p class="text-[10px] text-blue-600/80 leading-relaxed mt-1">Semua proses dilakukan secara lokal di perangkat Anda. File tidak diunggah ke server manapun.</p>
+                                    </div>
+                                    <i class="fa-solid fa-shield-halved text-blue-200 text-2xl ml-auto mt-2"></i>
+                                </div>
+
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- HASIL PROSES -->
+                    <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5 pb-4 border-b border-gray-100">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-sm font-bold text-gray-800">Hasil Proses</h3>
+                                    <i class="fa-regular fa-circle-question text-gray-400 text-xs cursor-pointer hover:text-blue-500 transition-colors"></i>
+                                </div>
+                                <p class="text-[11px] text-gray-500 mt-1">Ringkasan hasil akan muncul setelah proses dijalankan.</p>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="text-right">
+                                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Status</p>
+                                    <span class="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full border border-gray-200" id="resStatusBadge">Belum diproses</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Found Result -->
+                            <div class="flex items-center p-4 border border-gray-100 rounded-xl hover:shadow-sm transition-shadow">
+                                <div class="w-10 h-10 rounded-xl bg-green-50 text-green-500 flex items-center justify-center shrink-0 border border-green-100 mr-4">
+                                    <i class="fa-regular fa-square-check text-lg"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-gray-800">Ditemukan</h4>
+                                    <div class="flex items-baseline gap-1 mt-0.5">
+                                        <span class="text-lg font-black text-gray-800" id="resFoundCount">0</span>
+                                        <span class="text-[10px] text-gray-500">file</span>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 mt-0.5 font-mono" id="resFoundSize">0 B</p>
+                                </div>
+                            </div>
+
+                            <!-- Missing Result -->
+                            <div class="flex items-center p-4 border border-gray-100 rounded-xl hover:shadow-sm transition-shadow">
+                                <div class="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center shrink-0 border border-red-100 mr-4">
+                                    <i class="fa-solid fa-ban text-lg"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-gray-800">Tidak Ditemukan</h4>
+                                    <div class="flex items-baseline gap-1 mt-0.5">
+                                        <span class="text-lg font-black text-gray-800" id="resMissingCount">0</span>
+                                        <span class="text-[10px] text-gray-500">file</span>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 mt-0.5 font-mono" id="resMissingSize">0 B</p>
+                                </div>
+                            </div>
+
+                            <!-- Ready/Zipped Result -->
+                            <div class="flex items-center p-4 border border-gray-100 rounded-xl hover:shadow-sm transition-shadow">
+                                <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0 border border-blue-100 mr-4">
+                                    <i class="fa-regular fa-file-zipper text-lg"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-gray-800">Siap Diproses</h4>
+                                    <div class="flex items-baseline gap-1 mt-0.5">
+                                        <span class="text-lg font-black text-gray-800" id="resReadyCount">0</span>
+                                        <span class="text-[10px] text-gray-500">file</span>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 mt-0.5 font-mono" id="resReadySize">0 B</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Missing files details -->
+                        <div id="missingFilesArea" class="hidden mt-6 pt-5 border-t border-gray-100">
+                            <h4 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Detail File Tidak Ditemukan
+                            </h4>
+                            <div class="bg-amber-50/50 border border-amber-100 rounded-xl p-4 max-h-40 overflow-y-auto custom-scrollbar">
+                                <ul id="missingFilesList" class="text-[11px] font-mono text-amber-800 space-y-1">
+                                    <!-- Dynamic -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
         </main>
 
         <footer class="bg-white border-t border-gray-100 py-3 text-center text-[10px] text-gray-400">
@@ -2328,77 +2641,6 @@
         </div>
     </div>
 
-    <div id="local-sorter-view" class="view-section bg-kama-50 min-h-screen">
-        <header class="glass-header px-6 py-4 flex items-center sticky top-0 gap-4 shadow-sm">
-            <button onclick="closeSortirLokal()"
-                class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center justify-center transition-colors">
-                <i class="fa-solid fa-arrow-left"></i>
-            </button>
-            <div>
-                <h1 class="font-bold text-lg text-kama-800 leading-tight">Sortir File Lokal (Otomatis ZIP)</h1>
-                <p class="text-xs text-gray-500">Pilih folder foto master, paste list klien, jadikan satu ZIP</p>
-            </div>
-        </header>
-
-        <main class="scrollable-content p-4 sm:p-8">
-            <div
-                class="max-w-3xl mx-auto bg-white rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-kama-100 p-6 sm:p-8">
-                <form id="sortForm" onsubmit="handleProsesSorter(event)">
-                    <div class="mb-6">
-                        <label class="block text-sm font-bold text-kama-800 mb-2">1. Pilih Folder Sumber (Bisa pilih
-                            lebih dari 1 folder)</label>
-                        <div class="file-upload-wrapper w-full">
-                            <button type="button"
-                                class="w-full bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-100 transition duration-200">
-                                <i class="fa-regular fa-folder-open text-3xl text-gray-400 mb-3 block"></i>
-                                <span class="text-kama-800 font-medium">Klik untuk memilih / tambah Folder Master</span>
-                                <input type="file" id="sourceDirectory" webkitdirectory directory multiple
-                                    onchange="updateFolderInfo()">
-                            </button>
-                        </div>
-                        <div id="folderInfo"
-                            class="mt-3 text-sm text-kama-800 font-medium hidden bg-blue-50 p-3 rounded-lg border border-blue-100 flex justify-between items-center">
-                            <div><i class="fa-solid fa-check-circle text-blue-500 mr-1"></i> <span
-                                    id="fileCount">0</span> file siap diproses.</div>
-                            <button type="button" onclick="clearUploadedFiles()"
-                                class="text-red-500 hover:text-red-700 text-xs font-bold px-3 py-1.5 bg-red-100 rounded-lg transition-colors">Reset</button>
-                        </div>
-                    </div>
-
-                    <div class="mb-6">
-                        <label class="block text-sm font-bold text-kama-800 mb-2">2. Paste Nama/Nomor Foto Klien</label>
-                        <textarea id="targetNames" rows="6"
-                            class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-kama-800 outline-none transition font-mono text-sm"
-                            placeholder="Contoh:&#10;1. DSC_0012.JPG&#10;2. DSC_0055.JPG"></textarea>
-                    </div>
-
-                    <div id="progressArea" class="mb-6 hidden bg-gray-50 p-4 rounded-xl border border-gray-200">
-                        <div class="flex justify-between text-sm mb-2">
-                            <span class="font-bold text-kama-800" id="progressStatus">Memproses...</span>
-                            <span class="font-bold text-gray-700" id="progressPercent">0%</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                            <div id="progressBar" class="bg-kama-800 h-2.5 rounded-full transition-all duration-300"
-                                style="width: 0%"></div>
-                        </div>
-                        <div class="text-xs text-gray-500 mt-2 font-medium" id="progressDetail">Menyiapkan file...</div>
-                    </div>
-
-                    <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-100">
-                        <button type="button" id="btnCancelSorter" onclick="handleCancelSorter()" disabled
-                            class="px-6 py-3 bg-white border border-gray-200 text-red-500 text-sm font-bold rounded-xl hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">
-                            Cancel Proses
-                        </button>
-                        <button type="submit" id="btnProsesSorter"
-                            class="flex-1 bg-primary-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-primary-700 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all relative flex justify-center items-center gap-2">
-                            <i class="fa-solid fa-file-zipper" id="iconProsesSorter"></i> <span>Proses & Download
-                                ZIP</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </main>
-        </div> <!-- End of MAIN CONTENT CONTAINER -->
     </div>
 
     <div id="client-auth-view" class="view-section relative hero-pattern-bg">
@@ -4279,8 +4521,8 @@
                 // Data Pantau Klien kini otomatis disinkronkan oleh robot 'silentFetchData' 
                 // secara diam-diam. Menghapus ini mencegah aplikasi menembak server 2x lipat.
             } else if (tabId === 'sortir-lokal') {
-                showView('local-sorter-view');
-                return; // Keluar dari fungsi karena ini adalah view yang berbeda (full screen)
+                var sectionSortirLokal = document.getElementById('section-sortir-lokal');
+                if (sectionSortirLokal) { sectionSortirLokal.classList.remove('hidden'); sectionSortirLokal.classList.add('flex'); }
             } else if (tabId === 'panduan') {
                 if (sectionPanduan) { sectionPanduan.classList.remove('hidden'); sectionPanduan.classList.add('flex'); }
             } else if (tabId === 'settings') {
@@ -5334,9 +5576,20 @@
         var isCancelledSorter = false;
         var uploadedFilesSorter = [];
 
+        function updateLineCount() {
+            var textarea = document.getElementById('targetNames');
+            var lineCount = document.getElementById('lineCount');
+            if (textarea && lineCount) {
+                var text = textarea.value.trim();
+                var lines = text ? text.split('\n').filter(l => l.trim().length > 0).length : 0;
+                lineCount.textContent = lines;
+            }
+        }
+
         function updateFolderInfo() {
             var fileInput = document.getElementById('sourceDirectory');
             var folderInfo = document.getElementById('folderInfo');
+            var folderInfoActive = document.getElementById('folderInfoActive');
             var fileCountSpan = document.getElementById('fileCount');
 
             if (fileInput && fileInput.files && fileInput.files.length > 0) {
@@ -5350,7 +5603,8 @@
                 });
 
                 if (fileCountSpan) fileCountSpan.textContent = uploadedFilesSorter.length;
-                if (folderInfo && folderInfo.classList) folderInfo.classList.remove('hidden');
+                if (folderInfo && folderInfo.classList) { folderInfo.classList.add('hidden'); }
+                if (folderInfoActive && folderInfoActive.classList) { folderInfoActive.classList.remove('hidden'); folderInfoActive.classList.add('flex'); }
             }
             if (fileInput) fileInput.value = "";
         }
@@ -5358,9 +5612,22 @@
         function clearUploadedFiles() {
             uploadedFilesSorter = [];
             var folderInfo = document.getElementById('folderInfo');
-            if (folderInfo && folderInfo.classList) folderInfo.classList.add('hidden');
+            var folderInfoActive = document.getElementById('folderInfoActive');
+            if (folderInfo && folderInfo.classList) { folderInfo.classList.remove('hidden'); }
+            if (folderInfoActive && folderInfoActive.classList) { folderInfoActive.classList.add('hidden'); folderInfoActive.classList.remove('flex'); }
             var fileCountSpan = document.getElementById('fileCount');
             if (fileCountSpan) fileCountSpan.textContent = "0";
+            
+            // Reset results panel
+            var resStatusBadge = document.getElementById('resStatusBadge');
+            if (resStatusBadge) { resStatusBadge.textContent = 'Belum diproses'; resStatusBadge.className = 'px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full border border-gray-200'; }
+            ['resFoundCount', 'resMissingCount', 'resReadyCount'].forEach(id => { if (document.getElementById(id)) document.getElementById(id).textContent = '0'; });
+            ['resFoundSize', 'resMissingSize', 'resReadySize'].forEach(id => { if (document.getElementById(id)) document.getElementById(id).textContent = '0 B'; });
+            ['detect-found', 'detect-missing', 'detect-ready'].forEach(id => { if (document.getElementById(id)) document.getElementById(id).textContent = '0'; });
+            var mfa = document.getElementById('missingFilesArea');
+            if (mfa) mfa.classList.add('hidden');
+            var mfl = document.getElementById('missingFilesList');
+            if (mfl) mfl.innerHTML = '';
         }
 
         function handleProsesSorter(event) {
