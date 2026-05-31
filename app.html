@@ -119,16 +119,6 @@
 
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-            font-family: 'Inter', sans-serif;
-            color: #0f172a;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
 
         /* Phase 2: Watermark Dinamis */
         .has-watermark .photo-card::after {
@@ -999,6 +989,10 @@
                     <i class="fa-regular fa-circle-question"></i> Bantuan & Saran
                     <span id="badge-feedback" class="absolute right-4 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full hidden">0</span>
                 </button>
+                <div class="h-px bg-white/10 my-3 mx-2"></div>
+                <button onclick="handleLogout()" class="nav-tab text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors">
+                    <i class="fa-solid fa-right-from-bracket"></i> <span class="m-logout-txt">Keluar</span>
+                </button>
             </nav>
 
             <!-- Bottom Upgrade Card -->
@@ -1111,6 +1105,11 @@
                     </button>
                     <button onclick="switchAdminTab('feedback'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-feedback-m" class="nav-tab photo-only-col hidden">
                         <i class="fa-regular fa-circle-question"></i> Bantuan & Saran
+                    </button>
+                    
+                    <div class="h-px bg-white/10 my-2 mx-2"></div>
+                    <button onclick="handleLogout()" class="nav-tab text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors">
+                        <i class="fa-solid fa-right-from-bracket"></i> <span class="m-logout-txt">Keluar</span>
                     </button>
                 </nav>
             </div>
@@ -1693,6 +1692,78 @@
                 <div id="section-premium-addon" class="hidden flex-1 flex-col max-w-4xl mx-auto w-full">
                     <div id="premium-addon-container" class="w-full">
                         <!-- Konten akan dirender oleh JS -->
+                    </div>
+                </div>
+
+                <!-- SECTION SETTINGS (Pengaturan Studio) -->
+                <div id="section-settings" class="hidden flex-1 flex-col max-w-4xl mx-auto w-full pb-10">
+                    <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-800">Pengaturan Studio</h2>
+                            <p class="text-sm text-gray-500">Sesuaikan profil, brand, dan preferensi akun Anda.</p>
+                        </div>
+                        <button onclick="saveSettings()" class="bg-black text-white px-6 py-2.5 rounded-xl hover:bg-gray-800 transition-colors shadow-sm text-sm font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Profil Pengguna -->
+                        <div class="md:col-span-1 space-y-6">
+                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center">
+                                <div class="w-24 h-24 mx-auto bg-gray-100 rounded-full border-4 border-white shadow-md overflow-hidden relative mb-4">
+                                    <img src="https://ui-avatars.com/api/?name=Studio&background=0D8ABC&color=fff" id="settings-avatar-preview" class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer" onclick="document.getElementById('settings-logo-url').focus()">
+                                        <i class="fa-solid fa-camera text-white text-xl"></i>
+                                    </div>
+                                </div>
+                                <h3 class="font-bold text-gray-800 text-lg" id="settings-display-name">Studio Name</h3>
+                                <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-4">Fotografer PRO</p>
+                            </div>
+                        </div>
+
+                        <!-- Form Pengaturan -->
+                        <div class="md:col-span-2 space-y-6">
+                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                                    <h4 class="font-bold text-gray-800"><i class="fa-solid fa-building mr-2 text-gray-400"></i> Identitas Brand</h4>
+                                </div>
+                                <div class="p-6 space-y-5">
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Nama Brand / Studio</label>
+                                        <input type="text" id="settings-brand-name" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="Contoh: Kama Creative">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">URL Logo (Opsional)</label>
+                                        <input type="text" id="settings-logo-url" oninput="document.getElementById('settings-avatar-preview').src = this.value || 'https://ui-avatars.com/api/?name=Studio&background=0D8ABC&color=fff'" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="https://contoh.com/logo.png">
+                                        <p class="text-[10px] text-gray-500 mt-1.5"><i class="fa-solid fa-circle-info mr-1"></i> Kosongkan jika ingin menggunakan logo inisial.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                                    <h4 class="font-bold text-gray-800"><i class="fa-solid fa-sliders mr-2 text-gray-400"></i> Preferensi Aplikasi</h4>
+                                </div>
+                                <div class="p-6 space-y-5">
+                                    <div class="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('settings-lang').click()">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                                                <i class="fa-solid fa-language text-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h5 class="font-bold text-sm text-gray-800">Bahasa Antarmuka</h5>
+                                                <p class="text-[11px] text-gray-500">Pilih bahasa untuk aplikasi.</p>
+                                            </div>
+                                        </div>
+                                        <select id="settings-lang" class="bg-gray-100 border-none rounded-lg px-3 py-2 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-200 cursor-pointer">
+                                            <option value="id">Indonesia</option>
+                                            <option value="en">English</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -4224,8 +4295,15 @@
                 // FIX OPTIMASI: Robot interval lama DIHAPUS dari sini!
                 // Data Pantau Klien kini otomatis disinkronkan oleh robot 'silentFetchData' 
                 // secara diam-diam. Menghapus ini mencegah aplikasi menembak server 2x lipat.
+            } else if (tabId === 'sortir-lokal') {
+                showView('local-sorter-view');
+                return; // Keluar dari fungsi karena ini adalah view yang berbeda (full screen)
             } else if (tabId === 'panduan') {
                 if (sectionPanduan) { sectionPanduan.classList.remove('hidden'); sectionPanduan.classList.add('flex'); }
+            } else if (tabId === 'settings') {
+                var sectionSettings = document.getElementById('section-settings');
+                if (sectionSettings) { sectionSettings.classList.remove('hidden'); sectionSettings.classList.add('flex'); }
+                if (typeof loadSettings === 'function') loadSettings();
             } else if (tabId === 'collage') {
                 if (sectionCollage) { sectionCollage.classList.remove('hidden'); sectionCollage.classList.add('flex'); }
                 if (typeof loadCollageProjectsList === 'function') loadCollageProjectsList();
@@ -4547,7 +4625,19 @@
             if(document.getElementById('stat-total-links')) document.getElementById('stat-total-links').innerText = statTotal;
 
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<div class="text-center p-8 text-gray-400 italic bg-white rounded-2xl border border-gray-100 shadow-sm">Belum ada project.</div>'; return;
+                tbody.innerHTML = `
+                    <div class="flex flex-col items-center justify-center p-12 text-center bg-white rounded-3xl border border-gray-100 shadow-sm mt-4 min-h-[350px]">
+                        <div class="w-24 h-24 mb-6 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-folder-open text-4xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Belum Ada Project</h3>
+                        <p class="text-sm text-gray-500 max-w-md mx-auto mb-8">Anda belum membuat project apa pun. Buat project baru untuk mulai mengunggah foto dan mengirimkannya ke klien.</p>
+                        <button onclick="openModalCreate()" class="bg-blue-600 text-white px-8 py-3.5 rounded-2xl hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-500/30 text-sm font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-plus"></i> Buat Project Baru
+                        </button>
+                    </div>
+                `;
+                return;
             }
 
             data.forEach(function (row) {
@@ -4771,6 +4861,59 @@
             if(step >= 1 && step <= currentWizardStep) {
                 currentWizardStep = step;
                 updateWizardUI();
+            }
+        }
+
+        function loadSettings() {
+            var brandName = localStorage.getItem('ps_brand_name') || (typeof appBranding !== 'undefined' ? appBranding.name : '');
+            var logoUrl = localStorage.getItem('ps_logo_url') || (typeof appBranding !== 'undefined' ? appBranding.logo : '');
+            var lang = localStorage.getItem('ps_lang') || 'id';
+            
+            document.getElementById('settings-brand-name').value = brandName;
+            document.getElementById('settings-logo-url').value = logoUrl;
+            document.getElementById('settings-lang').value = lang;
+            
+            if (logoUrl) {
+                document.getElementById('settings-avatar-preview').src = logoUrl;
+            } else {
+                document.getElementById('settings-avatar-preview').src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(brandName || 'Studio') + '&background=0D8ABC&color=fff';
+            }
+            document.getElementById('settings-display-name').innerText = brandName || 'Studio Name';
+        }
+
+        function saveSettings() {
+            var brandName = document.getElementById('settings-brand-name').value;
+            var logoUrl = document.getElementById('settings-logo-url').value;
+            var lang = document.getElementById('settings-lang').value;
+            
+            localStorage.setItem('ps_brand_name', brandName);
+            localStorage.setItem('ps_logo_url', logoUrl);
+            localStorage.setItem('ps_lang', lang);
+            
+            if (typeof appBranding !== 'undefined') {
+                appBranding.name = brandName;
+                appBranding.logo = logoUrl;
+            }
+            
+            document.getElementById('settings-display-name').innerText = brandName || 'Studio Name';
+            
+            if (logoUrl) {
+                document.getElementById('settings-avatar-preview').src = logoUrl;
+            } else {
+                document.getElementById('settings-avatar-preview').src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(brandName || 'Studio') + '&background=0D8ABC&color=fff';
+            }
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Tersimpan!',
+                text: 'Pengaturan studio berhasil disimpan.',
+                timer: 1500,
+                showConfirmButton: false
+            });
+            
+            // Reload page to apply language if changed
+            if (lang !== (localStorage.getItem('ps_lang') || 'id')) {
+                setTimeout(function() { window.location.reload(); }, 1500);
             }
         }
 
@@ -6603,7 +6746,15 @@
 
             var countBelum = 0, countSedang = 0, countSelesai = 0;
             if (!data || data.length === 0) {
-                container.innerHTML = '<div class="text-center py-10 text-gray-400 text-sm font-medium"><div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl text-gray-300"><i class="fa-regular fa-folder-open"></i></div>Belum ada klien yang terdaftar.</div>';
+                container.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center p-12 text-center bg-white rounded-3xl border border-gray-100 shadow-sm min-h-[350px]">
+                        <div class="w-24 h-24 mb-6 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center">
+                            <i class="fa-regular fa-folder-open text-4xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Belum Ada Klien</h3>
+                        <p class="text-sm text-gray-500 max-w-md mx-auto">Anda belum memiliki klien yang terdaftar. Klien akan muncul di sini setelah Anda membagikan link project kepada mereka.</p>
+                    </div>
+                `;
                 updateStatusCounters(0, 0, 0); return;
             }
 
