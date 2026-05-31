@@ -992,14 +992,11 @@
                 <button onclick="switchAdminTab('panduan')" id="tab-panduan" class="nav-tab photo-only-col hidden">
                     <i class="fa-solid fa-book-open"></i> Panduan Penggunaan
                 </button>
-                <button onclick="switchAdminTab('premium-addon')" id="tab-premium-addon" class="nav-tab photo-only-col hidden">
-                    <i class="fa-solid fa-crown text-amber-500"></i> Add-On PRO
-                </button>
                 <button onclick="switchAdminTab('settings')" id="tab-settings" class="nav-tab photo-only-col hidden">
                     <i class="fa-solid fa-gear"></i> Pengaturan Studio
                 </button>
                 <button onclick="switchAdminTab('feedback')" id="tab-feedback" class="nav-tab photo-only-col hidden relative">
-                    <i class="fa-regular fa-circle-question"></i> Bantuan & Laporan
+                    <i class="fa-regular fa-circle-question"></i> Bantuan & Saran
                     <span id="badge-feedback" class="absolute right-4 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full hidden">0</span>
                 </button>
             </nav>
@@ -1109,14 +1106,11 @@
                     <button onclick="switchAdminTab('panduan'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-panduan-m" class="nav-tab photo-only-col hidden">
                         <i class="fa-solid fa-book-open"></i> Panduan Penggunaan
                     </button>
-                    <button onclick="switchAdminTab('premium-addon'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-premium-addon-m" class="nav-tab photo-only-col hidden">
-                        <i class="fa-solid fa-crown text-amber-500"></i> Add-On PRO
-                    </button>
                     <button onclick="switchAdminTab('settings'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-settings-m" class="nav-tab photo-only-col hidden">
                         <i class="fa-solid fa-gear"></i> Pengaturan Studio
                     </button>
                     <button onclick="switchAdminTab('feedback'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-feedback-m" class="nav-tab photo-only-col hidden">
-                        <i class="fa-regular fa-circle-question"></i> Bantuan & Laporan
+                        <i class="fa-regular fa-circle-question"></i> Bantuan & Saran
                     </button>
                 </nav>
             </div>
@@ -1960,225 +1954,293 @@
 
 
     <div id="modalCreate"
-        class="fixed inset-0 bg-kama-900/40 backdrop-blur-sm flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl transform transition-all duration-300 scale-95 flex flex-col max-h-[95vh]"
+        class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[60] hidden opacity-0 transition-opacity duration-300 p-0 sm:p-4">
+        <div class="bg-gray-50 sm:rounded-2xl shadow-2xl w-full h-full sm:h-[90vh] max-w-4xl transform transition-all duration-300 scale-95 flex flex-col relative overflow-hidden"
             id="modalCreateContent">
-            <div class="flex justify-between items-center p-4 sm:p-5 border-b border-gray-100 shrink-0">
-                <h3 class="font-bold text-lg text-kama-800" id="lbl-create-title">Create New Project</h3>
-                <button onclick="closeModalCreate()"
-                    class="text-gray-400 hover:text-kama-800 bg-gray-50 hover:bg-gray-100 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
-                    <i class="fa-solid fa-times"></i>
-                </button>
+            
+            <!-- HEADER WIZARD -->
+            <div class="flex flex-col border-b border-gray-200 shrink-0 relative overflow-hidden bg-white sm:rounded-t-2xl z-10">
+                <!-- Progress Line -->
+                <div class="absolute top-0 left-0 w-full h-1 bg-gray-100">
+                    <div id="wizard-progress-bar" class="h-full bg-primary-600 transition-all duration-500 w-1/4"></div>
+                </div>
+                
+                <div class="flex justify-between items-center p-4 sm:p-5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center font-bold shadow-sm border border-primary-100">
+                            <i class="fa-solid fa-folder-plus"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-black text-lg text-gray-800 leading-tight" id="lbl-create-title">Buat Project Baru</h3>
+                            <p class="text-[11px] font-bold text-gray-500 uppercase tracking-widest mt-0.5" id="wizard-step-indicator">Langkah 1 dari 4</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeModalCreate()"
+                        class="text-gray-400 hover:text-red-500 bg-gray-50 hover:bg-red-50 border border-gray-100 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+                
+                <!-- Stepper Nav (Desktop only, hidden on mobile for space) -->
+                <div class="hidden sm:flex px-6 pb-0 gap-2 justify-between relative mt-2">
+                    <div class="flex-1 text-center border-b-2 border-primary-600 pb-3 transition-colors wizard-nav-item" id="nav-step-1">
+                        <span class="text-xs font-bold text-primary-700 uppercase"><i class="fa-solid fa-1 mr-1"></i> Info Dasar</span>
+                    </div>
+                    <div class="flex-1 text-center border-b-2 border-gray-200 pb-3 transition-colors wizard-nav-item" id="nav-step-2">
+                        <span class="text-xs font-bold text-gray-400 uppercase"><i class="fa-solid fa-2 mr-1"></i> Tampilan</span>
+                    </div>
+                    <div class="flex-1 text-center border-b-2 border-gray-200 pb-3 transition-colors wizard-nav-item" id="nav-step-3">
+                        <span class="text-xs font-bold text-gray-400 uppercase"><i class="fa-solid fa-3 mr-1"></i> Kuota & Biaya</span>
+                    </div>
+                    <div class="flex-1 text-center border-b-2 border-gray-200 pb-3 transition-colors wizard-nav-item" id="nav-step-4">
+                        <span class="text-xs font-bold text-gray-400 uppercase"><i class="fa-solid fa-4 mr-1"></i> Akses & Fitur</span>
+                    </div>
+                </div>
             </div>
-            <div class="overflow-y-auto p-4 sm:p-6 custom-scrollbar">
+
+            <!-- BODY WIZARD -->
+            <div class="overflow-y-auto flex-1 p-4 sm:p-8 bg-gray-50/50 custom-scrollbar relative">
                 <form id="formCreateProject" onsubmit="handleCreateProject(event)" autocomplete="off">
                     
-                    <!-- INFORMASI DASAR -->
-                    <div class="mb-6 bg-white border border-gray-100 rounded-xl p-4 sm:p-5 shadow-sm">
-                        <h4 class="font-bold text-gray-800 text-sm mb-4 border-b border-gray-100 pb-2"><i class="fa-solid fa-address-card text-blue-500 mr-2"></i>Informasi Dasar</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-                            <div>
-                                <label id="lbl-p-nama" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Nama Klien <span class="text-red-500">*</span></label>
-                                <input type="text" id="p_nama" autocomplete="new-password" name="prevent_autofill_client" required class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-0 outline-none transition-all text-sm">
-                            </div>
-                            <div>
-                                <label id="lbl-p-wa" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">No. WA Admin/Fotografer <span class="text-red-500">*</span></label>
-                                <div class="relative">
-                                    <span class="absolute left-4 top-2 text-gray-400 text-sm"><i class="fa-brands fa-whatsapp"></i></span>
-                                    <input type="number" id="p_wa" autocomplete="new-password" name="prevent_autofill_wa" required placeholder="628..." class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-0 outline-none transition-all text-sm">
-                                </div>
-                            </div>
-                            <div class="md:col-span-2">
-                                <label id="lbl-p-drive" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Link Folder G-Drive (Isi Foto) <span class="text-red-500">*</span></label>
-                                <input type="url" id="p_drive" autocomplete="new-password" name="prevent_autofill_drive" required placeholder="https://drive.google.com/..." class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-0 outline-none transition-all text-sm text-blue-600">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- PENGATURAN GALERI -->
-                    <div class="mb-6 bg-white border border-gray-100 rounded-xl p-4 sm:p-5 shadow-sm">
-                        <h4 class="font-bold text-gray-800 text-sm mb-4 border-b border-gray-100 pb-2"><i class="fa-solid fa-palette text-purple-500 mr-2"></i>Pengaturan Galeri</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-                            <div>
-                                <label id="lbl-p-layout" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Tampilan Galeri (Layout)</label>
-                                <select id="p_client_layout" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-purple-500 focus:ring-0 outline-none transition-all text-sm">
-                                    <option value="masonry">Pinterest (Masonry Grid)</option>
-                                    <option value="horizontal">Filmstrip (Horizontal)</option>
-                                    <option value="slideshow">Cinematic (Slideshow)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label id="lbl-p-pass" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Password Galeri <span class="text-gray-400 font-normal lowercase">(Opsional)</span></label>
-                                <div class="relative">
-                                    <input type="password" id="p_pass" autocomplete="new-password" name="prevent_autofill_clientpwd" placeholder="Kosongkan jika publik" class="w-full pl-4 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-purple-500 focus:ring-0 outline-none transition-all text-sm">
-                                    <i class="fa-regular fa-eye password-toggle-icon" onclick="togglePasswordVisibility('p_pass', this)"></i>
-                                </div>
-                            </div>
-                            <div class="md:col-span-2">
-                                <label id="lbl-p-music" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Musik Latar / BGM (Opsional)</label>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
-                                    <div>
-                                        <p class="text-[10px] text-gray-400 mb-1.5">Upload file MP3 (Max 4MB)</p>
-                                        <input type="file" id="p_music_file" accept=".mp3,audio/mpeg" class="w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 cursor-pointer border border-gray-200 rounded-lg p-1 bg-gray-50">
+                    <!-- STEP 1: INFORMASI DASAR -->
+                    <div id="wizard-step-1" class="wizard-step fade-in">
+                        <div class="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-sm mb-4">
+                            <h4 class="font-bold text-gray-800 text-sm mb-5 flex items-center gap-2"><i class="fa-solid fa-circle-info text-blue-500"></i> Informasi Dasar Klien</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                                <div>
+                                    <label id="lbl-p-name" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Nama Klien / Project <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <span class="absolute left-4 top-2.5 text-gray-400 text-sm"><i class="fa-regular fa-user"></i></span>
+                                        <input type="text" id="p_nama" autocomplete="new-password" name="prevent_autofill_nama" required placeholder="Contoh: Budi & Susi Wedding" class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm font-medium text-gray-800">
                                     </div>
-                                    <div>
-                                        <p class="text-[10px] text-gray-400 mb-1.5">Atau tempel Link MP3 Eksternal</p>
-                                        <input type="url" id="p_music_url" placeholder="https://.../lagu.mp3" class="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-purple-500 focus:ring-0 outline-none transition-all text-xs">
+                                </div>
+                                <div>
+                                    <label id="lbl-p-wa" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Nomor WhatsApp Klien <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <span class="absolute left-4 top-2.5 text-gray-400 text-sm"><i class="fa-brands fa-whatsapp"></i></span>
+                                        <input type="number" id="p_wa" autocomplete="new-password" name="prevent_autofill_wa" required placeholder="628..." class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm font-medium text-gray-800">
                                     </div>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label id="lbl-p-drive" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Link Folder G-Drive (Isi Foto) <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <span class="absolute left-4 top-2.5 text-gray-400 text-sm"><i class="fa-brands fa-google-drive"></i></span>
+                                        <input type="url" id="p_drive" autocomplete="new-password" name="prevent_autofill_drive" required placeholder="https://drive.google.com/..." class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm font-medium text-blue-600">
+                                    </div>
+                                    <p class="text-[10px] text-gray-500 mt-2"><i class="fa-solid fa-circle-info mr-1"></i> Pastikan akses folder Google Drive sudah diatur ke <b>"Siapa saja yang memiliki link"</b>.</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- KUOTA & BIAYA -->
-                    <div class="mb-6 bg-white border border-gray-100 rounded-xl p-4 sm:p-5 shadow-sm">
-                        <h4 class="font-bold text-gray-800 text-sm mb-4 border-b border-gray-100 pb-2"><i class="fa-solid fa-coins text-yellow-500 mr-2"></i>Kuota & Biaya Ekstra</h4>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                            <div>
-                                <label id="lbl-p-max" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Batas Maksimal Foto <span class="text-red-500">*</span></label>
-                                <input type="number" id="p_max" autocomplete="new-password" required min="1" value="50" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-yellow-500 focus:ring-0 outline-none transition-all text-sm">
-                                <div class="mt-2 flex items-center">
-                                    <input type="checkbox" id="p_unlimited" onchange="var m=document.getElementById('p_max'); if(this.checked){m.dataset.o=m.value; m.value=999999; m.disabled=true; m.classList.add('opacity-50');}else{m.value=m.dataset.o||50; m.disabled=false; m.classList.remove('opacity-50');}" class="w-4 h-4 text-yellow-500 bg-gray-100 border-gray-300 rounded focus:ring-yellow-500 cursor-pointer">
-                                    <label for="p_unlimited" class="ml-2 text-xs font-semibold text-gray-600 cursor-pointer id-text-unlimit">Tanpa Batas (Unlimited)</label>
+                    <!-- STEP 2: PENGATURAN GALERI -->
+                    <div id="wizard-step-2" class="wizard-step fade-in hidden">
+                        <div class="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-sm mb-4">
+                            <h4 class="font-bold text-gray-800 text-sm mb-5 flex items-center gap-2"><i class="fa-solid fa-palette text-purple-500"></i> Pengaturan Tampilan Galeri</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                                <div>
+                                    <label id="lbl-p-layout" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Layout Galeri Klien</label>
+                                    <select id="p_client_layout" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all text-sm font-medium text-gray-800">
+                                        <option value="masonry">Pinterest (Masonry Grid)</option>
+                                        <option value="horizontal">Filmstrip (Horizontal)</option>
+                                        <option value="slideshow">Cinematic (Slideshow)</option>
+                                    </select>
                                 </div>
-                            </div>
-                            <div>
-                                <label id="lbl-p-extra" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Biaya Ekstra per Foto (Rp)</label>
-                                <input type="number" id="p_extra_price" min="0" placeholder="0 = Gratis" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-yellow-500 focus:ring-0 outline-none transition-all text-sm">
+                                <div>
+                                    <label id="lbl-p-pass" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Password Galeri <span class="text-gray-400 font-normal lowercase">(Opsional)</span></label>
+                                    <div class="relative">
+                                        <span class="absolute left-4 top-2.5 text-gray-400 text-sm"><i class="fa-solid fa-lock"></i></span>
+                                        <input type="password" id="p_pass" autocomplete="new-password" name="prevent_autofill_clientpwd" placeholder="Kosongkan jika publik" class="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all text-sm font-medium text-gray-800">
+                                        <i class="fa-regular fa-eye password-toggle-icon top-3 right-4 text-gray-400 cursor-pointer absolute" onclick="togglePasswordVisibility('p_pass', this)"></i>
+                                    </div>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label id="lbl-p-music" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Musik Latar / BGM (Opsional)</label>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center bg-purple-50/30 p-4 border border-purple-100 rounded-xl">
+                                        <div>
+                                            <p class="text-xs font-semibold text-gray-700 mb-1.5"><i class="fa-solid fa-upload text-purple-500 mr-1"></i> Upload file MP3 (Max 4MB)</p>
+                                            <input type="file" id="p_music_file" accept=".mp3,audio/mpeg" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer border border-purple-200 rounded-lg bg-white shadow-sm">
+                                        </div>
+                                        <div>
+                                            <p class="text-xs font-semibold text-gray-700 mb-1.5"><i class="fa-solid fa-link text-purple-500 mr-1"></i> Tempel Link MP3 Eksternal</p>
+                                            <input type="url" id="p_music_url" placeholder="https://.../lagu.mp3" class="w-full px-4 py-2 bg-white border border-purple-200 rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all text-sm shadow-sm">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- KONTROL AKSES & DURASI -->
-                    <div class="mb-6 bg-white border border-gray-100 rounded-xl p-4 sm:p-5 shadow-sm">
-                        <h4 class="font-bold text-gray-800 text-sm mb-4 border-b border-gray-100 pb-2"><i class="fa-solid fa-shield-halved text-green-500 mr-2"></i>Kontrol Akses & Durasi</h4>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Switch Akses -->
-                            <div class="space-y-3">
-                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Tampilan Menu Klien</p>
-                                <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-xl">
-                                    <div>
-                                        <h5 class="text-sm font-bold text-gray-700">Pilih Foto</h5>
-                                        <p class="text-[10px] text-gray-500 mt-0.5">Klien diizinkan memilih foto.</p>
+                    <!-- STEP 3: KUOTA & BIAYA -->
+                    <div id="wizard-step-3" class="wizard-step fade-in hidden">
+                        <div class="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-sm mb-4">
+                            <h4 class="font-bold text-gray-800 text-sm mb-5 flex items-center gap-2"><i class="fa-solid fa-coins text-yellow-500"></i> Atur Kuota & Biaya Ekstra</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div class="bg-yellow-50/50 p-4 border border-yellow-100 rounded-xl">
+                                    <label id="lbl-p-max" class="block text-xs font-bold text-yellow-800 uppercase tracking-wide mb-2"><i class="fa-solid fa-images mr-1"></i> Batas Maksimal Foto <span class="text-red-500">*</span></label>
+                                    <input type="number" id="p_max" autocomplete="new-password" required min="1" value="50" class="w-full px-4 py-3 bg-white border border-yellow-300 rounded-xl focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500 outline-none transition-all text-lg font-black text-gray-800 shadow-sm">
+                                    <div class="mt-3 flex items-center bg-white p-2 border border-yellow-200 rounded-lg">
+                                        <input type="checkbox" id="p_unlimited" onchange="var m=document.getElementById('p_max'); if(this.checked){m.dataset.o=m.value; m.value=999999; m.disabled=true; m.classList.add('opacity-50');}else{m.value=m.dataset.o||50; m.disabled=false; m.classList.remove('opacity-50');}" class="w-5 h-5 text-yellow-500 bg-gray-100 border-gray-300 rounded focus:ring-yellow-500 cursor-pointer">
+                                        <label for="p_unlimited" class="ml-2 text-sm font-bold text-gray-700 cursor-pointer id-text-unlimit">Tanpa Batas (Unlimited)</label>
                                     </div>
-                                    <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
-                                        <input type="checkbox" class="sr-only peer" id="p_akses_pilih" checked>
-                                        <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
-                                    </label>
                                 </div>
-                                <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-xl">
-                                    <div>
-                                        <h5 class="text-sm font-bold text-gray-700">Download Foto</h5>
-                                        <p class="text-[10px] text-gray-500 mt-0.5">Klien diizinkan mengunduh foto.</p>
-                                    </div>
-                                    <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
-                                        <input type="checkbox" class="sr-only peer" id="p_akses_download" checked>
-                                        <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
-                                    </label>
+                                <div class="bg-green-50/50 p-4 border border-green-100 rounded-xl">
+                                    <label id="lbl-p-extra" class="block text-xs font-bold text-green-800 uppercase tracking-wide mb-2"><i class="fa-solid fa-money-bill-wave mr-1"></i> Biaya Ekstra per Foto (Rp)</label>
+                                    <input type="number" id="p_extra_price" min="0" placeholder="0 = Gratis" class="w-full px-4 py-3 bg-white border border-green-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-500 outline-none transition-all text-lg font-black text-gray-800 shadow-sm">
+                                    <p class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-circle-info mr-1"></i> Biarkan 0 jika Anda mengizinkan klien memilih lebih tanpa bayar ekstra.</p>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 4: KONTROL AKSES & FITUR -->
+                    <div id="wizard-step-4" class="wizard-step fade-in hidden">
+                        <div class="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-sm mb-4">
+                            <h4 class="font-bold text-gray-800 text-sm mb-5 flex items-center gap-2"><i class="fa-solid fa-shield-halved text-green-500"></i> Kontrol Akses & Fitur Tambahan</h4>
                             
-                            <!-- Durasi -->
-                            <div class="space-y-3">
-                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Masa Aktif Akses</p>
-                                <div>
-                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">Masa Berlaku Pilih Foto</label>
-                                    <select id="p_durasi_pilih" onchange="document.getElementById('p_durasi_pilih_custom_wrapper').classList.toggle('hidden', this.value !== 'custom');" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-green-500 focus:ring-0 outline-none transition-all text-sm font-medium">
-                                        <option value="Selamanya">Selamanya</option>
-                                        <option value="1">1 Hari</option>
-                                        <option value="3">3 Hari</option>
-                                        <option value="5">5 Hari</option>
-                                        <option value="7">7 Hari</option>
-                                        <option value="14">14 Hari</option>
-                                        <option value="30">30 Hari</option>
-                                        <option value="custom">Custom Hari...</option>
-                                    </select>
-                                    <div id="p_durasi_pilih_custom_wrapper" class="hidden mt-2">
-                                        <div class="relative">
-                                            <input type="number" id="p_durasi_pilih_custom" min="1" placeholder="Masukkan jumlah hari" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-green-500 focus:ring-0 outline-none transition-all text-sm">
-                                            <span class="absolute right-4 top-2 text-sm text-gray-400 font-semibold">Hari</span>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Switch Akses -->
+                                <div class="space-y-3">
+                                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Tampilan Menu Klien</p>
+                                    <div class="flex items-center justify-between p-3.5 bg-gray-50 border border-gray-200 rounded-xl shadow-sm">
+                                        <div>
+                                            <h5 class="text-sm font-bold text-gray-800">Pilih Foto</h5>
+                                            <p class="text-[10px] text-gray-500 mt-0.5">Klien diizinkan memilih foto.</p>
                                         </div>
+                                        <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
+                                            <input type="checkbox" class="sr-only peer" id="p_akses_pilih" checked>
+                                            <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500 shadow-inner"></div>
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3.5 bg-gray-50 border border-gray-200 rounded-xl shadow-sm">
+                                        <div>
+                                            <h5 class="text-sm font-bold text-gray-800">Download Foto</h5>
+                                            <p class="text-[10px] text-gray-500 mt-0.5">Klien diizinkan mengunduh foto.</p>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
+                                            <input type="checkbox" class="sr-only peer" id="p_akses_download" checked>
+                                            <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500 shadow-inner"></div>
+                                        </label>
                                     </div>
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">Masa Berlaku Download</label>
-                                    <select id="p_durasi_download" onchange="document.getElementById('p_durasi_download_custom_wrapper').classList.toggle('hidden', this.value !== 'custom');" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-0 outline-none transition-all text-sm font-medium">
-                                        <option value="Selamanya">Selamanya</option>
-                                        <option value="1">1 Hari</option>
-                                        <option value="3">3 Hari</option>
-                                        <option value="5">5 Hari</option>
-                                        <option value="7">7 Hari</option>
-                                        <option value="14">14 Hari</option>
-                                        <option value="30">30 Hari</option>
-                                        <option value="custom">Custom Hari...</option>
-                                    </select>
-                                    <div id="p_durasi_download_custom_wrapper" class="hidden mt-2">
-                                        <div class="relative">
-                                            <input type="number" id="p_durasi_download_custom" min="1" placeholder="Masukkan jumlah hari" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-0 outline-none transition-all text-sm">
-                                            <span class="absolute right-4 top-2 text-sm text-gray-400 font-semibold">Hari</span>
+                                
+                                <!-- Durasi -->
+                                <div class="space-y-4 border-l border-gray-100 pl-6">
+                                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Masa Aktif Akses</p>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Masa Berlaku Pilih Foto</label>
+                                        <select id="p_durasi_pilih" onchange="document.getElementById('p_durasi_pilih_custom_wrapper').classList.toggle('hidden', this.value !== 'custom');" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-green-500 focus:ring-1 outline-none transition-all text-sm font-medium shadow-sm text-gray-800">
+                                            <option value="Selamanya">Selamanya</option>
+                                            <option value="1">1 Hari</option>
+                                            <option value="3">3 Hari</option>
+                                            <option value="5">5 Hari</option>
+                                            <option value="7">7 Hari</option>
+                                            <option value="14">14 Hari</option>
+                                            <option value="30">30 Hari</option>
+                                            <option value="custom">Custom Hari...</option>
+                                        </select>
+                                        <div id="p_durasi_pilih_custom_wrapper" class="hidden mt-2">
+                                            <div class="relative">
+                                                <input type="number" id="p_durasi_pilih_custom" min="1" placeholder="Masukkan jumlah hari" class="w-full px-4 py-2 bg-white border border-green-300 rounded-xl focus:border-green-500 focus:ring-1 outline-none transition-all text-sm">
+                                                <span class="absolute right-4 top-2 text-sm text-gray-400 font-semibold">Hari</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- FITUR PREMIUM TAMBAHAN -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- UI WATERMARK DINAMIS (PHASE 2) -->
-                        <div id="wrapper-watermark" class="flex items-center justify-between p-3.5 bg-blue-50/50 border border-blue-100 rounded-xl hidden">
-                            <div class="flex items-start gap-3">
-                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
-                                    <i class="fa-solid fa-droplet text-xs"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-gray-800 text-sm" id="lbl-p-wm-title">Keamanan Watermark</h4>
-                                    <p class="text-[10px] text-gray-500 mt-0.5" id="lbl-p-wm-desc">Tampilkan watermark logo perlindungan.</p>
-                                </div>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
-                                <input type="checkbox" class="sr-only peer" id="p_watermark" checked>
-                                <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                            </label>
-                        </div>
-
-                        <!-- UI MULTI-KATEGORI (PHASE 3) -->
-                        <div id="wrapper-multicategory" class="flex flex-col p-3.5 bg-purple-50/50 border border-purple-100 rounded-xl hidden">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-start gap-3">
-                                    <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 shrink-0">
-                                        <i class="fa-solid fa-layer-group text-xs"></i>
                                     </div>
                                     <div>
-                                        <h4 class="font-bold text-gray-800 text-sm" id="lbl-p-cat-title">Multi-Kategori</h4>
-                                        <p class="text-[10px] text-gray-500 mt-0.5" id="lbl-p-cat-desc">Pisahkan kuota foto per kategori.</p>
+                                        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Masa Berlaku Download</label>
+                                        <select id="p_durasi_download" onchange="document.getElementById('p_durasi_download_custom_wrapper').classList.toggle('hidden', this.value !== 'custom');" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-1 outline-none transition-all text-sm font-medium shadow-sm text-gray-800">
+                                            <option value="Selamanya">Selamanya</option>
+                                            <option value="1">1 Hari</option>
+                                            <option value="3">3 Hari</option>
+                                            <option value="5">5 Hari</option>
+                                            <option value="7">7 Hari</option>
+                                            <option value="14">14 Hari</option>
+                                            <option value="30">30 Hari</option>
+                                            <option value="custom">Custom Hari...</option>
+                                        </select>
+                                        <div id="p_durasi_download_custom_wrapper" class="hidden mt-2">
+                                            <div class="relative">
+                                                <input type="number" id="p_durasi_download_custom" min="1" placeholder="Masukkan jumlah hari" class="w-full px-4 py-2 bg-white border border-blue-300 rounded-xl focus:border-blue-500 focus:ring-1 outline-none transition-all text-sm">
+                                                <span class="absolute right-4 top-2 text-sm text-gray-400 font-semibold">Hari</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FITUR PREMIUM TAMBAHAN -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- UI WATERMARK DINAMIS (PHASE 2) -->
+                            <div id="wrapper-watermark" class="flex items-center justify-between p-4 bg-blue-50/80 border border-blue-200 rounded-2xl hidden shadow-sm">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shrink-0 border border-blue-200 shadow-sm">
+                                        <i class="fa-solid fa-droplet"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-gray-800 text-sm" id="lbl-p-wm-title">Keamanan Watermark</h4>
+                                        <p class="text-[10px] text-gray-500 mt-0.5" id="lbl-p-wm-desc">Tampilkan watermark logo perlindungan.</p>
                                     </div>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
-                                    <input type="checkbox" class="sr-only peer" id="p_use_category" onchange="toggleCategoryUI()">
-                                    <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                                    <input type="checkbox" class="sr-only peer" id="p_watermark" checked>
+                                    <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 shadow-inner"></div>
                                 </label>
                             </div>
-                            
-                            <div id="category-builder" class="hidden flex-col gap-2 mt-3 pt-3 border-t border-purple-200">
-                                <div id="category-list" class="space-y-2">
-                                    <!-- Dynamic items -->
+
+                            <!-- UI MULTI-KATEGORI (PHASE 3) -->
+                            <div id="wrapper-multicategory" class="flex flex-col p-4 bg-purple-50/80 border border-purple-200 rounded-2xl hidden shadow-sm">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600 shrink-0 border border-purple-200 shadow-sm">
+                                            <i class="fa-solid fa-layer-group"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-800 text-sm" id="lbl-p-cat-title">Multi-Kategori</h4>
+                                            <p class="text-[10px] text-gray-500 mt-0.5" id="lbl-p-cat-desc">Pisahkan kuota foto per kategori.</p>
+                                        </div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
+                                        <input type="checkbox" class="sr-only peer" id="p_use_category" onchange="toggleCategoryUI()">
+                                        <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600 shadow-inner"></div>
+                                    </label>
                                 </div>
-                                <button type="button" onclick="addCategoryRow()" class="mt-2 text-xs font-bold text-purple-600 hover:text-purple-800 flex items-center justify-center gap-1.5 p-2 bg-purple-100 hover:bg-purple-200 rounded-lg transition-colors">
-                                    <i class="fa-solid fa-plus"></i> <span id="lbl-p-cat-add">Tambah Kategori Baru</span>
-                                </button>
+                                
+                                <div id="category-builder" class="hidden flex-col gap-3 mt-4 pt-4 border-t border-purple-200">
+                                    <div id="category-list" class="space-y-3">
+                                        <!-- Dynamic items -->
+                                    </div>
+                                    <button type="button" onclick="addCategoryRow()" class="mt-1 text-xs font-bold text-purple-700 hover:text-purple-900 flex items-center justify-center gap-1.5 p-2.5 bg-purple-100 hover:bg-purple-200 rounded-xl transition-colors border border-purple-200 shadow-sm">
+                                        <i class="fa-solid fa-plus"></i> <span id="lbl-p-cat-add">Tambah Kategori Baru</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
+
                     </div>
                 </form>
             </div>
-            <div class="p-5 sm:p-6 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex gap-3 justify-end mt-auto">
-                <button type="button" onclick="closeModalCreate()"
-                    class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors">Cancel</button>
-                <button type="submit" form="formCreateProject" id="btnCreate"
-                    class="px-6 py-2.5 bg-primary-600 text-white text-sm font-bold rounded-xl hover:bg-primary-700 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all relative flex items-center justify-center">Generate
-                    Link</button>
+
+            <!-- FOOTER WIZARD -->
+            <div class="p-4 sm:p-5 border-t border-gray-200 bg-white sm:rounded-b-2xl flex gap-3 justify-between mt-auto shrink-0 shadow-[0_-4px_10px_rgba(0,0,0,0.02)] z-10 relative">
+                <button type="button" onclick="prevWizardStep()" id="btnWizardPrev"
+                    class="px-5 py-2.5 bg-gray-100 border border-gray-200 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-200 transition-colors hidden items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Kembali
+                </button>
+                <div class="flex gap-3 ml-auto">
+                    <button type="button" onclick="closeModalCreate()" id="btnWizardCancel"
+                        class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-colors">Batal</button>
+                    
+                    <button type="button" onclick="nextWizardStep()" id="btnWizardNext"
+                        class="px-6 py-2.5 bg-gray-800 text-white text-sm font-bold rounded-xl hover:bg-gray-900 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                        Lanjut <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    
+                    <button type="submit" form="formCreateProject" id="btnCreate"
+                        class="px-6 py-2.5 bg-primary-600 text-white text-sm font-bold rounded-xl hover:bg-primary-700 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all hidden items-center gap-2">
+                        <i class="fa-solid fa-bolt"></i> Generate Link
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -4568,6 +4630,117 @@
             showView('admin-view');
         }
 
+        var currentWizardStep = 1;
+        var totalWizardSteps = 4;
+
+        function updateWizardUI() {
+            for(var i=1; i<=totalWizardSteps; i++) {
+                var stepDiv = document.getElementById('wizard-step-' + i);
+                if(stepDiv) stepDiv.classList.toggle('hidden', i !== currentWizardStep);
+                
+                var navTab = document.getElementById('nav-step-' + i);
+                if(navTab) {
+                    var sName = getStepName(i);
+                    if(i === currentWizardStep) {
+                        navTab.className = "flex-1 text-center border-b-2 border-primary-600 pb-3 transition-colors wizard-nav-item";
+                        navTab.innerHTML = '<span class="text-xs font-bold text-primary-700 uppercase"><i class="fa-solid fa-'+i+' mr-1"></i> ' + sName + '</span>';
+                        navTab.onclick = null;
+                    } else if (i < currentWizardStep) {
+                        navTab.className = "flex-1 text-center border-b-2 border-green-500 pb-3 transition-colors wizard-nav-item cursor-pointer";
+                        navTab.innerHTML = '<span class="text-xs font-bold text-green-600 uppercase"><i class="fa-solid fa-check mr-1"></i> ' + sName + '</span>';
+                        navTab.onclick = (function(target){ return function(){ goToWizardStep(target); } })(i);
+                    } else {
+                        navTab.className = "flex-1 text-center border-b-2 border-gray-200 pb-3 transition-colors wizard-nav-item opacity-50";
+                        navTab.innerHTML = '<span class="text-xs font-bold text-gray-400 uppercase"><i class="fa-solid fa-'+i+' mr-1"></i> ' + sName + '</span>';
+                        navTab.onclick = null;
+                    }
+                }
+            }
+            
+            var progress = (currentWizardStep / totalWizardSteps) * 100;
+            var bar = document.getElementById('wizard-progress-bar');
+            if(bar) bar.style.width = progress + '%';
+            
+            var indicator = document.getElementById('wizard-step-indicator');
+            if(indicator) indicator.innerText = 'Langkah ' + currentWizardStep + ' dari ' + totalWizardSteps;
+            
+            var btnPrev = document.getElementById('btnWizardPrev');
+            var btnNext = document.getElementById('btnWizardNext');
+            var btnCreate = document.getElementById('btnCreate');
+            var btnCancel = document.getElementById('btnWizardCancel');
+            
+            if(btnPrev) {
+                if(currentWizardStep === 1) {
+                    btnPrev.classList.add('hidden');
+                    btnPrev.classList.remove('flex');
+                } else {
+                    btnPrev.classList.remove('hidden');
+                    btnPrev.classList.add('flex');
+                }
+            }
+            if(btnCancel) {
+                if(currentWizardStep !== 1) btnCancel.classList.add('hidden');
+                else btnCancel.classList.remove('hidden');
+            }
+            
+            if(btnNext) {
+                if(currentWizardStep === totalWizardSteps) {
+                    btnNext.classList.add('hidden');
+                    btnNext.classList.remove('flex');
+                } else {
+                    btnNext.classList.remove('hidden');
+                    btnNext.classList.add('flex');
+                }
+            }
+            
+            if(btnCreate) {
+                if(currentWizardStep !== totalWizardSteps) {
+                    btnCreate.classList.add('hidden');
+                    btnCreate.classList.remove('flex');
+                } else {
+                    btnCreate.classList.remove('hidden');
+                    btnCreate.classList.add('flex');
+                }
+            }
+        }
+        
+        function getStepName(i) {
+            if(i===1) return "Info Dasar";
+            if(i===2) return "Tampilan";
+            if(i===3) return "Kuota & Biaya";
+            if(i===4) return "Akses & Fitur";
+            return "";
+        }
+        
+        function nextWizardStep() {
+            var currentStepDiv = document.getElementById('wizard-step-' + currentWizardStep);
+            var inputs = currentStepDiv.querySelectorAll('[required]');
+            for(var i=0; i<inputs.length; i++) {
+                if(!inputs[i].value && inputs[i].type !== 'checkbox') {
+                    if(inputs[i].reportValidity) inputs[i].reportValidity();
+                    return;
+                }
+            }
+            if(currentWizardStep < totalWizardSteps) {
+                currentWizardStep++;
+                updateWizardUI();
+            }
+        }
+        
+        function prevWizardStep() {
+            if(currentWizardStep > 1) {
+                currentWizardStep--;
+                updateWizardUI();
+            }
+        }
+        
+        function goToWizardStep(step) {
+            if(step >= 1 && step <= currentWizardStep) {
+                currentWizardStep = step;
+                updateWizardUI();
+            }
+        }
+
         function openModalCreate() {
             if (typeof isAccountExpired === 'function' && isAccountExpired()) {
                 showExpiredAlert();
@@ -4604,6 +4777,10 @@
             }
             var formCreate = document.getElementById('formCreateProject');
             if (formCreate) formCreate.reset();
+            
+            currentWizardStep = 1;
+            updateWizardUI();
+
             var modal = document.getElementById('modalCreate');
             var content = document.getElementById('modalCreateContent');
             if (modal && modal.classList) { modal.classList.remove('hidden'); modal.classList.remove('opacity-0'); }
