@@ -1400,58 +1400,91 @@
                     </div>
                 </div>
 
-                <div id="section-status" class="hidden flex-1 flex-col">
+                <div id="section-status" class="hidden flex-1 flex-col pb-10">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                         <div>
-                            <h2 class="text-xl font-bold text-kama-800">Pantau Status Klien</h2>
-                            <p class="text-sm text-gray-500">Monitoring progres pemilihan foto oleh klien Anda.</p>
+                            <h2 class="text-xl font-bold text-gray-800">Pantau Status Klien</h2>
+                            <p class="text-sm text-gray-500 mt-1">Monitoring progres pemilihan foto oleh klien Anda.</p>
                         </div>
-                        <button onclick="loadClientProgress()"
-                            class="bg-white border border-gray-200 text-kama-800 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors shadow-sm text-sm font-semibold flex items-center justify-center gap-2">
+                        <button onclick="loadClientProgress()" class="bg-white border border-gray-200 text-gray-700 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors shadow-sm text-sm font-semibold flex items-center justify-center gap-2">
                             <i class="fa-solid fa-rotate-right text-blue-500"></i> Refresh Data
                         </button>
                     </div>
 
+                    <!-- 3 Metric Cards -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                        <div
-                            class="bg-red-50/70 border border-red-100 rounded-2xl p-5 text-center flex flex-col justify-center shadow-sm relative overflow-hidden">
-                            <div class="absolute -right-4 -top-4 opacity-5 text-red-900"><i
-                                    class="fa-solid fa-hourglass-start text-7xl"></i></div>
-                            <h3 class="text-3xl font-bold text-red-500 mb-1 relative z-10" id="count-belum">0</h3>
-                            <p class="text-[11px] font-bold text-red-600 uppercase tracking-wider relative z-10"><i
-                                    class="fa-regular fa-circle-xmark mr-1"></i> Belum Memilih</p>
+                        <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm flex items-center gap-4 relative overflow-hidden group">
+                            <div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform"><i class="fa-solid fa-hourglass-start"></i></div>
+                            <div>
+                                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Belum Memilih</p>
+                                <h3 class="text-2xl font-bold text-gray-800 leading-none mt-1" id="count-belum">0</h3>
+                            </div>
                         </div>
-                        <div
-                            class="bg-amber-50/70 border border-amber-100 rounded-2xl p-5 text-center flex flex-col justify-center shadow-sm relative overflow-hidden">
-                            <div class="absolute -right-4 -top-4 opacity-5 text-amber-900"><i
-                                    class="fa-solid fa-spinner text-7xl"></i></div>
-                            <h3 class="text-3xl font-bold text-amber-500 mb-1 relative z-10" id="count-sedang">0</h3>
-                            <p class="text-[11px] font-bold text-amber-600 uppercase tracking-wider relative z-10"><i
-                                    class="fa-regular fa-clock mr-1"></i> Sedang Memilih</p>
+                        <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm flex items-center gap-4 relative overflow-hidden group">
+                            <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform"><i class="fa-solid fa-spinner"></i></div>
+                            <div>
+                                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Sedang Memilih</p>
+                                <h3 class="text-2xl font-bold text-gray-800 leading-none mt-1" id="count-sedang">0</h3>
+                            </div>
                         </div>
-                        <div
-                            class="bg-green-50/70 border border-green-100 rounded-2xl p-5 text-center flex flex-col justify-center shadow-sm relative overflow-hidden">
-                            <div class="absolute -right-4 -top-4 opacity-5 text-green-900"><i
-                                    class="fa-solid fa-check-double text-7xl"></i></div>
-                            <h3 class="text-3xl font-bold text-green-500 mb-1 relative z-10" id="count-selesai">0</h3>
-                            <p class="text-[11px] font-bold text-green-600 uppercase tracking-wider relative z-10"><i
-                                    class="fa-regular fa-circle-check mr-1"></i> Selesai (Disubmit)</p>
+                        <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm flex items-center gap-4 relative overflow-hidden group">
+                            <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform"><i class="fa-solid fa-check-double"></i></div>
+                            <div>
+                                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Selesai (Disubmit)</p>
+                                <h3 class="text-2xl font-bold text-gray-800 leading-none mt-1" id="count-selesai">0</h3>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-2xl shadow-sm border border-kama-100 flex flex-col mb-6">
-                        <div class="p-4 border-b border-gray-100 bg-gray-50/50 rounded-t-2xl">
-                            <div class="relative">
-                                <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-gray-400"></i>
-                                <input type="text" id="search-client-status" onkeyup="filterClientStatus()"
-                                    placeholder="Cari nama klien di sini..."
-                                    class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:border-kama-800 focus:ring-1 focus:ring-kama-800 outline-none text-sm transition-colors shadow-sm">
+                    <div class="flex flex-col lg:flex-row gap-6 items-start h-full">
+                        
+                        <!-- Main Content: Client List -->
+                        <div class="flex-1 w-full flex flex-col">
+                            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col min-h-[400px]">
+                                <div class="p-4 border-b border-gray-100 bg-gray-50/50 rounded-t-2xl flex justify-between items-center">
+                                    <div class="relative w-full max-w-sm">
+                                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-3 text-gray-400"></i>
+                                        <input type="text" id="search-client-status" onkeyup="filterClientStatus()" placeholder="Cari nama klien..." class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm transition-colors shadow-sm">
+                                    </div>
+                                    <button class="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-500 hover:text-blue-600 hover:border-blue-300 transition-colors shadow-sm shrink-0 ml-2" title="Filter"><i class="fa-solid fa-filter"></i></button>
+                                </div>
+                                
+                                <!-- Client List Container (replaces old table/cards) -->
+                                <div class="p-4 flex flex-col gap-3" id="client-status-container">
+                                    <!-- Cards will be injected here -->
+                                </div>
                             </div>
                         </div>
-                        <div class="p-4 bg-gray-50/30 min-h-[300px]" id="client-status-container">
-                            <div class="text-center py-10 text-gray-400 text-sm font-medium"><i
-                                    class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat data...</div>
+
+                        <!-- Right Sidebar: Insight & Rekomendasi -->
+                        <div class="w-full lg:w-[320px] flex flex-col gap-4 shrink-0">
+                            
+                            <div class="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-2xl shadow-lg p-5 text-white relative overflow-hidden">
+                                <div class="absolute -right-4 -bottom-4 opacity-10"><i class="fa-solid fa-chart-pie text-9xl"></i></div>
+                                <h3 class="font-bold text-indigo-100 mb-4 flex items-center gap-2 relative z-10">
+                                    <i class="fa-solid fa-lightbulb text-yellow-400"></i> Insight & Rekomendasi
+                                </h3>
+                                
+                                <div class="space-y-4 relative z-10">
+                                    <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-xl p-3 flex gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-red-500/20 text-red-300 flex items-center justify-center shrink-0"><i class="fa-regular fa-bell"></i></div>
+                                        <div>
+                                            <p class="text-sm font-bold text-white mb-1">Follow up klien</p>
+                                            <p class="text-xs text-indigo-100/70 leading-relaxed">Ada klien yang belum memilih lebih dari 3 hari. Gunakan tombol WA untuk mengingatkan mereka.</p>
+                                        </div>
+                                    </div>
+                                    <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-xl p-3 flex gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-green-500/20 text-green-300 flex items-center justify-center shrink-0"><i class="fa-solid fa-bolt"></i></div>
+                                        <div>
+                                            <p class="text-sm font-bold text-white mb-1">Cepat Selesai</p>
+                                            <p class="text-xs text-indigo-100/70 leading-relaxed">Rata-rata klien Anda menyelesaikan pemilihan dalam waktu 2 hari. Pertahankan!</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="w-full mt-4 py-2 bg-indigo-500 hover:bg-indigo-400 transition-colors rounded-xl text-xs font-bold shadow-sm">Lihat Analisis Detail</button>
+                            </div>
                         </div>
+
                     </div>
                 </div>
 
@@ -2918,7 +2951,7 @@
         function isPremiumAddon() {
             if (!currentUser) return false;
             if (currentUser.role === 'Admin') return true;
-            return currentUser.isPremiumAddon === true;
+            return currentUser.isPremiumAddon === true || String(currentUser.isPremiumAddon).toUpperCase() === 'TRUE' || currentUser.isPremiumAddon === '1' || currentUser.isPremiumAddon === 1;
         }
 
         function showPremiumAlert() {
@@ -6570,7 +6603,7 @@
 
             var countBelum = 0, countSedang = 0, countSelesai = 0;
             if (!data || data.length === 0) {
-                container.innerHTML = '<div class="text-center py-10 text-gray-400 text-sm font-medium"><i class="fa-regular fa-folder-open text-3xl mb-2 block opacity-50"></i>Belum ada klien yang terdaftar.</div>';
+                container.innerHTML = '<div class="text-center py-10 text-gray-400 text-sm font-medium"><div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl text-gray-300"><i class="fa-regular fa-folder-open"></i></div>Belum ada klien yang terdaftar.</div>';
                 updateStatusCounters(0, 0, 0); return;
             }
 
@@ -6595,7 +6628,6 @@
                     else if (status === 'Selesai') statusText = 'Completed';
                 }
 
-                // Perhitungan Progress
                 var selected = parseInt(row['Foto Terpilih'] || 0);
                 var max = parseInt(row['Max Foto'] || 1);
                 var percent = Math.min(Math.round((selected / max) * 100), 100);
