@@ -4857,7 +4857,7 @@
         var userPingInterval = null; // Robot ping aktivitas user
 
         function switchAdminTab(tabId, skipHistory) {
-            if (tabId === 'collage') {
+            if (tabId === 'collage' || tabId === 'sortir-lokal') {
                 if (typeof isAccountExpired === 'function' && isAccountExpired()) {
                     showExpiredAlert(); return;
                 }
