@@ -915,8 +915,9 @@
         <aside id="sidebar-desktop" class="hidden sm:flex flex-col w-[220px] bg-[#0A0F1C] text-white h-full relative z-50 shrink-0">
             <!-- Brand Logo & Name -->
             <div class="p-6 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full border border-gray-600 bg-gradient-to-br from-kama-800 to-kama-900 flex items-center justify-center shrink-0">
-                    <i class="fa-solid fa-camera-retro text-white text-sm"></i>
+                <div class="w-10 h-10 rounded-full border border-gray-600 bg-gradient-to-br from-kama-800 to-kama-900 flex items-center justify-center shrink-0 overflow-hidden relative">
+                    <i id="sidebar-icon" class="fa-solid fa-camera-retro text-white text-sm"></i>
+                    <img id="sidebar-logo" src="" class="absolute inset-0 w-full h-full object-cover hidden">
                 </div>
                 <div class="flex flex-col">
                     <h1 class="font-bold text-lg tracking-tight leading-tight truncate w-32 brand-name-text">App Name</h1>
@@ -1028,7 +1029,7 @@
                             <span class="text-sm font-bold text-gray-800 leading-tight truncate max-w-[120px]" id="adminName">User</span>
                             <span class="text-[10px] text-gray-500 uppercase tracking-wide font-semibold mt-0.5" id="adminRole">Fotografer</span>
                         </div>
-                        <i class="fa-solid fa-chevron-down text-gray-400 text-xs ml-1 group-hover:text-gray-600 hidden sm:block"></i>
+                        <i class="fa-solid fa-right-from-bracket text-red-400 text-lg ml-2 group-hover:text-red-600 hidden sm:block" title="Logout"></i>
                     </div>
                 </div>
             </header>
@@ -1037,8 +1038,9 @@
             <div id="mobile-sidebar" class="fixed inset-y-0 left-0 w-[260px] bg-[#0A0F1C] text-white z-[60] transform -translate-x-full transition-transform duration-300 sm:hidden flex flex-col shadow-2xl">
                 <div class="p-4 flex justify-between items-center border-b border-white/10">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full border border-gray-600 bg-gradient-to-br from-kama-800 to-kama-900 flex items-center justify-center shrink-0">
-                            <i class="fa-solid fa-camera-retro text-white text-xs"></i>
+                        <div class="w-8 h-8 rounded-full border border-gray-600 bg-gradient-to-br from-kama-800 to-kama-900 flex items-center justify-center shrink-0 overflow-hidden relative">
+                            <i id="sidebar-icon-m" class="fa-solid fa-camera-retro text-white text-xs"></i>
+                            <img id="sidebar-logo-m" src="" class="absolute inset-0 w-full h-full object-cover hidden">
                         </div>
                         <h1 class="font-bold text-base tracking-tight truncate w-24 brand-name-text">App Name</h1>
                     </div>
@@ -1283,9 +1285,9 @@
                             
                             <!-- Tab Filters -->
                             <div class="flex gap-4 border-b border-gray-200 mb-4 overflow-x-auto hide-scrollbar">
-                                <button class="pb-3 border-b-2 border-blue-600 text-blue-600 font-semibold text-sm whitespace-nowrap px-1">Semua Project</button>
-                                <button class="pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm whitespace-nowrap px-1">Menunggu Klien</button>
-                                <button class="pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm whitespace-nowrap px-1">Selesai</button>
+                                <button onclick="filterProjectsTab('Semua', this)" class="pb-3 border-b-2 border-blue-600 text-blue-600 font-semibold text-sm whitespace-nowrap px-1">Semua Project</button>
+                                <button onclick="filterProjectsTab('Menunggu Klien', this)" class="pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm whitespace-nowrap px-1">Menunggu Klien</button>
+                                <button onclick="filterProjectsTab('Selesai', this)" class="pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm whitespace-nowrap px-1">Selesai</button>
                             </div>
 
                             <!-- Project List Container (Replaces old table) -->
@@ -4120,12 +4122,12 @@
 
                         var titleClick = isEn ? 'Click to Extend' : 'Klik untuk Perpanjang';
                         var titleActive = isEn ? 'Active Period' : 'Masa Aktif';
-                        var labelExp = isEn ? 'Expired: ' : 'Kedaluwarsa: ';
+                        var labelExp = isEn ? 'Exp: ' : 'Exp: ';
 
                         if (typeof isAccountExpired === 'function' && isAccountExpired()) {
-                            adminRoleEl.innerHTML = currentUser.role + ' &bull; <span class="text-red-500 font-bold text-[10px] animate-pulse cursor-pointer border border-red-200 bg-red-50 px-1.5 py-0.5 rounded-md shadow-sm" onclick="showExpiredAlert()" title="' + titleClick + '"><i class="fa-solid fa-circle-exclamation mr-0.5"></i>' + labelExp + expText + '</span>';
+                            adminRoleEl.innerHTML = currentUser.role + '<br><span class="text-red-500 font-bold text-[10px] animate-pulse cursor-pointer border border-red-200 bg-red-50 px-1.5 py-0.5 rounded-md shadow-sm" onclick="showExpiredAlert()" title="' + titleClick + '"><i class="fa-solid fa-circle-exclamation mr-0.5"></i>' + labelExp + expText + '</span>';
                         } else {
-                            adminRoleEl.innerHTML = currentUser.role + ' &bull; <span class="text-blue-500 font-semibold text-[10px]" title="' + titleActive + '">Exp: ' + expText + '</span>';
+                            adminRoleEl.innerHTML = currentUser.role + '<br><span class="text-blue-500 font-semibold text-[10px]" title="' + titleActive + '">Exp: ' + expText + '</span>';
                         }
                     } else {
                         adminRoleEl.innerText = currentUser.role;
@@ -4937,6 +4939,7 @@
 
                 var card = document.createElement('div');
                 card.className = "bg-white border border-gray-200 rounded-2xl p-4 flex flex-col sm:flex-row gap-4 sm:items-center hover:shadow-md transition-shadow relative overflow-hidden group";
+                card.setAttribute('data-status', statusClient);
 
                 var isUserAdmin = currentUser && currentUser.role === 'Admin';
                 var ownerRaw = row.Owner || '-';
@@ -5159,10 +5162,34 @@
             
             if (logoUrl) {
                 document.getElementById('settings-avatar-preview').src = logoUrl;
+                if(document.getElementById('profile-avatar')) document.getElementById('profile-avatar').src = logoUrl;
+                if(document.getElementById('sidebar-logo')) {
+                    document.getElementById('sidebar-logo').src = logoUrl;
+                    document.getElementById('sidebar-logo').classList.remove('hidden');
+                    document.getElementById('sidebar-icon').classList.add('hidden');
+                }
+                if(document.getElementById('sidebar-logo-m')) {
+                    document.getElementById('sidebar-logo-m').src = logoUrl;
+                    document.getElementById('sidebar-logo-m').classList.remove('hidden');
+                    document.getElementById('sidebar-icon-m').classList.add('hidden');
+                }
             } else {
                 document.getElementById('settings-avatar-preview').src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(brandName || 'Studio') + '&background=0D8ABC&color=fff';
+                if(document.getElementById('sidebar-logo')) {
+                    document.getElementById('sidebar-logo').classList.add('hidden');
+                    document.getElementById('sidebar-icon').classList.remove('hidden');
+                }
+                if(document.getElementById('sidebar-logo-m')) {
+                    document.getElementById('sidebar-logo-m').classList.add('hidden');
+                    document.getElementById('sidebar-icon-m').classList.remove('hidden');
+                }
             }
             document.getElementById('settings-display-name').innerText = brandName || 'Studio Name';
+            
+            // Update app branding texts
+            if (brandName) {
+                document.querySelectorAll('.brand-name-text').forEach(el => el.innerText = brandName);
+            }
         }
 
         function saveSettings() {
@@ -5173,6 +5200,8 @@
             var bankName = document.getElementById('settings-bank-name') ? document.getElementById('settings-bank-name').value : '';
             var bankAccount = document.getElementById('settings-bank-account') ? document.getElementById('settings-bank-account').value : '';
             var bankOwner = document.getElementById('settings-bank-owner') ? document.getElementById('settings-bank-owner').value : '';
+            
+            var oldLang = localStorage.getItem('ps_lang') || 'id';
             
             localStorage.setItem('ps_brand_name', brandName);
             localStorage.setItem('ps_logo_url', logoUrl);
@@ -5194,8 +5223,32 @@
             
             if (logoUrl) {
                 document.getElementById('settings-avatar-preview').src = logoUrl;
+                if(document.getElementById('profile-avatar')) document.getElementById('profile-avatar').src = logoUrl;
+                if(document.getElementById('sidebar-logo')) {
+                    document.getElementById('sidebar-logo').src = logoUrl;
+                    document.getElementById('sidebar-logo').classList.remove('hidden');
+                    document.getElementById('sidebar-icon').classList.add('hidden');
+                }
+                if(document.getElementById('sidebar-logo-m')) {
+                    document.getElementById('sidebar-logo-m').src = logoUrl;
+                    document.getElementById('sidebar-logo-m').classList.remove('hidden');
+                    document.getElementById('sidebar-icon-m').classList.add('hidden');
+                }
             } else {
                 document.getElementById('settings-avatar-preview').src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(brandName || 'Studio') + '&background=0D8ABC&color=fff';
+                if(document.getElementById('sidebar-logo')) {
+                    document.getElementById('sidebar-logo').classList.add('hidden');
+                    document.getElementById('sidebar-icon').classList.remove('hidden');
+                }
+                if(document.getElementById('sidebar-logo-m')) {
+                    document.getElementById('sidebar-logo-m').classList.add('hidden');
+                    document.getElementById('sidebar-icon-m').classList.remove('hidden');
+                }
+            }
+            
+            // Update app branding texts
+            if (brandName) {
+                document.querySelectorAll('.brand-name-text').forEach(el => el.innerText = brandName);
             }
             
             Swal.fire({
@@ -5207,7 +5260,7 @@
             });
             
             // Reload page to apply language if changed
-            if (lang !== (localStorage.getItem('ps_lang') || 'id')) {
+            if (lang !== oldLang) {
                 setTimeout(function() { window.location.reload(); }, 1500);
             }
         }
@@ -8995,6 +9048,36 @@ function updateBackgroundConfig() {
     if(document.getElementById('cBgBlur')) collageState.bgBlur = document.getElementById('cBgBlur').value;
     requestRenderCollage();
 }
+
+function filterProjectsTab(statusFilter, btnEl) {
+    if(btnEl) {
+        btnEl.parentElement.querySelectorAll('button').forEach(btn => {
+            btn.className = 'pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm whitespace-nowrap px-1';
+        });
+        btnEl.className = 'pb-3 border-b-2 border-blue-600 text-blue-600 font-semibold text-sm whitespace-nowrap px-1';
+    }
+
+    var projectCards = document.querySelectorAll('#projectTableBody > div.bg-white');
+    projectCards.forEach(function (card) {
+        var cardStatus = card.getAttribute('data-status');
+        if (statusFilter === 'Semua') {
+            card.style.display = '';
+        } else if (statusFilter === 'Menunggu Klien') {
+            if (cardStatus === 'Belum Memilih' || cardStatus === 'Sedang Memilih') {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        } else if (statusFilter === 'Selesai') {
+            if (cardStatus === 'Selesai') {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        }
+    });
+}
+
     // GLOBAL SEARCH FUNCTIONALITY
     document.addEventListener('DOMContentLoaded', function () {
         var searchInput = document.getElementById('global-search');
@@ -9013,12 +9096,12 @@ function updateBackgroundConfig() {
                 });
                 
                 // Filter di tab Pantau Klien
-                var clientStatusRows = document.querySelectorAll('#clientStatusTableBody > tr');
-                clientStatusRows.forEach(function (row) {
-                    if (row.textContent.toLowerCase().indexOf(query) > -1) {
-                        row.style.display = '';
+                var clientStatusCards = document.querySelectorAll('#client-status-container > div.bg-white');
+                clientStatusCards.forEach(function (card) {
+                    if (card.textContent.toLowerCase().indexOf(query) > -1) {
+                        card.style.display = '';
                     } else {
-                        row.style.display = 'none';
+                        card.style.display = 'none';
                     }
                 });
             });
