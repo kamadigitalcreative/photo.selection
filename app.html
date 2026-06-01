@@ -3529,24 +3529,73 @@
             setLbl('#lbl-p-wm-desc', 'Tampilkan watermark logo.', 'Show logo watermark.');
             setLbl('#lbl-p-cat-title', 'Multi-Kategori <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i>', 'Multi-Category <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i>');
             setLbl('#lbl-p-cat-desc', 'Pisahkan kuota foto per kategori.', 'Separate photo quota per category.');
-            setLbl('#lbl-p-cat-add', 'Tambah Kategori', 'Add Category');
-            setPh('#p_pass', 'Kosong jika open', 'Leave blank if open');
-            setTx('#formCreateProject + div button[type="button"]', 'Batal', 'Cancel'); // Khusus tombol bawah, tombol X aman!
-            setTx('#btnCreate', 'Buat Link', 'Generate Link');
-
-            setTx('#modalSettingsContent h3', '<i class="fa-solid fa-palette text-blue-500 mr-2"></i> Pengaturan Tampilan', '<i class="fa-solid fa-palette text-blue-500 mr-2"></i> Display Settings', true);
-            setLbl('#formSettings > div > div:nth-child(2) > label', 'Nama Studio / Brand', 'Studio / Brand Name');
-            setLbl('#formSettings > div > div:nth-child(3) > label:nth-of-type(1)', 'Upload Logo (JPG/PNG)', 'Upload Logo (JPG/PNG)');
-            setTx('#modalSettingsContent .text-\\[10px\\].font-bold.text-gray-400', 'ATAU PAKAI LINK', 'OR USE LINK');
-            setLbl('#formSettings > div > div:nth-child(3) > label:nth-of-type(2)', 'URL Logo', 'Logo URL');
-            setPh('#set_brand_logo', 'https://... (kosongkan jika upload file)', 'https://... (leave blank if upload file)');
-            setTx('#formSettings .mt-6 button[type="button"]', 'Batal', 'Cancel'); // Khusus tombol bawah, tombol X aman!
-            setTx('#btnSaveSettings', 'Simpan', 'Save');
+            setPh('#global-search', 'Cari project, klien, atau link...', 'Search project, client, or link...');
             
-            // Pengaturan Studio di Dashboard Utama
-            setTx('#section-settings h2', 'Pengaturan Studio', 'Studio Settings');
-            setTx('#section-settings p.text-sm.text-gray-500', 'Sesuaikan profil, brand, dan preferensi akun Anda.', 'Customize your account profile, brand, and preferences.');
-            setTx('#section-settings button[onclick="saveSettings()"]', '<i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan', '<i class="fa-solid fa-floppy-disk"></i> Save Changes', true);
+            // Overview Dashboard
+            setTx('#section-dashboard h2', 'Overview Analytics', 'Analytics Overview');
+            setTx('#section-dashboard p.text-sm', 'Ringkasan performa sistem Photo Selector Anda.', 'Summary of your Photo Selector system performance.');
+            setTx('#section-dashboard .flex-wrap > button:nth-child(2)', 'Semua Waktu', 'All Time');
+            setTx('#section-dashboard .flex-wrap > button:nth-child(3)', 'Hari Ini', 'Today');
+            setTx('#section-dashboard .flex-wrap > button:nth-child(4)', 'Bulan Ini', 'This Month');
+            setTx('#section-dashboard .flex-wrap > button.bg-kama-800', 'Cari', 'Search');
+            
+            setTx('#section-dashboard .grid > div:nth-child(1) p', 'Total Project', 'Total Projects');
+            setTx('#section-dashboard .grid > div:nth-child(2) p', 'Semua Fotografer', 'All Photographers');
+            setTx('#section-dashboard .grid > div:nth-child(3) p', 'Fotografer Aktif', 'Active Photographers');
+            setTx('#section-dashboard .grid > div:nth-child(4) p', 'Pending ACC', 'Pending ACC');
+            setTx('#section-dashboard .grid > div:nth-child(5) p', 'Tidak Aktif', 'Inactive');
+
+            setTx('#section-projects h2', 'Daftar Project', 'Project List');
+            setTx('#section-projects > div.grid > div:nth-child(1) p', 'Project Aktif', 'Active Projects');
+            setTx('#section-projects > div.grid > div:nth-child(2) p', 'Sudah Submit', 'Submitted');
+            setTx('#section-projects > div.grid > div:nth-child(3) p', 'Menunggu Review', 'Awaiting Review');
+            setTx('#section-projects > div.grid > div:nth-child(4) p', 'Total Link (Bulan Ini)', 'Total Links (This Month)');
+            
+            setTx('#section-projects button[onclick="openModalCreate()"]', '<i class="fa-solid fa-plus"></i> Buat Project Baru', '<i class="fa-solid fa-plus"></i> Create New Project', true);
+            setTx('#section-projects .flex.gap-4.border-b button:nth-child(1)', 'Semua Project', 'All Projects');
+            setTx('#section-projects .flex.gap-4.border-b button:nth-child(2)', 'Menunggu Klien', 'Awaiting Client');
+            setTx('#section-projects .flex.gap-4.border-b button:nth-child(3)', 'Selesai', 'Completed');
+
+            setTx('#section-status h2', 'Pantau Status Klien', 'Client Status Monitor');
+            setTx('#section-status > div:first-child > div > p', 'Monitoring progres pemilihan foto oleh klien Anda.', 'Monitor photo selection progress by your clients.');
+            setTx('#section-users h2', 'Kelola Fotografer', 'Manage Photographers');
+            setTx('#section-users > div:first-child > div > p', 'Daftar tim fotografer dan akses login mereka.', 'List of photographer team and their login access.');
+            setTx('#section-users button[onclick="openModalAddUser()"]', '<i class="fa-solid fa-plus"></i> Tambah Fotografer', '<i class="fa-solid fa-plus"></i> Add Photographer', true);
+            
+            setTx('#section-admin-feedback h2', 'Laporan Feedback', 'Feedback Reports');
+            setTx('#section-admin-feedback > div:first-child > div > p', 'Daftar saran dan kendala yang dilaporkan.', 'List of reported suggestions and issues.');
+
+            // Headers Table Admin
+            var tblUserHeaders = document.querySelectorAll('#section-users thead th');
+            if(tblUserHeaders.length >= 4) {
+                tblUserHeaders[0].innerText = isEn ? 'Name & Studio' : 'Nama & Studio';
+                tblUserHeaders[1].innerText = isEn ? 'Role & Limit' : 'Role & Limit';
+                tblUserHeaders[2].innerText = isEn ? 'Status & Last Active' : 'Status & Terakhir Aktif';
+                tblUserHeaders[3].innerText = isEn ? 'Actions' : 'Aksi';
+            }
+            var tblFbHeaders = document.querySelectorAll('#section-admin-feedback thead th');
+            if(tblFbHeaders.length >= 4) {
+                tblFbHeaders[0].innerText = isEn ? 'Reporter' : 'Pelapor';
+                tblFbHeaders[1].innerText = isEn ? 'Message & Proof' : 'Pesan & Bukti';
+                tblFbHeaders[2].innerText = isEn ? 'Status & Time' : 'Status & Waktu';
+                tblFbHeaders[3].innerText = isEn ? 'Actions' : 'Aksi';
+            }
+
+            // Client UI Header
+            setTx('.text-\\[9px\\].sm\\:text-\\[10px\\].font-semibold.text-slate-400.uppercase', 'Total Foto', 'Total Photos');
+            setTx('.text-\\[9px\\].sm\\:text-\\[10px\\].font-semibold.text-slate-400.uppercase:nth-child(2)', 'Terpilih', 'Selected');
+            
+            setTx('#btn-back-dashboard span', 'Home', 'Home');
+            setTx('#gallery-subtitle', 'Pilih maksimal <span id="gallery-max" class="font-semibold text-kama-800">0</span> foto', 'Choose up to <span id="gallery-max" class="font-semibold text-kama-800">0</span> photos', true);
+            setTx('label[for="selectAllCheckbox"]', '<input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAllClient()" class="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-600 cursor-pointer"> Pilih Semua', '<input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAllClient()" class="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-600 cursor-pointer"> Select All', true);
+            setTx('button[onclick="downloadSelectedAsZip()"] span', 'Download ZIP', 'Download ZIP');
+            setTx('button[onclick="sendToWA()"] span', 'Kirim WA', 'Send to WA');
+            
+            setTx('#client-auth-view h2', 'Galeri Terkunci', 'Gallery Locked');
+            setTx('#client-auth-view p.text-gray-500', 'Masukkan password yang diberikan fotografer', 'Enter the password provided by the photographer');
+            setPh('#client-password', 'Masukkan Password', 'Enter Password');
+            setTx('#btnClientLogin', 'Buka Galeri', 'Open Gallery');
+            setTx('#client-auth-error', 'Password salah!', 'Incorrect password!');
             
             setTx('#modalPaymentSettingsContent h3', '<i class="fa-solid fa-money-check-dollar text-green-500 mr-2"></i> Info Pembayaran', '<i class="fa-solid fa-money-check-dollar text-green-500 mr-2"></i> Payment Info', true);
             setTx('#modalPaymentSettingsContent .bg-blue-50\\/50 p', '<i class="fa-solid fa-circle-info mr-1"></i> Data rekening Anda akan ditampilkan secara otomatis kepada Klien yang membeli foto ekstra agar mereka bisa melakukan transfer pembayaran.', '<i class="fa-solid fa-circle-info mr-1"></i> Your bank details will be shown automatically to clients purchasing extra photos so they can make payment transfers.', true);
@@ -5339,6 +5388,7 @@ function isAccountExpired() {
                     '</td>';
                 tbody.appendChild(tr);
             });
+            if (typeof applyLanguage === 'function') applyLanguage(localStorage.getItem('ps_lang') || 'id');
         }
 
         function promptExpiry(username, currentExpiry, isApproval) {
@@ -5614,6 +5664,7 @@ function isAccountExpired() {
                 
                 tbody.appendChild(card);
             });
+            if (typeof applyLanguage === 'function') applyLanguage(localStorage.getItem('ps_lang') || 'id');
         }
 
         function copyLink(link) {
@@ -7867,6 +7918,7 @@ function isAccountExpired() {
             });
 
             updateStatusCounters(countBelum, countSedang, countSelesai);
+            if (typeof applyLanguage === 'function') applyLanguage(localStorage.getItem('ps_lang') || 'id');
         }
 
         function updateStatusCounters(b, s, sl) {
@@ -8206,6 +8258,7 @@ function isAccountExpired() {
                     imgHtml + replyHtml;
                 container.appendChild(card);
             });
+            if (typeof applyLanguage === 'function') applyLanguage(localStorage.getItem('ps_lang') || 'id');
         }
 
         async function submitReply(id) {
