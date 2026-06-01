@@ -4367,6 +4367,15 @@
             // fetchAdminTabBranding() dihapus dari sini karena sudah dipanggil di saat load awal
 
             if (currentUser) {
+                // Terapkan logo langsung dari session
+                if (currentUser.brandLogo) {
+                    appBranding.logo = currentUser.brandLogo;
+                }
+                if (currentUser.brandName) {
+                    appBranding.name = currentUser.brandName;
+                }
+                if (typeof applyBranding === 'function') applyBranding();
+
                 var adminNameEl = document.getElementById('adminName');
                 if (adminNameEl) adminNameEl.innerText = currentUser.nama ? currentUser.nama.split(' ')[0] : 'User';
 
