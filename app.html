@@ -1472,8 +1472,8 @@
                     </div>
                 </div>
 
-                <!-- SECTION: PREMIUM COLLAGE (FASE 6 - SCRL FREEFORM) -->
-<div id="section-collage" class="hidden flex-1 flex-col fade-in relative max-w-[1400px] mx-auto w-full" style="zoom: 0.95; transform: scale(0.95); transform-origin: top center;">
+<!-- SECTION: PREMIUM COLLAGE (FASE 6 - SCRL FREEFORM) -->
+<div id="section-collage" class="hidden flex-1 flex-col fade-in relative w-full h-full">
     
     <!-- Kolase Top Header -->
     <div class="mb-6">
@@ -1482,10 +1482,10 @@
     </div>
 
     <!-- Main Grid: Left (Templates + Preview), Right (Settings) -->
-    <div class="flex flex-col lg:flex-row gap-6 items-start h-full pb-10">
+    <div class="flex flex-col lg:flex-row gap-6 items-start h-full pb-10 w-full overflow-hidden">
         
         <!-- Left Column: Templates and Preview -->
-        <div class="flex-1 flex flex-col w-full space-y-6">
+        <div class="flex-1 min-w-0 flex flex-col w-full h-full space-y-6">
             
             <!-- Pilih Template -->
             <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
@@ -1645,12 +1645,14 @@
             <!-- Jumlah Foto -->
             <div>
                 <label class="block text-xs font-bold text-gray-700 mb-2">Jumlah Foto</label>
-                <div class="flex gap-2">
-                    <button class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">3</button>
-                    <button class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">4</button>
-                    <button class="flex-1 py-2 rounded-lg border border-blue-600 text-xs font-bold text-blue-600 bg-blue-50 transition-colors shadow-sm">5</button>
-                    <button class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">6</button>
-                    <button class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">7+</button>
+                <div class="flex gap-2 min-w-0">
+                    <button onclick="Swal.fire({toast:true, position:'top', icon:'info', text:'Gunakan template untuk mengatur tata letak otomatis.', timer:2500})" class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">1</button>
+                    <button onclick="Swal.fire({toast:true, position:'top', icon:'info', text:'Gunakan template untuk mengatur tata letak otomatis.', timer:2500})" class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">2</button>
+                    <button onclick="Swal.fire({toast:true, position:'top', icon:'info', text:'Gunakan template untuk mengatur tata letak otomatis.', timer:2500})" class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">3</button>
+                    <button onclick="Swal.fire({toast:true, position:'top', icon:'info', text:'Gunakan template untuk mengatur tata letak otomatis.', timer:2500})" class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">4</button>
+                    <button onclick="Swal.fire({toast:true, position:'top', icon:'info', text:'Gunakan template untuk mengatur tata letak otomatis.', timer:2500})" class="flex-1 py-2 rounded-lg border border-blue-600 text-xs font-bold text-blue-600 bg-blue-50 transition-colors shadow-sm">5</button>
+                    <button onclick="Swal.fire({toast:true, position:'top', icon:'info', text:'Gunakan template untuk mengatur tata letak otomatis.', timer:2500})" class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">6</button>
+                    <button onclick="Swal.fire({toast:true, position:'top', icon:'info', text:'Gunakan template untuk mengatur tata letak otomatis.', timer:2500})" class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">7+</button>
                 </div>
             </div>
 
@@ -1690,7 +1692,7 @@
                     <label class="text-xs font-bold text-gray-700">Judul <span class="text-gray-400 font-normal">(Opsional)</span></label>
                 </div>
                 <div class="relative">
-                    <input type="text" value="Rizky & Anisa" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-gray-50 focus:bg-white shadow-sm">
+                    <input type="text" id="collageTitleInput" oninput="updateCollageTitle()" value="Rizky & Anisa" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-gray-50 focus:bg-white shadow-sm">
                     <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400">13 / 60</span>
                 </div>
                 <p class="text-[9px] text-gray-400 mt-2"><i class="fa-solid fa-circle-info mr-1"></i> Judul akan otomatis ditampilkan di bagian bawah kolase.</p>
@@ -1700,13 +1702,13 @@
             <div>
                 <label class="block text-xs font-bold text-gray-700 mb-2">Gaya & Warna</label>
                 <div class="relative">
-                    <select class="w-full appearance-none border border-gray-200 rounded-xl pl-11 pr-4 py-2.5 text-sm font-bold text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer bg-gray-50 focus:bg-white shadow-sm">
-                        <option>Putih Bersih</option>
-                        <option>Hitam Elegan</option>
-                        <option>Pastel Hangat</option>
-                        <option>Transparan (PNG)</option>
+                    <select id="collageBgSelect" onchange="updateCollageBgColor()" class="w-full appearance-none border border-gray-200 rounded-xl pl-11 pr-4 py-2.5 text-sm font-bold text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer bg-gray-50 focus:bg-white shadow-sm">
+                        <option value="#ffffff">Putih Bersih</option>
+                        <option value="#1a1a1a">Hitam Elegan</option>
+                        <option value="#f8ede3">Pastel Hangat</option>
+                        <option value="transparent">Transparan (PNG)</option>
                     </select>
-                    <div class="w-4 h-4 rounded shadow-sm border border-gray-300 absolute left-3.5 top-1/2 -translate-y-1/2 bg-white"></div>
+                    <div id="collageBgPreviewBox" class="w-4 h-4 rounded shadow-sm border border-gray-300 absolute left-3.5 top-1/2 -translate-y-1/2 bg-white"></div>
                     <i class="fa-solid fa-chevron-down text-gray-400 text-xs absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"></i>
                 </div>
             </div>
@@ -8962,6 +8964,25 @@ function renderCollagePreview() {
         }
         ctx.restore();
     }
+    // Draw Title if exists
+    if (collageState.title && collageState.title.trim() !== "") {
+        ctx.save();
+        ctx.fillStyle = '#ffffff';
+        // Auto-sizing text based on canvas width, max size 150
+        let fontSize = Math.min(150, w * 0.05);
+        ctx.font = `bold ${fontSize}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        
+        // Add shadow for better visibility
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        
+        ctx.fillText(collageState.title, w/2, h - (fontSize/2));
+        ctx.restore();
+    }
     
     updateInteractiveOverlays(1); // 1 to 1 mapping, scaled by workspace CSS transform
 }
@@ -8972,8 +8993,8 @@ let collageWorkspace = { zoom: 1, panX: 0, panY: 0, isPanning: false, startX: 0,
 function initWorkspace() {
     let wrapper = document.getElementById('collageCanvasWrapper');
     if(!wrapper) return;
-    let maxW = wrapper.clientWidth - 80;
-    let maxH = wrapper.clientHeight - 80;
+    let maxW = wrapper.clientWidth - 10;
+    let maxH = wrapper.clientHeight - 10;
     let baseScale = Math.min(maxW / collageState.canvasW, maxH / collageState.canvasH);
     
     collageWorkspace.zoom = baseScale;
@@ -9298,6 +9319,28 @@ function filterProjectsTab(statusFilter, btnEl) {
         });
         btnEl.className = 'pb-3 border-b-2 border-blue-600 text-blue-600 font-semibold text-sm whitespace-nowrap px-1';
     }
+}
+
+function updateCollageTitle() {
+    var el = document.getElementById('collageTitleInput');
+    if (el) {
+        collageState.title = el.value;
+        requestRenderCollage();
+    }
+}
+
+function updateCollageBgColor() {
+    var el = document.getElementById('collageBgSelect');
+    if (el) {
+        collageState.bgColor = el.value;
+        var previewBox = document.getElementById('collageBgPreviewBox');
+        if (previewBox) {
+            previewBox.style.backgroundColor = el.value === 'transparent' ? '#ffffff' : el.value;
+        }
+        requestRenderCollage();
+    }
+}
+
 
     var projectCards = document.querySelectorAll('#projectTableBody > div.bg-white');
     projectCards.forEach(function (card) {
