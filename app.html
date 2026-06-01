@@ -4512,6 +4512,17 @@
                     searchContainer.classList.add('hidden');
                 }
             }
+            
+            var mainContainer = document.querySelector('main.scrollable-content');
+            if (mainContainer) {
+                if (tabId === 'sortir-lokal' || tabId === 'collage') {
+                    mainContainer.classList.remove('p-4', 'sm:p-8');
+                    mainContainer.classList.add('px-4', 'sm:px-8', 'pb-4', 'sm:pb-8', 'pt-0');
+                } else {
+                    mainContainer.classList.add('p-4', 'sm:p-8');
+                    mainContainer.classList.remove('px-4', 'sm:px-8', 'pb-4', 'sm:pb-8', 'pt-0');
+                }
+            }
 
             // FIX: Matikan robot setiap kali pindah menu agar hemat memori
             clearInterval(autoRefreshInterval);
@@ -4557,6 +4568,7 @@
             } else if (tabId === 'collage') {
                 if (sectionCollage) { sectionCollage.classList.remove('hidden'); sectionCollage.classList.add('flex'); }
                 if (typeof loadCollageProjectsList === 'function') loadCollageProjectsList();
+                if (typeof initWorkspace === 'function') setTimeout(initWorkspace, 100);
             } else if (tabId === 'feedback') {
                 if (sectionFeedback) { sectionFeedback.classList.remove('hidden'); sectionFeedback.classList.add('flex'); }
                 loadAdminFeedback();
@@ -5148,9 +5160,9 @@
             var logoUrl = localStorage.getItem('ps_logo_url') || (typeof appBranding !== 'undefined' ? appBranding.logo : '');
             var lang = localStorage.getItem('ps_lang') || 'id';
             
-            var bankName = localStorage.getItem('ps_bank_name') || '';
-            var bankAccount = localStorage.getItem('ps_bank_account') || '';
-            var bankOwner = localStorage.getItem('ps_bank_owner') || '';
+            var bankName = (typeof currentUser !== 'undefined' && currentUser && currentUser.bankName) ? currentUser.bankName : (localStorage.getItem('ps_bank_name') || '');
+            var bankAccount = (typeof currentUser !== 'undefined' && currentUser && currentUser.bankAccount) ? currentUser.bankAccount : (localStorage.getItem('ps_bank_account') || '');
+            var bankOwner = (typeof currentUser !== 'undefined' && currentUser && currentUser.bankAccountName) ? currentUser.bankAccountName : (localStorage.getItem('ps_bank_owner') || '');
             
             document.getElementById('settings-brand-name').value = brandName;
             document.getElementById('settings-logo-url').value = logoUrl;
@@ -5209,6 +5221,21 @@
             localStorage.setItem('ps_bank_name', bankName);
             localStorage.setItem('ps_bank_account', bankAccount);
             localStorage.setItem('ps_bank_owner', bankOwner);
+            
+            if (typeof currentUser !== 'undefined' && currentUser) {
+                currentUser.bankName = bankName;
+                currentUser.bankAccount = bankAccount;
+                currentUser.bankAccountName = bankOwner;
+                
+                // Save payment to DB
+                if (typeof API_ENDPOINT !== 'undefined') {
+                    fetch(API_ENDPOINT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'savePaymentSettings', username: currentUser.username, bankName: bankName, bankAccount: bankAccount, bankAccountName: bankOwner })
+                    }).catch(()=>{});
+                }
+            }
             
             if (typeof applyLanguage === 'function') {
                 applyLanguage(lang);
