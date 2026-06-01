@@ -1473,7 +1473,7 @@
                 </div>
 
 <!-- SECTION: PREMIUM COLLAGE (FASE 6 - SCRL FREEFORM) -->
-<div id="section-collage" class="hidden flex-1 flex-col fade-in relative w-full h-full">
+<div id="section-collage" class="hidden flex-1 flex-col fade-in relative w-full min-h-full">
     
     <!-- Kolase Top Header -->
     <div class="mb-6">
@@ -1482,10 +1482,10 @@
     </div>
 
     <!-- Main Grid: Left (Templates + Preview), Right (Settings) -->
-    <div class="flex flex-col lg:flex-row gap-6 items-start h-full pb-10 w-full overflow-hidden">
+    <div class="flex flex-col lg:flex-row gap-6 items-start h-full pb-10 w-full">
         
         <!-- Left Column: Templates and Preview -->
-        <div class="flex-1 min-w-0 flex flex-col w-full h-full space-y-6">
+        <div class="flex-1 min-w-0 flex flex-col w-full space-y-6">
             
             <!-- Pilih Template -->
             <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
@@ -1569,7 +1569,7 @@
             </div>
 
             <!-- Preview Kolase -->
-            <div class="bg-white border border-gray-100 rounded-2xl flex-1 flex flex-col overflow-hidden min-h-[550px] shadow-sm">
+            <div class="bg-white border border-gray-100 rounded-2xl flex-1 flex flex-col overflow-hidden min-h-[550px] lg:min-h-[700px] shadow-sm">
                 <div class="p-4 border-b border-gray-100 bg-white flex items-center justify-between">
                     <h3 class="text-sm font-bold text-gray-900">Preview Kolase</h3>
                     <div class="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded" id="collageSelectedCountDisplay">0 Foto Terpilih</div>
@@ -9019,14 +9019,28 @@ let collageWorkspace = { zoom: 1, panX: 0, panY: 0, isPanning: false, startX: 0,
 function initWorkspace() {
     let wrapper = document.getElementById('collageCanvasWrapper');
     if(!wrapper) return;
-    let maxW = wrapper.clientWidth - 10;
-    let maxH = wrapper.clientHeight - 10;
+    
+    let w = wrapper.clientWidth;
+    let h = wrapper.clientHeight;
+    
+    // Failsafe if flex hasn't rendered yet
+    if (w <= 0) w = wrapper.parentElement.clientWidth || 300;
+    if (h <= 0) h = wrapper.parentElement.clientHeight || 550;
+    
+    let maxW = w - 10;
+    let maxH = h - 10;
+    
     let baseScale = Math.min(maxW / collageState.canvasW, maxH / collageState.canvasH);
+    if (isNaN(baseScale) || baseScale <= 0 || !isFinite(baseScale)) {
+        baseScale = 0.5; // fallback
+    }
     
     collageWorkspace.zoom = baseScale;
     collageWorkspace.panX = 0;
     collageWorkspace.panY = 0;
+    
     applyWorkspaceTransform();
+    updateInteractiveOverlays(baseScale);
 }
 
 function applyWorkspaceTransform() {
