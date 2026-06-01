@@ -3823,6 +3823,23 @@
             renderLogo(document.querySelectorAll('.brand-logo-container'), 'text-2xl', false);
             renderLogo(document.querySelectorAll('.brand-logo-container-sm'), 'text-sm', false);
             renderLogo(document.querySelectorAll('.brand-logo-container-lock'), 'text-2xl', true);
+            
+            // Also apply to sidebar logos directly during initialization
+            if (appBranding.logo) {
+                if(document.getElementById('sidebar-logo')) {
+                    document.getElementById('sidebar-logo').src = appBranding.logo;
+                    document.getElementById('sidebar-logo').classList.remove('hidden');
+                    document.getElementById('sidebar-icon').classList.add('hidden');
+                }
+                if(document.getElementById('sidebar-logo-m')) {
+                    document.getElementById('sidebar-logo-m').src = appBranding.logo;
+                    document.getElementById('sidebar-logo-m').classList.remove('hidden');
+                    document.getElementById('sidebar-icon-m').classList.add('hidden');
+                }
+                if(document.getElementById('profile-avatar')) {
+                    document.getElementById('profile-avatar').src = appBranding.logo;
+                }
+            }
         }
 
         // --- LOGIKA LONCENG NOTIFIKASI ---
@@ -9319,28 +9336,6 @@ function filterProjectsTab(statusFilter, btnEl) {
         });
         btnEl.className = 'pb-3 border-b-2 border-blue-600 text-blue-600 font-semibold text-sm whitespace-nowrap px-1';
     }
-}
-
-function updateCollageTitle() {
-    var el = document.getElementById('collageTitleInput');
-    if (el) {
-        collageState.title = el.value;
-        requestRenderCollage();
-    }
-}
-
-function updateCollageBgColor() {
-    var el = document.getElementById('collageBgSelect');
-    if (el) {
-        collageState.bgColor = el.value;
-        var previewBox = document.getElementById('collageBgPreviewBox');
-        if (previewBox) {
-            previewBox.style.backgroundColor = el.value === 'transparent' ? '#ffffff' : el.value;
-        }
-        requestRenderCollage();
-    }
-}
-
 
     var projectCards = document.querySelectorAll('#projectTableBody > div.bg-white');
     projectCards.forEach(function (card) {
@@ -9361,6 +9356,26 @@ function updateCollageBgColor() {
             }
         }
     });
+}
+
+function updateCollageTitle() {
+    var el = document.getElementById('collageTitleInput');
+    if (el) {
+        collageState.title = el.value;
+        requestRenderCollage();
+    }
+}
+
+function updateCollageBgColor() {
+    var el = document.getElementById('collageBgSelect');
+    if (el) {
+        collageState.bgColor = el.value;
+        var previewBox = document.getElementById('collageBgPreviewBox');
+        if (previewBox) {
+            previewBox.style.backgroundColor = el.value === 'transparent' ? '#ffffff' : el.value;
+        }
+        requestRenderCollage();
+    }
 }
 
     // GLOBAL SEARCH FUNCTIONALITY
