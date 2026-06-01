@@ -1100,7 +1100,7 @@
             </div>
             
             <main class="flex-1 overflow-y-auto scrollable-content bg-[#F9FAFB] p-4 sm:p-8">
-                <div class="max-w-[1400px] mx-auto h-full flex flex-col">
+                <div class="max-w-[1400px] mx-auto min-h-full flex flex-col">
 
                 <div id="section-dashboard" class="hidden flex-1 flex-col">
                     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
@@ -1643,16 +1643,16 @@
             </div>
 
             <!-- Jumlah Foto -->
-            <div>
+            <div class="hidden">
                 <label class="block text-xs font-bold text-gray-700 mb-2">Jumlah Foto</label>
                 <div class="flex gap-2 min-w-0">
-                    <button onclick="Swal.fire({toast:true, position:'top', icon:'info', text:'Gunakan template untuk mengatur tata letak otomatis.', timer:2500})" class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">1</button>
-                    <button onclick="Swal.fire({toast:true, position:'top', icon:'info', text:'Gunakan template untuk mengatur tata letak otomatis.', timer:2500})" class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">2</button>
-                    <button onclick="Swal.fire({toast:true, position:'top', icon:'info', text:'Gunakan template untuk mengatur tata letak otomatis.', timer:2500})" class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">3</button>
-                    <button onclick="Swal.fire({toast:true, position:'top', icon:'info', text:'Gunakan template untuk mengatur tata letak otomatis.', timer:2500})" class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">4</button>
-                    <button onclick="Swal.fire({toast:true, position:'top', icon:'info', text:'Gunakan template untuk mengatur tata letak otomatis.', timer:2500})" class="flex-1 py-2 rounded-lg border border-blue-600 text-xs font-bold text-blue-600 bg-blue-50 transition-colors shadow-sm">5</button>
-                    <button onclick="Swal.fire({toast:true, position:'top', icon:'info', text:'Gunakan template untuk mengatur tata letak otomatis.', timer:2500})" class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">6</button>
-                    <button onclick="Swal.fire({toast:true, position:'top', icon:'info', text:'Gunakan template untuk mengatur tata letak otomatis.', timer:2500})" class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">7+</button>
+                    <button class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">1</button>
+                    <button class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">2</button>
+                    <button class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">3</button>
+                    <button class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">4</button>
+                    <button class="flex-1 py-2 rounded-lg border border-blue-600 text-xs font-bold text-blue-600 bg-blue-50 transition-colors shadow-sm">5</button>
+                    <button class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">6</button>
+                    <button class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">7+</button>
                 </div>
             </div>
 
@@ -2385,11 +2385,13 @@
         
         recalculateSmartAutoLayout();
         initWorkspace();
+        requestRenderCollage();
     }
     
     function setCollageSpacing(spacingVal) {
         collageState.spacing = spacingVal;
         recalculateSmartAutoLayout();
+        requestRenderCollage();
     }
     
     // Override calculate auto grid to respect spacing
@@ -9046,6 +9048,8 @@ function initWorkspace() {
 function applyWorkspaceTransform() {
     let area = document.getElementById('collageInteractiveArea');
     if(!area) return;
+    area.style.width = collageState.canvasW + 'px';
+    area.style.height = collageState.canvasH + 'px';
     area.style.transform = `translate(calc(-50% + ${collageWorkspace.panX}px), calc(-50% + ${collageWorkspace.panY}px)) scale(${collageWorkspace.zoom})`;
     document.getElementById('workspaceZoomDisplay').innerText = Math.round(collageWorkspace.zoom * 100) + '%';
 }
@@ -9101,15 +9105,15 @@ function updateInteractiveOverlays(viewScale) {
     let sortedLayers = [...collageState.layers].sort((a,b) => a.zIndex - b.zIndex);
     
     sortedLayers.forEach(layer => {
-        let pxX = layer.x * viewScale;
-        let pxY = layer.y * viewScale;
+        let pxX = layer.x;
+        let pxY = layer.y;
         let pxW, pxH;
         if (layer.isText) {
-            pxW = layer.w * layer.scale * viewScale;
-            pxH = layer.h * layer.scale * viewScale;
+            pxW = layer.w * layer.scale;
+            pxH = layer.h * layer.scale;
         } else {
-            pxW = layer.w * layer.scale * viewScale;
-            pxH = layer.h * layer.scale * viewScale;
+            pxW = layer.w * layer.scale;
+            pxH = layer.h * layer.scale;
         }
         
         let isActive = collageState.activeLayerId === layer.id;
