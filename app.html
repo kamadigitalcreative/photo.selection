@@ -1675,7 +1675,7 @@
                 </div>
 
                 <!-- SECTION SETTINGS (Pengaturan Studio) -->
-                <div id="section-settings" class="hidden flex-1 flex-col max-w-4xl mx-auto w-full pb-10">
+                <div id="section-settings" class="hidden flex-1 flex-col max-w-[1400px] mx-auto w-full pb-10">
                     <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
                             <h2 class="text-xl font-bold text-gray-800">Pengaturan Studio</h2>
@@ -1923,10 +1923,10 @@
             </div>
 
                 <!-- SECTION SORTIR LOKAL -->
-                <div id="section-sortir-lokal" class="hidden flex-1 flex-col max-w-[1400px] mx-auto w-full pb-10 -mt-6">
+                <div id="section-sortir-lokal" class="hidden flex-1 flex-col max-w-[1400px] mx-auto w-full pb-10 -mt-10">
                     
                     <!-- HEADER -->
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-5 pt-0 mt-2">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2 pt-0 mt-0">
                         <div>
                             <h2 class="text-2xl font-bold text-kama-800 tracking-tight">Sortir Lokal (Otomatis ZIP)</h2>
                             <p class="text-sm text-gray-500 mt-1">Pilih folder foto master, tempel daftar nama file klien, dan kami akan siapkan ZIP otomatis untuk Anda.</p>
@@ -5180,6 +5180,10 @@
             localStorage.setItem('ps_bank_name', bankName);
             localStorage.setItem('ps_bank_account', bankAccount);
             localStorage.setItem('ps_bank_owner', bankOwner);
+            
+            if (typeof applyLanguage === 'function') {
+                applyLanguage(lang);
+            }
             
             if (typeof appBranding !== 'undefined') {
                 appBranding.name = brandName;
@@ -8991,7 +8995,35 @@ function updateBackgroundConfig() {
     if(document.getElementById('cBgBlur')) collageState.bgBlur = document.getElementById('cBgBlur').value;
     requestRenderCollage();
 }
-
+    // GLOBAL SEARCH FUNCTIONALITY
+    document.addEventListener('DOMContentLoaded', function () {
+        var searchInput = document.getElementById('global-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', function (e) {
+                var query = e.target.value.toLowerCase();
+                
+                // Filter di tab Projects
+                var projectCards = document.querySelectorAll('#projectTableBody > div.bg-white');
+                projectCards.forEach(function (card) {
+                    if (card.textContent.toLowerCase().indexOf(query) > -1) {
+                        card.style.display = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                
+                // Filter di tab Pantau Klien
+                var clientStatusRows = document.querySelectorAll('#clientStatusTableBody > tr');
+                clientStatusRows.forEach(function (row) {
+                    if (row.textContent.toLowerCase().indexOf(query) > -1) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
     </script>
 </body>
 
