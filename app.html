@@ -1873,97 +1873,118 @@
                 </div>
 
                 <!-- SECTION PANDUAN -->
-                <div id="section-panduan" class="hidden flex-1 flex-col max-w-4xl mx-auto w-full">
-                    <div class="mb-6">
-                        <h2 class="text-xl font-bold text-kama-800">Panduan Penggunaan Lengkap</h2>
-                        <p class="text-sm text-gray-500">Ikuti langkah-langkah praktis ini untuk mempermudah alur kerja pemilihan foto bersama klien Anda.</p>
+                <div id="section-panduan" class="hidden flex-1 flex-col max-w-5xl mx-auto w-full pb-10">
+                    <div class="mb-8 text-center sm:text-left">
+                        <span class="inline-block bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-[10px] font-black px-3 py-1 rounded-full mb-3 shadow-sm uppercase tracking-wider guide-badge">PUSAT BANTUAN</span>
+                        <h2 class="text-3xl font-black text-slate-800 tracking-tight guide-title">Panduan Aplikasi Lengkap</h2>
+                        <p class="text-slate-500 mt-2 max-w-2xl guide-subtitle">Pelajari alur kerja cerdas untuk mengirim dan menerima foto pilihan klien Anda dalam hitungan menit.</p>
                     </div>
-                    <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.03)] border border-kama-100 p-6 space-y-8">
-                        
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         <!-- Step 1 -->
-                        <div>
-                            <h3 class="font-bold text-lg text-kama-800 mb-3 flex items-center">
-                                <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm"><i class="fa-solid fa-folder-plus"></i></span> 
-                                1. Persiapan Link Google Drive
-                            </h3>
-                            <div class="text-sm text-gray-600 ml-11 leading-relaxed bg-blue-50/50 p-4 rounded-xl border border-blue-100/50">
-                                <p class="mb-2">Sebelum membuat project, pastikan Anda sudah mengupload foto mentahan ke Google Drive.</p>
-                                <ul class="list-disc pl-5 space-y-1 text-gray-500">
-                                    <li>Klik kanan pada folder foto di Google Drive, pilih <b>Bagikan (Share)</b>.</li>
-                                    <li>Ubah akses umum menjadi <b class="text-kama-700">"Siapa saja yang memiliki link"</b> (Anyone with the link).</li>
-                                    <li>Pastikan perannya adalah <b>Pelihat (Viewer)</b> saja.</li>
-                                    <li>Salin link folder tersebut.</li>
+                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -z-10 group-hover:scale-110 transition-transform"></div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-2xl flex items-center justify-center text-xl shadow-md mb-5">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </div>
+                            <h3 class="font-black text-lg text-slate-800 mb-2 guide-step1-title">1. Siapkan Link Google Drive</h3>
+                            <p class="text-sm text-slate-600 leading-relaxed mb-4 guide-step1-desc">Sebelum membuat project, pastikan Anda sudah mengupload seluruh foto mentahan ke Google Drive.</p>
+                            <ul class="text-xs text-slate-500 space-y-2 font-medium guide-step1-list">
+                                <li class="flex items-start gap-2"><i class="fa-solid fa-check text-blue-500 mt-0.5"></i> <span>Ubah akses folder Drive menjadi <b>"Siapa saja yang memiliki link"</b> (Anyone with the link).</span></li>
+                                <li class="flex items-start gap-2"><i class="fa-solid fa-check text-blue-500 mt-0.5"></i> <span>Pastikan perannya disetel sebagai <b>Pelihat (Viewer)</b> saja.</span></li>
+                                <li class="flex items-start gap-2"><i class="fa-solid fa-check text-blue-500 mt-0.5"></i> <span>Salin (Copy) link folder tersebut.</span></li>
+                            </ul>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-bl-full -z-10 group-hover:scale-110 transition-transform"></div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-indigo-400 to-indigo-600 text-white rounded-2xl flex items-center justify-center text-xl shadow-md mb-5">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </div>
+                            <h3 class="font-black text-lg text-slate-800 mb-2 guide-step2-title">2. Buat Project Klien</h3>
+                            <p class="text-sm text-slate-600 leading-relaxed mb-4 guide-step2-desc">Masuk ke menu <b>Projects</b>, lalu klik tombol <b>New Project</b>. Isi formulir dengan lengkap dan benar.</p>
+                            <ul class="text-xs text-slate-500 space-y-2 font-medium guide-step2-list">
+                                <li class="flex items-start gap-2"><i class="fa-solid fa-check text-indigo-500 mt-0.5"></i> <span><b>Link G-Drive:</b> Tempel link folder dari Langkah 1.</span></li>
+                                <li class="flex items-start gap-2"><i class="fa-solid fa-check text-indigo-500 mt-0.5"></i> <span><b>Batas Foto:</b> Tentukan kuota maksimal foto yang boleh dipilih oleh klien.</span></li>
+                                <li class="flex items-start gap-2"><i class="fa-solid fa-check text-indigo-500 mt-0.5"></i> <span><b>Password:</b> Biarkan kosong jika tidak ingin mengunci galeri klien.</span></li>
+                            </ul>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -z-10 group-hover:scale-110 transition-transform"></div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white rounded-2xl flex items-center justify-center text-xl shadow-md mb-5">
+                                <i class="fa-brands fa-whatsapp"></i>
+                            </div>
+                            <h3 class="font-black text-lg text-slate-800 mb-2 guide-step3-title">3. Kirim Galeri ke Klien</h3>
+                            <p class="text-sm text-slate-600 leading-relaxed mb-4 guide-step3-desc">Setelah project berhasil dibuat, temukan nama klien Anda di daftar tabel Project.</p>
+                            <div class="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 flex items-start gap-3">
+                                <i class="fa-regular fa-copy text-emerald-600 mt-0.5 text-lg"></i>
+                                <p class="text-xs text-slate-600 font-medium leading-relaxed guide-step3-note">Klik tombol <b>Copy</b> berwarna hijau. Sistem akan menyalin teks sapaan otomatis beserta link galeri. Anda tinggal <b>Paste</b> di chat WhatsApp klien.</p>
+                            </div>
+                        </div>
+
+                        <!-- Step 4 -->
+                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-bl-full -z-10 group-hover:scale-110 transition-transform"></div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 text-white rounded-2xl flex items-center justify-center text-xl shadow-md mb-5">
+                                <i class="fa-solid fa-satellite-dish"></i>
+                            </div>
+                            <h3 class="font-black text-lg text-slate-800 mb-2 guide-step4-title">4. Pantau Progress Klien</h3>
+                            <p class="text-sm text-slate-600 leading-relaxed mb-4 guide-step4-desc">Tidak perlu lagi menagih klien terus-menerus. Buka menu <b>Pantau Klien</b> untuk melihat status secara <i>real-time</i>.</p>
+                            <div class="flex flex-wrap gap-2 guide-step4-badges">
+                                <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-[10px] font-bold"><i class="fa-solid fa-circle text-[8px] mr-1"></i> New</span>
+                                <span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-bold border border-blue-100"><i class="fa-solid fa-circle-dot text-[8px] mr-1"></i> Memilih</span>
+                                <span class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded text-[10px] font-bold border border-emerald-100"><i class="fa-solid fa-check-circle text-[8px] mr-1"></i> Selesai</span>
+                            </div>
+                        </div>
+
+                        <!-- Step 5 -->
+                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group md:col-span-2">
+                            <div class="absolute top-0 right-0 w-48 h-48 bg-purple-50 rounded-bl-full -z-10 group-hover:scale-110 transition-transform"></div>
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 text-white rounded-2xl flex items-center justify-center text-xl shadow-md shrink-0">
+                                    <i class="fa-solid fa-file-zipper"></i>
+                                </div>
+                                <h3 class="font-black text-xl text-slate-800 guide-step5-title">5. Sortir File Otomatis (Proses Akhir)</h3>
+                            </div>
+                            <p class="text-sm text-slate-600 leading-relaxed mb-4 guide-step5-desc">Fitur ajaib untuk menghemat waktu kerja Anda berjam-jam! Pisahkan ratusan foto hanya dalam satu klik saja.</p>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <ul class="text-xs text-slate-500 space-y-3 font-medium guide-step5-list">
+                                    <li class="flex items-start gap-2"><div class="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center shrink-0 mt-0.5 font-bold text-[10px]">1</div> <span>Salin (Copy) daftar nama file foto dari pesan WhatsApp klien Anda.</span></li>
+                                    <li class="flex items-start gap-2"><div class="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center shrink-0 mt-0.5 font-bold text-[10px]">2</div> <span>Masuk ke menu <b>Projects</b> > klik tombol abu-abu <b>Sortir Lokal</b>.</span></li>
+                                </ul>
+                                <ul class="text-xs text-slate-500 space-y-3 font-medium guide-step5-list2">
+                                    <li class="flex items-start gap-2"><div class="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center shrink-0 mt-0.5 font-bold text-[10px]">3</div> <span>Pilih folder foto master (mentahan) di komputer Anda, lalu paste list dari klien ke kotak yang disediakan.</span></li>
+                                    <li class="flex items-start gap-2"><div class="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center shrink-0 mt-0.5 font-bold text-[10px]">4</div> <span>Klik <b>Proses & Download ZIP</b>. Sistem otomatis memisahkan foto-foto tersebut!</span></li>
                                 </ul>
                             </div>
                         </div>
+                    </div>
 
-                        <hr class="border-gray-100">
-
-                        <!-- Step 2 -->
-                        <div>
-                            <h3 class="font-bold text-lg text-kama-800 mb-3 flex items-center">
-                                <span class="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm"><i class="fa-solid fa-layer-group"></i></span> 
-                                2. Membuat Project Klien
-                            </h3>
-                            <p class="text-sm text-gray-600 ml-11 leading-relaxed">Masuk ke menu <b>Projects</b>, lalu klik tombol <b>New Project</b>. Isi formulir dengan lengkap:</p>
-                            <ul class="list-disc pl-16 text-sm text-gray-500 space-y-1 mt-2">
-                                <li><b>Link G-Drive:</b> Paste link folder yang sudah disiapkan di Langkah 1.</li>
-                                <li><b>Batas Foto:</b> Tentukan jumlah maksimal foto yang boleh dipilih oleh klien.</li>
-                                <li><b>Password:</b> Boleh dikosongkan jika Anda tidak ingin galeri klien dikunci password.</li>
-                            </ul>
-                        </div>
+                    <!-- SUPPORT CONTACT BOX -->
+                    <div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-3xl p-8 sm:p-10 text-center relative overflow-hidden shadow-xl">
+                        <div class="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
+                        <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
                         
-                        <hr class="border-gray-100">
-
-                        <!-- Step 3 -->
-                        <div>
-                            <h3 class="font-bold text-lg text-kama-800 mb-3 flex items-center">
-                                <span class="bg-green-100 text-green-600 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm"><i class="fa-brands fa-whatsapp"></i></span> 
-                                3. Mengirim Galeri ke Klien
-                            </h3>
-                            <p class="text-sm text-gray-600 ml-11 leading-relaxed">Setelah project selesai dibuat, cari nama klien Anda di daftar tabel Project.</p>
-                            <div class="ml-11 mt-3 flex items-start gap-3 bg-green-50/50 p-4 rounded-xl border border-green-100/50">
-                                <i class="fa-regular fa-copy text-green-600 mt-0.5 text-lg"></i>
-                                <p class="text-sm text-gray-600">Klik tombol <b>Copy</b> berwarna hijau. Sistem akan otomatis menyalin teks rapi (berisi sapaan, link galeri, dan password). Anda tinggal <b>Paste (Tempel)</b> di chat WhatsApp klien Anda.</p>
+                        <div class="relative z-10">
+                            <div class="w-16 h-16 mx-auto bg-white/10 backdrop-blur border border-white/20 text-white rounded-full flex items-center justify-center text-2xl mb-4 shadow-lg">
+                                <i class="fa-solid fa-headset"></i>
+                            </div>
+                            <h3 class="text-2xl font-black text-white mb-2 tracking-tight guide-support-title">Butuh Bantuan Teknis?</h3>
+                            <p class="text-slate-300 text-sm max-w-lg mx-auto mb-6 guide-support-desc">Jika Anda mengalami kendala pada aplikasi, menemukan bug, atau butuh panduan khusus, tim support kami siap membantu Anda kapan saja.</p>
+                            
+                            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                                <a href="https://t.me/kamacreative" target="_blank" class="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-900 px-6 py-3 rounded-xl font-bold text-sm transition-colors w-full sm:w-auto justify-center shadow-md group">
+                                    <i class="fa-brands fa-telegram text-blue-500 text-lg group-hover:scale-110 transition-transform"></i> <span class="guide-support-btn1">Hubungi via Telegram</span>
+                                </a>
+                                <a href="https://instagram.com/kamacreative" target="_blank" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white px-6 py-3 rounded-xl font-bold text-sm transition-colors w-full sm:w-auto justify-center group">
+                                    <i class="fa-brands fa-instagram text-pink-400 text-lg group-hover:scale-110 transition-transform"></i> <span class="guide-support-btn2">DM via Instagram</span>
+                                </a>
                             </div>
                         </div>
-
-                        <hr class="border-gray-100">
-
-                        <!-- Step 4 -->
-                        <div>
-                            <h3 class="font-bold text-lg text-kama-800 mb-3 flex items-center">
-                                <span class="bg-amber-100 text-amber-600 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm"><i class="fa-solid fa-satellite-dish"></i></span> 
-                                4. Memantau Progress Klien
-                            </h3>
-                            <p class="text-sm text-gray-600 ml-11 leading-relaxed">Anda tidak perlu terus bertanya ke klien apakah mereka sudah selesai memilih. Cukup buka menu <b>Pantau Klien</b> untuk melihat status secara <i>real-time</i>.</p>
-                            <ul class="list-disc pl-16 text-sm text-gray-500 space-y-2 mt-3">
-                                <li><span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-semibold">New</span> Klien belum membuka galeri sama sekali.</li>
-                                <li><span class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-xs font-semibold">Memilih</span> Klien sudah login dan sedang melakukan proses pemilihan.</li>
-                                <li><span class="bg-green-50 text-green-600 px-2 py-0.5 rounded text-xs font-semibold">Selesai</span> Klien sudah mengklik tombol konfirmasi selesai. Klien akan mengirimkan rekap file foto ke WA Anda.</li>
-                            </ul>
-                        </div>
-
-                        <hr class="border-gray-100">
-
-                        <!-- Step 5 -->
-                        <div>
-                            <h3 class="font-bold text-lg text-kama-800 mb-3 flex items-center">
-                                <span class="bg-purple-100 text-purple-600 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm"><i class="fa-solid fa-file-zipper"></i></span> 
-                                5. Sortir File Otomatis (Proses Akhir)
-                            </h3>
-                            <p class="text-sm text-gray-600 ml-11 leading-relaxed mb-3">Ini adalah fitur paling ajaib untuk menghemat waktu kerja Anda berjam-jam!</p>
-                            <div class="ml-11 bg-purple-50/30 p-5 rounded-xl border border-purple-100/50">
-                                <ol class="list-decimal pl-5 text-sm text-gray-600 space-y-3 font-medium">
-                                    <li>Salin (Copy) seluruh <span class="text-kama-700">list nama file foto</span> yang dikirimkan klien ke WhatsApp Anda.</li>
-                                    <li>Buka menu <b>Projects</b>, lalu klik tombol abu-abu <span class="bg-gray-200 px-2 py-1 rounded text-xs"><i class="fa-solid fa-folder-tree mr-1"></i> Sortir Lokal</span>.</li>
-                                    <li>Sistem akan meminta Anda memilih folder asli (mentahan) di komputer / laptop Anda.</li>
-                                    <li>Paste list dari klien ke dalam kotak yang disediakan.</li>
-                                    <li>Klik tombol <span class="bg-kama-800 text-white px-2 py-1 rounded text-xs">Proses & Download ZIP</span>. Sistem akan bekerja memisahkan foto-foto tersebut lalu mengunduhnya dalam bentuk 1 file ZIP yang rapi!</li>
-                                </ol>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
 
@@ -3313,6 +3334,91 @@
     <script>
         console.log("App Initialized: Safe UI Elements with Lottie Loader");
 
+        // --- GLOBAL SWAL.FIRE TRANSLATOR INTERCEPTOR ---
+        if (window.Swal) {
+            const originalSwalFire = window.Swal.fire;
+            window.Swal.fire = function(...args) {
+                var isEn = document.getElementById('langSelector') && document.getElementById('langSelector').value === 'en';
+                if (!isEn) return originalSwalFire.apply(this, args);
+
+                const dict = {
+                    'Berhasil': 'Success',
+                    'Gagal': 'Failed',
+                    'Peringatan': 'Warning',
+                    'Error': 'Error',
+                    'Akses Ditolak': 'Access Denied',
+                    'Upload Gagal': 'Upload Failed',
+                    'Berhasil Dibuat': 'Successfully Created',
+                    'Mempersiapkan Link...': 'Preparing Link...',
+                    'Hapus Project?': 'Delete Project?',
+                    'Ya, Hapus': 'Yes, Delete',
+                    'Tersimpan': 'Saved',
+                    'Dihapus': 'Deleted',
+                    'Ubah Status Watermark?': 'Change Watermark Status?',
+                    'Ya, Ubah': 'Yes, Change',
+                    'Klien akan melihat/tidak melihat tombol Download sesuai status watermark.': 'Clients will see/hide the Download button based on watermark status.',
+                    'Akun Demo tidak dapat mengubah pengaturan ini.': 'Demo Accounts cannot change this setting.',
+                    'Harap lengkapi semua isian formulir pendaftaran sebelum melanjutkan!': 'Please complete all registration form fields before proceeding!',
+                    'Gagal menghubungi server.': 'Failed to contact server.',
+                    'Gagal terhubung ke server': 'Failed to connect to server',
+                    'Di-ACC!': 'Approved!',
+                    'Diperbarui!': 'Updated!',
+                    'Hapus Fotografer?': 'Delete Photographer?',
+                    'Akun ini akan dihapus permanen.': 'This account will be permanently deleted.',
+                    'Ukuran Terlalu Besar': 'File Too Large',
+                    'Maksimal ukuran file musik yang diupload langsung adalah 4 MB karena batasan server. Jika lagu Anda lebih besar, harap upload manual ke Google Drive Anda dan masukkan Link-nya di kolom bawah.': 'Maximum music file size for direct upload is 4 MB due to server limits. If your song is larger, please manually upload it to your Google Drive and paste the Link below.',
+                    'Apakah Klien Yakin?': 'Is the Client Sure?',
+                    'Apakah Klien Anda sudah yakin dengan seluruh foto pilihannya? Jika sudah, galeri klien ini akan dikunci dan dilabeli SELESAI.': 'Is your Client sure with all their photo choices? If so, this client gallery will be locked and marked as COMPLETED.',
+                    'Ya, Selesai': 'Yes, Completed',
+                    'Batal': 'Cancel',
+                    'Reset Data Project?': 'Reset Project Data?',
+                    'Link project akan di-reset, klien harus memilih ulang dari awal, dan riwayat file ZIP akan dihapus. Lanjutkan?': 'The project link will be reset, the client must re-select from the beginning, and ZIP file history will be deleted. Continue?',
+                    'Ya, Reset': 'Yes, Reset',
+                    'Perhatian': 'Attention',
+                    'Mohon isi Nama Klien, Link Google Drive, No Whatsapp, dan Batas Foto!': 'Please fill in Client Name, Google Drive Link, WhatsApp Number, and Photo Limit!',
+                    'Mohon isi minimal salah satu: Kategori 1 atau Batas Foto Utama!': 'Please fill in at least one: Category 1 or Main Photo Limit!',
+                    'Apakah Anda yakin klien ini sudah selesai?': 'Are you sure this client has finished?',
+                    'Berhasil menyalin link untuk': 'Successfully copied link for',
+                    'Pilih Fotografer': 'Select Photographer',
+                    'Anda Admin. Silakan pilih Fotografer dulu!': 'You are Admin. Please select a Photographer first!'
+                };
+
+                // Helper to translate strings if they match dictionary, or do partial replace
+                function tr(str) {
+                    if (typeof str !== 'string') return str;
+                    if (dict[str]) return dict[str];
+                    // Handle dynamic strings
+                    if (str.includes('Berhasil menyalin link untuk ')) {
+                        return str.replace('Berhasil menyalin link untuk ', 'Successfully copied link for ');
+                    }
+                    if (str.includes('Telah tersalin! Anda bisa paste ke WA sekarang.')) {
+                        return str.replace('Telah tersalin! Anda bisa paste ke WA sekarang.', 'Copied! You can paste it into WA now.');
+                    }
+                    if (str.includes('Silakan upgrade ke Add-On PRO!')) {
+                        return str.replace('Silakan upgrade ke Add-On PRO!', 'Please upgrade to PRO Add-On!');
+                    }
+                    return str;
+                }
+
+                for (let i = 0; i < args.length; i++) {
+                    if (typeof args[i] === 'string') {
+                        args[i] = tr(args[i]);
+                    }
+                }
+
+                if (args.length === 1 && typeof args[0] === 'object' && args[0] !== null) {
+                    let opts = args[0];
+                    if (opts.title) opts.title = tr(opts.title);
+                    if (opts.text) opts.text = tr(opts.text);
+                    if (opts.html) opts.html = tr(opts.html);
+                    if (opts.confirmButtonText) opts.confirmButtonText = tr(opts.confirmButtonText);
+                    if (opts.cancelButtonText) opts.cancelButtonText = tr(opts.cancelButtonText);
+                }
+
+                return originalSwalFire.apply(this, args);
+            };
+        }
+
         // --- FITUR BAHASA (MULTI-LANGUAGE) TERBARU ---
         function changeLanguage(lang) {
             localStorage.setItem('ps_lang', lang);
@@ -3437,6 +3543,11 @@
             setTx('#formSettings .mt-6 button[type="button"]', 'Batal', 'Cancel'); // Khusus tombol bawah, tombol X aman!
             setTx('#btnSaveSettings', 'Simpan', 'Save');
             
+            // Pengaturan Studio di Dashboard Utama
+            setTx('#section-settings h2', 'Pengaturan Studio', 'Studio Settings');
+            setTx('#section-settings p.text-sm.text-gray-500', 'Sesuaikan profil, brand, dan preferensi akun Anda.', 'Customize your account profile, brand, and preferences.');
+            setTx('#section-settings button[onclick="saveSettings()"]', '<i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan', '<i class="fa-solid fa-floppy-disk"></i> Save Changes', true);
+            
             setTx('#modalPaymentSettingsContent h3', '<i class="fa-solid fa-money-check-dollar text-green-500 mr-2"></i> Info Pembayaran', '<i class="fa-solid fa-money-check-dollar text-green-500 mr-2"></i> Payment Info', true);
             setTx('#modalPaymentSettingsContent .bg-blue-50\\/50 p', '<i class="fa-solid fa-circle-info mr-1"></i> Data rekening Anda akan ditampilkan secara otomatis kepada Klien yang membeli foto ekstra agar mereka bisa melakukan transfer pembayaran.', '<i class="fa-solid fa-circle-info mr-1"></i> Your bank details will be shown automatically to clients purchasing extra photos so they can make payment transfers.', true);
             setTx('#lbl-bank-name', 'Nama Bank / e-Wallet', 'Bank Name / e-Wallet');
@@ -3472,24 +3583,58 @@
             setTx('#btnProsesSorter span', 'Proses & Download ZIP', 'Process & Download ZIP');
 
             // 7. TRANSLASI PANDUAN (GUIDE)
-            setTx('#section-panduan h2', 'Panduan Penggunaan', 'User Guide');
-            setTx('#section-panduan > div > p', 'Pelajari cara menggunakan sistem Photo Selection untuk mempermudah pekerjaan Anda.', 'Learn how to use the Photo Selection system to simplify your work.');
-
-            var gH3 = document.querySelectorAll('#section-panduan h3');
-            var gP = document.querySelectorAll('#section-panduan p.text-sm.text-gray-600');
-            if (gH3.length >= 4 && gP.length >= 4) {
-                gH3[0].innerHTML = isEn ? '<i class="fa-solid fa-folder-plus text-blue-500 mr-2"></i> 1. Create New Project' : '<i class="fa-solid fa-folder-plus text-blue-500 mr-2"></i> 1. Membuat Project Baru';
-                gP[0].innerHTML = isEn ? 'Go to the <b>Projects</b> menu, click <b>New Project</b>. Enter client name, Google Drive link (must be "Viewer/Anyone with link"), WhatsApp number, and max photos. Password is optional.' : 'Masuk ke menu <b>Projects</b>, klik tombol <b>New Project</b>. Isi nama klien, link Google Drive yang berisi folder foto klien (pastikan akses linknya diset "Siapa saja yang memiliki link / Viewer"), nomor WhatsApp Fotografer, dan batas maksimal foto yang boleh dipilih. Password opsional jika ingin galeri diprivasi.';
-
-                gH3[1].innerHTML = isEn ? '<i class="fa-solid fa-share-nodes text-green-500 mr-2"></i> 2. Send Link to Client' : '<i class="fa-solid fa-share-nodes text-green-500 mr-2"></i> 2. Mengirim Link ke Klien';
-                gP[1].innerHTML = isEn ? 'Click the <i class="fa-regular fa-copy text-gray-400 mx-1"></i> <b>Copy</b> button on the project row. The link and password will be copied automatically. Just paste it into your client\'s WhatsApp.' : 'Setelah project terbuat, klik tombol <i class="fa-regular fa-copy text-gray-400 mx-1"></i> <b>Copy</b> pada baris project tersebut. Teks otomatis disalin beserta link dan passwordnya. Anda tinggal menempelkannya (Paste) di chat WhatsApp klien Anda.';
-
-                gH3[2].innerHTML = isEn ? '<i class="fa-solid fa-satellite-dish text-amber-500 mr-2"></i> 3. Monitor Selection Progress' : '<i class="fa-solid fa-satellite-dish text-amber-500 mr-2"></i> 3. Memantau Proses Pemilihan';
-                gP[2].innerHTML = isEn ? 'Open the <b>Client Status</b> menu. Here you can see in real-time whether the client is <i>Not Started</i>, <i>Selecting</i>, or <i>Completed</i>. Once completed, the client will send the photo list to your WhatsApp.' : 'Buka menu <b>Pantau Klien</b>. Di sini Anda bisa melihat status secara real-time apakah klien <i>Belum Memilih</i>, <i>Sedang Memilih</i>, atau sudah <i>Selesai</i>. Jika sudah selesai, klien akan mengirimkan list file foto ke WhatsApp Anda.';
-
-                gH3[3].innerHTML = isEn ? '<i class="fa-solid fa-file-zipper text-purple-500 mr-2"></i> 4. Local File Sort (Auto ZIP)' : '<i class="fa-solid fa-file-zipper text-purple-500 mr-2"></i> 4. Sortir File Lokal (Otomatis ZIP)';
-                gP[3].innerHTML = isEn ? 'After receiving the photo list, go to <b>Projects</b> > <b>Local Sort</b>. Select your master folder on your computer, paste the list into the box, and click process. The system will automatically sort and create a ZIP file.' : 'Setelah menerima list foto dari klien di WA, copy teks list tersebut. Masuk ke menu <b>Projects</b> > klik <b>Sortir Lokal</b>. Pilih folder asli (mentahan) di komputer Anda, lalu paste list dari klien ke kotak yang disediakan, lalu klik proses. Sistem otomatis menyortir foto ke dalam file ZIP.';
+            setTx('.guide-badge', 'PUSAT BANTUAN', 'HELP CENTER');
+            setTx('.guide-title', 'Panduan Aplikasi Lengkap', 'Complete Application Guide');
+            setTx('.guide-subtitle', 'Pelajari alur kerja cerdas untuk mengirim dan menerima foto pilihan klien Anda dalam hitungan menit.', 'Learn the smart workflow to send and receive your clients\' selected photos in minutes.');
+            
+            setTx('.guide-step1-title', '1. Siapkan Link Google Drive', '1. Prepare Google Drive Link');
+            setTx('.guide-step1-desc', 'Sebelum membuat project, pastikan Anda sudah mengupload seluruh foto mentahan ke Google Drive.', 'Before creating a project, make sure you have uploaded all raw photos to Google Drive.');
+            var gS1 = document.querySelectorAll('.guide-step1-list span');
+            if (gS1.length >= 3) {
+                gS1[0].innerHTML = isEn ? 'Change the Drive folder access to <b>"Anyone with the link"</b>.' : 'Ubah akses folder Drive menjadi <b>"Siapa saja yang memiliki link"</b> (Anyone with the link).';
+                gS1[1].innerHTML = isEn ? 'Ensure the role is set to <b>Viewer</b> only.' : 'Pastikan perannya disetel sebagai <b>Pelihat (Viewer)</b> saja.';
+                gS1[2].innerHTML = isEn ? 'Copy the folder link.' : 'Salin (Copy) link folder tersebut.';
             }
+
+            setTx('.guide-step2-title', '2. Buat Project Klien', '2. Create Client Project');
+            setTx('.guide-step2-desc', 'Masuk ke menu <b>Projects</b>, lalu klik tombol <b>New Project</b>. Isi formulir dengan lengkap dan benar.', 'Go to the <b>Projects</b> menu, then click the <b>New Project</b> button. Fill out the form completely and correctly.', true);
+            var gS2 = document.querySelectorAll('.guide-step2-list span');
+            if (gS2.length >= 3) {
+                gS2[0].innerHTML = isEn ? '<b>G-Drive Link:</b> Paste the folder link from Step 1.' : '<b>Link G-Drive:</b> Tempel link folder dari Langkah 1.';
+                gS2[1].innerHTML = isEn ? '<b>Photo Limit:</b> Set the maximum photo quota the client can choose.' : '<b>Batas Foto:</b> Tentukan kuota maksimal foto yang boleh dipilih oleh klien.';
+                gS2[2].innerHTML = isEn ? '<b>Password:</b> Leave empty if you don\'t want to lock the client gallery.' : '<b>Password:</b> Biarkan kosong jika tidak ingin mengunci galeri klien.';
+            }
+
+            setTx('.guide-step3-title', '3. Kirim Galeri ke Klien', '3. Send Gallery to Client');
+            setTx('.guide-step3-desc', 'Setelah project berhasil dibuat, temukan nama klien Anda di daftar tabel Project.', 'After the project is successfully created, find your client\'s name in the Project table list.');
+            setTx('.guide-step3-note', 'Klik tombol <b>Copy</b> berwarna hijau. Sistem akan menyalin teks sapaan otomatis beserta link galeri. Anda tinggal <b>Paste</b> di chat WhatsApp klien.', 'Click the green <b>Copy</b> button. The system will automatically copy the greeting text and gallery link. Just <b>Paste</b> it into the client\'s WhatsApp chat.', true);
+
+            setTx('.guide-step4-title', '4. Pantau Progress Klien', '4. Monitor Client Progress');
+            setTx('.guide-step4-desc', 'Tidak perlu lagi menagih klien terus-menerus. Buka menu <b>Pantau Klien</b> untuk melihat status secara <i>real-time</i>.', 'No need to constantly chase clients. Open the <b>Monitor Client</b> menu to view the status in <i>real-time</i>.', true);
+            var gS4 = document.querySelectorAll('.guide-step4-badges span');
+            if (gS4.length >= 3) {
+                gS4[0].innerHTML = isEn ? '<i class="fa-solid fa-circle text-[8px] mr-1"></i> New' : '<i class="fa-solid fa-circle text-[8px] mr-1"></i> New';
+                gS4[1].innerHTML = isEn ? '<i class="fa-solid fa-circle-dot text-[8px] mr-1"></i> Selecting' : '<i class="fa-solid fa-circle-dot text-[8px] mr-1"></i> Memilih';
+                gS4[2].innerHTML = isEn ? '<i class="fa-solid fa-check-circle text-[8px] mr-1"></i> Completed' : '<i class="fa-solid fa-check-circle text-[8px] mr-1"></i> Selesai';
+            }
+
+            setTx('.guide-step5-title', '5. Sortir File Otomatis (Proses Akhir)', '5. Automatic File Sorting (Final Process)');
+            setTx('.guide-step5-desc', 'Fitur ajaib untuk menghemat waktu kerja Anda berjam-jam! Pisahkan ratusan foto hanya dalam satu klik saja.', 'A magical feature to save you hours of work! Separate hundreds of photos in just one click.');
+            var gS5a = document.querySelectorAll('.guide-step5-list span');
+            if (gS5a.length >= 2) {
+                gS5a[0].innerHTML = isEn ? 'Copy the list of photo file names from your client\'s WhatsApp message.' : 'Salin (Copy) daftar nama file foto dari pesan WhatsApp klien Anda.';
+                gS5a[1].innerHTML = isEn ? 'Go to the <b>Projects</b> menu > click the gray <b>Local Sort</b> button.' : 'Masuk ke menu <b>Projects</b> > klik tombol abu-abu <b>Sortir Lokal</b>.';
+            }
+            var gS5b = document.querySelectorAll('.guide-step5-list2 span');
+            if (gS5b.length >= 2) {
+                gS5b[0].innerHTML = isEn ? 'Select the master (raw) photo folder on your computer, then paste the client\'s list into the provided box.' : 'Pilih folder foto master (mentahan) di komputer Anda, lalu paste list dari klien ke kotak yang disediakan.';
+                gS5b[1].innerHTML = isEn ? 'Click <b>Process & Download ZIP</b>. The system will automatically separate these photos!' : 'Klik <b>Proses & Download ZIP</b>. Sistem otomatis memisahkan foto-foto tersebut!';
+            }
+
+            setTx('.guide-support-title', 'Butuh Bantuan Teknis?', 'Need Technical Help?');
+            setTx('.guide-support-desc', 'Jika Anda mengalami kendala pada aplikasi, menemukan bug, atau butuh panduan khusus, tim support kami siap membantu Anda kapan saja.', 'If you experience issues with the application, find a bug, or need a specific guide, our support team is ready to help you anytime.');
+            setTx('.guide-support-btn1', 'Hubungi via Telegram', 'Contact via Telegram');
+            setTx('.guide-support-btn2', 'DM via Instagram', 'DM via Instagram');
 
             // 8. SINKRONISASI DROPDOWN BAHASA
             var authSel = document.getElementById('langSelector');
@@ -3589,7 +3734,7 @@
         var appBranding = { name: 'Kama Creative', logo: '' };
         var currentUser = null;
 
-        function isAccountExpired() {
+function isAccountExpired() {
             if (!currentUser || currentUser.role === 'Admin') return false;
             if (currentUser.expiredAt === 'Lifetime' || !currentUser.expiredAt) return false;
             var expDate = new Date(currentUser.expiredAt);
@@ -3598,31 +3743,32 @@
         }
 
         function showExpiredAlert() {
+            var isEn = document.getElementById('langSelector') && document.getElementById('langSelector').value === 'en';
             Swal.fire({
-                title: 'Masa Aktif Habis 🔒',
+                title: isEn ? 'Subscription Expired 🔒' : 'Masa Aktif Habis 🔒',
                 html: `
                     <div class="text-left text-sm text-slate-600 space-y-3">
-                        <p>Akses fitur premium Anda (Watermark, Kolase Premium, Ekstra Kategori, New Project, Sortir Lokal, Copy Teks, dan Edit Brand) dinonaktifkan sementara karena akun Anda telah melewati batas masa aktif langganan.</p>
-                        <p class="font-bold text-slate-800 text-xs uppercase border-b pb-1 pt-1"><i class="fa-solid fa-wallet text-blue-500 mr-1"></i> Pilih Paket Perpanjangan Instan (Mayar):</p>
+                        <p>${isEn ? 'Your premium features access is temporarily disabled because your account subscription has expired.' : 'Akses fitur premium Anda (Watermark, Kolase Premium, Ekstra Kategori, New Project, Sortir Lokal, Copy Teks, dan Edit Brand) dinonaktifkan sementara karena akun Anda telah melewati batas masa aktif langganan.'}</p>
+                        <p class="font-bold text-slate-800 text-xs uppercase border-b pb-1 pt-1"><i class="fa-solid fa-wallet text-blue-500 mr-1"></i> ${isEn ? 'Choose Instant Renewal Package:' : 'Pilih Paket Perpanjangan Instan (Mayar):'}</p>
                         <div class="grid grid-cols-1 gap-2 pt-1">
                             <a href="https://kamacreative.myr.id/pl/paket-1-bulan-photo-selection" target="_blank" class="flex justify-between items-center bg-blue-50 border border-blue-200 hover:bg-blue-100 p-3 rounded-xl transition-all text-blue-700 font-bold shadow-sm">
-                                <span><i class="fa-solid fa-box mr-1.5"></i> Paket Langganan 1 Bulan</span>
+                                <span><i class="fa-solid fa-box mr-1.5"></i> ${isEn ? '1 Month Subscription' : 'Paket Langganan 1 Bulan'}</span>
                                 <i class="fa-solid fa-chevron-right text-xs"></i>
                             </a>
                             <a href="https://kamacreative.myr.id/pl/paket-6-bulan-photo-selection" target="_blank" class="flex justify-between items-center bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 p-3 rounded-xl transition-all text-indigo-700 font-bold shadow-sm">
-                                <span><i class="fa-solid fa-cubes mr-1.5"></i> Paket Langganan 6 Bulan (Hemat)</span>
+                                <span><i class="fa-solid fa-cubes mr-1.5"></i> ${isEn ? '6 Months Subscription (Save)' : 'Paket Langganan 6 Bulan (Hemat)'}</span>
                                 <i class="fa-solid fa-chevron-right text-xs"></i>
                             </a>
                             <a href="https://kamacreative.myr.id/pl/paket-1-tahunn-photo-selection" target="_blank" class="flex justify-between items-center bg-purple-50 border border-purple-200 hover:bg-purple-100 p-3 rounded-xl transition-all text-purple-700 font-bold shadow-sm">
-                                <span><i class="fa-solid fa-gem mr-1.5"></i> Paket Langganan 1 Tahun (Terbaik)</span>
+                                <span><i class="fa-solid fa-gem mr-1.5"></i> ${isEn ? '1 Year Subscription (Best)' : 'Paket Langganan 1 Tahun (Terbaik)'}</span>
                                 <i class="fa-solid fa-chevron-right text-xs"></i>
                             </a>
                         </div>
-                        <p class="text-[10px] text-gray-400 text-center pt-2"><i class="fa-solid fa-circle-info mr-1"></i> Setelah pembayaran sukses di Mayar, akun Anda otomatis aktif kembali tanpa perlu konfirmasi Admin.</p>
+                        <p class="text-[10px] text-gray-400 text-center pt-2"><i class="fa-solid fa-circle-info mr-1"></i> ${isEn ? 'After successful payment, your account will be automatically reactivated.' : 'Setelah pembayaran sukses di Mayar, akun Anda otomatis aktif kembali tanpa perlu konfirmasi Admin.'}</p>
                     </div>
                 `,
                 showCancelButton: true,
-                cancelButtonText: 'Nanti Saja',
+                cancelButtonText: isEn ? 'Later' : 'Nanti Saja',
                 showConfirmButton: false,
                 customClass: { popup: 'rounded-2xl border border-gray-100 shadow-2xl' }
             });
@@ -3635,22 +3781,58 @@
         }
 
         function showPremiumAlert() {
+            var isEn = document.getElementById('langSelector') && document.getElementById('langSelector').value === 'en';
             Swal.fire({
-                title: 'Add-On PRO Terkunci 🔒',
+                title: isEn ? 'PRO Add-On Locked 🔒' : 'Add-On PRO Terkunci 🔒',
                 html: `
                     <div class="text-left text-sm text-slate-600 space-y-3">
-                        <p>Fitur <b>Watermark, Kolase Premium, Multi-Kategori, Sortir Lokal, Musik Galeri,</b> dan <b>Sistem Upsell Otomatis</b> adalah bagian dari modul <i>Add-On PRO</i>.</p>
-                        <p>Dapatkan semuanya hanya dengan berlangganan ekstra untuk melindungi karya Anda dan melipatgandakan penghasilan secara otomatis!</p>
+                        <p>${isEn ? 'Features like <b>Watermark, Premium Collage, Multi-Category, Local Sort, Gallery Music,</b> and <b>Auto Upsell System</b> are part of the <i>PRO Add-On</i> module.' : 'Fitur <b>Watermark, Kolase Premium, Multi-Kategori, Sortir Lokal, Musik Galeri,</b> dan <b>Sistem Upsell Otomatis</b> adalah bagian dari modul <i>Add-On PRO</i>.'}</p>
+                        <p>${isEn ? 'Get them all by subscribing extra to protect your work and multiply your income automatically!' : 'Dapatkan semuanya hanya dengan berlangganan ekstra untuk melindungi karya Anda dan melipatgandakan penghasilan secara otomatis!'}</p>
                         <div class="grid grid-cols-1 gap-2 pt-2">
                             <a href="#" onclick="Swal.close(); switchAdminTab('premium-addon'); return false;" class="flex justify-between items-center bg-yellow-50 border border-yellow-200 hover:bg-yellow-100 p-3 rounded-xl transition-all text-yellow-700 font-bold shadow-sm">
-                                <span><i class="fa-solid fa-crown mr-1.5"></i> Lihat Detail Add-On PRO</span>
+                                <span><i class="fa-solid fa-crown mr-1.5"></i> ${isEn ? 'View PRO Add-On Details' : 'Lihat Detail Add-On PRO'}</span>
                                 <i class="fa-solid fa-chevron-right text-xs"></i>
                             </a>
                         </div>
                     </div>
                 `,
                 showCancelButton: true,
-                cancelButtonText: 'Nanti Saja',
+                cancelButtonText: isEn ? 'Later' : 'Nanti Saja',
+                showConfirmButton: false,
+                customClass: { popup: 'rounded-2xl border border-gray-100 shadow-2xl' }
+            });
+        }
+
+        function isDemoAccount() {
+            return currentUser && currentUser.role !== 'Admin' && (!currentUser.paket || currentUser.paket === '-' || currentUser.paket === '');
+        }
+
+        function showDemoSubscribeAlert() {
+            var isEn = document.getElementById('langSelector') && document.getElementById('langSelector').value === 'en';
+            Swal.fire({
+                title: isEn ? 'Premium Feature 🔒' : 'Fitur Premium 🔒',
+                html: `
+                    <div class="text-left text-sm text-slate-600 space-y-3">
+                        <p>${isEn ? 'You are currently using the <b>Demo Package</b>. Features like <b>Local Sort</b>, Logo Customization, and Unlimited Projects are only available for Premium Subscribers.' : 'Anda saat ini menggunakan <b>Paket Demo</b>. Fitur <b>Sortir Lokal</b>, Kustomisasi Logo, dan Unlimited Project hanya tersedia untuk Fotografer Berlangganan Premium.'}</p>
+                        <p class="font-bold text-slate-800 text-xs uppercase border-b pb-1 pt-1"><i class="fa-solid fa-star text-yellow-500 mr-1"></i> ${isEn ? 'Upgrade Your Account Now:' : 'Upgrade Akun Anda Sekarang:'}</p>
+                        <div class="grid grid-cols-1 gap-2 pt-1">
+                            <a href="https://kamacreative.myr.id/pl/paket-1-bulan-photo-selection" target="_blank" class="flex justify-between items-center bg-blue-50 border border-blue-200 hover:bg-blue-100 p-3 rounded-xl transition-all text-blue-700 font-bold shadow-sm">
+                                <span><i class="fa-solid fa-box mr-1.5"></i> ${isEn ? '1 Month Subscription' : 'Langganan 1 Bulan'}</span>
+                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            </a>
+                            <a href="https://kamacreative.myr.id/pl/paket-6-bulan-photo-selection" target="_blank" class="flex justify-between items-center bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 p-3 rounded-xl transition-all text-indigo-700 font-bold shadow-sm">
+                                <span><i class="fa-solid fa-cubes mr-1.5"></i> ${isEn ? '6 Months Subscription (Save)' : 'Langganan 6 Bulan (Hemat)'}</span>
+                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            </a>
+                            <a href="https://kamacreative.myr.id/pl/paket-1-tahunn-photo-selection" target="_blank" class="flex justify-between items-center bg-purple-50 border border-purple-200 hover:bg-purple-100 p-3 rounded-xl transition-all text-purple-700 font-bold shadow-sm">
+                                <span><i class="fa-solid fa-gem mr-1.5"></i> ${isEn ? '1 Year Subscription (Best)' : 'Langganan 1 Tahun (Terbaik)'}</span>
+                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            </a>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                cancelButtonText: isEn ? 'Later' : 'Nanti Saja',
                 showConfirmButton: false,
                 customClass: { popup: 'rounded-2xl border border-gray-100 shadow-2xl' }
             });
@@ -3659,6 +3841,7 @@
         function renderPremiumAddonPage() {
             var container = document.getElementById('premium-addon-container');
             if (!container) return;
+            var isEn = document.getElementById('langSelector') && document.getElementById('langSelector').value === 'en';
 
             if (isPremiumAddon()) {
                 container.innerHTML = `
@@ -3666,10 +3849,10 @@
                         <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-green-500 text-4xl">
                             <i class="fa-solid fa-circle-check"></i>
                         </div>
-                        <h2 class="text-2xl font-black text-slate-800 mb-2">Langganan PRO Aktif</h2>
-                        <p class="text-slate-600 max-w-md mx-auto mb-6">Terima kasih telah berlangganan! Semua fitur premium seperti Watermark, Kolase, Multi-Kategori, Sortir Lokal, Musik Galeri, dan Sistem Upsell sudah terbuka dan siap digunakan untuk meroketkan cuan Anda.</p>
+                        <h2 class="text-2xl font-black text-slate-800 mb-2">${isEn ? 'PRO Subscription Active' : 'Langganan PRO Aktif'}</h2>
+                        <p class="text-slate-600 max-w-md mx-auto mb-6">${isEn ? 'Thank you for subscribing! All premium features like Watermark, Collage, Multi-Category, Local Sort, Gallery Music, and Upsell System are unlocked and ready to skyrocket your profits.' : 'Terima kasih telah berlangganan! Semua fitur premium seperti Watermark, Kolase, Multi-Kategori, Sortir Lokal, Musik Galeri, dan Sistem Upsell sudah terbuka dan siap digunakan untuk meroketkan cuan Anda.'}</p>
                         <button onclick="switchAdminTab('projects')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2.5 px-6 rounded-full transition-colors shadow-md">
-                            Mulai Buat Project
+                            ${isEn ? 'Start Creating Project' : 'Mulai Buat Project'}
                         </button>
                     </div>
                 `;
@@ -3681,70 +3864,83 @@
                         </div>
                         
                         <span class="inline-block bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-black px-3 py-1 rounded-full mb-6 shadow-sm uppercase tracking-wider">
-                            PENAWARAN SPESIAL
+                            ${isEn ? 'SPECIAL OFFER' : 'PENAWARAN SPESIAL'}
                         </span>
                         
                         <h2 class="text-3xl sm:text-4xl font-black text-slate-800 mb-4 leading-tight">
-                            Tingkatkan Pendapatan & Lindungi Karya Anda dengan <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">Add-On PRO</span>
+                            ${isEn ? 'Boost Revenue & Protect Your Work with' : 'Tingkatkan Pendapatan & Lindungi Karya Anda dengan'} <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">PRO Add-On</span>
                         </h2>
                         
                         <p class="text-slate-600 text-sm sm:text-base max-w-xl mx-auto mb-8">
-                            Ubah galeri seleksi biasa menjadi <b>mesin pencetak uang otomatis</b> dan tampil jauh lebih profesional di mata klien VIP Anda.
+                            ${isEn ? 'Turn standard selection galleries into an <b>automated money-making machine</b> and look much more professional to your VIP clients.' : 'Ubah galeri seleksi biasa menjadi <b>mesin pencetak uang otomatis</b> dan tampil jauh lebih profesional di mata klien VIP Anda.'}
                         </p>
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto mb-8 text-left">
                             <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                                 <div class="w-10 h-10 bg-green-100 text-green-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-sack-dollar"></i></div>
-                                <h3 class="font-bold text-slate-800 text-sm mb-1">Sistem Upsell Otomatis</h3>
-                                <p class="text-xs text-slate-500 leading-relaxed">Klien mau pilih foto lebih dari jatah? Sistem otomatis menghitung tagihannya. Cuan ekstra tanpa repot nagih!</p>
+                                <h3 class="font-bold text-slate-800 text-sm mb-1">${isEn ? 'Automated Upsell System' : 'Sistem Upsell Otomatis'}</h3>
+                                <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Client selects more than their quota? The system automatically calculates the bill. Extra profit without the hassle of asking!' : 'Klien mau pilih foto lebih dari jatah? Sistem otomatis menghitung tagihannya. Cuan ekstra tanpa repot nagih!'}</p>
                             </div>
                             <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                                 <div class="w-10 h-10 bg-blue-100 text-blue-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-shield-halved"></i></div>
-                                <h3 class="font-bold text-slate-800 text-sm mb-1">Watermark Dinamis</h3>
-                                <p class="text-xs text-slate-500 leading-relaxed">Fotografer tenang, karya aman. Bagikan galeri sebelum pelunasan tanpa takut foto discreenshot/dicuri.</p>
+                                <h3 class="font-bold text-slate-800 text-sm mb-1">${isEn ? 'Dynamic Watermark' : 'Watermark Dinamis'}</h3>
+                                <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Photographer rests easy, work is safe. Share galleries before full payment without fear of photos being screenshotted/stolen.' : 'Fotografer tenang, karya aman. Bagikan galeri sebelum pelunasan tanpa takut foto discreenshot/dicuri.'}</p>
                             </div>
                             <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                                 <div class="w-10 h-10 bg-fuchsia-100 text-fuchsia-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-                                <h3 class="font-bold text-slate-800 text-sm mb-1">Kolase Premium 1-Klik</h3>
-                                <p class="text-xs text-slate-500 leading-relaxed">Bikin bahan teaser sosial media estetik secara instan tanpa perlu repot buka Photoshop sama sekali.</p>
+                                <h3 class="font-bold text-slate-800 text-sm mb-1">${isEn ? '1-Click Premium Collage' : 'Kolase Premium 1-Klik'}</h3>
+                                <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Create aesthetic social media teasers instantly without opening Photoshop at all.' : 'Bikin bahan teaser sosial media estetik secara instan tanpa perlu repot buka Photoshop sama sekali.'}</p>
                             </div>
                             <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                                 <div class="w-10 h-10 bg-purple-100 text-purple-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-layer-group"></i></div>
-                                <h3 class="font-bold text-slate-800 text-sm mb-1">Multi-Kategori Album</h3>
-                                <p class="text-xs text-slate-500 leading-relaxed">Pisahkan foto Akad, Resepsi, dan Siraman dalam satu link elegan yang memukau klien Anda.</p>
+                                <h3 class="font-bold text-slate-800 text-sm mb-1">${isEn ? 'Multi-Category' : 'Multi-Kategori'}</h3>
+                                <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Neatly separate photo quotas. E.g., Max 50 for Morning Session, Max 100 for Reception. Keep everything organized.' : 'Pisahkan jatah foto dengan rapi. Misal Max 50 untuk Akad, Max 100 untuk Resepsi. Semua lebih terorganisir.'}</p>
                             </div>
                             <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                                 <div class="w-10 h-10 bg-orange-100 text-orange-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-folder-tree"></i></div>
-                                <h3 class="font-bold text-slate-800 text-sm mb-1">Sortir Lokal (Otomatis ZIP)</h3>
-                                <p class="text-xs text-slate-500 leading-relaxed">Sistem cerdas akan menyalin foto pilihan klien ke dalam folder lokal Anda secara otomatis!</p>
+                                <h3 class="font-bold text-slate-800 text-sm mb-1">${isEn ? 'Local Sort (Auto ZIP)' : 'Sortir Lokal (Otomatis ZIP)'}</h3>
+                                <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Smart system will automatically copy the client\'s selected photos into your local folder!' : 'Sistem cerdas akan menyalin foto pilihan klien ke dalam folder lokal Anda secara otomatis!'}</p>
                             </div>
                             <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                                <div class="w-10 h-10 bg-pink-100 text-pink-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-music"></i></div>
-                                <h3 class="font-bold text-slate-800 text-sm mb-1">Musik Galeri Latar Belakang</h3>
-                                <p class="text-xs text-slate-500 leading-relaxed">Berikan kesan premium dan emosional pada galeri Anda dengan fitur putar otomatis musik estetik.</p>
+                                <div class="w-10 h-10 bg-rose-100 text-rose-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-music"></i></div>
+                                <h3 class="font-bold text-slate-800 text-sm mb-1">${isEn ? 'Gallery Music' : 'Musik Galeri'}</h3>
+                                <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Give an emotional touch! Add romantic background music so clients feel more engaged while selecting photos.' : 'Beri sentuhan emosional! Tambahkan musik latar romantis agar klien makin baper saat memilih foto.'}</p>
                             </div>
                         </div>
-                        
-                        <div class="bg-white p-6 rounded-2xl shadow-sm max-w-xl mx-auto border border-amber-100">
-                            <p class="text-xs text-amber-600 font-bold uppercase mb-2">Pilih Paket Langganan Add-On:</p>
+
+                        <!-- Harga & Tombol -->
+                        <div class="bg-white p-6 rounded-2xl shadow-sm inline-block mx-auto border border-amber-100 relative w-full max-w-xl">
+                            <div class="absolute -top-3 -right-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full animate-bounce">HOT DEAL!</div>
+                            
+                            <p class="text-xs text-amber-600 font-bold uppercase mb-4 text-center">${isEn ? 'Select Add-On Subscription Plan:' : 'Pilih Paket Langganan Add-On:'}</p>
+                            
                             <div class="flex flex-col gap-3">
-                                <a href="https://kamacreative.myr.id/pl/add-on-pro-photo-selection-1-tahun" target="_blank" class="flex justify-between items-center bg-white border-2 border-slate-200 hover:border-amber-400 p-3 rounded-xl transition-all text-slate-700 hover:text-amber-700 font-bold group">
+                                <a href="https://kamacreative.myr.id/pl/add-on-pro-photo-selection-1-tahun" target="_blank" class="flex justify-between items-center bg-white border-2 border-slate-200 hover:border-amber-400 p-3 sm:p-4 rounded-xl transition-all text-slate-700 hover:text-amber-700 font-bold group">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-4 h-4 rounded-full border-2 border-slate-300 group-hover:border-amber-500"></div>
-                                        <span>Paket 1 Tahun</span>
+                                        <div class="w-4 h-4 rounded-full border-2 border-slate-300 group-hover:border-amber-500 shrink-0"></div>
+                                        <span class="text-sm sm:text-base">${isEn ? '1 Year License' : 'Paket 1 Tahun'}</span>
                                     </div>
-                                    <span class="text-sm">Rp 149.000</span>
+                                    <span class="text-sm sm:text-base whitespace-nowrap ml-2">Rp 149.000</span>
                                 </a>
-                                <a href="https://kamacreative.myr.id/pl/add-on-pro-photo-selection-lifetime" target="_blank" class="flex justify-between items-center bg-amber-50 border-2 border-amber-500 p-3 rounded-xl transition-all text-amber-800 font-bold relative overflow-hidden group hover:bg-amber-100">
-                                    <div class="absolute -right-6 top-1 bg-red-500 text-white text-[9px] font-black py-0.5 px-6 rotate-45 shadow-sm">HEMAT 80%</div>
+                                
+                                <a href="https://kamacreative.myr.id/pl/add-on-pro-photo-selection-lifetime" target="_blank" class="flex justify-between items-center bg-amber-50 border-2 border-amber-500 p-3 sm:p-4 rounded-xl transition-all text-amber-800 font-bold relative overflow-hidden group hover:bg-amber-100 shadow-md">
+                                    <div class="absolute -right-8 top-2 bg-red-500 text-white text-[9px] font-black py-0.5 px-8 rotate-45 shadow-sm transform group-hover:scale-110 transition-transform hidden sm:block">${isEn ? 'SAVE 80%' : 'HEMAT 80%'}</div>
                                     <div class="flex items-center gap-3">
-                                        <div class="w-4 h-4 rounded-full border-2 border-amber-500 bg-amber-500 shadow-[inset_0_0_0_2px_white]"></div>
-                                        <span class="relative z-10">Paket Lifetime <span class="bg-red-100 text-red-600 text-[10px] px-1.5 py-0.5 rounded ml-1 border border-red-200">BEST DEAL</span></span>
+                                        <div class="w-4 h-4 rounded-full border-2 border-amber-500 bg-amber-500 shadow-[inset_0_0_0_2px_white] shrink-0"></div>
+                                        <span class="relative z-10 text-sm sm:text-base flex items-center flex-wrap gap-1">
+                                            ${isEn ? 'Lifetime License' : 'Paket Lifetime'} 
+                                            <span class="bg-red-100 text-red-600 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded border border-red-200 shrink-0">BEST DEAL</span>
+                                        </span>
                                     </div>
-                                    <span class="text-sm relative z-10">Rp 649.000</span>
+                                    <span class="text-sm sm:text-base relative z-10 whitespace-nowrap ml-2">Rp 649.000</span>
                                 </a>
                             </div>
-                            <p class="text-[10px] text-gray-400 mt-4"><i class="fa-solid fa-info-circle"></i> Dengan modal Rp 149rb/tahun, jika ada 1 klien saja yang tergoda <b>Sistem Upsell</b>, Anda sudah langsung balik modal!</p>
+                            
+                            <p class="text-[10px] text-gray-400 mt-5 text-center leading-relaxed">
+                                <i class="fa-solid fa-shield-check text-green-500 mr-1"></i> ${isEn ? '*Instant Auto Activation. Secure payment via Mayar.id' : '*Aktivasi Instan Otomatis. Pembayaran aman via Mayar.id'}
+                                <br>
+                                <span class="text-amber-600 font-medium mt-1 inline-block"><i class="fa-solid fa-rocket mr-1"></i> ${isEn ? 'With only Rp 149k/year, if just 1 client is tempted by the <b>Upsell System</b>, you\'ve already made your money back!' : 'Dengan modal Rp 149rb/tahun, jika ada 1 klien saja yang tergoda <b>Sistem Upsell</b>, Anda sudah langsung balik modal!'}</span>
+                            </p>
                         </div>
                     </div>
                 `;
