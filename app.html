@@ -1661,27 +1661,27 @@
                 <label class="block text-xs font-bold text-gray-700 mb-2">Spacing</label>
                 <div class="flex gap-3">
                     <!-- Rapat -->
-                    <button onclick="setCollageSpacing(0)" class="flex-1 flex flex-col items-center gap-2 group">
-                        <div class="w-14 h-10 border border-gray-200 rounded-lg flex items-center justify-center bg-gray-50 group-hover:border-gray-300 transition-colors">
+                    <button id="btn-spacing-0" onclick="setCollageSpacing(0)" class="flex-1 flex flex-col items-center gap-2 group">
+                        <div class="w-14 h-10 border border-gray-200 rounded-lg flex items-center justify-center bg-gray-50 transition-colors" id="wrapper-spacing-0">
                             <div class="w-8 h-6 border-[1px] border-gray-400 rounded-sm"></div>
                         </div>
-                        <span class="text-[10px] font-bold text-gray-400 group-hover:text-gray-600 transition-colors">Rapat</span>
+                        <span class="text-[10px] font-bold text-gray-400 transition-colors" id="label-spacing-0">Rapat</span>
                     </button>
                     
                     <!-- Normal -->
-                    <button onclick="setCollageSpacing(20)" class="flex-1 flex flex-col items-center gap-2">
-                        <div class="w-14 h-10 border-2 border-blue-600 rounded-lg flex items-center justify-center bg-blue-50 transition-colors shadow-sm">
+                    <button id="btn-spacing-20" onclick="setCollageSpacing(20)" class="flex-1 flex flex-col items-center gap-2">
+                        <div class="w-14 h-10 border-2 border-blue-600 rounded-lg flex items-center justify-center bg-blue-50 transition-colors shadow-sm" id="wrapper-spacing-20">
                             <div class="w-8 h-6 border-[3px] border-blue-600 rounded-sm"></div>
                         </div>
-                        <span class="text-[10px] font-bold text-blue-600">Normal</span>
+                        <span class="text-[10px] font-bold text-blue-600 transition-colors">Normal</span>
                     </button>
                     
                     <!-- Longgar -->
-                    <button onclick="setCollageSpacing(60)" class="flex-1 flex flex-col items-center gap-2 group">
-                        <div class="w-14 h-10 border border-gray-200 rounded-lg flex items-center justify-center bg-gray-50 group-hover:border-gray-300 transition-colors">
+                    <button id="btn-spacing-60" onclick="setCollageSpacing(60)" class="flex-1 flex flex-col items-center gap-2 group">
+                        <div class="w-14 h-10 border border-gray-200 rounded-lg flex items-center justify-center bg-gray-50 transition-colors">
                             <div class="w-8 h-6 border-[5px] border-gray-400 rounded-sm"></div>
                         </div>
-                        <span class="text-[10px] font-bold text-gray-400 group-hover:text-gray-600 transition-colors">Longgar</span>
+                        <span class="text-[10px] font-bold text-gray-400 transition-colors">Longgar</span>
                     </button>
                 </div>
             </div>
@@ -1714,9 +1714,9 @@
             </div>
 
             <!-- Generate Action -->
-            <div class="pt-4 border-t border-gray-100 mt-2">
+            <div class="pt-4 border-t border-gray-100 mt-auto">
             <!-- Generate Button -->
-            <button class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-bold text-sm transition-all shadow-[0_4px_15px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] flex justify-center items-center gap-2 mt-auto" onclick="downloadCollage()">
+            <button class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-bold text-sm transition-all shadow-[0_4px_15px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] flex justify-center items-center gap-2" onclick="downloadCollage()">
                 <i class="fa-solid fa-wand-magic-sparkles"></i>
                 Generate Kolase HD
             </button>
@@ -2367,19 +2367,80 @@
     }
     
     function setCollageTemplate(id, w, h, name) {
-        // Register or update the template dynamically to use auto grid layout
-        collageTemplates[id] = {
-            name: name,
-            previewHtml: '',
-            maxPhotos: 99,
-            isSmartAuto: true // We use the auto-grid math for Kolase Cepat!
-        };
+        if (!collageTemplates['scrl_1']) {
+            collageTemplates['scrl_1'] = {
+                name: 'Unfold A', previewHtml: '', maxPhotos: 5, isSmartAuto: false,
+                calculateLayout: function(w, h, count) {
+                    let spacing = collageState.spacing !== undefined ? collageState.spacing : 20; let padding = 40; let boxes = [];
+                    let wC = w - (padding*2); let hC = h - (padding*2);
+                    let h3 = (hC - spacing*2)/3; let h2 = (hC - spacing)/2; let w2 = (wC - spacing)/2;
+                    if (count >= 1) boxes.push({x: padding, y: padding, w: w2, h: h3});
+                    if (count >= 2) boxes.push({x: padding, y: padding + h3 + spacing, w: w2, h: h3});
+                    if (count >= 3) boxes.push({x: padding, y: padding + (h3 + spacing)*2, w: w2, h: h3});
+                    if (count >= 4) boxes.push({x: padding + w2 + spacing, y: padding, w: w2, h: h2});
+                    if (count >= 5) boxes.push({x: padding + w2 + spacing, y: padding + h2 + spacing, w: w2, h: h2});
+                    return boxes;
+                }
+            };
+            collageTemplates['scrl_2'] = {
+                name: 'Unfold B', previewHtml: '', maxPhotos: 6, isSmartAuto: false,
+                calculateLayout: function(w, h, count) {
+                    let spacing = collageState.spacing !== undefined ? collageState.spacing : 20; let padding = 40; let boxes = [];
+                    let wC = w - (padding*2); let hC = h - (padding*2);
+                    let w2 = (wC - spacing)/2; let hTop = hC * 0.35; let hBottom = hC * 0.65 - spacing;
+                    if (count >= 1) boxes.push({x: padding, y: padding, w: w2, h: hTop});
+                    if (count >= 2) boxes.push({x: padding + w2 + spacing, y: padding, w: w2, h: hTop});
+                    if (count >= 3) boxes.push({x: padding, y: padding + hTop + spacing, w: w2, h: hBottom*0.4});
+                    if (count >= 4) boxes.push({x: padding + w2 + spacing, y: padding + hTop + spacing, w: w2, h: hBottom*0.6});
+                    if (count >= 5) boxes.push({x: padding, y: padding + hTop + spacing + hBottom*0.4 + spacing, w: w2, h: hBottom*0.6 - spacing});
+                    if (count >= 6) boxes.push({x: padding + w2 + spacing, y: padding + hTop + spacing + hBottom*0.6 + spacing, w: w2, h: hBottom*0.4 - spacing});
+                    return boxes;
+                }
+            };
+            collageTemplates['scrl_3'] = {
+                name: 'Unfold C', previewHtml: '', maxPhotos: 5, isSmartAuto: false,
+                calculateLayout: function(w, h, count) {
+                    let spacing = collageState.spacing !== undefined ? collageState.spacing : 20; let padding = 40; let boxes = [];
+                    let wC = w - (padding*2); let hC = h - (padding*2);
+                    let h2 = (hC - spacing)/2; let wMain = wC * 0.65; let wSub = wC * 0.35 - spacing;
+                    if (count >= 1) boxes.push({x: padding, y: padding, w: wMain, h: h2});
+                    if (count >= 2) boxes.push({x: padding + wMain + spacing, y: padding, w: wSub, h: h2*0.4});
+                    if (count >= 3) boxes.push({x: padding + wMain + spacing, y: padding + h2*0.4 + spacing, w: wSub, h: h2*0.6 - spacing});
+                    if (count >= 4) boxes.push({x: padding, y: padding + h2 + spacing, w: wSub, h: h2});
+                    if (count >= 5) boxes.push({x: padding + wSub + spacing, y: padding + h2 + spacing, w: wMain, h: h2});
+                    return boxes;
+                }
+            };
+            collageTemplates['scrl_4'] = {
+                name: 'Unfold D', previewHtml: '', maxPhotos: 5, isSmartAuto: false,
+                calculateLayout: function(w, h, count) {
+                    let spacing = collageState.spacing !== undefined ? collageState.spacing : 20; let padding = 40; let boxes = [];
+                    let wC = w - (padding*2); let hC = h - (padding*2);
+                    let h3 = (hC - spacing*2)/3; let w2 = (wC - spacing)/2;
+                    if (count >= 1) boxes.push({x: padding, y: padding, w: w2, h: h3*1.2});
+                    if (count >= 2) boxes.push({x: padding + w2 + spacing, y: padding, w: w2, h: h3*1.2});
+                    if (count >= 3) boxes.push({x: padding, y: padding + h3*1.2 + spacing, w: wC, h: h3*0.8});
+                    if (count >= 4) boxes.push({x: padding, y: padding + h3*2 + spacing, w: w2, h: hC - h3*2 - spacing});
+                    if (count >= 5) boxes.push({x: padding + w2 + spacing, y: padding + h3*2 + spacing, w: w2, h: hC - h3*2 - spacing});
+                    return boxes;
+                }
+            };
+        }
+
+        let isScrl = id.startsWith('scrl_');
+        if (!collageTemplates[id]) {
+            collageTemplates[id] = {
+                name: name,
+                previewHtml: '',
+                maxPhotos: 99,
+                isSmartAuto: !isScrl
+            };
+        }
         
         collageState.canvasW = w;
         collageState.canvasH = h;
         collageState.currentTemplateId = id;
         
-        // Update UI
         document.getElementById('selectedTemplateName').innerText = name;
         document.getElementById('selectedTemplateDims').innerText = Math.round(w) + ' x ' + Math.round(h);
         
@@ -2390,6 +2451,26 @@
     
     function setCollageSpacing(spacingVal) {
         collageState.spacing = spacingVal;
+        
+        // Update UI Active State
+        [0, 20, 60].forEach(val => {
+            let btn = document.getElementById('btn-spacing-' + val);
+            if(!btn) return;
+            let iconBox = btn.querySelector('div.w-14');
+            let iconInner = btn.querySelector('div.w-8');
+            let textSpan = btn.querySelector('span');
+            
+            if (val === spacingVal) {
+                iconBox.className = 'w-14 h-10 border-2 border-blue-600 rounded-lg flex items-center justify-center bg-blue-50 transition-colors shadow-sm';
+                iconInner.className = `w-8 h-6 border-[${val === 0 ? '1' : val === 20 ? '3' : '5'}px] border-blue-600 rounded-sm`;
+                textSpan.className = 'text-[10px] font-bold text-blue-600 transition-colors';
+            } else {
+                iconBox.className = 'w-14 h-10 border border-gray-200 rounded-lg flex items-center justify-center bg-gray-50 transition-colors hover:border-gray-300';
+                iconInner.className = `w-8 h-6 border-[${val === 0 ? '1' : val === 20 ? '3' : '5'}px] border-gray-400 rounded-sm`;
+                textSpan.className = 'text-[10px] font-bold text-gray-400 transition-colors group-hover:text-gray-600';
+            }
+        });
+
         recalculateSmartAutoLayout();
         requestRenderCollage();
     }
