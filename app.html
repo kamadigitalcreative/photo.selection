@@ -1929,7 +1929,7 @@
             </div>
 
                 <!-- SECTION SORTIR LOKAL -->
-                <div id="section-sortir-lokal" class="hidden flex-1 flex-col w-full">
+                <div id="section-sortir-lokal" class="hidden flex-1 flex-col max-w-[1400px] mx-auto w-full pb-10">
                     
                     <!-- HEADER -->
                     <div class="mb-4">
@@ -2588,7 +2588,7 @@
                                     </div>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
-                                    <input type="checkbox" class="sr-only peer" id="p_watermark" checked>
+                                    <input type="checkbox" class="sr-only peer" id="p_watermark" onclick="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ showPremiumAlert(); return false; }" checked>
                                     <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 shadow-inner"></div>
                                 </label>
                             </div>
@@ -2601,12 +2601,12 @@
                                             <i class="fa-solid fa-layer-group"></i>
                                         </div>
                                         <div>
-                                            <h4 class="font-bold text-gray-800 text-sm" id="lbl-p-cat-title">Multi-Kategori</h4>
+                                            <h4 class="font-bold text-gray-800 text-sm flex items-center gap-2" id="lbl-p-cat-title">Multi-Kategori <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i></h4>
                                             <p class="text-[10px] text-gray-500 mt-0.5" id="lbl-p-cat-desc">Pisahkan kuota foto per kategori.</p>
                                         </div>
                                     </div>
                                     <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
-                                        <input type="checkbox" class="sr-only peer" id="p_use_category" onchange="toggleCategoryUI()">
+                                        <input type="checkbox" class="sr-only peer" id="p_use_category" onclick="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ showPremiumAlert(); return false; }" onchange="toggleCategoryUI()">
                                         <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600 shadow-inner"></div>
                                     </label>
                                 </div>
@@ -3040,9 +3040,9 @@
             setLbl('#lbl-p-extra', 'Biaya Ekstra Foto (Rp)', 'Extra Photo Price (Rp)');
             setLbl('#lbl-p-pass', 'Password Galeri <span class="text-gray-400 font-normal lowercase">(Opsional)</span>', 'Gallery Password <span class="text-gray-400 font-normal lowercase">(Opt)</span>');
             
-            setLbl('#lbl-p-wm-title', 'Keamanan Watermark', 'Watermark Security');
+            setLbl('#lbl-p-wm-title', 'Keamanan Watermark <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i>', 'Watermark Security <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i>');
             setLbl('#lbl-p-wm-desc', 'Tampilkan watermark logo.', 'Show logo watermark.');
-            setLbl('#lbl-p-cat-title', 'Multi-Kategori', 'Multi-Category');
+            setLbl('#lbl-p-cat-title', 'Multi-Kategori <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i>', 'Multi-Category <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i>');
             setLbl('#lbl-p-cat-desc', 'Pisahkan kuota foto per kategori.', 'Separate photo quota per category.');
             setLbl('#lbl-p-cat-add', 'Tambah Kategori', 'Add Category');
             setPh('#p_pass', 'Kosong jika open', 'Leave blank if open');
