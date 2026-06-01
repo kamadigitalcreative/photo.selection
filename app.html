@@ -948,11 +948,13 @@
                 <button onclick="switchAdminTab('status')" id="tab-status" class="nav-tab">
                     <i class="fa-solid fa-headset"></i> Pantau Klien
                 </button>
-                <button onclick="switchAdminTab('sortir-lokal')" id="tab-sortir-lokal" class="nav-tab photo-only-col hidden">
-                    <i class="fa-solid fa-file-zipper"></i> Sortir Lokal
+                <button onclick="switchAdminTab('sortir-lokal')" id="tab-sortir-lokal" class="nav-tab photo-only-col hidden group flex justify-between items-center">
+                    <span><i class="fa-solid fa-file-zipper w-5"></i> Sortir Lokal</span>
+                    <i class="fa-solid fa-crown text-yellow-500 text-[10px]" title="Fitur PRO"></i>
                 </button>
-                <button onclick="switchAdminTab('collage')" id="tab-collage" class="nav-tab photo-only-col hidden">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Kolase
+                <button onclick="switchAdminTab('collage')" id="tab-collage" class="nav-tab photo-only-col hidden group flex justify-between items-center">
+                    <span><i class="fa-solid fa-wand-magic-sparkles w-5"></i> Kolase</span>
+                    <i class="fa-solid fa-crown text-yellow-500 text-[10px]" title="Fitur PRO"></i>
                 </button>
                 
                 <!-- Separator -->
@@ -1069,11 +1071,13 @@
                     <button onclick="switchAdminTab('status'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-status-m" class="nav-tab">
                         <i class="fa-solid fa-headset"></i> Pantau Klien
                     </button>
-                    <button onclick="switchAdminTab('sortir-lokal'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-sortir-lokal-m" class="nav-tab photo-only-col hidden">
-                        <i class="fa-solid fa-file-zipper"></i> Sortir Lokal
+                    <button onclick="switchAdminTab('sortir-lokal'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-sortir-lokal-m" class="nav-tab photo-only-col hidden flex justify-between items-center">
+                        <span><i class="fa-solid fa-file-zipper w-5"></i> Sortir Lokal</span>
+                        <i class="fa-solid fa-crown text-yellow-500 text-[10px]" title="Fitur PRO"></i>
                     </button>
-                    <button onclick="switchAdminTab('collage'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-collage-m" class="nav-tab photo-only-col hidden">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> Kolase
+                    <button onclick="switchAdminTab('collage'); document.getElementById('mobile-sidebar').classList.add('-translate-x-full');" id="tab-collage-m" class="nav-tab photo-only-col hidden flex justify-between items-center">
+                        <span><i class="fa-solid fa-wand-magic-sparkles w-5"></i> Kolase</span>
+                        <i class="fa-solid fa-crown text-yellow-500 text-[10px]" title="Fitur PRO"></i>
                     </button>
                     
                     <div class="h-px bg-white/10 my-2 mx-2"></div>
@@ -1925,21 +1929,12 @@
             </div>
 
                 <!-- SECTION SORTIR LOKAL -->
-                <div id="section-sortir-lokal" class="hidden flex-1 flex-col max-w-[1400px] mx-auto w-full pb-10 -mt-10">
+                <div id="section-sortir-lokal" class="hidden flex-1 flex-col w-full">
                     
                     <!-- HEADER -->
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2 pt-0 mt-0">
-                        <div>
-                            <h2 class="text-2xl font-bold text-kama-800 tracking-tight">Sortir Lokal (Otomatis ZIP)</h2>
-                            <p class="text-sm text-gray-500 mt-1">Pilih folder foto master, tempel daftar nama file klien, dan kami akan siapkan ZIP otomatis untuk Anda.</p>
-                        </div>
-                        <div class="bg-blue-50 border border-blue-100 px-4 py-3 rounded-xl flex items-start gap-3 shadow-sm max-w-sm">
-                            <i class="fa-regular fa-star text-blue-500 text-lg mt-0.5"></i>
-                            <div>
-                                <h4 class="text-xs font-bold text-blue-800">Fitur Andalan untuk Fotografer</h4>
-                                <p class="text-[10px] text-blue-600/80 leading-relaxed mt-0.5">Hemat waktu, kurangi human error, fokus ke karya terbaik.</p>
-                            </div>
-                        </div>
+                    <div class="mb-4">
+                        <h2 class="text-xl font-bold text-kama-800 tracking-tight flex items-center gap-2">Sortir Lokal (Otomatis ZIP) <i class="fa-solid fa-crown text-yellow-500 text-[14px]"></i></h2>
+                        <p class="text-sm text-gray-500 mt-1">Pilih folder foto master, tempel daftar nama file klien, dan kami akan siapkan ZIP otomatis untuk Anda.</p>
                     </div>
 
                     <!-- STEPPER -->
@@ -2588,7 +2583,7 @@
                                         <i class="fa-solid fa-droplet"></i>
                                     </div>
                                     <div>
-                                        <h4 class="font-bold text-gray-800 text-sm" id="lbl-p-wm-title">Keamanan Watermark</h4>
+                                        <h4 class="font-bold text-gray-800 text-sm flex items-center gap-2" id="lbl-p-wm-title">Keamanan Watermark <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i></h4>
                                         <p class="text-[10px] text-gray-500 mt-0.5" id="lbl-p-wm-desc">Tampilkan watermark logo perlindungan.</p>
                                     </div>
                                 </div>
@@ -5030,6 +5025,12 @@
         function exitClientPreview() {
             clientState.isPreviewMode = false;
             clientState.token = '';
+            
+            var audio = document.getElementById('bgm-audio');
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
 
             var btnBackAuth = document.getElementById('btn-back-dashboard-auth');
             var btnBackGallery = document.getElementById('btn-back-dashboard');
