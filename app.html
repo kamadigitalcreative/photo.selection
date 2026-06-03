@@ -1304,29 +1304,29 @@
                         <div class="w-full lg:w-[320px] flex flex-col gap-4 shrink-0">
                             
                             <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-                                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                <h3 id="tx-mulai-cepat" class="font-bold text-gray-800 mb-4 flex items-center gap-2">
                                     <i class="fa-solid fa-rocket text-blue-500"></i> Mulai Cepat
                                 </h3>
                                 <div class="flex flex-col gap-4 relative before:content-[''] before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-blue-100">
                                     <div class="flex gap-3 relative z-10">
                                         <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0 border-2 border-white shadow-sm">1</div>
                                         <div>
-                                            <h4 class="font-bold text-sm text-gray-800">Upload Foto Mentah</h4>
-                                            <p class="text-[11px] text-gray-500 mt-0.5 leading-relaxed">Upload folder berisi ratusan/ribuan foto mentah ke Google Drive.</p>
+                                            <h4 id="tx-upload-mentah" class="font-bold text-sm text-gray-800">Upload Foto Mentah</h4>
+                                            <p id="tx-upload-desc" class="text-[11px] text-gray-500 mt-0.5 leading-relaxed">Upload folder berisi ratusan/ribuan foto mentah ke Google Drive.</p>
                                         </div>
                                     </div>
                                     <div class="flex gap-3 relative z-10">
                                         <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0 border-2 border-white shadow-sm">2</div>
                                         <div>
-                                            <h4 class="font-bold text-sm text-gray-800">Buat Link Project</h4>
-                                            <p class="text-[11px] text-gray-500 mt-0.5 leading-relaxed">Masukkan link folder Drive tadi, atur maksimal pilihan, dan bagikan ke klien.</p>
+                                            <h4 id="tx-buat-link" class="font-bold text-sm text-gray-800">Buat Link Project</h4>
+                                            <p id="tx-buat-desc" class="text-[11px] text-gray-500 mt-0.5 leading-relaxed">Masukkan link folder Drive tadi, atur maksimal pilihan, dan bagikan ke klien.</p>
                                         </div>
                                     </div>
                                     <div class="flex gap-3 relative z-10">
                                         <div class="w-8 h-8 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center font-bold text-sm shrink-0 border-2 border-white shadow-sm">3</div>
                                         <div>
-                                            <h4 class="font-bold text-sm text-gray-400">Tunggu & Sortir</h4>
-                                            <p class="text-[11px] text-gray-400 mt-0.5 leading-relaxed">Klien memilih dari HP mereka. Anda bisa langsung sort lokal.</p>
+                                            <h4 id="tx-tunggu" class="font-bold text-sm text-gray-400">Tunggu & Sortir</h4>
+                                            <p id="tx-tunggu-desc" class="text-[11px] text-gray-400 mt-0.5 leading-relaxed">Klien memilih dari HP mereka. Anda bisa langsung sort lokal.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -1334,10 +1334,10 @@
 
                             <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 shadow-sm p-5 relative overflow-hidden">
                                 <i class="fa-regular fa-life-ring absolute -right-4 -top-4 text-6xl text-blue-500/10"></i>
-                                <h3 class="font-bold text-blue-800 text-sm mb-1">Butuh bantuan?</h3>
-                                <p class="text-xs text-blue-600/80 mb-3 leading-relaxed">Tim kami siap membantu kendala Anda kapan saja.</p>
+                                <h3 id="tx-bantuan" class="font-bold text-blue-800 text-sm mb-1">Butuh bantuan?</h3>
+                                <p id="tx-bantuan-desc" class="text-xs text-blue-600/80 mb-3 leading-relaxed">Tim kami siap membantu kendala Anda kapan saja.</p>
                                 <button onclick="switchAdminTab('feedback')" class="w-full bg-white border border-blue-200 text-blue-700 py-2 rounded-xl text-xs font-bold hover:bg-blue-50 transition-colors">
-                                    Hubungi Support
+                                    <span class="tx-hubungi">Hubungi Support</span>
                                 </button>
                             </div>
                         </div>
@@ -1400,21 +1400,21 @@
                         <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm flex items-center gap-4 relative overflow-hidden group">
                             <div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform"><i class="fa-solid fa-hourglass-start"></i></div>
                             <div>
-                                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Belum Memilih</p>
+                                <p id="tx-stat-belum" class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Belum Memilih</p>
                                 <h3 class="text-2xl font-bold text-gray-800 leading-none mt-1" id="count-belum">0</h3>
                             </div>
                         </div>
                         <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm flex items-center gap-4 relative overflow-hidden group">
                             <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform"><i class="fa-solid fa-spinner"></i></div>
                             <div>
-                                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Sedang Memilih</p>
+                                <p id="tx-stat-sedang" class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Sedang Memilih</p>
                                 <h3 class="text-2xl font-bold text-gray-800 leading-none mt-1" id="count-sedang">0</h3>
                             </div>
                         </div>
                         <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm flex items-center gap-4 relative overflow-hidden group">
                             <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform"><i class="fa-solid fa-check-double"></i></div>
                             <div>
-                                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Selesai (Disubmit)</p>
+                                <p id="tx-stat-selesai" class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Selesai (Disubmit)</p>
                                 <h3 class="text-2xl font-bold text-gray-800 leading-none mt-1" id="count-selesai">0</h3>
                             </div>
                         </div>
@@ -1446,26 +1446,26 @@
                             <div class="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-2xl shadow-lg p-5 text-white relative overflow-hidden">
                                 <div class="absolute -right-4 -bottom-4 opacity-10"><i class="fa-solid fa-chart-pie text-9xl"></i></div>
                                 <h3 class="font-bold text-indigo-100 mb-4 flex items-center gap-2 relative z-10">
-                                    <i class="fa-solid fa-lightbulb text-yellow-400"></i> Insight & Rekomendasi
+                                    <i class="fa-solid fa-lightbulb text-yellow-400"></i> <span id="tx-insight">Insight & Rekomendasi</span>
                                 </h3>
                                 
                                 <div class="space-y-4 relative z-10">
                                     <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-xl p-3 flex gap-3">
                                         <div class="w-8 h-8 rounded-full bg-red-500/20 text-red-300 flex items-center justify-center shrink-0"><i class="fa-regular fa-bell"></i></div>
                                         <div>
-                                            <p class="text-sm font-bold text-white mb-1">Follow up klien</p>
-                                            <p class="text-xs text-indigo-100/70 leading-relaxed">Ada klien yang belum memilih lebih dari 3 hari. Gunakan tombol WA untuk mengingatkan mereka.</p>
+                                            <p id="tx-follow" class="text-sm font-bold text-white mb-1">Follow up klien</p>
+                                            <p id="tx-follow-desc" class="text-xs text-indigo-100/70 leading-relaxed">Ada klien yang belum memilih lebih dari 3 hari. Gunakan tombol WA untuk mengingatkan mereka.</p>
                                         </div>
                                     </div>
                                     <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-xl p-3 flex gap-3">
                                         <div class="w-8 h-8 rounded-full bg-green-500/20 text-green-300 flex items-center justify-center shrink-0"><i class="fa-solid fa-bolt"></i></div>
                                         <div>
-                                            <p class="text-sm font-bold text-white mb-1">Cepat Selesai</p>
-                                            <p class="text-xs text-indigo-100/70 leading-relaxed">Rata-rata klien Anda menyelesaikan pemilihan dalam waktu 2 hari. Pertahankan!</p>
+                                            <p id="tx-cepat" class="text-sm font-bold text-white mb-1">Cepat Selesai</p>
+                                            <p id="tx-cepat-desc" class="text-xs text-indigo-100/70 leading-relaxed">Rata-rata klien Anda menyelesaikan pemilihan dalam waktu 2 hari. Pertahankan!</p>
                                         </div>
                                     </div>
                                 </div>
-                                <button class="w-full mt-4 py-2 bg-indigo-500 hover:bg-indigo-400 transition-colors rounded-xl text-xs font-bold shadow-sm">Lihat Analisis Detail</button>
+                                <button class="w-full mt-4 py-2 bg-indigo-500 hover:bg-indigo-400 transition-colors rounded-xl text-xs font-bold shadow-sm"><span id="tx-analisis">Lihat Analisis Detail</span></button>
                             </div>
                         </div>
 
@@ -1477,8 +1477,8 @@
     
     <!-- Kolase Top Header -->
     <div class="mb-6">
-        <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Kolase Cepat</h2>
-        <p class="text-sm text-gray-500 mt-1">Buat kolase profesional dalam hitungan detik untuk media sosial, portofolio, atau presentasi klien.</p>
+        <h2 id="tx-kl-h2" class="text-2xl font-bold text-gray-900 tracking-tight">Kolase Cepat</h2>
+        <p id="tx-kl-p1" class="text-sm text-gray-500 mt-1">Buat kolase profesional dalam hitungan detik untuk media sosial, portofolio, atau presentasi klien.</p>
     </div>
 
     <!-- Main Grid: Left (Templates + Preview), Right (Settings) -->
@@ -1613,7 +1613,7 @@
             <!-- Preview Kolase -->
             <div class="bg-white border border-gray-100 rounded-2xl flex-1 flex flex-col overflow-hidden min-h-[550px] lg:min-h-[700px] shadow-sm">
                 <div class="p-4 border-b border-gray-100 bg-white flex items-center justify-between">
-                    <h3 class="text-sm font-bold text-gray-900">Preview Kolase</h3>
+                    <h3 id="tx-kl-preview" class="text-sm font-bold text-gray-900">Preview Kolase</h3>
                     <div class="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded" id="collageSelectedCountDisplay">0 Foto Terpilih</div>
                 </div>
                 
@@ -1648,7 +1648,7 @@
 
         <!-- Right Column: Settings Sidebar -->
         <div class="w-full lg:w-[320px] bg-white border border-gray-100 shadow-sm rounded-2xl p-6 shrink-0 flex flex-col gap-6">
-            <h3 class="text-sm font-bold text-gray-900 border-b border-gray-100 pb-4">Pengaturan Kolase</h3>
+            <h3 id="tx-kl-pengaturan" class="text-sm font-bold text-gray-900 border-b border-gray-100 pb-4">Pengaturan Kolase</h3>
             
             <!-- Sumber Foto -->
             <div>
@@ -1737,7 +1737,7 @@
                     <input type="text" id="collageTitleInput" oninput="updateCollageTitle()" value="Rizky & Anisa" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-gray-50 focus:bg-white shadow-sm">
                     <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400">13 / 60</span>
                 </div>
-                <p class="text-[9px] text-gray-400 mt-2"><i class="fa-solid fa-circle-info mr-1"></i> Judul akan otomatis ditampilkan di bagian bawah kolase.</p>
+                <p id="tx-kl-info" class="text-[9px] text-gray-400 mt-2"><i class="fa-solid fa-circle-info mr-1"></i> Judul akan otomatis ditampilkan di bagian bawah kolase.</p>
             </div>
 
             <!-- Gaya & Warna -->
@@ -1760,7 +1760,7 @@
             <!-- Generate Button -->
             <button class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-bold text-sm transition-all shadow-[0_4px_15px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] flex justify-center items-center gap-2" onclick="downloadCollage()">
                 <i class="fa-solid fa-wand-magic-sparkles"></i>
-                Generate Kolase HD
+                <span class="tx-kl-gen">Generate Kolase HD</span>
             </button>
                 <p class="text-[9px] text-gray-400 text-center mt-3 flex items-center justify-center gap-1">
                     <i class="fa-solid fa-bolt text-amber-500"></i> Render secepat kilat.
@@ -1784,11 +1784,11 @@
                 <div id="section-settings" class="hidden flex-1 flex-col max-w-[1400px] mx-auto w-full pb-10">
                     <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
-                            <h2 class="text-xl font-bold text-gray-800">Pengaturan Studio</h2>
+                            <h2 id="tx-st-h2" class="text-xl font-bold text-gray-800">Pengaturan Studio</h2>
                             <p class="text-sm text-gray-500">Sesuaikan profil, brand, dan preferensi akun Anda.</p>
                         </div>
                         <button onclick="saveSettings()" class="bg-black text-white px-6 py-2.5 rounded-xl hover:bg-gray-800 transition-colors shadow-sm text-sm font-bold flex items-center gap-2">
-                            <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan
+                            <i class="fa-solid fa-floppy-disk"></i> <span class="tx-st-simpan">Simpan Perubahan</span>
                         </button>
                     </div>
 
@@ -2051,8 +2051,8 @@
                     
                     <!-- HEADER -->
                     <div class="mb-4">
-                        <h2 class="text-xl font-bold text-kama-800 tracking-tight flex items-center gap-2">Sortir Lokal (Otomatis ZIP) <i class="fa-solid fa-crown text-yellow-500 text-[14px]"></i></h2>
-                        <p class="text-sm text-gray-500 mt-1">Pilih folder foto master, tempel daftar nama file klien, dan kami akan siapkan ZIP otomatis untuk Anda.</p>
+                        <h2 id="tx-sl-h2" class="text-xl font-bold text-kama-800 tracking-tight flex items-center gap-2">Sortir Lokal (Otomatis ZIP) <i class="fa-solid fa-crown text-yellow-500 text-[14px]"></i></h2>
+                        <p id="tx-sl-p1" class="text-sm text-gray-500 mt-1">Pilih folder foto master, tempel daftar nama file klien, dan kami akan siapkan ZIP otomatis untuk Anda.</p>
                     </div>
 
                     <!-- STEPPER -->
@@ -2061,8 +2061,8 @@
                         <div class="flex items-center gap-3 shrink-0 opacity-100 transition-opacity" id="step1-indicator">
                             <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm transition-colors" id="step1-circle">1</div>
                             <div>
-                                <h4 class="text-sm font-bold text-gray-800">Pilih Folder Master</h4>
-                                <p class="text-[10px] text-gray-500">Pilih folder sumber foto Anda</p>
+                                <h4 id="tx-sl-step1" class="text-sm font-bold text-gray-800">Pilih Folder Master</h4>
+                                <p id="tx-sl-step1-desc" class="text-[10px] text-gray-500">Pilih folder sumber foto Anda</p>
                             </div>
                         </div>
                         <i class="fa-solid fa-chevron-right text-gray-300 text-sm shrink-0"></i>
@@ -2784,16 +2784,16 @@
                 <!-- Stepper Nav (Desktop only, hidden on mobile for space) -->
                 <div class="hidden sm:flex px-6 pb-0 gap-2 justify-between relative mt-2">
                     <div class="flex-1 text-center border-b-2 border-primary-600 pb-3 transition-colors wizard-nav-item" id="nav-step-1">
-                        <span class="text-xs font-bold text-primary-700 uppercase"><i class="fa-solid fa-1 mr-1"></i> Info Dasar</span>
+                        <span id="tx-wiz1" class="text-xs font-bold text-primary-700 uppercase"><i class="fa-solid fa-1 mr-1"></i> Info Dasar</span>
                     </div>
                     <div class="flex-1 text-center border-b-2 border-gray-200 pb-3 transition-colors wizard-nav-item" id="nav-step-2">
-                        <span class="text-xs font-bold text-gray-400 uppercase"><i class="fa-solid fa-2 mr-1"></i> Tampilan</span>
+                        <span id="tx-wiz2" class="text-xs font-bold text-gray-400 uppercase"><i class="fa-solid fa-2 mr-1"></i> Tampilan</span>
                     </div>
                     <div class="flex-1 text-center border-b-2 border-gray-200 pb-3 transition-colors wizard-nav-item" id="nav-step-3">
-                        <span class="text-xs font-bold text-gray-400 uppercase"><i class="fa-solid fa-3 mr-1"></i> Kuota & Biaya</span>
+                        <span id="tx-wiz3" class="text-xs font-bold text-gray-400 uppercase"><i class="fa-solid fa-3 mr-1"></i> Kuota & Biaya</span>
                     </div>
                     <div class="flex-1 text-center border-b-2 border-gray-200 pb-3 transition-colors wizard-nav-item" id="nav-step-4">
-                        <span class="text-xs font-bold text-gray-400 uppercase"><i class="fa-solid fa-4 mr-1"></i> Akses & Fitur</span>
+                        <span id="tx-wiz4" class="text-xs font-bold text-gray-400 uppercase"><i class="fa-solid fa-4 mr-1"></i> Akses & Fitur</span>
                     </div>
                 </div>
             </div>
@@ -2805,13 +2805,13 @@
                     <!-- STEP 1: INFORMASI DASAR -->
                     <div id="wizard-step-1" class="wizard-step fade-in">
                         <div class="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-sm mb-4">
-                            <h4 class="font-bold text-gray-800 text-sm mb-5 flex items-center gap-2"><i class="fa-solid fa-circle-info text-blue-500"></i> Informasi Dasar Klien</h4>
+                            <h4 id="tx-info-dasar" class="font-bold text-gray-800 text-sm mb-5 flex items-center gap-2"><i class="fa-solid fa-circle-info text-blue-500"></i> Informasi Dasar Klien</h4>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                                 <div>
                                     <label id="lbl-p-name" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Nama Klien / Project <span class="text-red-500">*</span></label>
                                     <div class="relative">
                                         <span class="absolute left-4 top-2.5 text-gray-400 text-sm"><i class="fa-regular fa-user"></i></span>
-                                        <input type="text" id="p_nama" autocomplete="new-password" name="prevent_autofill_nama" required placeholder="Contoh: Budi & Susi Wedding" class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm font-medium text-gray-800">
+                                        <input type="text" id="p_nama" autocomplete="new-password" name="prevent_autofill_nama" required placeholder="Contoh: Budi & Susi Wedding" id="inp-budi" class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm font-medium text-gray-800">
                                     </div>
                                 </div>
                                 <div>
@@ -2827,7 +2827,7 @@
                                         <span class="absolute left-4 top-2.5 text-gray-400 text-sm"><i class="fa-brands fa-google-drive"></i></span>
                                         <input type="url" id="p_drive" autocomplete="new-password" name="prevent_autofill_drive" required placeholder="https://drive.google.com/..." class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm font-medium text-blue-600">
                                     </div>
-                                    <p class="text-[10px] text-gray-500 mt-2"><i class="fa-solid fa-circle-info mr-1"></i> Pastikan akses folder Google Drive sudah diatur ke <b>"Siapa saja yang memiliki link"</b>.</p>
+                                    <p id="tx-gdrive-desc" class="text-[10px] text-gray-500 mt-2"><i class="fa-solid fa-circle-info mr-1"></i> Pastikan akses folder Google Drive sudah diatur ke <b>"Siapa saja yang memiliki link"</b>.</p>
                                 </div>
                             </div>
                         </div>
@@ -3038,7 +3038,7 @@
                     
                     <button type="button" onclick="nextWizardStep()" id="btnWizardNext"
                         class="px-6 py-2.5 bg-gray-800 text-white text-sm font-bold rounded-xl hover:bg-gray-900 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
-                        Lanjut <i class="fa-solid fa-arrow-right"></i>
+                        <span class="tx-btn-lanjut">Lanjut</span> <i class="fa-solid fa-arrow-right"></i>
                     </button>
                     
                     <button type="submit" form="formCreateProject" id="btnCreate"
@@ -3825,6 +3825,73 @@
             setTx('#section-admin-feedback h2', 'Laporan Masuk', 'Incoming Reports');
             setTx('#section-admin-feedback p.text-sm.text-gray-500', 'Daftar saran dan keluhan bug dari tim fotografer Anda (Auto-Refresh).', 'List of suggestions and bug reports from your photographer team (Auto-Refresh).');
             setTx('#section-feedback h2.text-lg.font-bold', 'Riwayat Laporan Saya', 'My Report History');
+
+            // --- INJECTED TRANSLATIONS FROM USER REQUEST ---
+            // 1. Menu Project (Mulai Cepat, dll)
+            setTx('#tx-mulai-cepat', '<i class="fa-solid fa-rocket text-blue-500"></i> Mulai Cepat', '<i class="fa-solid fa-rocket text-blue-500"></i> Quick Start', true);
+            setTx('#tx-upload-mentah', 'Upload Foto Mentah', 'Upload Raw Photos');
+            setTx('#tx-upload-desc', 'Upload folder berisi ratusan/ribuan foto mentah ke Google Drive.', 'Upload folders containing hundreds/thousands of raw photos to Google Drive.');
+            setTx('#tx-buat-link', 'Buat Link Project', 'Create Project Link');
+            setTx('#tx-buat-desc', 'Masukkan link folder Drive tadi, atur maksimal pilihan, dan bagikan ke klien.', 'Enter the Drive folder link, set max selections, and share with the client.');
+            setTx('#tx-tunggu', 'Tunggu & Sortir', 'Wait & Sort');
+            setTx('#tx-tunggu-desc', 'Klien memilih dari HP mereka. Anda bisa langsung sort lokal.', 'Clients select from their phone. You can immediately sort locally.');
+            setTx('#tx-bantuan', 'Butuh bantuan?', 'Need help?');
+            setTx('#tx-bantuan-desc', 'Tim kami siap membantu kendala Anda kapan saja.', 'Our team is ready to help you anytime.');
+            setTx('.tx-hubungi', 'Hubungi Support', 'Contact Support');
+
+            // 2. Menu Client Status
+            setTx('#tx-stat-belum', 'Belum Memilih', 'Not Started');
+            setTx('#tx-stat-sedang', 'Sedang Memilih', 'Selecting');
+            setTx('#tx-stat-selesai', 'Selesai (Disubmit)', 'Completed (Submitted)');
+            setTx('#tx-insight', 'Insight & Rekomendasi', 'Insights & Recommendations');
+            setTx('#tx-follow', 'Follow up klien', 'Follow up clients');
+            setTx('#tx-follow-desc', 'Ada klien yang belum memilih lebih dari 3 hari. Gunakan tombol WA untuk mengingatkan mereka.', 'There are clients who haven\'t selected in over 3 days. Use the WA button to remind them.');
+            setTx('#tx-cepat', 'Cepat Selesai', 'Quick Completion');
+            setTx('#tx-cepat-desc', 'Rata-rata klien Anda menyelesaikan pemilihan dalam waktu 2 hari. Pertahankan!', 'Your clients average 2 days to complete selection. Keep it up!');
+            setTx('#tx-analisis', 'Lihat Analisis Detail', 'View Detailed Analysis');
+
+            // Wizard Step Modal
+            setTx('#tx-wiz1', '<i class="fa-solid fa-1 mr-1"></i> Info Dasar', '<i class="fa-solid fa-1 mr-1"></i> Basic Info', true);
+            setTx('#tx-wiz2', '<i class="fa-solid fa-2 mr-1"></i> Tampilan', '<i class="fa-solid fa-2 mr-1"></i> Display', true);
+            setTx('#tx-wiz3', '<i class="fa-solid fa-3 mr-1"></i> Kuota & Biaya', '<i class="fa-solid fa-3 mr-1"></i> Quota & Price', true);
+            setTx('#tx-wiz4', '<i class="fa-solid fa-4 mr-1"></i> Akses & Fitur', '<i class="fa-solid fa-4 mr-1"></i> Access & Features', true);
+            setTx('#tx-info-dasar', '<i class="fa-solid fa-circle-info text-blue-500"></i> Informasi Dasar Klien', '<i class="fa-solid fa-circle-info text-blue-500"></i> Client Basic Information', true);
+            setTx('#tx-gdrive-desc', '<i class="fa-solid fa-circle-info mr-1"></i> Pastikan akses folder Google Drive sudah diatur ke <b>"Siapa saja yang memiliki link"</b>.', '<i class="fa-solid fa-circle-info mr-1"></i> Make sure the Google Drive folder access is set to <b>"Anyone with the link"</b>.', true);
+            setTx('.tx-btn-lanjut', 'Lanjut', 'Next');
+
+            // File input texts
+            setTx('.tx-pilih-file', 'Pilih File', 'Choose File');
+            setTx('.tx-tidak-ada-file', 'Tidak ada file yang dipilih', 'No file chosen');
+
+            // Sortir Lokal
+            setTx('#tx-sl-h2', 'Sortir Lokal (Otomatis ZIP) <i class="fa-solid fa-crown text-yellow-500 text-[14px]"></i>', 'Local Sort (Auto ZIP) <i class="fa-solid fa-crown text-yellow-500 text-[14px]"></i>', true);
+            setTx('#tx-sl-p1', 'Pilih folder foto master, tempel daftar nama file klien, dan kami akan siapkan ZIP otomatis untuk Anda.', 'Select master photo folder, paste client file list, and we will automatically prepare a ZIP for you.');
+            setTx('#tx-sl-step1', 'Pilih Folder Master', 'Select Master Folder');
+            setTx('#tx-sl-step1-desc', 'Pilih folder sumber foto Anda', 'Select your source photo folder');
+            setTx('#tx-sl-step2', 'Paste Daftar Klien', 'Paste Client List');
+            setTx('#tx-sl-step2-desc', 'Tempel daftar nama/nomor foto', 'Paste photo names/numbers');
+            setTx('#tx-sl-step3', 'Download ZIP', 'Download ZIP');
+            setTx('#tx-sl-step3-desc', 'Sistem buatkan ZIP untuk Anda', 'System will create ZIP for you');
+
+            // Kolase Cepat
+            setTx('#tx-kl-h2', 'Kolase Cepat', 'Quick Collage');
+            setTx('#tx-kl-p1', 'Buat kolase profesional dalam hitungan detik untuk media sosial, portofolio, atau presentasi klien.', 'Create professional collages in seconds for social media, portfolios, or client presentations.');
+            setTx('#tx-kl-pengaturan', 'Pengaturan Kolase', 'Collage Settings');
+            setTx('#tx-kl-info', '<i class="fa-solid fa-circle-info mr-1"></i> Judul akan otomatis ditampilkan di bagian bawah kolase.', '<i class="fa-solid fa-circle-info mr-1"></i> The title will automatically be displayed at the bottom of the collage.', true);
+            setTx('.tx-kl-gen', 'Generate Kolase HD', 'Generate HD Collage');
+            setTx('#tx-kl-preview', 'Preview Kolase', 'Collage Preview');
+
+            // Pengaturan Studio
+            setTx('#tx-st-h2', 'Pengaturan Studio', 'Studio Settings');
+            setTx('#tx-st-p1', 'Sesuaikan identitas brand dan pengaturan default studio Anda di sini.', 'Customize your brand identity and default studio settings here.');
+            setTx('#tx-st-profil', 'Profil & Identitas Brand', 'Profile & Brand Identity');
+            setTx('#tx-st-keuangan', 'Keuangan & Pembayaran Default', 'Finance & Default Payment');
+            setTx('#tx-st-ekstra', 'Pengaturan Ekstra Fitur <i class="fa-solid fa-crown text-yellow-500 text-xs ml-1"></i>', 'Extra Feature Settings <i class="fa-solid fa-crown text-yellow-500 text-xs ml-1"></i>', true);
+            setTx('.tx-st-simpan', 'Simpan Perubahan', 'Save Changes');
+
+            // Placeholder fix for "Contoh: Budi & Susi Wedding"
+            var inpBudi = document.getElementById('inp-budi');
+            if (inpBudi) inpBudi.placeholder = isEn ? 'Example: John & Jane Wedding' : 'Contoh: Budi & Susi Wedding';
 
             // Render ulang galeri klien agar tombol-tombol di dalam grid ikut berubah bahasanya
             if (document.getElementById('client-gallery-view').classList.contains('active') && clientState.currentContent) {
