@@ -5596,7 +5596,12 @@ function isAccountExpired() {
                         }
                     }
                 } else {
-                    if (!cachedProjects) Swal.fire('Error', res.message || res.data.message, 'error');
+                    var errMsg = res.message || res.data?.message;
+                    if (errMsg === 'Sesi berakhir, harap login ulang.') {
+                        Swal.fire('Sesi Berakhir', 'Sesi Anda telah kedaluwarsa. Silakan login kembali.', 'warning').then(() => handleLogout());
+                    } else if (!cachedProjects) {
+                        Swal.fire('Error', errMsg, 'error');
+                    }
                 }
             } catch (err) {
                 if (!cachedProjects) { endLoading(); Swal.fire('Error', err.message, 'error'); }
@@ -7876,7 +7881,12 @@ function isAccountExpired() {
                         renderClientProgress(rawStatusData);
                     }
                 } else {
-                    if (!cachedStatus && !isSilent) Swal.fire('Error', res.message, 'error');
+                    var errMsg = res.message || res.data?.message;
+                    if (errMsg === 'Sesi berakhir, harap login ulang.') {
+                        Swal.fire('Sesi Berakhir', 'Sesi Anda telah kedaluwarsa. Silakan login kembali.', 'warning').then(() => handleLogout());
+                    } else if (!cachedStatus && !isSilent) {
+                        Swal.fire('Error', errMsg, 'error');
+                    }
                 }
             } catch (err) {
                 if (!cachedStatus && !isSilent) { endLoading(); Swal.fire('Error', err.message, 'error'); }
