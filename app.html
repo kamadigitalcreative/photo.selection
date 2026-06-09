@@ -2947,7 +2947,7 @@
                                         <div id="p_durasi_pilih_custom_wrapper" class="hidden mt-2">
                                             <div class="relative">
                                                 <input type="number" id="p_durasi_pilih_custom" min="1" placeholder="Masukkan jumlah hari" class="w-full px-4 py-2 bg-white border border-green-300 rounded-xl focus:border-green-500 focus:ring-1 outline-none transition-all text-sm">
-                                                <span class="absolute right-4 top-2 text-sm text-gray-400 font-semibold">Hari</span>
+                                                <span class="absolute right-4 top-2 text-sm text-gray-400 font-semibold tx-span-hari">Hari</span>
                                             </div>
                                         </div>
                                     </div>
@@ -2966,7 +2966,7 @@
                                         <div id="p_durasi_download_custom_wrapper" class="hidden mt-2">
                                             <div class="relative">
                                                 <input type="number" id="p_durasi_download_custom" min="1" placeholder="Masukkan jumlah hari" class="w-full px-4 py-2 bg-white border border-blue-300 rounded-xl focus:border-blue-500 focus:ring-1 outline-none transition-all text-sm">
-                                                <span class="absolute right-4 top-2 text-sm text-gray-400 font-semibold">Hari</span>
+                                                <span class="absolute right-4 top-2 text-sm text-gray-400 font-semibold tx-span-hari">Hari</span>
                                             </div>
                                         </div>
                                     </div>
@@ -3683,6 +3683,29 @@
             setTx('#tx-btn-batal', 'Batal', 'Cancel');
             setTx('.tx-btn-lanjut', 'Lanjut', 'Next');
             setTx('#tx-btn-generate', 'Generate Link', 'Generate Link');
+
+            // Dropdowns & Placeholders
+            setPh('#p_pass', 'Kosongkan jika publik', 'Leave blank if public');
+            setPh('#p_durasi_pilih_custom', 'Masukkan jumlah hari', 'Enter number of days');
+            setPh('#p_durasi_download_custom', 'Masukkan jumlah hari', 'Enter number of days');
+            setTx('.tx-span-hari', 'Hari', 'Days');
+
+            var durasiPilih = document.getElementById('p_durasi_pilih');
+            if (durasiPilih) {
+                Array.from(durasiPilih.options).forEach(opt => {
+                    if(opt.value === 'Selamanya') opt.text = isEn ? 'Forever' : 'Selamanya';
+                    else if(opt.value === 'custom') opt.text = isEn ? 'Custom Days...' : 'Custom Hari...';
+                    else opt.text = isEn ? opt.value + ' Days' : opt.value + ' Hari';
+                });
+            }
+            var durasiDownload = document.getElementById('p_durasi_download');
+            if (durasiDownload) {
+                Array.from(durasiDownload.options).forEach(opt => {
+                    if(opt.value === 'Selamanya') opt.text = isEn ? 'Forever' : 'Selamanya';
+                    else if(opt.value === 'custom') opt.text = isEn ? 'Custom Days...' : 'Custom Hari...';
+                    else opt.text = isEn ? opt.value + ' Days' : opt.value + ' Hari';
+                });
+            }
 
             // Pengaturan Peringatan Admin di Modal Settings
             var pInfo = document.querySelector('#formSettings .bg-blue-50 p');
@@ -6251,6 +6274,7 @@ function isAccountExpired() {
 
             // --- PREMIUM ADDON LOCKS ---
             var isPrem = typeof isPremiumAddon === 'function' ? isPremiumAddon() : false;
+            var isEn = document.getElementById('langSelector') && document.getElementById('langSelector').value === 'en';
             var inpWm = document.getElementById('p_watermark');
             var inpCat = document.getElementById('p_use_category');
             var inpPrice = document.getElementById('p_extra_price');
@@ -6270,9 +6294,9 @@ function isAccountExpired() {
                 inpPrice.disabled = !isPrem;
                 if (!isPrem) {
                     inpPrice.value = '';
-                    inpPrice.placeholder = 'Terkunci (Add-On PRO)';
+                    inpPrice.placeholder = isEn ? 'Locked (PRO Add-On)' : 'Terkunci (Add-On PRO)';
                 } else {
-                    inpPrice.placeholder = '0 = Gratis';
+                    inpPrice.placeholder = isEn ? '0 = Free' : '0 = Gratis';
                 }
             }
 
@@ -6294,10 +6318,10 @@ function isAccountExpired() {
             if (inpMusicUrl) {
                 inpMusicUrl.disabled = !isPrem;
                 if (!isPrem) {
-                    inpMusicUrl.placeholder = 'Terkunci (Add-On PRO)';
+                    inpMusicUrl.placeholder = isEn ? 'Locked (PRO Add-On)' : 'Terkunci (Add-On PRO)';
                     inpMusicUrl.classList.add('pointer-events-none');
                 } else {
-                    inpMusicUrl.placeholder = 'URL Musik MP3 (Contoh: https://.../lagu.mp3)';
+                    inpMusicUrl.placeholder = isEn ? 'MP3 Music URL (e.g., https://.../song.mp3)' : 'URL Musik MP3 (Contoh: https://.../lagu.mp3)';
                     inpMusicUrl.classList.remove('pointer-events-none');
                 }
             }
