@@ -3626,9 +3626,9 @@
             setTx('#section-projects > div.grid > div:nth-child(4) p', 'Total Link (Bulan Ini)', 'Total Links (This Month)');
             
             setTx('#section-projects button[onclick="openModalCreate()"]', '<i class="fa-solid fa-plus"></i> Buat Project Baru', '<i class="fa-solid fa-plus"></i> Create New Project', true);
-            setTx('#section-projects button[onclick*="\\'Semua\\'"]', 'Semua Project', 'All Projects');
-            setTx('#section-projects button[onclick*="\\'Menunggu Klien\\'"]', 'Menunggu Klien', 'Awaiting Client');
-            setTx('#section-projects button[onclick*="\\'Selesai\\'"]', 'Selesai', 'Completed');
+            setTx('#section-projects button[onclick*="Semua"]', 'Semua Project', 'All Projects');
+            setTx('#section-projects button[onclick*="Menunggu Klien"]', 'Menunggu Klien', 'Awaiting Client');
+            setTx('#section-projects button[onclick*="Selesai"]', 'Selesai', 'Completed');
 
             setTx('#section-status h2', 'Pantau Status Klien', 'Client Status Monitor');
             setTx('#section-status > div:first-child > div > p', 'Monitoring progres pemilihan foto oleh klien Anda.', 'Monitor photo selection progress by your clients.');
@@ -5150,7 +5150,7 @@ function isAccountExpired() {
                 showView('auth-view');
 
                 var pathParts = window.location.pathname.split('/').filter(Boolean);
-                var currentPath = pathParts.length > 0 ? pathParts[0] : 'login';
+                var currentPath = pathParts.length > 0 ? pathParts[0] : 'login'; var authParam = new URLSearchParams(window.location.search).get('auth'); if(authParam) currentPath = authParam;
 
                 if (currentPath === 'register') {
                     toggleAuth('register', true);
