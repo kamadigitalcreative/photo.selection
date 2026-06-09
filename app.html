@@ -1785,7 +1785,7 @@
                     <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
                             <h2 id="tx-st-h2" class="text-xl font-bold text-gray-800">Pengaturan Studio</h2>
-                            <p class="text-sm text-gray-500">Sesuaikan profil, brand, dan preferensi akun Anda.</p>
+                            <p id="tx-st-desc" class="text-sm text-gray-500">Sesuaikan profil, brand, dan preferensi akun Anda.</p>
                         </div>
                         <button onclick="saveSettings()" class="bg-black text-white px-6 py-2.5 rounded-xl hover:bg-gray-800 transition-colors shadow-sm text-sm font-bold flex items-center gap-2">
                             <i class="fa-solid fa-floppy-disk"></i> <span class="tx-st-simpan">Simpan Perubahan</span>
@@ -1803,12 +1803,12 @@
                                     </div>
                                 </div>
                                 <h3 class="font-bold text-gray-800 text-lg" id="settings-display-name">Studio Name</h3>
-                                <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-4">Fotografer PRO</p>
+                                <p id="tx-st-pro" class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-4">Fotografer PRO</p>
                             </div>
                             
                             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                                 <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                                    <h4 class="font-bold text-gray-800"><i class="fa-solid fa-sliders mr-2 text-gray-400"></i> Preferensi Aplikasi</h4>
+                                    <h4 id="tx-st-pref" class="font-bold text-gray-800"><i class="fa-solid fa-sliders mr-2 text-gray-400"></i> Preferensi Aplikasi</h4>
                                 </div>
                                 <div class="p-6 space-y-5">
                                     <div class="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('settings-lang').click()">
@@ -1817,8 +1817,8 @@
                                                 <i class="fa-solid fa-language text-lg"></i>
                                             </div>
                                             <div>
-                                                <h5 class="font-bold text-sm text-gray-800">Bahasa Antarmuka</h5>
-                                                <p class="text-[11px] text-gray-500">Pilih bahasa untuk aplikasi.</p>
+                                                <h5 id="tx-st-lang" class="font-bold text-sm text-gray-800">Bahasa Antarmuka</h5>
+                                                <p id="tx-st-lang-desc" class="text-[11px] text-gray-500">Pilih bahasa untuk aplikasi.</p>
                                             </div>
                                         </div>
                                         <select id="settings-lang" class="bg-gray-100 border-none rounded-lg px-3 py-2 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-200 cursor-pointer">
@@ -1834,36 +1834,36 @@
                         <div class="space-y-6">
                             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                                 <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                                    <h4 class="font-bold text-gray-800"><i class="fa-solid fa-building mr-2 text-gray-400"></i> Identitas Brand</h4>
+                                    <h4 id="tx-st-brand" class="font-bold text-gray-800"><i class="fa-solid fa-building mr-2 text-gray-400"></i> Identitas Brand</h4>
                                 </div>
                                 <div class="p-6 space-y-5">
                                     <div>
-                                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Nama Brand / Studio</label>
+                                        <label id="tx-st-brand-name" class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Nama Brand / Studio</label>
                                         <input type="text" id="settings-brand-name" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="Contoh: Kama Creative">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">URL Logo (Opsional)</label>
+                                        <label id="tx-st-logo-url" class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">URL Logo (Opsional)</label>
                                         <input type="text" id="settings-logo-url" oninput="document.getElementById('settings-avatar-preview').src = this.value || 'https://ui-avatars.com/api/?name=Studio&background=0D8ABC&color=fff'" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="https://contoh.com/logo.png">
-                                        <p class="text-[10px] text-gray-500 mt-1.5"><i class="fa-solid fa-circle-info mr-1"></i> Kosongkan jika ingin menggunakan logo inisial.</p>
+                                        <p id="tx-st-logo-desc" class="text-[10px] text-gray-500 mt-1.5"><i class="fa-solid fa-circle-info mr-1"></i> Kosongkan jika ingin menggunakan logo inisial.</p>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                                 <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                                    <h4 class="font-bold text-gray-800"><i class="fa-solid fa-wallet mr-2 text-gray-400"></i> Data Pembayaran</h4>
+                                    <h4 id="tx-st-pay" class="font-bold text-gray-800"><i class="fa-solid fa-wallet mr-2 text-gray-400"></i> Data Pembayaran</h4>
                                 </div>
                                 <div class="p-6 space-y-5">
                                     <div>
-                                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Nama Bank / E-Wallet</label>
+                                        <label id="tx-st-bank" class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Nama Bank / E-Wallet</label>
                                         <input type="text" id="settings-bank-name" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="BCA / Mandiri / OVO">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Nomor Rekening / Virtual Account</label>
+                                        <label id="tx-st-acc" class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Nomor Rekening / Virtual Account</label>
                                         <input type="text" id="settings-bank-account" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="1234567890">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Atas Nama (Pemilik Rekening)</label>
+                                        <label id="tx-st-owner" class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Atas Nama (Pemilik Rekening)</label>
                                         <input type="text" id="settings-bank-owner" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="John Doe">
                                     </div>
                                 </div>
@@ -2070,8 +2070,8 @@
                         <div class="flex items-center gap-3 shrink-0 opacity-100 transition-opacity" id="step2-indicator">
                             <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm transition-colors" id="step2-circle">2</div>
                             <div>
-                                <h4 class="text-sm font-bold text-gray-800">Tempel List Foto Klien</h4>
-                                <p class="text-[10px] text-gray-500">Paste daftar nama/nomor file klien</p>
+                                <h4 id="tx-sl-step2" class="text-sm font-bold text-gray-800">Tempel List Foto Klien</h4>
+                                <p id="tx-sl-step2-desc" class="text-[10px] text-gray-500">Paste daftar nama/nomor file klien</p>
                             </div>
                         </div>
                         <i class="fa-solid fa-chevron-right text-gray-300 text-sm shrink-0"></i>
@@ -2079,8 +2079,8 @@
                         <div class="flex items-center gap-3 shrink-0 opacity-50 transition-opacity" id="step3-indicator">
                             <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-sm transition-colors" id="step3-circle">3</div>
                             <div>
-                                <h4 class="text-sm font-bold text-gray-800">Proses ZIP</h4>
-                                <p class="text-[10px] text-gray-500">Sistem menyiapkan & download ZIP</p>
+                                <h4 id="tx-sl-step3" class="text-sm font-bold text-gray-800">Proses ZIP</h4>
+                                <p id="tx-sl-step3-desc" class="text-[10px] text-gray-500">Sistem menyiapkan & download ZIP</p>
                             </div>
                         </div>
                     </div>
@@ -2267,14 +2267,14 @@
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5 pb-4 border-b border-gray-100">
                             <div>
                                 <div class="flex items-center gap-2">
-                                    <h3 class="text-sm font-bold text-gray-800">Hasil Proses</h3>
+                                    <h3 id="tx-sl-hasil" class="text-sm font-bold text-gray-800">Hasil Proses</h3>
                                     <i class="fa-regular fa-circle-question text-gray-400 text-xs cursor-pointer hover:text-blue-500 transition-colors"></i>
                                 </div>
-                                <p class="text-[11px] text-gray-500 mt-1">Ringkasan hasil akan muncul setelah proses dijalankan.</p>
+                                <p id="tx-sl-hasil-desc" class="text-[11px] text-gray-500 mt-1">Ringkasan hasil akan muncul setelah proses dijalankan.</p>
                             </div>
                             <div class="flex items-center gap-4">
                                 <div class="text-right">
-                                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Status</p>
+                                    <p id="tx-sl-status" class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Status</p>
                                     <span class="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full border border-gray-200" id="resStatusBadge">Belum diproses</span>
                                 </div>
                             </div>
@@ -2287,10 +2287,10 @@
                                     <i class="fa-regular fa-square-check text-lg"></i>
                                 </div>
                                 <div>
-                                    <h4 class="text-xs font-bold text-gray-800">Ditemukan</h4>
+                                    <h4 id="tx-sl-res-found" class="text-xs font-bold text-gray-800">Ditemukan</h4>
                                     <div class="flex items-baseline gap-1 mt-0.5">
                                         <span class="text-lg font-black text-gray-800" id="resFoundCount">0</span>
-                                        <span class="text-[10px] text-gray-500">file</span>
+                                        <span id="tx-sl-f1" class="text-[10px] text-gray-500">file</span>
                                     </div>
                                     <p class="text-[10px] text-gray-400 mt-0.5 font-mono" id="resFoundSize">0 B</p>
                                 </div>
@@ -2302,10 +2302,10 @@
                                     <i class="fa-solid fa-ban text-lg"></i>
                                 </div>
                                 <div>
-                                    <h4 class="text-xs font-bold text-gray-800">Tidak Ditemukan</h4>
+                                    <h4 id="tx-sl-res-notfound" class="text-xs font-bold text-gray-800">Tidak Ditemukan</h4>
                                     <div class="flex items-baseline gap-1 mt-0.5">
                                         <span class="text-lg font-black text-gray-800" id="resMissingCount">0</span>
-                                        <span class="text-[10px] text-gray-500">file</span>
+                                        <span id="tx-sl-f2" class="text-[10px] text-gray-500">file</span>
                                     </div>
                                     <p class="text-[10px] text-gray-400 mt-0.5 font-mono" id="resMissingSize">0 B</p>
                                 </div>
@@ -2317,10 +2317,10 @@
                                     <i class="fa-regular fa-file-zipper text-lg"></i>
                                 </div>
                                 <div>
-                                    <h4 class="text-xs font-bold text-gray-800">Siap Diproses</h4>
+                                    <h4 id="tx-sl-res-ready" class="text-xs font-bold text-gray-800">Siap Diproses</h4>
                                     <div class="flex items-baseline gap-1 mt-0.5">
                                         <span class="text-lg font-black text-gray-800" id="resReadyCount">0</span>
-                                        <span class="text-[10px] text-gray-500">file</span>
+                                        <span id="tx-sl-f3" class="text-[10px] text-gray-500">file</span>
                                     </div>
                                     <p class="text-[10px] text-gray-400 mt-0.5 font-mono" id="resReadySize">0 B</p>
                                 </div>
@@ -2329,7 +2329,7 @@
 
                         <!-- Missing files details -->
                         <div id="missingFilesArea" class="hidden mt-6 pt-5 border-t border-gray-100">
-                            <h4 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                            <h4 id="tx-sl-detail-notfound" class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
                                 <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Detail File Tidak Ditemukan
                             </h4>
                             <div class="bg-amber-50/50 border border-amber-100 rounded-xl p-4 max-h-40 overflow-y-auto custom-scrollbar">
@@ -2839,7 +2839,7 @@
                             <div class="flex items-center justify-between mb-4">
                                 <div>
                                     <h4 class="font-bold text-gray-800 text-sm flex items-center gap-2" id="lbl-p-layout">Tampilan Galeri (Layout) <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i></h4>
-                                    <p class="text-[10px] text-gray-500 mt-0.5">Pilih gaya grid untuk galeri klien</p>
+                                    <p id="tx-p-layout-desc" class="text-[10px] text-gray-500 mt-0.5">Pilih gaya grid untuk galeri klien</p>
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -2863,11 +2863,11 @@
                                     <label id="lbl-p-music" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Musik Latar / BGM (Opsional)</label>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center bg-purple-50/30 p-4 border border-purple-100 rounded-xl">
                                         <div>
-                                            <p class="text-xs font-semibold text-gray-700 mb-1.5"><i class="fa-solid fa-upload text-purple-500 mr-1"></i> Upload file MP3 (Max 4MB)</p>
+                                            <p id="tx-p-music-up" class="text-xs font-semibold text-gray-700 mb-1.5"><i class="fa-solid fa-upload text-purple-500 mr-1"></i> Upload file MP3 (Max 4MB)</p>
                                             <input type="file" id="p_music_file" accept=".mp3,audio/mpeg" class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer border border-purple-200 rounded-lg bg-white shadow-sm">
                                         </div>
                                         <div>
-                                            <p class="text-xs font-semibold text-gray-700 mb-1.5"><i class="fa-solid fa-link text-purple-500 mr-1"></i> Tempel Link MP3 Eksternal</p>
+                                            <p id="tx-p-music-link" class="text-xs font-semibold text-gray-700 mb-1.5"><i class="fa-solid fa-link text-purple-500 mr-1"></i> Tempel Link MP3 Eksternal</p>
                                             <input type="url" id="p_music_url" placeholder="https://.../lagu.mp3" class="w-full px-4 py-2 bg-white border border-purple-200 rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all text-sm shadow-sm">
                                         </div>
                                     </div>
@@ -2879,7 +2879,7 @@
                     <!-- STEP 3: KUOTA & BIAYA -->
                     <div id="wizard-step-3" class="wizard-step fade-in hidden">
                         <div class="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-sm mb-4">
-                            <h4 class="font-bold text-gray-800 text-sm mb-5 flex items-center gap-2"><i class="fa-solid fa-coins text-yellow-500"></i> Atur Kuota & Biaya Ekstra</h4>
+                            <h4 id="tx-p-kuota" class="font-bold text-gray-800 text-sm mb-5 flex items-center gap-2"><i class="fa-solid fa-coins text-yellow-500"></i> Atur Kuota & Biaya Ekstra</h4>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div class="bg-yellow-50/50 p-4 border border-yellow-100 rounded-xl">
                                     <label id="lbl-p-max" class="block text-xs font-bold text-yellow-800 uppercase tracking-wide mb-2"><i class="fa-solid fa-images mr-1"></i> Batas Maksimal Foto <span class="text-red-500">*</span></label>
@@ -2892,7 +2892,7 @@
                                 <div class="bg-green-50/50 p-4 border border-green-100 rounded-xl">
                                     <label id="lbl-p-extra" class="block text-xs font-bold text-green-800 uppercase tracking-wide mb-2 flex items-center gap-2"><i class="fa-solid fa-money-bill-wave mr-1"></i> Biaya Ekstra per Foto (Rp) <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i></label>
                                     <input type="number" id="p_extra_price" min="0" placeholder="0 = Gratis" class="w-full px-4 py-3 bg-white border border-green-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-500 outline-none transition-all text-lg font-black text-gray-800 shadow-sm" onclick="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ showPremiumAlert(); this.blur(); return false; }" onkeydown="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ return false; }">
-                                    <p class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-circle-info mr-1"></i> Biarkan 0 jika Anda mengizinkan klien memilih lebih tanpa bayar ekstra.</p>
+                                    <p id="tx-p-extra-desc" class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-circle-info mr-1"></i> Biarkan 0 jika Anda mengizinkan klien memilih lebih tanpa bayar ekstra.</p>
                                 </div>
                             </div>
                         </div>
@@ -2901,16 +2901,16 @@
                     <!-- STEP 4: KONTROL AKSES & FITUR -->
                     <div id="wizard-step-4" class="wizard-step fade-in hidden">
                         <div class="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-sm mb-4">
-                            <h4 class="font-bold text-gray-800 text-sm mb-5 flex items-center gap-2"><i class="fa-solid fa-shield-halved text-green-500"></i> Kontrol Akses & Fitur Tambahan</h4>
+                            <h4 id="tx-p-kontrol" class="font-bold text-gray-800 text-sm mb-5 flex items-center gap-2"><i class="fa-solid fa-shield-halved text-green-500"></i> Kontrol Akses & Fitur Tambahan</h4>
                             
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <!-- Switch Akses -->
                                 <div class="space-y-3">
-                                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Tampilan Menu Klien</p>
+                                    <p id="tx-p-menu" class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Tampilan Menu Klien</p>
                                     <div class="flex items-center justify-between p-3.5 bg-gray-50 border border-gray-200 rounded-xl shadow-sm">
                                         <div>
-                                            <h5 class="text-sm font-bold text-gray-800">Pilih Foto</h5>
-                                            <p class="text-[10px] text-gray-500 mt-0.5">Klien diizinkan memilih foto.</p>
+                                            <h5 id="tx-p-pilih" class="text-sm font-bold text-gray-800">Pilih Foto</h5>
+                                            <p id="tx-p-pilih-desc" class="text-[10px] text-gray-500 mt-0.5">Klien diizinkan memilih foto.</p>
                                         </div>
                                         <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
                                             <input type="checkbox" class="sr-only peer" id="p_akses_pilih" checked>
@@ -2919,8 +2919,8 @@
                                     </div>
                                     <div class="flex items-center justify-between p-3.5 bg-gray-50 border border-gray-200 rounded-xl shadow-sm">
                                         <div>
-                                            <h5 class="text-sm font-bold text-gray-800">Download Foto</h5>
-                                            <p class="text-[10px] text-gray-500 mt-0.5">Klien diizinkan mengunduh foto.</p>
+                                            <h5 id="tx-p-down" class="text-sm font-bold text-gray-800">Download Foto</h5>
+                                            <p id="tx-p-down-desc" class="text-[10px] text-gray-500 mt-0.5">Klien diizinkan mengunduh foto.</p>
                                         </div>
                                         <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
                                             <input type="checkbox" class="sr-only peer" id="p_akses_download" checked>
@@ -2931,9 +2931,9 @@
                                 
                                 <!-- Durasi -->
                                 <div class="space-y-4 border-l border-gray-100 pl-6">
-                                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Masa Aktif Akses</p>
+                                    <p id="tx-p-masa" class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Masa Aktif Akses</p>
                                     <div>
-                                        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Masa Berlaku Pilih Foto</label>
+                                        <label id="tx-p-masa-pilih" class="block text-xs font-semibold text-gray-600 mb-1.5">Masa Berlaku Pilih Foto</label>
                                         <select id="p_durasi_pilih" onchange="document.getElementById('p_durasi_pilih_custom_wrapper').classList.toggle('hidden', this.value !== 'custom');" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-green-500 focus:ring-1 outline-none transition-all text-sm font-medium shadow-sm text-gray-800">
                                             <option value="Selamanya">Selamanya</option>
                                             <option value="1">1 Hari</option>
@@ -2952,7 +2952,7 @@
                                         </div>
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Masa Berlaku Download</label>
+                                        <label id="tx-p-masa-down" class="block text-xs font-semibold text-gray-600 mb-1.5">Masa Berlaku Download</label>
                                         <select id="p_durasi_download" onchange="document.getElementById('p_durasi_download_custom_wrapper').classList.toggle('hidden', this.value !== 'custom');" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-1 outline-none transition-all text-sm font-medium shadow-sm text-gray-800">
                                             <option value="Selamanya">Selamanya</option>
                                             <option value="1">1 Hari</option>
@@ -3030,11 +3030,11 @@
             <div class="p-4 sm:p-5 border-t border-gray-200 bg-white sm:rounded-b-2xl flex gap-3 justify-between mt-auto shrink-0 shadow-[0_-4px_10px_rgba(0,0,0,0.02)] z-10 relative">
                 <button type="button" onclick="prevWizardStep()" id="btnWizardPrev"
                     class="px-5 py-2.5 bg-gray-100 border border-gray-200 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-200 transition-colors hidden items-center gap-2">
-                    <i class="fa-solid fa-arrow-left"></i> Kembali
+                    <i class="fa-solid fa-arrow-left"></i> <span id="tx-btn-kembali">Kembali</span>
                 </button>
                 <div class="flex gap-3 ml-auto">
                     <button type="button" onclick="closeModalCreate()" id="btnWizardCancel"
-                        class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-colors">Batal</button>
+                        class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-colors"><span id="tx-btn-batal">Batal</span></button>
                     
                     <button type="button" onclick="nextWizardStep()" id="btnWizardNext"
                         class="px-6 py-2.5 bg-gray-800 text-white text-sm font-bold rounded-xl hover:bg-gray-900 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
@@ -3043,7 +3043,7 @@
                     
                     <button type="submit" form="formCreateProject" id="btnCreate"
                         class="px-6 py-2.5 bg-primary-600 text-white text-sm font-bold rounded-xl hover:bg-primary-700 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all hidden items-center gap-2">
-                        <i class="fa-solid fa-bolt"></i> Generate Link
+                        <i class="fa-solid fa-bolt"></i> <span id="tx-btn-generate">Generate Link</span>
                     </button>
                 </div>
             </div>
@@ -3557,6 +3557,53 @@
             setLbl('#lbl-p-cat-title', 'Multi-Kategori <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i>', 'Multi-Category <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i>');
             setLbl('#lbl-p-cat-desc', 'Pisahkan kuota foto per kategori.', 'Separate photo quota per category.');
             setPh('#global-search', 'Cari project, klien, atau link...', 'Search project, client, or link...');
+
+            setTx('#tx-p-layout-desc', 'Pilih gaya grid untuk galeri klien', 'Choose grid style for client gallery');
+            setTx('#tx-p-music-up', '<i class="fa-solid fa-upload text-purple-500 mr-1"></i> Upload file MP3 (Max 4MB)', '<i class="fa-solid fa-upload text-purple-500 mr-1"></i> Upload MP3 file (Max 4MB)', true);
+            setTx('#tx-p-music-link', '<i class="fa-solid fa-link text-purple-500 mr-1"></i> Tempel Link MP3 Eksternal', '<i class="fa-solid fa-link text-purple-500 mr-1"></i> Paste External MP3 Link', true);
+            setTx('#tx-p-kuota', '<i class="fa-solid fa-coins text-yellow-500"></i> Atur Kuota & Biaya Ekstra', '<i class="fa-solid fa-coins text-yellow-500"></i> Set Quota & Extra Cost', true);
+            setTx('#tx-p-extra-desc', '<i class="fa-solid fa-circle-info mr-1"></i> Biarkan 0 jika Anda mengizinkan klien memilih lebih tanpa bayar ekstra.', '<i class="fa-solid fa-circle-info mr-1"></i> Leave 0 if you allow clients to choose more without extra pay.', true);
+            setTx('#tx-p-kontrol', '<i class="fa-solid fa-shield-halved text-green-500"></i> Kontrol Akses & Fitur Tambahan', '<i class="fa-solid fa-shield-halved text-green-500"></i> Access Control & Extra Features', true);
+            setTx('#tx-p-menu', 'Tampilan Menu Klien', 'Client Menu Display');
+            setTx('#tx-p-pilih', 'Pilih Foto', 'Select Photos');
+            setTx('#tx-p-pilih-desc', 'Klien diizinkan memilih foto.', 'Clients are allowed to select photos.');
+            setTx('#tx-p-down', 'Download Foto', 'Download Photos');
+            setTx('#tx-p-down-desc', 'Klien diizinkan mengunduh foto.', 'Clients are allowed to download photos.');
+            setTx('#tx-p-masa', 'Masa Aktif Akses', 'Access Validity Period');
+            setTx('#tx-p-masa-pilih', 'Masa Berlaku Pilih Foto', 'Validity Period for Selection');
+            setTx('#tx-p-masa-down', 'Masa Berlaku Download', 'Validity Period for Download');
+
+            // Sortir Lokal
+            setTx('#tx-sl-step2', 'Tempel List Foto Klien', 'Paste Client Photo List');
+            setTx('#tx-sl-step2-desc', 'Paste daftar nama/nomor file klien', 'Paste client file names/numbers list');
+            setTx('#tx-sl-step3', 'Proses ZIP', 'Process ZIP');
+            setTx('#tx-sl-step3-desc', 'Sistem menyiapkan & download ZIP', 'System prepares & downloads ZIP');
+            setTx('#tx-sl-hasil', 'Hasil Proses', 'Process Result');
+            setTx('#tx-sl-hasil-desc', 'Ringkasan hasil akan muncul setelah proses dijalankan.', 'Result summary will appear after process runs.');
+            setTx('#tx-sl-status', 'Status', 'Status');
+            setTx('#tx-sl-res-found', 'Ditemukan', 'Found');
+            setTx('#tx-sl-f1', 'file', 'files');
+            setTx('#tx-sl-res-notfound', 'Tidak Ditemukan', 'Not Found');
+            setTx('#tx-sl-f2', 'file', 'files');
+            setTx('#tx-sl-res-ready', 'Siap Diproses', 'Ready to Process');
+            setTx('#tx-sl-f3', 'file', 'files');
+            setTx('#tx-sl-detail-notfound', '<i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Detail File Tidak Ditemukan', '<i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Not Found Files Details', true);
+            
+            // Settings
+            setTx('#tx-st-desc', 'Sesuaikan profil, brand, dan preferensi akun Anda.', 'Adjust your profile, brand, and account preferences.');
+            setTx('.tx-st-simpan', 'Simpan Perubahan', 'Save Changes');
+            setTx('#tx-st-pro', 'Fotografer PRO', 'PRO Photographer');
+            setTx('#tx-st-pref', '<i class="fa-solid fa-sliders mr-2 text-gray-400"></i> Preferensi Aplikasi', '<i class="fa-solid fa-sliders mr-2 text-gray-400"></i> App Preferences', true);
+            setTx('#tx-st-lang', 'Bahasa Antarmuka', 'Interface Language');
+            setTx('#tx-st-lang-desc', 'Pilih bahasa untuk aplikasi.', 'Select language for the app.');
+            setTx('#tx-st-brand', '<i class="fa-solid fa-building mr-2 text-gray-400"></i> Identitas Brand', '<i class="fa-solid fa-building mr-2 text-gray-400"></i> Brand Identity', true);
+            setTx('#tx-st-brand-name', 'Nama Brand / Studio', 'Brand / Studio Name');
+            setTx('#tx-st-logo-url', 'URL Logo (Opsional)', 'Logo URL (Optional)');
+            setTx('#tx-st-logo-desc', '<i class="fa-solid fa-circle-info mr-1"></i> Kosongkan jika ingin menggunakan logo inisial.', '<i class="fa-solid fa-circle-info mr-1"></i> Leave blank to use initial logo.', true);
+            setTx('#tx-st-pay', '<i class="fa-solid fa-wallet mr-2 text-gray-400"></i> Data Pembayaran', '<i class="fa-solid fa-wallet mr-2 text-gray-400"></i> Payment Details', true);
+            setTx('#tx-st-bank', 'Nama Bank / E-Wallet', 'Bank / E-Wallet Name');
+            setTx('#tx-st-acc', 'Nomor Rekening / Virtual Account', 'Account / Virtual Account Number');
+            setTx('#tx-st-owner', 'Atas Nama (Pemilik Rekening)', 'Account Owner Name');
             
             // Overview Dashboard
             setTx('#section-dashboard h2', 'Overview Analytics', 'Analytics Overview');
@@ -3631,6 +3678,11 @@
             setTx('#lbl-bank-accname', 'Atas Nama', 'Account Name');
             setTx('#btn-cancel-pay', 'Batal', 'Cancel');
             setTx('#btnSavePaymentSettings', 'Simpan', 'Save');
+
+            setTx('#tx-btn-kembali', 'Kembali', 'Back');
+            setTx('#tx-btn-batal', 'Batal', 'Cancel');
+            setTx('.tx-btn-lanjut', 'Lanjut', 'Next');
+            setTx('#tx-btn-generate', 'Generate Link', 'Generate Link');
 
             // Pengaturan Peringatan Admin di Modal Settings
             var pInfo = document.querySelector('#formSettings .bg-blue-50 p');
