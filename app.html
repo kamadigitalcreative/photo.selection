@@ -1234,40 +1234,40 @@
                     
                     <!-- 4 Metric Cards -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
-                            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl shrink-0">
+                        <div class="bg-white/60 backdrop-blur-md p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3 hover:shadow-md transition-shadow">
+                            <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-lg shrink-0">
                                 <i class="fa-solid fa-camera"></i>
                             </div>
                             <div>
-                                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Project Aktif</p>
-                                <h4 class="text-2xl font-bold text-gray-800 leading-none mt-1" id="stat-active-projects">0</h4>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Project Aktif</p>
+                                <h4 class="text-xl font-bold text-gray-800 leading-none mt-1" id="stat-active-projects">0</h4>
                             </div>
                         </div>
-                        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
-                            <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center text-xl shrink-0">
+                        <div class="bg-white/60 backdrop-blur-md p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3 hover:shadow-md transition-shadow">
+                            <div class="w-10 h-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center text-lg shrink-0">
                                 <i class="fa-solid fa-check-circle"></i>
                             </div>
                             <div>
-                                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Sudah Submit</p>
-                                <h4 class="text-2xl font-bold text-gray-800 leading-none mt-1" id="stat-submitted-projects">0</h4>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Sudah Submit</p>
+                                <h4 class="text-xl font-bold text-gray-800 leading-none mt-1" id="stat-submitted-projects">0</h4>
                             </div>
                         </div>
-                        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
-                            <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl shrink-0">
+                        <div class="bg-white/60 backdrop-blur-md p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3 hover:shadow-md transition-shadow">
+                            <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-lg shrink-0">
                                 <i class="fa-solid fa-clock-rotate-left"></i>
                             </div>
                             <div>
-                                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Menunggu Review</p>
-                                <h4 class="text-2xl font-bold text-gray-800 leading-none mt-1" id="stat-review-projects">0</h4>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Menunggu Review</p>
+                                <h4 class="text-xl font-bold text-gray-800 leading-none mt-1" id="stat-review-projects">0</h4>
                             </div>
                         </div>
-                        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
-                            <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center text-xl shrink-0">
+                        <div class="bg-white/60 backdrop-blur-md p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3 hover:shadow-md transition-shadow">
+                            <div class="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center text-lg shrink-0">
                                 <i class="fa-solid fa-link"></i>
                             </div>
                             <div>
-                                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Link (Bulan Ini)</p>
-                                <h4 class="text-2xl font-bold text-gray-800 leading-none mt-1" id="stat-total-links">0</h4>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total Link (Bulan Ini)</p>
+                                <h4 class="text-xl font-bold text-gray-800 leading-none mt-1" id="stat-total-links">0</h4>
                             </div>
                         </div>
                     </div>
@@ -1288,10 +1288,10 @@
                             </div>
                             
                             <!-- Tab Filters -->
-                            <div class="flex gap-4 border-b border-gray-200 mb-4 overflow-x-auto hide-scrollbar">
-                                <button onclick="filterProjectsTab('Semua', this)" class="pb-3 border-b-2 border-blue-600 text-blue-600 font-semibold text-sm whitespace-nowrap px-1">Semua Project</button>
-                                <button onclick="filterProjectsTab('Menunggu Klien', this)" class="pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm whitespace-nowrap px-1">Menunggu Klien</button>
-                                <button onclick="filterProjectsTab('Selesai', this)" class="pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm whitespace-nowrap px-1">Selesai</button>
+                            <div class="flex gap-2 mb-5 overflow-x-auto hide-scrollbar p-1.5 bg-gray-100/50 rounded-xl w-fit border border-gray-100">
+                                <button onclick="filterProjectsTab('Semua', this)" class="px-4 py-2 bg-white rounded-lg shadow-sm text-blue-600 font-bold text-sm whitespace-nowrap border border-gray-100 transition-all">Semua Project</button>
+                                <button onclick="filterProjectsTab('Menunggu Klien', this)" class="px-4 py-2 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-white/60 font-medium text-sm whitespace-nowrap transition-all">Menunggu Klien</button>
+                                <button onclick="filterProjectsTab('Selesai', this)" class="px-4 py-2 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-white/60 font-medium text-sm whitespace-nowrap transition-all">Selesai</button>
                             </div>
 
                             <!-- Project List Container (Replaces old table) -->
@@ -3626,9 +3626,9 @@
             setTx('#section-projects > div.grid > div:nth-child(4) p', 'Total Link (Bulan Ini)', 'Total Links (This Month)');
             
             setTx('#section-projects button[onclick="openModalCreate()"]', '<i class="fa-solid fa-plus"></i> Buat Project Baru', '<i class="fa-solid fa-plus"></i> Create New Project', true);
-            setTx('#section-projects .flex.gap-4.border-b button:nth-child(1)', 'Semua Project', 'All Projects');
-            setTx('#section-projects .flex.gap-4.border-b button:nth-child(2)', 'Menunggu Klien', 'Awaiting Client');
-            setTx('#section-projects .flex.gap-4.border-b button:nth-child(3)', 'Selesai', 'Completed');
+            setTx('#section-projects button[onclick*="\\'Semua\\'"]', 'Semua Project', 'All Projects');
+            setTx('#section-projects button[onclick*="\\'Menunggu Klien\\'"]', 'Menunggu Klien', 'Awaiting Client');
+            setTx('#section-projects button[onclick*="\\'Selesai\\'"]', 'Selesai', 'Completed');
 
             setTx('#section-status h2', 'Pantau Status Klien', 'Client Status Monitor');
             setTx('#section-status > div:first-child > div > p', 'Monitoring progres pemilihan foto oleh klien Anda.', 'Monitor photo selection progress by your clients.');
@@ -5853,10 +5853,10 @@ function isAccountExpired() {
                     statusDisplay = isEnLocale ? 'Active' : 'Aktif';
                 }
 
-                var statusHtml = '<div class="bg-' + statusColor + '-50 text-' + statusColor + '-700 border border-' + statusColor + '-200 text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5">' + pulseHtml + statusDisplay + '</div>';
+                var statusHtml = '<div class="bg-' + statusColor + '-50 text-' + statusColor + '-700 text-[11px] px-2.5 py-1 rounded-md font-bold flex items-center gap-1.5 w-fit mb-1">' + pulseHtml + statusDisplay + '</div>';
 
                 var card = document.createElement('div');
-                card.className = "bg-white border border-gray-200 rounded-2xl p-4 flex flex-col sm:flex-row gap-4 sm:items-center hover:shadow-md transition-shadow relative overflow-hidden group";
+                card.className = "bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row gap-4 sm:gap-6 sm:items-center hover:shadow-md hover:border-blue-100 transition-all relative group";
                 card.setAttribute('data-status', statusClient);
 
                 var isUserAdmin = currentUser && currentUser.role === 'Admin';
@@ -5869,42 +5869,51 @@ function isAccountExpired() {
                 var wmIcon = isWmOn ? "fa-droplet" : "fa-droplet-slash";
 
                 var actionHtml = 
-                    '<button onclick="copyProjectInfo(\'' + safeJSName + '\', \'' + displayLink + '\', \'' + safePass + '\')" class="bg-white border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-300 w-9 h-9 flex items-center justify-center rounded-xl transition-colors shadow-sm" title="Copy Link">' +
+                    '<button onclick="copyProjectInfo(\'' + safeJSName + '\', \'' + displayLink + '\', \'' + safePass + '\')" class="text-gray-400 hover:text-blue-600 hover:bg-blue-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Copy Link">' +
                     '<i class="fa-regular fa-copy"></i></button>' +
-                    '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="bg-white border border-gray-200 text-gray-600 hover:text-green-600 hover:border-green-300 w-9 h-9 flex items-center justify-center rounded-xl transition-colors shadow-sm" title="Lihat Galeri">' +
+                    '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="text-gray-400 hover:text-green-600 hover:bg-green-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Lihat Galeri">' +
                     '<i class="fa-solid fa-arrow-up-right-from-square"></i></button>' +
-                    '<button onclick="editPasswordPrompt(\'' + row.ID + '\', \'' + safeJSName + '\')" class="bg-white border border-gray-200 text-gray-600 hover:text-amber-500 hover:border-amber-300 w-9 h-9 flex items-center justify-center rounded-xl transition-colors shadow-sm" title="Edit Password">' +
+                    '<button onclick="editPasswordPrompt(\'' + row.ID + '\', \'' + safeJSName + '\')" class="text-gray-400 hover:text-amber-500 hover:bg-amber-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Edit Password">' +
                     '<i class="fa-solid fa-key"></i></button>' +
-                    '<button onclick="toggleWatermarkStatus(\'' + row.ID + '\')" class="border w-9 h-9 flex items-center justify-center rounded-xl transition-colors shadow-sm ' + wmBtnClass + '" title="Toggle Watermark">' +
+                    '<button onclick="toggleWatermarkStatus(\'' + row.ID + '\')" class="w-8 h-8 flex items-center justify-center rounded-lg transition-colors ' + (isWmOn ? 'text-green-500 bg-green-50 hover:bg-green-100' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100') + '" title="Toggle Watermark">' +
                     '<i class="fa-solid ' + wmIcon + '"></i></button>' +
-                    '<button onclick="deleteProject(\'' + row.ID + '\')" class="bg-white border border-gray-200 text-gray-400 hover:text-red-600 hover:border-red-300 hover:bg-red-50 w-9 h-9 flex items-center justify-center rounded-xl transition-colors shadow-sm" title="Hapus Project">' +
+                    '<button onclick="deleteProject(\'' + row.ID + '\')" class="text-gray-400 hover:text-red-600 hover:bg-red-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Hapus Project">' +
                     '<i class="fa-solid fa-trash-can"></i></button>';
 
-                var avatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(rawName) + '&background=random&size=128';
+                var avatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(rawName) + '&background=random&size=128&bold=true';
 
                 card.innerHTML = 
-                    '<div class="flex gap-1 shrink-0 bg-gray-100 rounded-xl p-1 overflow-hidden h-[80px] w-[120px]">' +
-                    '<div class="w-2/3 h-full bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center"><img src="' + avatarUrl + '" class="w-full h-full object-cover"></div>' +
-                    '<div class="w-1/3 h-full flex flex-col gap-1">' +
-                    '<div class="h-1/2 bg-gray-200 rounded-md overflow-hidden flex items-center justify-center"><i class="fa-solid fa-image text-gray-400 text-xs"></i></div>' +
-                    '<div class="h-1/2 bg-gray-800 rounded-md flex items-center justify-center text-[10px] font-bold text-white">+' + maxFoto + '</div>' +
-                    '</div></div>' +
-                    
-                    '<div class="flex-1 min-w-0 flex flex-col">' +
-                    '<div class="flex items-center gap-2 mb-1"><span class="bg-blue-50 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold">Project</span><span class="text-xs text-gray-400 font-medium">' + dateStr + '</span>' + ownerBadge + '</div>' +
-                    '<h3 class="font-bold text-gray-800 truncate text-base leading-tight">' + safeHTMLName + '</h3>' +
-                    '<p class="text-xs text-blue-600 mt-1 truncate"><i class="fa-solid fa-link mr-1"></i> ' + displayedTokenOrLink + '</p>' +
-                    '<p class="text-[10px] text-gray-500 mt-1"><i class="fa-solid fa-lock text-gray-400 mr-1"></i>' + safePass + '</p>' +
+                    // Left: Clean Avatar
+                    '<div class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 bg-gray-100 rounded-full sm:rounded-2xl border-2 border-white shadow-sm overflow-hidden">' +
+                    '<img src="' + avatarUrl + '" class="w-full h-full object-cover">' +
                     '</div>' +
                     
-                    '<div class="shrink-0 flex items-center justify-end sm:justify-center w-full sm:w-[100px]">' +
-                    statusHtml + '</div>' +
+                    // Middle: Project Info
+                    '<div class="flex-1 min-w-0 flex flex-col justify-center">' +
+                    '<div class="flex items-center gap-2 mb-0.5"><span class="text-[10px] text-gray-400 font-bold uppercase tracking-wide">' + dateStr + '</span>' + ownerBadge + '</div>' +
+                    '<div class="flex items-center gap-2">' +
+                        '<h3 class="font-bold text-gray-800 truncate text-base sm:text-lg">' + safeHTMLName + '</h3>' +
+                    '</div>' +
+                    '<div class="flex items-center gap-3 mt-1.5 text-[11px] text-gray-500">' +
+                        '<span class="flex items-center gap-1.5 truncate bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100"><i class="fa-solid fa-link text-gray-400"></i> <span class="truncate">' + displayedTokenOrLink + '</span></span>' +
+                        '<span class="flex items-center gap-1.5 truncate bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100"><i class="fa-solid fa-lock text-gray-400"></i> <span class="truncate">' + safePass + '</span></span>' +
+                    '</div>' +
+                    '</div>' +
                     
-                    '<div class="shrink-0 w-full sm:w-[140px] flex flex-col justify-center">' +
-                    '<div class="flex justify-between text-[11px] font-semibold text-gray-600 mb-1"><span>' + (isEnLocale ? 'Selected ' : 'Terpilih ') + fotoTerpilih + ' / ' + maxFoto + '</span><span class="text-gray-800">' + progressPct + '%</span></div>' +
-                    '<div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden"><div class="' + progressColor + ' h-full rounded-full transition-all duration-500" style="width: ' + progressPct + '%"></div></div></div>' +
+                    // Right-ish: Status and Progress
+                    '<div class="flex-shrink-0 w-full sm:w-[160px] flex flex-col justify-center gap-1 mt-2 sm:mt-0">' +
+                        '<div class="flex items-center justify-between">' +
+                            statusHtml +
+                            '<span class="text-[10px] font-bold text-gray-500">' + progressPct + '%</span>' +
+                        '</div>' +
+                        '<div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden mb-1"><div class="' + progressColor + ' h-full rounded-full transition-all duration-500" style="width: ' + progressPct + '%"></div></div>' +
+                        '<div class="text-[10px] text-gray-400 text-right">' + (isEnLocale ? 'Selected ' : 'Terpilih ') + '<b class="text-gray-700">' + fotoTerpilih + '</b> / ' + maxFoto + '</div>' +
+                    '</div>' +
                     
-                    '<div class="shrink-0 flex items-center gap-1.5 w-full sm:w-auto mt-3 sm:mt-0 pt-3 sm:pt-0 border-t border-gray-100 sm:border-0 justify-end">' + actionHtml + '</div>';
+                    // Far Right: Actions
+                    '<div class="flex-shrink-0 flex items-center justify-end sm:justify-center gap-0.5 w-full sm:w-auto mt-3 sm:mt-0 pt-3 sm:pt-0 border-t border-gray-100 sm:border-0">' +
+                        actionHtml +
+                    '</div>';
                 
                 tbody.appendChild(card);
             });
@@ -10002,9 +10011,9 @@ function updateBackgroundConfig() {
 function filterProjectsTab(statusFilter, btnEl) {
     if(btnEl) {
         btnEl.parentElement.querySelectorAll('button').forEach(btn => {
-            btn.className = 'pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm whitespace-nowrap px-1';
+            btn.className = 'px-4 py-2 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-white/60 font-medium text-sm whitespace-nowrap transition-all';
         });
-        btnEl.className = 'pb-3 border-b-2 border-blue-600 text-blue-600 font-semibold text-sm whitespace-nowrap px-1';
+        btnEl.className = 'px-4 py-2 bg-white rounded-lg shadow-sm text-blue-600 font-bold text-sm whitespace-nowrap border border-gray-100 transition-all';
     }
 
     var projectCards = document.querySelectorAll('#projectTableBody > div.bg-white');
