@@ -2095,19 +2095,19 @@
                                 <!-- Card 1: Pilih Folder -->
                                 <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
                                     <div class="flex items-center gap-2 mb-4">
-                                        <h3 class="text-sm font-bold text-gray-800">1. Pilih Folder Master</h3>
+                                        <h3 id="tx-sl-pilih-folder" class="text-sm font-bold text-gray-800">1. Pilih Folder Master</h3>
                                         <i class="fa-regular fa-circle-question text-gray-400 text-xs cursor-pointer hover:text-blue-500 transition-colors" title="Folder yang berisi semua foto asli"></i>
                                     </div>
                                     <div class="file-upload-wrapper w-full">
                                         <button type="button" class="w-full bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-100 hover:border-blue-300 transition-all duration-200 group relative">
                                             <i class="fa-regular fa-folder-open text-4xl text-blue-500 mb-3 block group-hover:scale-110 transition-transform"></i>
-                                            <span class="text-gray-800 font-bold text-sm">Klik untuk memilih / tambah Folder Master</span>
-                                            <p class="text-xs text-gray-400 mt-1">atau drag & drop folder di sini</p>
+                                            <span id="tx-sl-addfolder" class="text-gray-800 font-bold text-sm">Klik untuk memilih / tambah Folder Master</span>
+                                            <p id="tx-sl-drag" class="text-xs text-gray-400 mt-1">atau drag & drop folder di sini</p>
                                             <input type="file" id="sourceDirectory" webkitdirectory directory multiple onchange="updateFolderInfo()" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                                         </button>
                                     </div>
                                     <div id="folderInfo" class="mt-4 flex items-center gap-2 text-xs text-gray-500 font-medium">
-                                        <i class="fa-regular fa-folder text-gray-400"></i> Belum ada folder dipilih
+                                        <i class="fa-regular fa-folder text-gray-400"></i> <span id="tx-sl-nofolder">Belum ada folder dipilih</span>
                                     </div>
                                     <div id="folderInfoActive" class="mt-4 items-center justify-between text-sm bg-blue-50/50 p-3 rounded-lg border border-blue-100 hidden">
                                         <div class="flex items-center gap-2">
@@ -2123,16 +2123,16 @@
                                 <!-- Card 2: Paste List -->
                                 <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
                                     <div class="flex items-center gap-2 mb-4">
-                                        <h3 class="text-sm font-bold text-gray-800">2. Tempel List Foto Klien</h3>
+                                        <h3 id="tx-sl-paste-list" class="text-sm font-bold text-gray-800">2. Tempel List Foto Klien</h3>
                                         <i class="fa-regular fa-circle-question text-gray-400 text-xs cursor-pointer hover:text-blue-500 transition-colors" title="Paste list dari WhatsApp klien"></i>
                                     </div>
                                     <div class="relative">
                                         <textarea id="targetNames" rows="8" oninput="updateLineCount()" class="w-full px-4 py-4 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-50 outline-none transition-all font-mono text-sm resize-y custom-scrollbar" placeholder="Contoh:&#10;1. DSC_0012.JPG&#10;2. DSC_0055.JPG&#10;3. DSC_0100.JPG&#10;..."></textarea>
-                                        <div class="absolute bottom-3 right-3 text-xs text-gray-400 font-medium bg-white/80 backdrop-blur px-2 py-1 rounded shadow-sm border border-gray-100"><span id="lineCount">0</span> baris</div>
+                                        <div class="absolute bottom-3 right-3 text-xs text-gray-400 font-medium bg-white/80 backdrop-blur px-2 py-1 rounded shadow-sm border border-gray-100"><span id="lineCount">0</span> <span id="tx-sl-baris">baris</span></div>
                                     </div>
                                     <div class="mt-3 flex items-start gap-2 text-[11px] text-gray-500 bg-blue-50/30 p-2.5 rounded-lg border border-blue-50">
                                         <i class="fa-solid fa-circle-info text-blue-400 mt-0.5"></i>
-                                        <p>Satu nama file per baris. Gunakan nama file lengkap termasuk ekstensi (contoh: DSC_0012.JPG)</p>
+                                        <p><span id="tx-sl-note">Satu nama file per baris. Gunakan nama file lengkap termasuk ekstensi (contoh: DSC_0012.JPG)</span></p>
                                     </div>
                                 </div>
 
@@ -2168,11 +2168,11 @@
                                 <!-- Card: Info & Panduan -->
                                 <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
                                     <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                        <i class="fa-solid fa-book-open text-blue-500"></i> Informasi & Panduan
+                                        <i class="fa-solid fa-book-open text-blue-500"></i> <span id="tx-sl-info">Informasi & Panduan</span>
                                     </h3>
                                     
                                     <div class="mb-5">
-                                        <h4 class="text-xs font-bold text-gray-600 mb-2">Format yang didukung</h4>
+                                        <h4 id="tx-sl-format" class="text-xs font-bold text-gray-600 mb-2">Format yang didukung</h4>
                                         <div class="flex flex-wrap gap-1.5">
                                             <span class="text-[10px] font-mono bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200">.JPG</span>
                                             <span class="text-[10px] font-mono bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200">.JPEG</span>
@@ -2180,28 +2180,28 @@
                                             <span class="text-[10px] font-mono bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200">.HEIC</span>
                                             <span class="text-[10px] font-mono bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200">.CR2</span>
                                             <span class="text-[10px] font-mono bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200">.ARW</span>
-                                            <span class="text-[10px] text-gray-400 px-1 py-1">+ lainnya</span>
+                                            <span id="tx-sl-others" class="text-[10px] text-gray-400 px-1 py-1">+ lainnya</span>
                                         </div>
                                     </div>
 
                                     <div>
-                                        <h4 class="text-xs font-bold text-gray-600 mb-2">Tips terbaik</h4>
+                                        <h4 id="tx-sl-tips" class="text-xs font-bold text-gray-600 mb-2">Tips terbaik</h4>
                                         <ul class="text-xs text-gray-500 space-y-2">
                                             <li class="flex items-start gap-2">
                                                 <i class="fa-solid fa-check text-blue-500 mt-0.5"></i>
-                                                <span>Pastikan nama file sama persis (case sensitive).</span>
+                                                <span id="tx-sl-tip1">Pastikan nama file sama persis (case sensitive).</span>
                                             </li>
                                             <li class="flex items-start gap-2">
                                                 <i class="fa-solid fa-check text-blue-500 mt-0.5"></i>
-                                                <span>Satu nama file per baris.</span>
+                                                <span id="tx-sl-tip2">Satu nama file per baris.</span>
                                             </li>
                                             <li class="flex items-start gap-2">
                                                 <i class="fa-solid fa-check text-blue-500 mt-0.5"></i>
-                                                <span>Gunakan <b class="text-blue-600">ekstensi file</b>.</span>
+                                                <span id="tx-sl-tip3">Gunakan <b class="text-blue-600">ekstensi file</b>.</span>
                                             </li>
                                             <li class="flex items-start gap-2">
                                                 <i class="fa-solid fa-check text-blue-500 mt-0.5"></i>
-                                                <span>Folder master tidak boleh dipindah saat proses.</span>
+                                                <span id="tx-sl-tip4">Folder master tidak boleh dipindah saat proses.</span>
                                             </li>
                                         </ul>
                                     </div>
@@ -2210,7 +2210,7 @@
                                 <!-- Card: Ringkasan Deteksi -->
                                 <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
                                     <div class="flex items-center gap-2 mb-4">
-                                        <h3 class="text-sm font-bold text-gray-800">Ringkasan Deteksi</h3>
+                                        <h3 id="tx-sl-ringkasan" class="text-sm font-bold text-gray-800">Ringkasan Deteksi</h3>
                                         <i class="fa-regular fa-circle-question text-gray-400 text-xs cursor-pointer hover:text-blue-500 transition-colors" title="Deteksi real-time"></i>
                                     </div>
                                     
@@ -2221,8 +2221,8 @@
                                                     <i class="fa-solid fa-check-double text-xs"></i>
                                                 </div>
                                                 <div>
-                                                    <h4 class="text-xs font-bold text-gray-700">Ditemukan</h4>
-                                                    <p class="text-[9px] text-gray-400 mt-0.5">File yang ditemukan di folder master</p>
+                                                    <h4 id="tx-sl-found" class="text-xs font-bold text-gray-700">Ditemukan</h4>
+                                                    <p id="tx-sl-found-desc" class="text-[9px] text-gray-400 mt-0.5">File yang ditemukan di folder master</p>
                                                 </div>
                                             </div>
                                             <span class="text-lg font-black text-green-600" id="detect-found">0</span>
@@ -2234,8 +2234,8 @@
                                                     <i class="fa-solid fa-ban text-xs"></i>
                                                 </div>
                                                 <div>
-                                                    <h4 class="text-xs font-bold text-gray-700">Tidak Ditemukan</h4>
-                                                    <p class="text-[9px] text-gray-400 mt-0.5">File yang tidak ditemukan</p>
+                                                    <h4 id="tx-sl-notfound" class="text-xs font-bold text-gray-700">Tidak Ditemukan</h4>
+                                                    <p id="tx-sl-notfound-desc" class="text-[9px] text-gray-400 mt-0.5">File yang tidak ditemukan</p>
                                                 </div>
                                             </div>
                                             <span class="text-lg font-black text-red-500" id="detect-missing">0</span>
@@ -2247,8 +2247,8 @@
                                                     <i class="fa-solid fa-box-archive text-xs"></i>
                                                 </div>
                                                 <div>
-                                                    <h4 class="text-xs font-bold text-blue-900">Siap Diproses</h4>
-                                                    <p class="text-[9px] text-blue-600/70 mt-0.5">File yang akan dikemas ke ZIP</p>
+                                                    <h4 id="tx-sl-ready" class="text-xs font-bold text-blue-900">Siap Diproses</h4>
+                                                    <p id="tx-sl-ready-desc" class="text-[9px] text-blue-400 mt-0.5">File yang akan dikemas ke ZIP</p>
                                                 </div>
                                             </div>
                                             <span class="text-lg font-black text-blue-700" id="detect-ready">0</span>
@@ -2775,7 +2775,7 @@
                             <p class="text-[11px] font-bold text-gray-500 uppercase tracking-widest mt-0.5" id="wizard-step-indicator">Langkah 1 dari 4</p>
                         </div>
                     </div>
-                    <button type="button" onclick="closeModalCreate()"
+                    <button type="button" onclick="closeModalCreate()" id="btn-batal-create"
                         class="text-gray-400 hover:text-red-500 bg-gray-50 hover:bg-red-50 border border-gray-100 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
                         <i class="fa-solid fa-times"></i>
                     </button>
@@ -3542,7 +3542,7 @@
 
             // 4. TRANSLASI MODAL (CREATE PROJECT & SETTINGS)
             setTx('#lbl-create-title', 'Create New Project', 'Create New Project');
-            setLbl('#lbl-p-nama', 'Nama Klien <span class="text-red-500">*</span>', 'Client Name <span class="text-red-500">*</span>');
+            setLbl('#lbl-p-name', 'Nama Klien / Project <span class="text-red-500">*</span>', 'Client / Project Name <span class="text-red-500">*</span>');
             setLbl('#lbl-p-drive', 'Link Folder G-Drive (Isi Foto) <span class="text-red-500">*</span>', 'Google Drive Folder Link <span class="text-red-500">*</span>');
 
             setLbl('#lbl-p-layout', 'Tampilan Galeri (Layout) <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i>', 'Gallery Layout View <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i>');
@@ -3858,6 +3858,9 @@
             setTx('#tx-info-dasar', '<i class="fa-solid fa-circle-info text-blue-500"></i> Informasi Dasar Klien', '<i class="fa-solid fa-circle-info text-blue-500"></i> Client Basic Information', true);
             setTx('#tx-gdrive-desc', '<i class="fa-solid fa-circle-info mr-1"></i> Pastikan akses folder Google Drive sudah diatur ke <b>"Siapa saja yang memiliki link"</b>.', '<i class="fa-solid fa-circle-info mr-1"></i> Make sure the Google Drive folder access is set to <b>"Anyone with the link"</b>.', true);
             setTx('.tx-btn-lanjut', 'Lanjut', 'Next');
+            setTx('#btn-batal-create', 'Batal', 'Cancel');
+            setTx('#btn-batal-create2', 'Batal', 'Cancel');
+            setTx('#btn-batal-create3', 'Batal', 'Cancel');
 
             // File input texts
             setTx('.tx-pilih-file', 'Pilih File', 'Choose File');
@@ -3872,6 +3875,28 @@
             setTx('#tx-sl-step2-desc', 'Tempel daftar nama/nomor foto', 'Paste photo names/numbers');
             setTx('#tx-sl-step3', 'Download ZIP', 'Download ZIP');
             setTx('#tx-sl-step3-desc', 'Sistem buatkan ZIP untuk Anda', 'System will create ZIP for you');
+            setTx('#tx-sl-pilih-folder', '1. Pilih Folder Master', '1. Select Master Folder');
+            setTx('#tx-sl-paste-list', '2. Tempel List Foto Klien', '2. Paste Client Photo List');
+            setTx('#tx-sl-addfolder', 'Klik untuk memilih / tambah Folder Master', 'Click to select / add Master Folder');
+            setTx('#tx-sl-drag', 'atau drag & drop folder di sini', 'or drag & drop folder here');
+            setTx('#tx-sl-nofolder', 'Belum ada folder dipilih', 'No folder selected');
+            setTx('#tx-sl-note', 'Satu nama file per baris. Gunakan nama file lengkap termasuk ekstensi (contoh: DSC_0012.JPG)', 'One file name per line. Use full file name including extension (e.g., DSC_0012.JPG)');
+            setTx('#tx-sl-baris', 'baris', 'lines');
+            setTx('#tx-sl-info', 'Informasi & Panduan', 'Information & Guide');
+            setTx('#tx-sl-format', 'Format yang didukung', 'Supported Formats');
+            setTx('#tx-sl-others', '+ lainnya', '+ others');
+            setTx('#tx-sl-tips', 'Tips terbaik', 'Best Tips');
+            setTx('#tx-sl-tip1', 'Pastikan nama file sama persis (case sensitive).', 'Make sure file names match exactly (case sensitive).');
+            setTx('#tx-sl-tip2', 'Satu nama file per baris.', 'One file name per line.');
+            setTx('#tx-sl-tip3', 'Gunakan <b class="text-blue-600">ekstensi file</b>.', 'Use <b class="text-blue-600">file extensions</b>.', true);
+            setTx('#tx-sl-tip4', 'Folder master tidak boleh dipindah saat proses.', 'Master folder must not be moved during process.');
+            setTx('#tx-sl-ringkasan', 'Ringkasan Deteksi', 'Detection Summary');
+            setTx('#tx-sl-found', 'Ditemukan', 'Found');
+            setTx('#tx-sl-found-desc', 'File yang ditemukan di folder master', 'Files found in master folder');
+            setTx('#tx-sl-notfound', 'Tidak Ditemukan', 'Not Found');
+            setTx('#tx-sl-notfound-desc', 'File yang tidak ditemukan', 'Files not found');
+            setTx('#tx-sl-ready', 'Siap Diproses', 'Ready to Process');
+            setTx('#tx-sl-ready-desc', 'File yang akan dikemas ke ZIP', 'Files to be packed into ZIP');
 
             // Kolase Cepat
             setTx('#tx-kl-h2', 'Kolase Cepat', 'Quick Collage');
@@ -5738,16 +5763,19 @@ function isAccountExpired() {
                 var pulseHtml = '';
                 var statusDisplay = statusClient;
                 
+                var isEnLocale = document.getElementById('langSelector') && document.getElementById('langSelector').value === 'en';
                 if (statusClient === 'Selesai') {
                     statusColor = 'blue';
-                    pulseHtml = '<i class="fa-solid fa-check-circle"></i>';
+                    pulseHtml = '<i class="fa-solid fa-check-circle mr-1"></i>';
+                    statusDisplay = isEnLocale ? 'Completed' : 'Selesai';
                 } else if (statusClient === 'Sedang Memilih') {
                     statusColor = 'amber';
-                    pulseHtml = '<div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>';
+                    pulseHtml = '<div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse mr-1"></div>';
+                    statusDisplay = isEnLocale ? 'Selecting' : 'Sedang Memilih';
                 } else {
                     statusColor = 'green';
-                    pulseHtml = '<div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>';
-                    statusDisplay = 'Aktif';
+                    pulseHtml = '<div class="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-1"></div>';
+                    statusDisplay = isEnLocale ? 'Active' : 'Aktif';
                 }
 
                 var statusHtml = '<div class="bg-' + statusColor + '-50 text-' + statusColor + '-700 border border-' + statusColor + '-200 text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5">' + pulseHtml + statusDisplay + '</div>';
@@ -5798,7 +5826,7 @@ function isAccountExpired() {
                     statusHtml + '</div>' +
                     
                     '<div class="shrink-0 w-full sm:w-[140px] flex flex-col justify-center">' +
-                    '<div class="flex justify-between text-[11px] font-semibold text-gray-600 mb-1"><span>Terpilih ' + fotoTerpilih + ' / ' + maxFoto + '</span><span class="text-gray-800">' + progressPct + '%</span></div>' +
+                    '<div class="flex justify-between text-[11px] font-semibold text-gray-600 mb-1"><span>' + (isEnLocale ? 'Selected ' : 'Terpilih ') + fotoTerpilih + ' / ' + maxFoto + '</span><span class="text-gray-800">' + progressPct + '%</span></div>' +
                     '<div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden"><div class="' + progressColor + ' h-full rounded-full transition-all duration-500" style="width: ' + progressPct + '%"></div></div></div>' +
                     
                     '<div class="shrink-0 flex items-center gap-1.5 w-full sm:w-auto mt-3 sm:mt-0 pt-3 sm:pt-0 border-t border-gray-100 sm:border-0 justify-end">' + actionHtml + '</div>';
@@ -5886,7 +5914,8 @@ function isAccountExpired() {
             if(bar) bar.style.width = progress + '%';
             
             var indicator = document.getElementById('wizard-step-indicator');
-            if(indicator) indicator.innerText = 'Langkah ' + currentWizardStep + ' dari ' + totalWizardSteps;
+            var isEn = document.getElementById('langSelector') && document.getElementById('langSelector').value === 'en';
+            if(indicator) indicator.innerText = isEn ? ('STEP ' + currentWizardStep + ' OF ' + totalWizardSteps) : ('Langkah ' + currentWizardStep + ' dari ' + totalWizardSteps);
             
             var btnPrev = document.getElementById('btnWizardPrev');
             var btnNext = document.getElementById('btnWizardNext');
@@ -5929,10 +5958,11 @@ function isAccountExpired() {
         }
         
         function getStepName(i) {
-            if(i===1) return "Info Dasar";
-            if(i===2) return "Tampilan";
-            if(i===3) return "Kuota & Biaya";
-            if(i===4) return "Akses & Fitur";
+            var isEn = document.getElementById('langSelector') && document.getElementById('langSelector').value === 'en';
+            if(i===1) return isEn ? "Basic Info" : "Info Dasar";
+            if(i===2) return isEn ? "Display" : "Tampilan";
+            if(i===3) return isEn ? "Quota & Cost" : "Kuota & Biaya";
+            if(i===4) return isEn ? "Access & Features" : "Akses & Fitur";
             return "";
         }
         
