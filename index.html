@@ -14,7 +14,7 @@
     <script>
         // Deteksi jika ini adalah link klien (mengandung ?c= atau ?token=) dan lempar ke aplikasi
         if (window.location.search.includes('?c=') || window.location.search.includes('?token=')) {
-            window.location.replace('/app' + window.location.search);
+            window.location.replace('app.html' + window.location.search);
         }
     </script>
 
@@ -154,9 +154,9 @@
                             <i class="fa-solid fa-earth-americas text-xs"></i>
                         </div>
                     </div>
-                    <a href="/login"
+                    <a href="app.html"
                         class="text-slate-600 hover:text-primary-600 font-bold transition px-4 py-2 id-text-login">Masuk Aplikasi</a>
-                    <a href="/register"
+                    <a href="app.html?auth=register"
                         class="bg-yellow-400 hover:bg-yellow-300 text-yellow-900 px-6 py-2.5 rounded-full font-bold transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-1"><i
                             class="fa-solid fa-rocket"></i> <span class="id-text-hero-btn2">Coba Gratis 1 Project</span></a>
                 </div>
@@ -174,7 +174,7 @@
                             <i class="fa-solid fa-earth-americas text-xs"></i>
                         </div>
                     </div>
-                    <a href="/login" class="text-slate-600 font-bold text-sm id-text-login">Login</a>
+                    <a href="app.html" class="text-slate-600 font-bold text-sm id-text-login">Login</a>
                     <button onclick="toggleMobileMenu()" class="text-dark hover:text-primary-600 focus:outline-none">
                         <i class="fa-solid fa-bars text-2xl"></i>
                     </button>
@@ -196,7 +196,7 @@
                     class="block px-3 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg">Testimoni</a>
                 <a href="#faq" onclick="toggleMobileMenu()"
                     class="block px-3 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg">FAQ</a>
-                <a href="/register"
+                <a href="app.html?auth=register"
                     class="block mt-4 px-3 py-3 bg-yellow-400 text-yellow-900 font-bold rounded-lg shadow-md text-center"><i
                         class="fa-solid fa-rocket"></i> Coba Gratis 1 Project</a>
             </div>
@@ -219,7 +219,7 @@
                 Photo Selection membantu fotografer mengirim link pilihan foto ke klien, memantau status pemilihan, lalu menyortir file pilihan ke laptop dalam bentuk ZIP.
             </p>
             <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mb-3">
-                <a href="/register"
+                <a href="app.html?auth=register"
                     class="w-full sm:w-auto px-12 py-4 bg-yellow-400 hover:bg-yellow-300 text-yellow-900 rounded-full font-bold text-xl transition shadow-lg hover:shadow-xl transform hover:-translate-y-1 border border-yellow-500 flex items-center justify-center gap-2">
                     <i class="fa-solid fa-rocket"></i> Coba Gratis 1 Project
                 </a>
@@ -642,7 +642,7 @@
                         <li class="flex items-center text-slate-600"><i
                                 class="fa-solid fa-check text-green-500 mr-3 w-5"></i> Basic Support</li>
                     </ul>
-                    <a href="/register"
+                    <a href="app.html?auth=register"
                         class="w-full py-3.5 px-6 rounded-xl font-bold border-2 border-primary-100 text-primary-600 hover:bg-primary-50 hover:border-primary-200 transition block text-center">Coba Gratis Dulu</a>
                 </div>
 
@@ -677,7 +677,7 @@
                         <li class="flex items-center text-slate-300"><i
                                 class="fa-solid fa-check text-primary-400 mr-3 w-5"></i> VIP Support 24/7</li>
                     </ul>
-                    <a href="/register"
+                    <a href="app.html?auth=register"
                         class="w-full py-3.5 px-6 rounded-xl font-bold bg-primary-600 text-white hover:bg-primary-500 shadow-[0_0_15px_rgba(59,130,246,0.4)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] transition transform hover:-translate-y-0.5 block text-center">Mulai dari 1 Project Gratis</a>
                 </div>
 
@@ -706,7 +706,7 @@
                         <li class="flex items-center text-slate-600"><i
                                 class="fa-solid fa-check text-green-500 mr-3 w-5"></i> Prioritas Support</li>
                     </ul>
-                    <a href="/register"
+                    <a href="app.html?auth=register"
                         class="w-full py-3.5 px-6 rounded-xl font-bold border-2 border-primary-100 text-primary-600 hover:bg-primary-50 hover:border-primary-200 transition block text-center">Coba Gratis Dulu</a>
                 </div>
             </div>
@@ -1145,11 +1145,13 @@
             <div class="mt-8 text-center bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                 <p class="font-bold text-dark mb-3">Masih ada pertanyaan yang belum terjawab?</p>
                 <button id="btnMoreFaq" onclick="toggleAllFaq()"
-                    class="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition duration-300 border border-slate-300">
+                    class="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition duration-300 border border-slate-300 mb-6">
                     Lihat Semua Pertanyaan <i class="fa-solid fa-chevron-down ml-1"></i>
                 </button>
-                <a href="#" class="block mt-4 text-sm text-primary-600 hover:text-primary-700 font-medium"><i
-                        class="fa-brands fa-instagram text-lg mr-1 align-middle"></i> Hubungi kami via Instagram</a>
+                <div class="flex justify-center items-center gap-6">
+                    <a href="https://t.me/kamadigitalcreative" target="_blank" class="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center"><i class="fa-brands fa-telegram text-lg mr-2"></i> Telegram</a>
+                    <a href="https://www.instagram.com/kamadigitalcreative/" target="_blank" class="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center"><i class="fa-brands fa-instagram text-lg mr-2"></i> Instagram</a>
+                </div>
             </div>
 
         </div>
@@ -1163,7 +1165,7 @@
                 <h2 class="text-3xl md:text-5xl font-bold text-white mb-4">Tingkatkan Level Studio Anda Hari Ini</h2>
                 <p class="text-primary-100 mb-10 text-lg md:px-10">Daftar sekarang dan dapatkan akses eksklusif ke
                     seluruh fitur otomatisasi premium yang akan merevolusi cara kerja Anda.</p>
-                <a href="/register"
+                <a href="app.html?auth=register"
                     class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-primary-700 hover:bg-primary-50 rounded-xl font-extrabold text-lg transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_35px_rgba(255,255,255,0.6)] transform hover:-translate-y-1 ring-4 ring-white/20">
                     🚀 Daftar Sekarang Juga <i class="fa-solid fa-arrow-right ml-2"></i>
                 </a>
@@ -1514,13 +1516,13 @@
             setT('a[href="#testimoni"]', 'Testimoni', 'Testimonials');
             setT('a[href="#faq"]', 'FAQ', 'FAQ');
             setT('.id-text-login', 'Login', 'Login');
-            setT('nav a[href="/register"]', '<i class="fa-solid fa-rocket"></i> Coba Gratis 1 Project', '<i class="fa-solid fa-rocket"></i> Try 1 Project Free', true);
+            setT('nav a[href="app.html?auth=register"]', '<i class="fa-solid fa-rocket"></i> Coba Gratis 1 Project', '<i class="fa-solid fa-rocket"></i> Try 1 Project Free', true);
             setT('.id-text-masuk', 'Masuk Aplikasi', 'Sign In');
 
             setT('.hero-pattern .bg-primary-50', '<i class="fa-solid fa-star text-yellow-400 mr-2"></i> Asisten Digital Fotografer Profesional', '<i class="fa-solid fa-star text-yellow-400 mr-2"></i> Professional Photographer Digital Assistant', true);
             setT('.hero-pattern h1', 'Klien Pilih Foto, <br class="hidden md:block"> File Langsung Tersortir di Laptop', 'Clients Choose Photos, <br class="hidden md:block"> Files Sorted Directly on Laptop', true);
             setT('.hero-pattern p.text-slate-600', 'Photo Selection membantu fotografer mengirim link pilihan foto ke klien, memantau status pemilihan, lalu menyortir file pilihan ke laptop dalam bentuk ZIP.', 'Photo Selection helps photographers send photo selection links to clients, monitor selection status, and then sort selected files to laptop as ZIP.', true);
-            setT('.hero-pattern a[href="/register"]', '<i class="fa-solid fa-rocket"></i> Coba Gratis 1 Project', '<i class="fa-solid fa-rocket"></i> Try 1 Project Free', true);
+            setT('.hero-pattern a[href="app.html?auth=register"]', '<i class="fa-solid fa-rocket"></i> Coba Gratis 1 Project', '<i class="fa-solid fa-rocket"></i> Try 1 Project Free', true);
             setT('.hero-pattern a[href="#fitur"]', '<i class="fa-solid fa-circle-down"></i> Pelajari Fitur Selengkapnya', '<i class="fa-solid fa-circle-down"></i> Learn More Features', true);
             setT('.hero-pattern p.uppercase', 'Dirancang Khusus Untuk', 'Specially Designed For');
 
@@ -1632,7 +1634,7 @@
             setT('#faq h3.text-lg:not(.text-purple-600):not(.text-green-600)', 'Umum', 'General');
             setT('#btnMoreFaq', 'Lihat Semua Pertanyaan <i class="fa-solid fa-chevron-down ml-1"></i>', 'View All Questions <i class="fa-solid fa-chevron-down ml-1"></i>', true);
             setT('#faq .mt-8 p.font-bold', 'Masih ada pertanyaan yang belum terjawab?', 'Still have unanswered questions?');
-            setT('#btnMoreFaq + a', '<i class="fa-brands fa-instagram text-lg mr-1 align-middle"></i> Hubungi kami via Instagram', '<i class="fa-brands fa-instagram text-lg mr-1 align-middle"></i> Contact us via Instagram', true);
+            // removed setT for instagram link since there are multiple links now
 
             // Translasi isi FAQ
             var faqBtns = document.querySelectorAll('#faq button span.font-semibold');
