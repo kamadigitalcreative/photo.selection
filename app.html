@@ -5280,8 +5280,8 @@ function isAccountExpired() {
                     var isEn = localStorage.getItem('ps_lang') === 'en';
                     Swal.fire({
                         icon: 'success',
-                        title: isEn ? 'Welcome!' : 'Selamat Datang!',
-                        text: (isEn ? 'Successfully logged in as ' : 'Berhasil login sebagai ') + res.data.role,
+                        title: isEn ? ('Welcome, ' + res.data.nama + '!') : ('Selamat Datang, ' + res.data.nama + '!'),
+                        text: isEn ? 'Successfully accessed the dashboard' : 'Akses berhasil masuk ke dashboard',
                         timer: 1500,
                         showConfirmButton: false
                     });
