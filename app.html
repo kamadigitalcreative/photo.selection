@@ -148,6 +148,37 @@
             font-weight: 700 !important;
         }
 
+        /* Adaptive Grid Layout */
+        .adaptive-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 16px;
+        }
+        .adaptive-grid::after {
+            content: '';
+            flex-grow: 999999999;
+            min-width: 200px;
+            height: 0;
+        }
+        .adaptive-card {
+            flex-grow: 1;
+            height: 300px;
+            position: relative;
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+        .adaptive-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        @media (max-width: 640px) {
+            .adaptive-card {
+                height: 180px;
+            }
+        }
+
         tbody tr {
             transition: background-color 0.2s ease;
         }
@@ -2841,6 +2872,7 @@
                                     <label id="lbl-p-layout-select" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Layout Galeri Klien</label>
                                     <select id="p_client_layout" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all text-sm font-medium text-gray-800" onclick="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ showPremiumAlert(); this.blur(); return false; }" onkeydown="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ return false; }">
                                         <option value="masonry">Pinterest (Masonry Grid)</option>
+                                        <option value="adaptive">Adaptive Grid (Sesuai Orientasi)</option>
                                         <option value="horizontal">Filmstrip (Horizontal)</option>
                                         <option value="slideshow">Cinematic (Slideshow)</option>
                                     </select>
@@ -7390,6 +7422,8 @@ function isAccountExpired() {
                 // TERAPKAN LAYOUT SESUAI PHASE 12
                 if (clientState.clientLayout === 'masonry') {
                     container.classList.add('columns-2', 'sm:columns-3', 'md:columns-4', 'lg:columns-5', 'gap-4', 'space-y-4', 'p-4');
+                } else if (clientState.clientLayout === 'adaptive') {
+                    container.classList.add('adaptive-grid');
                 } else if (clientState.clientLayout === 'horizontal') {
                     container.classList.add('flex', 'overflow-x-auto', 'snap-x', 'snap-mandatory', 'gap-4', 'p-4', 'hide-scrollbar', 'items-center', 'h-full');
                 } else if (clientState.clientLayout === 'slideshow') {
@@ -7452,6 +7486,8 @@ function isAccountExpired() {
                     // PENYESUAIAN CSS LAYOUT PHASE 12
                     if (clientState.clientLayout === 'masonry') {
                         card.className = "photo-card group break-inside-avoid mb-4";
+                    } else if (clientState.clientLayout === 'adaptive') {
+                        card.className = "photo-card group adaptive-card";
                     } else if (clientState.clientLayout === 'horizontal') {
                         card.className = "photo-card group shrink-0 snap-center w-[80vw] sm:w-[400px] h-auto max-h-[80vh]";
                     } else if (clientState.clientLayout === 'slideshow') {
