@@ -167,6 +167,7 @@
             position: relative;
             border-radius: 0.75rem;
             overflow: hidden;
+            aspect-ratio: auto !important;
         }
         .adaptive-card img {
             width: 100%;
@@ -177,6 +178,20 @@
             .adaptive-card {
                 height: 180px;
             }
+        }
+
+        /* Fix Aspect Ratio for non-square layouts */
+        .masonry-card {
+            aspect-ratio: auto !important;
+            height: auto !important;
+        }
+        .masonry-card img {
+            height: auto !important;
+            position: static !important;
+        }
+        
+        .horizontal-card, .slideshow-card {
+            aspect-ratio: auto !important;
         }
 
         tbody tr {
@@ -7464,16 +7479,16 @@ function isAccountExpired() {
                     var baseClass = "photo-card bg-white flex flex-col items-center justify-center border border-gray-100 hover:border-blue-300 transition-colors shadow-sm cursor-pointer p-6 group break-inside-avoid ";
                     
                     if (clientState.clientLayout === 'horizontal' || clientState.clientLayout === 'slideshow') {
-                        fCard.className = baseClass + "shrink-0 snap-center w-48 h-48 sm:w-64 sm:h-64 mb-0 mx-2";
+                        fCard.className = baseClass + "shrink-0 snap-center w-40 h-40 sm:w-48 sm:h-48 mb-0 mx-2 rounded-xl";
                     } else {
-                        fCard.className = baseClass + "w-full aspect-square mb-4";
+                        fCard.className = baseClass + "w-full py-8 mb-4 rounded-xl";
                     }
                     
                     fCard.onclick = function () { openSubFolder(folder.id, folder.name); };
 
                     fCard.innerHTML =
-                        '<div class="text-blue-500 mb-4 transform group-hover:scale-110 transition-transform"><i class="fa-solid fa-folder text-6xl sm:text-7xl opacity-90"></i></div>' +
-                        '<div class="font-bold text-kama-800 text-sm sm:text-base text-center w-full truncate px-3">' + folder.name + '</div>';
+                        '<div class="text-blue-500 mb-3 transform group-hover:scale-110 transition-transform"><i class="fa-solid fa-folder text-4xl sm:text-5xl opacity-90"></i></div>' +
+                        '<div class="font-bold text-kama-800 text-sm text-center w-full truncate px-3">' + folder.name + '</div>';
 
                     if (container) container.appendChild(fCard);
                 });
@@ -7485,13 +7500,13 @@ function isAccountExpired() {
                     
                     // PENYESUAIAN CSS LAYOUT PHASE 12
                     if (clientState.clientLayout === 'masonry') {
-                        card.className = "photo-card group break-inside-avoid mb-4";
+                        card.className = "photo-card group break-inside-avoid mb-4 masonry-card";
                     } else if (clientState.clientLayout === 'adaptive') {
                         card.className = "photo-card group adaptive-card";
                     } else if (clientState.clientLayout === 'horizontal') {
-                        card.className = "photo-card group shrink-0 snap-center w-[80vw] sm:w-[400px] h-auto max-h-[80vh]";
+                        card.className = "photo-card group shrink-0 snap-center w-[80vw] sm:w-[400px] h-auto max-h-[80vh] horizontal-card";
                     } else if (clientState.clientLayout === 'slideshow') {
-                        card.className = "photo-card group shrink-0 snap-center w-full h-full flex items-center justify-center bg-black";
+                        card.className = "photo-card group shrink-0 snap-center w-full h-full flex items-center justify-center bg-black slideshow-card";
                     } else {
                         card.className = "photo-card group"; 
                     }
