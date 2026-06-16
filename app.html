@@ -1480,33 +1480,45 @@
                             </div>
                         </div>
 
-                        <!-- Right Sidebar: Insight & Rekomendasi -->
+                        <!-- Right Sidebar: Tindakan & Aktivitas -->
                         <div class="w-full lg:w-[320px] flex flex-col gap-4 shrink-0">
                             
-                            <div class="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-2xl shadow-lg p-5 text-white relative overflow-hidden">
-                                <div class="absolute -right-4 -bottom-4 opacity-10"><i class="fa-solid fa-chart-pie text-9xl"></i></div>
-                                <h3 class="font-bold text-indigo-100 mb-4 flex items-center gap-2 relative z-10">
-                                    <i class="fa-solid fa-lightbulb text-yellow-400"></i> <span id="tx-insight">Insight & Rekomendasi</span>
+                            <!-- Tindakan Prioritas Container -->
+                            <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
+                                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <i class="fa-solid fa-clipboard-list text-blue-500"></i> <span id="tx-tindakan">Tindakan Prioritas</span>
                                 </h3>
                                 
-                                <div class="space-y-4 relative z-10">
-                                    <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-xl p-3 flex gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-red-500/20 text-red-300 flex items-center justify-center shrink-0"><i class="fa-regular fa-bell"></i></div>
-                                        <div>
-                                            <p id="tx-follow" class="text-sm font-bold text-white mb-1">Follow up klien</p>
-                                            <p id="tx-follow-desc" class="text-xs text-indigo-100/70 leading-relaxed">Ada klien yang belum memilih lebih dari 3 hari. Gunakan tombol WA untuk mengingatkan mereka.</p>
-                                        </div>
-                                    </div>
-                                    <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-xl p-3 flex gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-green-500/20 text-green-300 flex items-center justify-center shrink-0"><i class="fa-solid fa-bolt"></i></div>
-                                        <div>
-                                            <p id="tx-cepat" class="text-sm font-bold text-white mb-1">Cepat Selesai</p>
-                                            <p id="tx-cepat-desc" class="text-xs text-indigo-100/70 leading-relaxed">Rata-rata klien Anda menyelesaikan pemilihan dalam waktu 2 hari. Pertahankan!</p>
-                                        </div>
-                                    </div>
+                                <div id="action-container" class="space-y-3">
+                                    <div class="text-center py-4 text-gray-400 text-xs italic">Menganalisis data klien...</div>
                                 </div>
-                                <button class="w-full mt-4 py-2 bg-indigo-500 hover:bg-indigo-400 transition-colors rounded-xl text-xs font-bold shadow-sm"><span id="tx-analisis">Lihat Analisis Detail</span></button>
                             </div>
+
+                            <!-- Aktivitas Terbaru -->
+                            <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
+                                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <i class="fa-solid fa-clock-rotate-left text-purple-500"></i> <span id="tx-aktivitas">Aktivitas Terbaru</span>
+                                </h3>
+                                
+                                <div id="activity-container" class="space-y-3 relative before:absolute before:inset-y-0 before:left-[11px] before:w-[2px] before:bg-gray-100">
+                                    <div class="text-center py-4 text-gray-400 text-xs italic">Memuat aktivitas...</div>
+                                </div>
+                            </div>
+
+                            <!-- Aksi Cepat Container -->
+                            <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
+                                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <i class="fa-solid fa-bolt text-yellow-500"></i> <span id="tx-aksi-cepat">Aksi Cepat</span>
+                                </h3>
+                                
+                                <div class="space-y-2">
+                                    <button onclick="copyReminderWA()" class="w-full text-left px-4 py-3 bg-gray-50 hover:bg-green-50 hover:text-green-700 hover:border-green-200 border border-gray-100 rounded-xl text-xs font-bold text-gray-600 transition-colors flex items-center justify-between group">
+                                        <span><i class="fa-brands fa-whatsapp text-green-500 mr-2"></i> Salin Template Reminder WA</span>
+                                        <i class="fa-regular fa-copy opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                    </button>
+                                </div>
+                            </div>
+
                         </div>
 
                     </div>
@@ -8224,6 +8236,10 @@ function isAccountExpired() {
             });
 
             updateStatusCounters(countBelum, countSedang, countSelesai);
+            
+            // --- INJECT: Tindakan & Aktivitas Panel Logic ---
+            populateActivityAndActions(data);
+
             if (typeof applyLanguage === 'function') applyLanguage(localStorage.getItem('ps_lang') || 'id');
         }
 
@@ -8240,6 +8256,146 @@ function isAccountExpired() {
                 return (row['Nama Client'] || '').toLowerCase().includes(search);
             });
             renderClientProgress(filtered);
+        }
+
+        // --- TONGGAK: FUNGSI TINDAKAN & AKTIVITAS BARU ---
+        function populateActivityAndActions(data) {
+            var actionContainer = document.getElementById('action-container');
+            var activityContainer = document.getElementById('activity-container');
+            if (!actionContainer || !activityContainer) return;
+
+            var actionsHtml = '';
+            var activitiesHtml = '';
+            
+            if (!data || data.length === 0) {
+                actionContainer.innerHTML = '<div class="text-center py-4 text-gray-400 text-xs italic">Belum ada klien.</div>';
+                activityContainer.innerHTML = '<div class="text-center py-4 text-gray-400 text-xs italic">Belum ada aktivitas.</div>';
+                return;
+            }
+
+            // Urutkan data berdasarkan Last Update untuk Aktivitas Terbaru (terbaru ke terlama)
+            var sortedData = [...data].sort((a, b) => {
+                var dA = new Date(a['Last Update'] || 0);
+                var dB = new Date(b['Last Update'] || 0);
+                return dB - dA;
+            });
+
+            // 1. Cek Tindakan Prioritas (Selesai -> Segera Proses, atau Lama Pending -> Follow Up)
+            var now = new Date();
+            var hasAction = false;
+
+            data.forEach(function(row) {
+                var status = row['Status Client'] || 'Belum Memilih';
+                var lastUpdate = new Date(row['Last Update']);
+                var diffDays = (now - lastUpdate) / (1000 * 60 * 60 * 24);
+                
+                // Jika sudah selesai
+                if (status === 'Selesai') {
+                    hasAction = true;
+                    actionsHtml += `
+                        <div class="bg-green-50 border border-green-200 rounded-xl p-3 flex gap-3 relative overflow-hidden group">
+                            <div class="w-8 h-8 rounded-full bg-green-200 text-green-700 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-check-double"></i>
+                            </div>
+                            <div>
+                                <p class="text-[11px] font-bold text-green-800 mb-0.5">Siap Diproses</p>
+                                <p class="text-[10px] text-green-700 leading-tight mb-2">Klien <strong class="font-extrabold">${escapeHTML(row['Nama Client'])}</strong> telah selesai memilih foto.</p>
+                                <button onclick="switchMenu('sortir')" class="text-[9px] font-bold uppercase tracking-wider bg-white text-green-700 border border-green-300 px-3 py-1 rounded-full hover:bg-green-600 hover:text-white transition-colors shadow-sm">Mulai Sortir Lokal</button>
+                            </div>
+                        </div>
+                    `;
+                } 
+                // Jika pending lebih dari 3 hari (belum memilih / sedang memilih)
+                else if ((status === 'Belum Memilih' || status === 'Sedang Memilih') && diffDays > 3) {
+                    hasAction = true;
+                    actionsHtml += `
+                        <div class="bg-red-50 border border-red-200 rounded-xl p-3 flex gap-3">
+                            <div class="w-8 h-8 rounded-full bg-red-200 text-red-700 flex items-center justify-center shrink-0">
+                                <i class="fa-regular fa-clock"></i>
+                            </div>
+                            <div>
+                                <p class="text-[11px] font-bold text-red-800 mb-0.5">Perlu Follow-up</p>
+                                <p class="text-[10px] text-red-700 leading-tight">Klien <strong class="font-extrabold">${escapeHTML(row['Nama Client'])}</strong> belum menyelesaikan pemilihan sejak ${Math.floor(diffDays)} hari lalu.</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            if (!hasAction) {
+                actionsHtml = `
+                    <div class="bg-gray-50 border border-gray-100 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <i class="fa-solid fa-mug-hot text-2xl text-gray-300 mb-2"></i>
+                        <p class="text-[11px] font-bold text-gray-500">Semua Terkendali</p>
+                        <p class="text-[9px] text-gray-400 mt-1">Tidak ada tindakan mendesak saat ini.</p>
+                    </div>
+                `;
+            }
+            actionContainer.innerHTML = actionsHtml;
+
+            // 2. Aktivitas Terbaru (Maksimal 4)
+            var recentCount = 0;
+            sortedData.forEach(function(row) {
+                if (recentCount >= 4) return;
+                var status = row['Status Client'] || 'Belum Memilih';
+                if (!row['Last Update']) return; // Abaikan yang tidak ada tanggal update
+
+                var dateTxt = new Date(row['Last Update']).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                
+                var actColor = 'bg-gray-200';
+                var actIcon = 'fa-solid fa-circle';
+                var actDesc = '';
+
+                if (status === 'Selesai') {
+                    actColor = 'bg-green-100 text-green-600';
+                    actIcon = 'fa-solid fa-check';
+                    actDesc = `Menyelesaikan pemilihan foto.`;
+                } else if (status === 'Sedang Memilih') {
+                    actColor = 'bg-blue-100 text-blue-600';
+                    actIcon = 'fa-solid fa-pen';
+                    actDesc = `Melakukan perubahan pilihan.`;
+                } else {
+                    actColor = 'bg-red-100 text-red-600';
+                    actIcon = 'fa-solid fa-folder-open';
+                    actDesc = `Proyek dibuat/diupdate.`;
+                }
+
+                activitiesHtml += `
+                    <div class="flex gap-3 relative z-10 group">
+                        <div class="w-6 h-6 rounded-full flex items-center justify-center shrink-0 border-[3px] border-white shadow-sm ${actColor} z-10 group-hover:scale-110 transition-transform">
+                            <i class="${actIcon} text-[9px]"></i>
+                        </div>
+                        <div class="pt-0.5 pb-2">
+                            <p class="text-[11px] font-bold text-gray-800">${escapeHTML(row['Nama Client'])}</p>
+                            <p class="text-[10px] text-gray-500">${actDesc}</p>
+                            <p class="text-[9px] text-gray-400 mt-0.5"><i class="fa-regular fa-clock mr-1"></i>${dateTxt}</p>
+                        </div>
+                    </div>
+                `;
+                recentCount++;
+            });
+
+            if (recentCount === 0) {
+                activitiesHtml = '<div class="text-center py-4 text-gray-400 text-xs italic">Belum ada aktivitas.</div>';
+            }
+            activityContainer.innerHTML = activitiesHtml;
+        }
+
+        function copyReminderWA() {
+            var text = "Halo kak! Sekadar mengingatkan untuk link pemilihan foto galerinya ya kak. Jika ada kendala dalam memilih, jangan sungkan untuk memberi tahu kami. Terima kasih banyak! 🙏";
+            navigator.clipboard.writeText(text).then(function() {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Template Reminder disalin!',
+                    text: 'Silakan paste (tempel) di WhatsApp klien.',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            }).catch(function() {
+                Swal.fire('Gagal Menyalin', 'Browser Anda tidak mendukung fitur copy clipboard.', 'error');
+            });
         }
 
         // --- FITUR LUPA PASSWORD (SISTEM OTP & CUSTOM PASSWORD) ---
