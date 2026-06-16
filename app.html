@@ -1484,24 +1484,26 @@
                         <div class="w-full lg:w-[320px] flex flex-col gap-4 shrink-0">
                             
                             <!-- Tindakan Prioritas Container -->
-                            <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
-                                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 flex flex-col h-auto max-h-80">
+                                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2 shrink-0">
                                     <i class="fa-solid fa-clipboard-list text-blue-500"></i> <span id="tx-tindakan">Tindakan Prioritas</span>
                                 </h3>
-                                
-                                <div id="action-container" class="space-y-3">
-                                    <div class="text-center py-4 text-gray-400 text-xs italic">Menganalisis data klien...</div>
+                                <div class="overflow-y-auto pr-2 custom-scrollbar">
+                                    <div id="action-container" class="space-y-3">
+                                        <div class="text-center py-4 text-gray-400 text-xs italic">Menganalisis data klien...</div>
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Aktivitas Terbaru -->
-                            <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5">
-                                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 flex flex-col h-auto max-h-80">
+                                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2 shrink-0">
                                     <i class="fa-solid fa-clock-rotate-left text-purple-500"></i> <span id="tx-aktivitas">Aktivitas Terbaru</span>
                                 </h3>
-                                
-                                <div id="activity-container" class="space-y-3 relative before:absolute before:inset-y-0 before:left-[11px] before:w-[2px] before:bg-gray-100">
-                                    <div class="text-center py-4 text-gray-400 text-xs italic">Memuat aktivitas...</div>
+                                <div class="overflow-y-auto pr-2 custom-scrollbar relative">
+                                    <div id="activity-container" class="space-y-3 relative before:absolute before:inset-y-0 before:left-[11px] before:w-[2px] before:bg-gray-100 min-h-[50px]">
+                                        <div class="text-center py-4 text-gray-400 text-xs italic">Memuat aktivitas...</div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -8284,7 +8286,7 @@ function isAccountExpired() {
             var now = new Date();
             var hasAction = false;
 
-            data.forEach(function(row) {
+            sortedData.forEach(function(row) {
                 var status = row['Status Client'] || 'Belum Memilih';
                 var lastUpdate = new Date(row['Last Update']);
                 var diffDays = (now - lastUpdate) / (1000 * 60 * 60 * 24);
@@ -8333,10 +8335,9 @@ function isAccountExpired() {
             }
             actionContainer.innerHTML = actionsHtml;
 
-            // 2. Aktivitas Terbaru (Maksimal 4)
+            // 2. Aktivitas Terbaru (Scrollable tanpa batas 4)
             var recentCount = 0;
             sortedData.forEach(function(row) {
-                if (recentCount >= 4) return;
                 var status = row['Status Client'] || 'Belum Memilih';
                 if (!row['Last Update']) return; // Abaikan yang tidak ada tanggal update
 
