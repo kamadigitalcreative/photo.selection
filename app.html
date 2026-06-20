@@ -886,7 +886,7 @@
                     </div>
 
                     <div class="mb-4">
-                        <button type="button" onclick="Swal.fire('Info', 'Pendaftaran dengan Google sedang dalam penyesuaian sistem.', 'info')" class="w-full flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 py-2.5 rounded-xl hover:bg-gray-50 font-medium text-sm shadow-sm transition-colors">
+                        <button type="button" onclick="simulateGoogleLogin()" class="w-full flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 py-2.5 rounded-xl hover:bg-gray-50 font-medium text-sm shadow-sm transition-colors">
                             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="w-5 h-5">
                             <span>Daftar dengan Google</span>
                         </button>
@@ -10301,6 +10301,32 @@ function updateCollageBgColor() {
             });
         }
     });
+
+    function simulateGoogleLogin() {
+        Swal.fire({
+            title: 'Menghubungkan ke Akun Google...',
+            text: 'Mohon tunggu sebentar.',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+                setTimeout(() => {
+                    // Pre-fill form data to simulate Google SSO
+                    document.getElementById('reg_nama').value = "Budi (via Google)";
+                    document.getElementById('reg_email').value = "budi@gmail.com";
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Terhubung!',
+                        text: 'Silakan lengkapi nomor WhatsApp, Username, dan Password Anda untuk menyelesaikan pendaftaran agar tidak ada miss data.',
+                        confirmButtonText: 'Lengkapi Data'
+                    }).then(() => {
+                        // Focus the next required field
+                        document.getElementById('reg_nohp').focus();
+                    });
+                }, 1200);
+            }
+        });
+    }
     </script>
 </body>
 
