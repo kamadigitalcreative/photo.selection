@@ -133,11 +133,9 @@
 
                 <!-- Desktop Menu -->
                 <div class="hidden md:flex space-x-8">
-                    <a href="#problem" class="text-slate-600 hover:text-primary-600 font-medium transition">Masalah</a>
                     <a href="#fitur" class="text-slate-600 hover:text-primary-600 font-medium transition">Fitur</a>
+                    <a href="#carakerja" class="text-slate-600 hover:text-primary-600 font-medium transition">Cara Kerja</a>
                     <a href="#harga" class="text-slate-600 hover:text-primary-600 font-medium transition">Harga</a>
-                    <a href="#testimoni"
-                        class="text-slate-600 hover:text-primary-600 font-medium transition">Testimoni</a>
                     <a href="#faq" class="text-slate-600 hover:text-primary-600 font-medium transition">FAQ</a>
                 </div>
 
@@ -155,10 +153,10 @@
                         </div>
                     </div>
                     <a href="app.html"
-                        class="text-slate-600 hover:text-primary-600 font-bold transition px-4 py-2 id-text-login">Masuk Aplikasi</a>
-                    <a href="app.html?auth=register"
+                        class="text-slate-600 hover:text-primary-600 font-bold transition px-4 py-2 id-text-login">Masuk</a>
+                    <a href="#" onclick="openModal(); trackEvent('click_hero_trial'); return false;"
                         class="bg-yellow-400 hover:bg-yellow-300 text-yellow-900 px-6 py-2.5 rounded-full font-bold transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-1"><i
-                            class="fa-solid fa-rocket"></i> <span class="id-text-hero-btn2">Coba Gratis 1 Project</span></a>
+                            class="fa-solid fa-rocket"></i> <span class="id-text-hero-btn2">Coba Gratis</span></a>
                 </div>
 
                 <!-- Mobile Menu Button -->
@@ -186,17 +184,15 @@
         <div id="mobileMenu"
             class="hidden md:hidden bg-white border-t border-slate-100 shadow-lg absolute w-full left-0 top-20">
             <div class="px-4 pt-2 pb-6 space-y-2 flex flex-col text-center">
-                <a href="#problem" onclick="toggleMobileMenu()"
-                    class="block px-3 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg">Masalah</a>
                 <a href="#fitur" onclick="toggleMobileMenu()"
                     class="block px-3 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg">Fitur</a>
+                <a href="#carakerja" onclick="toggleMobileMenu()"
+                    class="block px-3 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg">Cara Kerja</a>
                 <a href="#harga" onclick="toggleMobileMenu()"
                     class="block px-3 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg">Harga</a>
-                <a href="#testimoni" onclick="toggleMobileMenu()"
-                    class="block px-3 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg">Testimoni</a>
                 <a href="#faq" onclick="toggleMobileMenu()"
                     class="block px-3 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg">FAQ</a>
-                <a href="app.html?auth=register"
+                <a href="#" onclick="toggleMobileMenu(); openModal(); trackEvent('click_hero_trial'); return false;"
                     class="block mt-4 px-3 py-3 bg-yellow-400 text-yellow-900 font-bold rounded-lg shadow-md text-center"><i
                         class="fa-solid fa-rocket"></i> Coba Gratis 1 Project</a>
             </div>
@@ -212,27 +208,23 @@
             </div>
             <h1
                 class="text-4xl md:text-6xl font-extrabold text-dark tracking-tight mb-6 leading-tight max-w-4xl mx-auto">
-                Klien Pilih Foto, <br class="hidden md:block" />
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-indigo-600">File Langsung Tersortir di Laptop</span>
+                Stop Sortir Foto dari <br class="hidden md:block" />
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-indigo-600">Screenshot Klien</span>
             </h1>
             <p class="text-lg md:text-xl text-slate-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-                Photo Selection membantu fotografer mengirim link pilihan foto ke klien, memantau status pemilihan, lalu menyortir file pilihan ke laptop dalam bentuk ZIP.
+                Kirim link galeri ke klien, biarkan mereka memilih foto dari HP, lalu sortir file pilihan langsung ke laptop tanpa cari satu per satu.
             </p>
             <div class="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-4 mb-3">
-                <a href="app.html?auth=register"
+                <a href="#" onclick="openModal(); trackEvent('click_hero_trial'); return false;"
                     class="w-full sm:w-auto px-12 py-4 bg-yellow-400 hover:bg-yellow-300 text-yellow-900 rounded-full font-bold text-xl transition shadow-lg hover:shadow-xl transform hover:-translate-y-1 border border-yellow-500 flex items-center justify-center gap-2">
                     <i class="fa-solid fa-rocket"></i> Coba Gratis 1 Project
                 </a>
-                <a href="https://t.me/kamadigitalcreative" target="_blank"
+                <a href="#carakerja"
                     class="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-50 text-slate-800 rounded-full font-bold text-lg transition shadow-md hover:shadow-lg transform hover:-translate-y-1 border border-slate-200 flex items-center justify-center gap-2">
-                    <i class="fa-brands fa-telegram text-[#229ED9] text-xl"></i> Tanya Admin via Telegram
-                </a>
-                <a href="https://www.instagram.com/kamadigitalcreative/" target="_blank"
-                    class="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-50 text-slate-800 rounded-full font-bold text-lg transition shadow-md hover:shadow-lg transform hover:-translate-y-1 border border-slate-200 flex items-center justify-center gap-2">
-                    <i class="fa-brands fa-instagram text-[#E1306C] text-xl"></i> Tanya via DM Instagram
+                    <i class="fa-solid fa-eye text-primary-600 text-xl"></i> Lihat Cara Kerjanya
                 </a>
             </div>
-            <p class="text-sm font-medium text-slate-500 mb-6">Gratis percobaan 1 project, akun aktif 1 bulan. Tidak auto-debit.</p>
+            <p class="text-sm font-medium text-slate-500 mb-6">Gratis 1 project, akun aktif 1 bulan, tanpa kartu kredit, tanpa auto-debit.</p>
             <div class="mt-6 flex justify-center">
                 <a href="#fitur"
                     class="text-slate-400 hover:text-primary-600 font-medium transition flex items-center gap-2 text-sm">
@@ -260,6 +252,72 @@
                         <i class="fa-solid fa-camera text-green-500 text-2xl drop-shadow-sm"></i> Freelance
                         Photographers</div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CARA KERJA SECTION -->
+    <section id="carakerja" class="py-20 bg-slate-50 border-t border-slate-200">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <span class="text-primary-600 font-bold tracking-wider uppercase text-sm">Alur Super Cepat</span>
+                <h2 class="text-3xl md:text-4xl font-bold mt-2 mb-4 text-dark">Cara Kerjanya Simpel</h2>
+                <p class="text-slate-600 text-lg">Photo Selection membantu fotografer mengirim galeri ke klien, memantau pilihan foto, dan menyortir file hasil pilihan dengan lebih cepat.</p>
+            </div>
+            <div class="relative">
+                <div class="hidden md:block absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-primary-100 to-indigo-100 rounded-full"></div>
+                <div class="space-y-12">
+                    <!-- Step 1 -->
+                    <div class="relative flex flex-col md:flex-row items-center justify-between">
+                        <div class="md:w-5/12 mb-6 md:mb-0 md:text-right px-4">
+                            <h3 class="text-xl font-bold text-dark mb-2">1. Buat Project & Upload Foto</h3>
+                            <p class="text-slate-600">Buat project baru di dashboard, lalu upload foto-foto yang akan dipilih klien.</p>
+                        </div>
+                        <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center w-12 h-12 rounded-full bg-primary-600 text-white font-bold text-xl border-4 border-slate-50 z-10 shadow-md">1</div>
+                        <div class="md:w-5/12 px-4 hidden md:block"></div>
+                    </div>
+                    <!-- Step 2 -->
+                    <div class="relative flex flex-col md:flex-row items-center justify-between">
+                        <div class="md:w-5/12 px-4 hidden md:block"></div>
+                        <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center w-12 h-12 rounded-full bg-primary-600 text-white font-bold text-xl border-4 border-slate-50 z-10 shadow-md">2</div>
+                        <div class="md:w-5/12 mt-6 md:mt-0 px-4">
+                            <h3 class="text-xl font-bold text-dark mb-2">2. Bagikan Link ke Klien</h3>
+                            <p class="text-slate-600">Kirim link unik dan aman ke klien via WhatsApp. Tidak perlu install aplikasi tambahan.</p>
+                        </div>
+                    </div>
+                    <!-- Step 3 -->
+                    <div class="relative flex flex-col md:flex-row items-center justify-between">
+                        <div class="md:w-5/12 mb-6 md:mb-0 md:text-right px-4">
+                            <h3 class="text-xl font-bold text-dark mb-2">3. Klien Memilih dari HP</h3>
+                            <p class="text-slate-600">Klien membuka galeri, melihat foto, dan memilih favorit mereka langsung dari HP dengan mudah.</p>
+                        </div>
+                        <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center w-12 h-12 rounded-full bg-primary-600 text-white font-bold text-xl border-4 border-slate-50 z-10 shadow-md">3</div>
+                        <div class="md:w-5/12 px-4 hidden md:block"></div>
+                    </div>
+                    <!-- Step 4 -->
+                    <div class="relative flex flex-col md:flex-row items-center justify-between">
+                        <div class="md:w-5/12 px-4 hidden md:block"></div>
+                        <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center w-12 h-12 rounded-full bg-primary-600 text-white font-bold text-xl border-4 border-slate-50 z-10 shadow-md">4</div>
+                        <div class="md:w-5/12 mt-6 md:mt-0 px-4">
+                            <h3 class="text-xl font-bold text-dark mb-2">4. Fotografer Melihat Hasil</h3>
+                            <p class="text-slate-600">Hasil pilihan klien tersimpan otomatis di dashboard Anda secara real-time. Tidak ada lagi screenshot atau list panjang.</p>
+                        </div>
+                    </div>
+                    <!-- Step 5 -->
+                    <div class="relative flex flex-col md:flex-row items-center justify-between">
+                        <div class="md:w-5/12 mb-6 md:mb-0 md:text-right px-4">
+                            <h3 class="text-xl font-bold text-dark mb-2">5. Sortir Lokal di Laptop</h3>
+                            <p class="text-slate-600">Gunakan fitur Sortir Lokal kami, file RAW pilihan klien langsung tersusun otomatis.</p>
+                        </div>
+                        <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center w-12 h-12 rounded-full bg-primary-600 text-white font-bold text-xl border-4 border-slate-50 z-10 shadow-md">5</div>
+                        <div class="md:w-5/12 px-4 hidden md:block"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-16 text-center">
+                <a href="#" onclick="openModal(); trackEvent('click_carakerja_trial'); return false;" class="inline-flex items-center gap-2 px-8 py-3.5 bg-primary-600 hover:bg-primary-700 text-white rounded-full font-bold transition shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                    Coba Alur Ini Gratis <i class="fa-solid fa-arrow-right"></i>
+                </a>
             </div>
         </div>
     </section>
@@ -406,6 +464,68 @@
                         <p class="text-slate-600">Pasang logo studio Anda sendiri di halaman galeri klien. Tingkatkan
                             prestise dan profesionalitas brand Anda.</p>
                     </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DEMO VISUAL LOCAL SORTER SECTION -->
+    <section id="demo-sorter" class="py-20 bg-slate-800 text-white border-t border-slate-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="order-2 lg:order-1">
+                    <div class="bg-slate-900 rounded-2xl p-6 border border-slate-700 shadow-2xl relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-500 to-indigo-500"></div>
+                        <div class="flex items-center justify-between mb-6 border-b border-slate-800 pb-4">
+                            <div class="flex items-center gap-2 text-slate-300">
+                                <i class="fa-solid fa-folder-open text-primary-400"></i> Local Sorter V2.0
+                            </div>
+                            <div class="flex gap-1.5">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 flex items-center justify-between">
+                                <span class="text-slate-400 text-sm">Target Folder (RAW/JPEG)</span>
+                                <span class="text-primary-300 text-xs font-mono bg-primary-900/30 px-2 py-1 rounded">D:\Wedding\Sarah_John</span>
+                            </div>
+                            <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 flex items-center justify-between">
+                                <span class="text-slate-400 text-sm">Pilihan Klien</span>
+                                <span class="text-green-400 text-xs font-bold bg-green-900/30 px-2 py-1 rounded">50 Files Ditemukan</span>
+                            </div>
+                            <button class="w-full mt-4 bg-primary-600 hover:bg-primary-500 text-white font-bold py-3 rounded-xl transition flex justify-center items-center gap-2">
+                                <i class="fa-solid fa-play"></i> Mulai Sortir Otomatis
+                            </button>
+                            <div class="mt-4 pt-4 border-t border-slate-700 flex items-center justify-between text-xs text-slate-400">
+                                <span>Status: <span class="text-green-400">Selesai (0.8 detik)</span></span>
+                                <span>Tersalin ke folder: 📁 Terpilih</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="order-1 lg:order-2">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4 text-white">Fitur "Killer" Kami: <span class="text-primary-400">Sortir Lokal</span></h2>
+                    <p class="text-slate-300 text-lg mb-6 leading-relaxed">
+                        Anda tidak perlu lagi mencari file mentah (RAW) satu per satu di folder laptop Anda. Cukup arahkan folder foto Anda, klik satu tombol, dan aplikasi kami akan otomatis membuat folder khusus berisi foto-foto yang dipilih klien.
+                    </p>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-start">
+                            <i class="fa-solid fa-bolt text-yellow-400 mt-1 mr-4"></i>
+                            <div>
+                                <h4 class="font-bold text-white">Kecepatan Super</h4>
+                                <p class="text-slate-400 text-sm">Menyortir ratusan foto RAW hanya butuh waktu hitungan detik, bukan berjam-jam.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa-solid fa-shield-halved text-green-400 mt-1 mr-4"></i>
+                            <div>
+                                <h4 class="font-bold text-white">100% Aman & Offline</h4>
+                                <p class="text-slate-400 text-sm">File RAW Anda tidak perlu diupload. Semua proses sortir terjadi langsung di laptop Anda.</p>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -616,7 +736,7 @@
                 class="max-w-3xl mx-auto mb-14 bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center shadow-sm">
                 <p class="text-yellow-800 font-medium">
                     <i class="fa-solid fa-star text-yellow-500 mr-2"></i>
-                    <strong class="font-bold">Promo Spesial Peluncuran:</strong> Gratis percobaan 1 project, akun aktif 1 bulan!
+                    <strong class="font-bold">Promo Spesial:</strong> Gratis percobaan 1 project, akun aktif 1 bulan, tanpa kartu kredit, tanpa auto-debit!
                 </p>
             </div>
 
@@ -646,7 +766,7 @@
                         <li class="flex items-center text-slate-600"><i
                                 class="fa-solid fa-check text-green-500 mr-3 w-5"></i> Basic Support</li>
                     </ul>
-                    <a href="app.html?auth=register"
+                    <a href="#" onclick="openModal(); trackEvent('click_harga_trial'); return false;"
                         class="w-full py-3.5 px-6 rounded-xl font-bold border-2 border-primary-100 text-primary-600 hover:bg-primary-50 hover:border-primary-200 transition block text-center">Coba Gratis Dulu</a>
                 </div>
 
@@ -681,7 +801,7 @@
                         <li class="flex items-center text-slate-300"><i
                                 class="fa-solid fa-check text-primary-400 mr-3 w-5"></i> VIP Support 24/7</li>
                     </ul>
-                    <a href="app.html?auth=register"
+                    <a href="#" onclick="openModal(); trackEvent('click_harga_trial'); return false;"
                         class="w-full py-3.5 px-6 rounded-xl font-bold bg-primary-600 text-white hover:bg-primary-500 shadow-[0_0_15px_rgba(59,130,246,0.4)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] transition transform hover:-translate-y-0.5 block text-center">Mulai dari 1 Project Gratis</a>
                 </div>
 
@@ -710,7 +830,7 @@
                         <li class="flex items-center text-slate-600"><i
                                 class="fa-solid fa-check text-green-500 mr-3 w-5"></i> Prioritas Support</li>
                     </ul>
-                    <a href="app.html?auth=register"
+                    <a href="#" onclick="openModal(); trackEvent('click_harga_trial'); return false;"
                         class="w-full py-3.5 px-6 rounded-xl font-bold border-2 border-primary-100 text-primary-600 hover:bg-primary-50 hover:border-primary-200 transition block text-center">Coba Gratis Dulu</a>
                 </div>
             </div>
@@ -746,19 +866,18 @@
                         <div>
                             <h5 class="font-bold text-dark text-lg leading-tight">Kama Visual</h5>
                             <div class="flex items-center gap-1 text-primary-600 text-xs font-semibold mt-0.5">
-                                <i class="fa-solid fa-circle-check"></i> Verified
+                                <i class="fa-solid fa-circle-check"></i> Verified Studio
                             </div>
                         </div>
                     </div>
                     <div class="flex-grow flex flex-col justify-end gap-3">
                         <div
                             class="bg-slate-50 border border-slate-100 text-slate-700 p-4 rounded-2xl rounded-tl-none text-sm leading-relaxed relative">
-                            "Bro, fitur auto sortnya gila sih. Biasa nyortir raw kelar subuh, ini jam 10 malem udh bisa
-                            ngopi wkwk. Thanks banget yak!"
+                            "Fitur auto sort-nya luar biasa membantu. Pekerjaan menyortir foto mentah yang biasanya memakan waktu hingga dini hari, kini bisa selesai dengan sangat cepat."
                         </div>
                         <div
                             class="bg-primary-50 text-primary-800 p-3 rounded-2xl rounded-tr-none text-xs ml-auto max-w-[85%] border border-primary-100 font-medium">
-                            Siaap bro! Lancar terus projectnya 🔥
+                            Terima kasih, semoga sukses selalu projectnya! 🔥
                         </div>
                     </div>
                 </div>
@@ -779,12 +898,11 @@
                     <div class="flex-grow flex flex-col justify-end gap-3">
                         <div
                             class="bg-slate-50 border border-slate-100 text-slate-700 p-4 rounded-2xl rounded-tl-none text-sm leading-relaxed relative">
-                            "Bli, asli ngebantu bgt buat wedding. Klien ga pusing lg milih foto, tinggal tap tap dr HP
-                            doang. Udah gaperlu kirim GDrive lg."
+                            "Sangat membantu alur kerja untuk dokumentasi acara. Klien jadi lebih mudah memilih foto langsung dari smartphone mereka."
                         </div>
                         <div
                             class="bg-primary-50 text-primary-800 p-3 rounded-2xl rounded-tr-none text-xs ml-auto max-w-[85%] border border-primary-100 font-medium">
-                            Mantap bli, klien hepi kita tenang 🚀
+                            Kepuasan klien adalah prioritas kita bersama 🚀
                         </div>
                     </div>
                 </div>
@@ -805,186 +923,11 @@
                     <div class="flex-grow flex flex-col justify-end gap-3">
                         <div
                             class="bg-slate-50 border border-slate-100 text-slate-700 p-4 rounded-2xl rounded-tl-none text-sm leading-relaxed relative">
-                            "Akhirnya ada yg ngerti penderitaan FG wkkw. Sortir RAW 2000 foto cuma 1 menitan td. Goks!
-                            Fix ga akan balik ngetik manual lg."
+                            "Sistem ini menjawab permasalahan yang sering dialami fotografer. Menyortir 2000 file foto RAW kini hanya memakan waktu beberapa menit."
                         </div>
                         <div
                             class="bg-primary-50 text-primary-800 p-3 rounded-2xl rounded-tr-none text-xs ml-auto max-w-[85%] border border-primary-100 font-medium">
-                            Hahaha selamat tinggal begadang kang!
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 4: Make Visual -->
-                <div
-                    class="snap-center shrink-0 w-[280px] sm:w-[320px] md:w-[380px] bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-slate-100 p-6 flex flex-col h-[320px] transition-all">
-                    <div class="flex items-center gap-4 mb-4 border-b border-slate-50 pb-4">
-                        <img src="https://ui-avatars.com/api/?name=Make+Visual&background=e2e8f0&color=475569"
-                            alt="Make" class="w-12 h-12 rounded-full object-cover bg-slate-100">
-                        <div>
-                            <h5 class="font-bold text-dark text-lg leading-tight">Make Visual</h5>
-                            <div class="flex items-center gap-1 text-primary-600 text-xs font-semibold mt-0.5">
-                                <i class="fa-solid fa-circle-check"></i> Verified Fotografer
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex-grow flex flex-col justify-end gap-3">
-                        <div
-                            class="bg-slate-50 border border-slate-100 text-slate-700 p-4 rounded-2xl rounded-tl-none text-sm leading-relaxed relative">
-                            "Yg paling gw suka klien ga bisa curang lebih dr kuota yg ditentuin 😂 Dulu sering bgt diem2
-                            nambahin pilihan trus minta free."
-                        </div>
-                        <div
-                            class="bg-primary-50 text-primary-800 p-3 rounded-2xl rounded-tr-none text-xs ml-auto max-w-[85%] border border-primary-100 font-medium">
-                            Nah bener, sekarang auto kekunci amann 👍
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 5: Gusde Project -->
-                <div
-                    class="snap-center shrink-0 w-[280px] sm:w-[320px] md:w-[380px] bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-slate-100 p-6 flex flex-col h-[320px] transition-all">
-                    <div class="flex items-center gap-4 mb-4 border-b border-slate-50 pb-4">
-                        <img src="https://ui-avatars.com/api/?name=Gusde+Project&background=cbd5e1&color=334155"
-                            alt="Gusde" class="w-12 h-12 rounded-full object-cover bg-slate-100">
-                        <div>
-                            <h5 class="font-bold text-dark text-lg leading-tight">Gusde Project</h5>
-                            <div class="flex items-center gap-1 text-primary-600 text-xs font-semibold mt-0.5">
-                                <i class="fa-solid fa-circle-check"></i> Verified Fotografer
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex-grow flex flex-col justify-end gap-3">
-                        <div
-                            class="bg-slate-50 border border-slate-100 text-slate-700 p-4 rounded-2xl rounded-tl-none text-sm leading-relaxed relative">
-                            "Aman sentosa. Dulu sering miss edit file karna klien ngetik nama filenya typo. Skrg udh
-                            auto, ngurangin revisi banget bossku."
-                        </div>
-                        <div
-                            class="bg-primary-50 text-primary-800 p-3 rounded-2xl rounded-tr-none text-xs ml-auto max-w-[85%] border border-primary-100 font-medium">
-                            Minimalisir human error, mantap! 🍻
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 6: Navarta Film -->
-                <div
-                    class="snap-center shrink-0 w-[280px] sm:w-[320px] md:w-[380px] bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-slate-100 p-6 flex flex-col h-[320px] transition-all">
-                    <div class="flex items-center gap-4 mb-4 border-b border-slate-50 pb-4">
-                        <img src="https://ui-avatars.com/api/?name=Navarta+Film&background=f1f5f9&color=0f172a"
-                            alt="Navarta" class="w-12 h-12 rounded-full object-cover bg-slate-100">
-                        <div>
-                            <h5 class="font-bold text-dark text-lg leading-tight">Navarta Film</h5>
-                            <div class="flex items-center gap-1 text-primary-600 text-xs font-semibold mt-0.5">
-                                <i class="fa-solid fa-circle-check"></i> Verified Fotografer
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex-grow flex flex-col justify-end gap-3">
-                        <div
-                            class="bg-slate-50 border border-slate-100 text-slate-700 p-4 rounded-2xl rounded-tl-none text-sm leading-relaxed relative">
-                            "Keren euy, ga nyesel ngambil yg setaun lgsg. Client jd ngerasa seneng pelayanannya premium,
-                            editor di kantor apalagi 🍻"
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 7: Wine Photo Story -->
-                <div
-                    class="snap-center shrink-0 w-[280px] sm:w-[320px] md:w-[380px] bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-slate-100 p-6 flex flex-col h-[320px] transition-all">
-                    <div class="flex items-center gap-4 mb-4 border-b border-slate-50 pb-4">
-                        <img src="https://ui-avatars.com/api/?name=Wine+Photo&background=e2e8f0&color=475569" alt="Wine"
-                            class="w-12 h-12 rounded-full object-cover bg-slate-100">
-                        <div>
-                            <h5 class="font-bold text-dark text-lg leading-tight">Wine Photo Story</h5>
-                            <div class="flex items-center gap-1 text-primary-600 text-xs font-semibold mt-0.5">
-                                <i class="fa-solid fa-circle-check"></i> Verified Fotografer
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex-grow flex flex-col justify-end gap-3">
-                        <div
-                            class="bg-slate-50 border border-slate-100 text-slate-700 p-4 rounded-2xl rounded-tl-none text-sm leading-relaxed relative">
-                            "Baru nyoba buat prewed kemaren. Klien pd muji UI galerinya gampang banget dipake, naikin
-                            prestige brand studio kita nih."
-                        </div>
-                        <div
-                            class="bg-primary-50 text-primary-800 p-3 rounded-2xl rounded-tr-none text-xs ml-auto max-w-[85%] border border-primary-100 font-medium">
-                            Syukur deh kalau bantu ningkatin value brandnya kak ✨
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 8: By Diar -->
-                <div
-                    class="snap-center shrink-0 w-[280px] sm:w-[320px] md:w-[380px] bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-slate-100 p-6 flex flex-col h-[320px] transition-all">
-                    <div class="flex items-center gap-4 mb-4 border-b border-slate-50 pb-4">
-                        <img src="https://ui-avatars.com/api/?name=By+Diar&background=cbd5e1&color=334155" alt="Diar"
-                            class="w-12 h-12 rounded-full object-cover bg-slate-100">
-                        <div>
-                            <h5 class="font-bold text-dark text-lg leading-tight">By Diar</h5>
-                            <div class="flex items-center gap-1 text-primary-600 text-xs font-semibold mt-0.5">
-                                <i class="fa-solid fa-circle-check"></i> Verified Fotografer
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex-grow flex flex-col justify-end gap-3">
-                        <div
-                            class="bg-slate-50 border border-slate-100 text-slate-700 p-4 rounded-2xl rounded-tl-none text-sm leading-relaxed relative">
-                            "Nyesel baru tau sekarang. Ini nyelametin idup gue wkwk. Ga ada ceritanya mata sepet nyariin
-                            nama file satu2 anjir."
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 9: Dreambez Studio -->
-                <div
-                    class="snap-center shrink-0 w-[280px] sm:w-[320px] md:w-[380px] bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-slate-100 p-6 flex flex-col h-[320px] transition-all">
-                    <div class="flex items-center gap-4 mb-4 border-b border-slate-50 pb-4">
-                        <img src="https://ui-avatars.com/api/?name=Dreambez&background=f1f5f9&color=0f172a"
-                            alt="Dreambez" class="w-12 h-12 rounded-full object-cover bg-slate-100">
-                        <div>
-                            <h5 class="font-bold text-dark text-lg leading-tight">Dreambez Studio</h5>
-                            <div class="flex items-center gap-1 text-primary-600 text-xs font-semibold mt-0.5">
-                                <i class="fa-solid fa-circle-check"></i> Verified Studio
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex-grow flex flex-col justify-end gap-3">
-                        <div
-                            class="bg-slate-50 border border-slate-100 text-slate-700 p-4 rounded-2xl rounded-tl-none text-sm leading-relaxed relative">
-                            "UI/UX nya juara. Klienku yg ibu-ibu pejabat pada ngerti pakenya wkwk. The best lah
-                            PhotoSelection."
-                        </div>
-                        <div
-                            class="bg-primary-50 text-primary-800 p-3 rounded-2xl rounded-tr-none text-xs ml-auto max-w-[85%] border border-primary-100 font-medium">
-                            User friendly emang prioritas kita kak 😁
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 10: Genar Visual -->
-                <div
-                    class="snap-center shrink-0 w-[280px] sm:w-[320px] md:w-[380px] bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-slate-100 p-6 flex flex-col h-[320px] transition-all">
-                    <div class="flex items-center gap-4 mb-4 border-b border-slate-50 pb-4">
-                        <img src="https://ui-avatars.com/api/?name=Genar+Visual&background=e2e8f0&color=475569"
-                            alt="Genar" class="w-12 h-12 rounded-full object-cover bg-slate-100">
-                        <div>
-                            <h5 class="font-bold text-dark text-lg leading-tight">Genar Visual</h5>
-                            <div class="flex items-center gap-1 text-primary-600 text-xs font-semibold mt-0.5">
-                                <i class="fa-solid fa-circle-check"></i> Verified Fotografer
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex-grow flex flex-col justify-end gap-3">
-                        <div
-                            class="bg-slate-50 border border-slate-100 text-slate-700 p-4 rounded-2xl rounded-tl-none text-sm leading-relaxed relative">
-                            "Yg foto sih udh mantep parah ngirit waktu bgt. Btw ini kedepannya bisa dipake buat sortir
-                            footage video jg ga? wkwk ngarep."
-                        </div>
-                        <div
-                            class="bg-primary-50 text-primary-800 p-3 rounded-2xl rounded-tr-none text-xs ml-auto max-w-[85%] border border-primary-100 font-medium">
-                            Ditunggu kejutannya aja kak! Utk skrg yg foto dulu yaa 😆
+                            Senang bisa membantu efisiensi waktu kerja Anda!
                         </div>
                     </div>
                 </div>
@@ -1690,7 +1633,23 @@
             var savedLang = localStorage.getItem('ps_lang') || 'id';
             applyLandingLanguage(savedLang);
         });
+
+        function trackEvent(eventName) {
+            console.log('Event tracked:', eventName);
+            // Tambahkan Google Analytics / Pixel logic di sini
+        }
     </script>
+
+    <!-- Sticky CTA Mobile -->
+    <div class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 p-4 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex justify-between items-center gap-3">
+        <div class="flex flex-col">
+            <span class="text-xs text-slate-500 font-medium">Coba tanpa risiko</span>
+            <span class="text-sm font-bold text-dark">Gratis 1 Project</span>
+        </div>
+        <a href="#" onclick="openModal(); trackEvent('click_sticky_trial'); return false;" class="bg-yellow-400 hover:bg-yellow-300 text-yellow-900 px-6 py-2.5 rounded-full font-bold text-sm shadow-md transition whitespace-nowrap">
+            Coba Sekarang
+        </a>
+    </div>
 </body>
 
 </html>
