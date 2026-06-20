@@ -884,6 +884,19 @@
                         <h2 class="text-xl font-bold text-kama-800 tracking-tight">Daftar Akun</h2>
                         <p class="text-gray-500 text-xs mt-1">Daftar sebagai fotografer baru</p>
                     </div>
+
+                    <div class="mb-4">
+                        <button type="button" onclick="Swal.fire('Info', 'Pendaftaran dengan Google sedang dalam penyesuaian sistem.', 'info')" class="w-full flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 py-2.5 rounded-xl hover:bg-gray-50 font-medium text-sm shadow-sm transition-colors">
+                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="w-5 h-5">
+                            <span>Daftar dengan Google</span>
+                        </button>
+                    </div>
+                    <div class="flex items-center mb-4">
+                        <div class="flex-grow h-px bg-gray-200"></div>
+                        <span class="px-3 text-xs text-gray-400">atau</span>
+                        <div class="flex-grow h-px bg-gray-200"></div>
+                    </div>
+
                     <form onsubmit="handleRegister(event)" novalidate>
                         <div class="space-y-4 mb-6">
                             <input type="text" id="reg_nama" autocomplete="name" name="name" required
