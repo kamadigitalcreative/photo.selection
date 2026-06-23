@@ -1434,17 +1434,23 @@
                                     </div>
                                 </div>
 
-                                <!-- Tab Filters -->
-                                <div
-                                    class="flex gap-2 mb-5 overflow-x-auto hide-scrollbar p-1.5 bg-gray-100/50 rounded-xl w-fit border border-gray-100">
-                                    <button onclick="filterProjectsTab('Semua', this)"
-                                        class="px-4 py-2 bg-white rounded-lg shadow-sm text-blue-600 font-bold text-sm whitespace-nowrap border border-gray-100 transition-all">Semua
-                                        Project</button>
-                                    <button onclick="filterProjectsTab('Menunggu Klien', this)"
-                                        class="px-4 py-2 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-white/60 font-medium text-sm whitespace-nowrap transition-all">Menunggu
-                                        Klien</button>
-                                    <button onclick="filterProjectsTab('Selesai', this)"
-                                        class="px-4 py-2 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-white/60 font-medium text-sm whitespace-nowrap transition-all">Selesai</button>
+                                <!-- Tab Filters & View Toggles -->
+                                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
+                                    <div
+                                        class="flex gap-2 overflow-x-auto hide-scrollbar p-1.5 bg-gray-100/50 rounded-xl w-fit border border-gray-100">
+                                        <button onclick="filterProjectsTab('Semua', this)"
+                                            class="px-4 py-2 bg-white rounded-lg shadow-sm text-blue-600 font-bold text-sm whitespace-nowrap border border-gray-100 transition-all">Semua
+                                            Project</button>
+                                        <button onclick="filterProjectsTab('Menunggu Klien', this)"
+                                            class="px-4 py-2 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-white/60 font-medium text-sm whitespace-nowrap transition-all">Menunggu
+                                            Klien</button>
+                                        <button onclick="filterProjectsTab('Selesai', this)"
+                                            class="px-4 py-2 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-white/60 font-medium text-sm whitespace-nowrap transition-all">Selesai</button>
+                                    </div>
+                                    <div class="flex gap-2 bg-gray-100/50 p-1.5 rounded-xl border border-gray-100 hidden sm:flex">
+                                        <button onclick="toggleProjectView('list')" id="btn-view-list" class="px-3 py-1.5 bg-white text-blue-600 rounded-lg shadow-sm font-medium transition-all" title="List View"><i class="fa-solid fa-list"></i></button>
+                                        <button onclick="toggleProjectView('grid')" id="btn-view-grid" class="px-3 py-1.5 text-gray-500 hover:text-gray-800 hover:bg-white/60 rounded-lg font-medium transition-all" title="Grid View"><i class="fa-solid fa-border-all"></i></button>
+                                    </div>
                                 </div>
 
                                 <!-- Project List Container (Replaces old table) -->
@@ -1566,10 +1572,6 @@
                                 <p class="text-sm text-gray-500 mt-1">Monitoring progres pemilihan foto oleh klien Anda.
                                 </p>
                             </div>
-                            <button onclick="loadClientProgress()"
-                                class="bg-white border border-gray-200 text-gray-700 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors shadow-sm text-sm font-semibold flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-rotate-right text-blue-500"></i> Refresh Data
-                            </button>
                         </div>
 
                         <!-- 3 Metric Cards -->
@@ -6480,6 +6482,23 @@
         }
 
         // --- PROJECTS LOGIC ---
+        var currentProjectView = 'list';
+        function toggleProjectView(view) {
+            currentProjectView = view;
+            var btnList = document.getElementById('btn-view-list');
+            var btnGrid = document.getElementById('btn-view-grid');
+            if (view === 'grid') {
+                if(btnGrid) btnGrid.className = 'px-3 py-1.5 bg-white text-blue-600 rounded-lg shadow-sm font-medium transition-all';
+                if(btnList) btnList.className = 'px-3 py-1.5 text-gray-500 hover:text-gray-800 hover:bg-white/60 rounded-lg font-medium transition-all';
+            } else {
+                if(btnList) btnList.className = 'px-3 py-1.5 bg-white text-blue-600 rounded-lg shadow-sm font-medium transition-all';
+                if(btnGrid) btnGrid.className = 'px-3 py-1.5 text-gray-500 hover:text-gray-800 hover:bg-white/60 rounded-lg font-medium transition-all';
+            }
+            if (window.lastProjectsData) {
+                renderProjectsTable(window.lastProjectsData);
+            }
+        }
+
         async function loadDataProjects() {
             // --- SECURITY PATCH: Laci memori dikunci spesifik menggunakan Username ---
             var cacheKey = 'ps_cache_projects_' + (currentUser ? currentUser.username : 'guest');
@@ -6533,9 +6552,12 @@
         }
 
         function renderProjectsTable(data) {
+            window.lastProjectsData = data;
             var tbody = document.getElementById('projectTableBody');
             if (!tbody) return;
             tbody.innerHTML = '';
+            var isGrid = currentProjectView === 'grid';
+            tbody.className = isGrid ? 'grid grid-cols-1 xl:grid-cols-2 gap-4' : 'flex flex-col gap-3';
 
             var statActive = 0, statSubmitted = 0, statReview = 0, statTotal = data ? data.length : 0;
             if (data) {
@@ -6613,7 +6635,9 @@
                 var statusHtml = '<div class="bg-' + statusColor + '-50 text-' + statusColor + '-700 text-[11px] px-2.5 py-1 rounded-md font-bold flex items-center gap-1.5 w-fit mb-1">' + pulseHtml + statusDisplay + '</div>';
 
                 var card = document.createElement('div');
-                card.className = "bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row gap-4 sm:gap-6 sm:items-center hover:shadow-md hover:border-blue-100 transition-all relative group";
+                card.className = isGrid 
+                    ? "bg-white border border-gray-100 rounded-2xl p-5 flex flex-col justify-between gap-4 hover:shadow-md hover:border-blue-100 transition-all relative group h-full"
+                    : "bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row gap-4 sm:gap-6 sm:items-center hover:shadow-md hover:border-blue-100 transition-all relative group";
                 card.setAttribute('data-status', statusClient);
 
                 var isUserAdmin = currentUser && currentUser.role === 'Admin';
@@ -6640,33 +6664,38 @@
                 var iconAvatar = '<div class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-full sm:rounded-2xl border border-blue-200 shadow-sm flex items-center justify-center text-blue-500 group-hover:scale-105 transition-transform"><i class="fa-solid fa-images text-xl sm:text-2xl opacity-80"></i></div>';
 
                 card.innerHTML =
-                    // Left: Clean Avatar
-                    iconAvatar +
+                    // Left: Clean Avatar (or Header for grid)
+                    (isGrid ? '<div class="flex items-start justify-between w-full">' + iconAvatar + '<div class="flex flex-col items-end">' + statusHtml + '<span class="text-[10px] font-bold text-gray-500 mt-1">' + progressPct + '%</span></div></div>' : iconAvatar) +
 
                     // Middle: Project Info
-                    '<div class="flex-1 min-w-0 flex flex-col justify-center">' +
+                    '<div class="flex-1 min-w-0 flex flex-col justify-center ' + (isGrid ? 'mt-2' : '') + '">' +
                     '<div class="flex items-center gap-2 mb-0.5"><span class="text-[10px] text-gray-400 font-bold uppercase tracking-wide">' + dateStr + '</span>' + ownerBadge + '</div>' +
                     '<div class="flex items-center gap-2">' +
                     '<h3 class="font-bold text-gray-800 truncate text-base sm:text-lg">' + safeHTMLName + '</h3>' +
                     '</div>' +
-                    '<div class="flex items-center gap-3 mt-1.5 text-[11px] text-gray-500">' +
-                    '<span class="flex items-center gap-1.5 truncate bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100"><i class="fa-solid fa-link text-gray-400"></i> <span class="truncate">' + displayedTokenOrLink + '</span></span>' +
+                    '<div class="flex flex-wrap items-center gap-2 mt-1.5 text-[11px] text-gray-500">' +
+                    '<span class="flex items-center gap-1.5 truncate bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100 max-w-full"><i class="fa-solid fa-link text-gray-400"></i> <span class="truncate">' + displayedTokenOrLink + '</span></span>' +
                     '<span class="flex items-center gap-1.5 truncate bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100"><i class="fa-solid fa-lock text-gray-400"></i> <span class="truncate">' + safePass + '</span></span>' +
                     '</div>' +
                     '</div>' +
 
-                    // Right-ish: Status and Progress
-                    '<div class="flex-shrink-0 w-full sm:w-[160px] flex flex-col justify-center gap-1 mt-2 sm:mt-0">' +
-                    '<div class="flex items-center justify-between">' +
-                    statusHtml +
-                    '<span class="text-[10px] font-bold text-gray-500">' + progressPct + '%</span>' +
-                    '</div>' +
-                    '<div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden mb-1"><div class="' + progressColor + ' h-full rounded-full transition-all duration-500" style="width: ' + progressPct + '%"></div></div>' +
-                    '<div class="text-[10px] text-gray-400 text-right">' + (isEnLocale ? 'Selected ' : 'Terpilih ') + '<b class="text-gray-700">' + fotoTerpilih + '</b> / ' + maxFoto + '</div>' +
-                    '</div>' +
+                    // Right-ish: Status and Progress (List view) or Progress Bar (Grid view)
+                    (isGrid 
+                        ? '<div class="flex flex-col gap-1 mt-2 w-full">' +
+                          '<div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden mb-1"><div class="' + progressColor + ' h-full rounded-full transition-all duration-500" style="width: ' + progressPct + '%"></div></div>' +
+                          '<div class="text-[10px] text-gray-400 text-right">' + (isEnLocale ? 'Selected ' : 'Terpilih ') + '<b class="text-gray-700">' + fotoTerpilih + '</b> / ' + maxFoto + '</div>' +
+                          '</div>'
+                        : '<div class="flex-shrink-0 w-full sm:w-[160px] flex flex-col justify-center gap-1 mt-2 sm:mt-0">' +
+                          '<div class="flex items-center justify-between">' +
+                          statusHtml +
+                          '<span class="text-[10px] font-bold text-gray-500">' + progressPct + '%</span>' +
+                          '</div>' +
+                          '<div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden mb-1"><div class="' + progressColor + ' h-full rounded-full transition-all duration-500" style="width: ' + progressPct + '%"></div></div>' +
+                          '<div class="text-[10px] text-gray-400 text-right">' + (isEnLocale ? 'Selected ' : 'Terpilih ') + '<b class="text-gray-700">' + fotoTerpilih + '</b> / ' + maxFoto + '</div>' +
+                          '</div>') +
 
                     // Far Right: Actions
-                    '<div class="flex-shrink-0 flex items-center justify-end sm:justify-center gap-0.5 w-full sm:w-auto mt-3 sm:mt-0 pt-3 sm:pt-0 border-t border-gray-100 sm:border-0">' +
+                    '<div class="flex-shrink-0 flex items-center ' + (isGrid ? 'justify-end gap-1 w-full border-t border-gray-100 pt-3 mt-1' : 'justify-end sm:justify-center gap-0.5 w-full sm:w-auto mt-3 sm:mt-0 pt-3 sm:pt-0 border-t border-gray-100 sm:border-0') + '">' +
                     actionHtml +
                     '</div>';
 
@@ -8802,7 +8831,11 @@
 
             if (cachedStatus && !isSilent) {
                 rawStatusData = JSON.parse(cachedStatus);
-                renderClientProgress(rawStatusData);
+                if (typeof filterClientStatus === 'function' && document.getElementById('search-client-status') && document.getElementById('search-client-status').value) {
+                    filterClientStatus();
+                } else {
+                    renderClientProgress(rawStatusData);
+                }
                 // Catatan: Tulisan "Syncing..." yang mengganggu sudah dihapus total
             } else if (!cachedStatus && !isSilent) {
                 startLoading("Memuat Status...");
@@ -8821,7 +8854,11 @@
                     if (JSON.stringify(res.data.data) !== cachedStatus) {
                         rawStatusData = res.data.data;
                         localStorage.setItem(cacheKey, JSON.stringify(rawStatusData));
-                        renderClientProgress(rawStatusData);
+                        if (typeof filterClientStatus === 'function' && document.getElementById('search-client-status') && document.getElementById('search-client-status').value) {
+                            filterClientStatus();
+                        } else {
+                            renderClientProgress(rawStatusData);
+                        }
                     }
                 } else {
                     var errMsg = res.message || res.data?.message;
