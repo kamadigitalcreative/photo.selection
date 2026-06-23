@@ -4090,7 +4090,13 @@
                 class="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl transition-transform duration-300 bg-black/50 relative z-40 origin-center scale-95">
 
             <div
-                class="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 mt-4 bg-black/60 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 shadow-xl">
+                class="relative flex flex-col sm:flex-row items-center gap-3 sm:gap-6 mt-4 bg-black/60 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 shadow-xl z-50">
+                
+                <div id="viewerNoteContainer" class="hidden absolute bottom-full left-1/2 -translate-x-1/2 mb-4 w-[90vw] sm:w-[500px] bg-black/90 backdrop-blur-md px-6 py-4 rounded-2xl border border-blue-500/30 shadow-2xl transition-all duration-300 z-[100]">
+                    <p id="tx-note-title" class="text-xs font-bold text-blue-300 uppercase tracking-wide mb-2">Catatan / Revisi Foto</p>
+                    <textarea id="viewerNoteInput" oninput="saveCurrentNote()" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-sm text-white focus:bg-white/20 focus:border-blue-500 outline-none transition-all placeholder-gray-400" rows="3" placeholder="Contoh: Tolong hapus orang di background..."></textarea>
+                </div>
+
                 <p id="viewerCaption" class="text-white font-semibold text-sm tracking-wide"></p>
                 <div class="w-px h-6 bg-white/20 hidden sm:block"></div>
                 <div class="flex gap-2">
@@ -4102,11 +4108,6 @@
                         <i class="fa-solid fa-check"></i> <span>Pilih Foto</span>
                     </button>
                 </div>
-            </div>
-            
-            <div id="viewerNoteContainer" class="hidden mt-3 w-[90%] max-w-lg bg-black/80 backdrop-blur-md px-6 py-4 rounded-2xl border border-blue-500/30 shadow-xl transition-all duration-300">
-                <p id="tx-note-title" class="text-xs font-bold text-blue-300 uppercase tracking-wide mb-2">Catatan / Revisi Foto</p>
-                <textarea id="viewerNoteInput" oninput="saveCurrentNote()" class="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-sm text-white focus:bg-white/20 focus:border-blue-500 outline-none transition-all placeholder-gray-400" rows="3" placeholder="Contoh: Tolong hapus orang di background..."></textarea>
             </div>
         </div>
     </div>
