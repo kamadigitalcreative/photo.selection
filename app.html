@@ -6686,6 +6686,23 @@
 
                 var statusHtml = '<div class="bg-' + statusColor + '-50 text-' + statusColor + '-700 text-[11px] px-2.5 py-1 rounded-md font-bold flex items-center gap-1.5 w-fit mb-1">' + pulseHtml + statusDisplay + '</div>';
 
+                var lastUpdateRaw = row['Last Update'];
+                var lastSeenStr = '-';
+                if (lastUpdateRaw && lastUpdateRaw !== '') {
+                    try {
+                        var d = new Date(lastUpdateRaw);
+                        if (!isNaN(d.getTime())) {
+                            var mth = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+                            var dDate = d.getDate();
+                            var dMth = mth[d.getMonth()];
+                            var dYr = d.getFullYear();
+                            var dHr = String(d.getHours()).padStart(2, '0');
+                            var dMin = String(d.getMinutes()).padStart(2, '0');
+                            lastSeenStr = dDate + " " + dMth + " " + dYr + ", " + dHr + ":" + dMin;
+                        }
+                    } catch(e) {}
+                }
+
                 var card = document.createElement('div');
                 card.className = isGrid 
                     ? "bg-white border border-gray-100 rounded-2xl p-5 flex flex-col justify-between gap-4 hover:shadow-md hover:border-blue-100 transition-all relative group h-full"
@@ -6712,6 +6729,8 @@
                     '<i class="fa-solid ' + wmIcon + '"></i></button>' +
                     '<button onclick="editDeadlinePrompt(\'' + row.ID + '\', \'' + safeJSName + '\', \'' + (row['Deadline'] || '') + '\')" class="text-gray-400 hover:text-purple-500 hover:bg-purple-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Edit Batas Waktu Klien">' +
                     '<i class="fa-solid fa-stopwatch"></i></button>' +
+                    '<button onclick="copyForLightroom(\'' + row.ID + '\')" class="text-gray-400 hover:text-blue-500 hover:bg-blue-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Copy for Lightroom">' +
+                    '<i class="fa-solid fa-file-export"></i></button>' +
                     '<button onclick="deleteProject(\'' + row.ID + '\')" class="text-gray-400 hover:text-red-600 hover:bg-red-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Hapus Project">' +
                     '<i class="fa-solid fa-trash-can"></i></button>';
 
@@ -6731,6 +6750,8 @@
                     '<i class="fa-solid ' + wmIcon + '"></i></button>' +
                     '<button onclick="editDeadlinePrompt(\'' + row.ID + '\', \'' + safeJSName + '\', \'' + (row['Deadline'] || '') + '\')" class="' + btnClassGrid.replace('blue', 'purple') + '" title="Edit Batas Waktu Klien">' +
                     '<i class="fa-solid fa-stopwatch"></i></button>' +
+                    '<button onclick="copyForLightroom(\'' + row.ID + '\')" class="' + btnClassGrid.replace('blue', 'blue') + '" title="Copy for Lightroom">' +
+                    '<i class="fa-solid fa-file-export"></i></button>' +
                     '<button onclick="deleteProject(\'' + row.ID + '\')" class="' + btnClassGrid.replace('blue', 'red') + '" title="Hapus Project">' +
                     '<i class="fa-solid fa-trash-can"></i></button>';
 
@@ -6758,6 +6779,7 @@
                                 '<div class="text-[11px] text-slate-500 font-bold">' + (isEnLocale ? 'Selected ' : 'Terpilih ') + '<span class="' + (progressPct >= 100 ? 'text-green-500' : 'text-indigo-600') + ' text-base font-black">' + fotoTerpilih + '</span> <span class="text-slate-400 font-medium">/ ' + maxFoto + '</span></div>' +
                             '</div>' +
                             '<div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden shadow-inner"><div class="' + progressColor.replace('blue', 'indigo') + ' h-full rounded-full transition-all duration-1000 relative shadow-[0_0_12px_rgba(79,70,229,0.4)]" style="width: ' + progressPct + '%"></div></div>' +
+                            (lastSeenStr !== '-' ? '<div class="text-[10px] text-slate-400 mt-3 text-center"><i class="fa-regular fa-clock mr-1"></i>Terakhir Dilihat: <b>' + lastSeenStr + '</b></div>' : '') +
                         '</div>' +
                         '<div class="px-4 py-3 flex items-center justify-between gap-1 bg-slate-50/80 border-t border-slate-100">' +
                             actionHtmlGrid +
@@ -6786,7 +6808,10 @@
                         '<span class="text-[10px] font-bold text-gray-500">' + progressPct + '%</span>' +
                         '</div>' +
                         '<div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden mb-1"><div class="' + progressColor + ' h-full rounded-full transition-all duration-500" style="width: ' + progressPct + '%"></div></div>' +
+                        '<div class="flex justify-between items-center">' +
+                        (lastSeenStr !== '-' ? '<div class="text-[9px] text-gray-400" title="Terakhir dilihat"><i class="fa-regular fa-clock mr-0.5"></i>' + lastSeenStr + '</div>' : '<div></div>') +
                         '<div class="text-[10px] text-gray-400 text-right">' + (isEnLocale ? 'Selected ' : 'Terpilih ') + '<b class="text-gray-700">' + fotoTerpilih + '</b> / ' + maxFoto + '</div>' +
+                        '</div>' +
                         '</div>' +
 
                         // Far Right: Actions
@@ -6816,6 +6841,45 @@
                 "Pass : " + passText + "\n\n" +
                 "Terima kasih";
             doCopyText(textToCopy, 'Pesan link klien berhasil disalin.');
+        }
+
+        function copyForLightroom(projectId) {
+            if (!window.lastProjectsData) return;
+            var project = window.lastProjectsData.find(function(p) { return p.ID === projectId; });
+            if (!project) return;
+            
+            var listJson = project['Daftar Pilihan'];
+            if (!listJson || listJson === "") {
+                Swal.fire({ title: 'Kosong', text: 'Klien belum memilih foto apapun.', icon: 'info', confirmButtonColor: '#1e1e2d' });
+                return;
+            }
+            try {
+                var list = JSON.parse(listJson);
+                if (!list || list.length === 0) {
+                    Swal.fire({ title: 'Kosong', text: 'Klien belum memilih foto apapun.', icon: 'info', confirmButtonColor: '#1e1e2d' });
+                    return;
+                }
+                var fileNames = list.map(function(item) {
+                    var name = item.name || '';
+                    // Hapus ekstensi (.jpg, .jpeg, .png, dll)
+                    var lastDotIndex = name.lastIndexOf('.');
+                    if (lastDotIndex > 0) {
+                        name = name.substring(0, lastDotIndex);
+                    }
+                    return name;
+                }).filter(Boolean);
+                
+                var copyText = fileNames.join(', ');
+                if (!copyText) {
+                    Swal.fire({ title: 'Gagal', text: 'Gagal mengekstrak nama file.', icon: 'error', confirmButtonColor: '#1e1e2d' });
+                    return;
+                }
+                
+                doCopyText(copyText, 'Format Lightroom tersalin (' + fileNames.length + ' file).');
+            } catch (e) {
+                console.error('Error parsing list foto:', e);
+                Swal.fire({ title: 'Error', text: 'Gagal membaca data pilihan.', icon: 'error', confirmButtonColor: '#1e1e2d' });
+            }
         }
 
         function simulateClientLink(token) {
