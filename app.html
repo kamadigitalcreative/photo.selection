@@ -9513,7 +9513,8 @@
 
         // --- FITUR PREVIEW FOTO KLIEN ---
         function showPreviewSelected() {
-            if (clientState.selectedImages.length === 0) {
+            try {
+                if (clientState.selectedImages.length === 0) {
                 Swal.fire({ title: 'Masih Kosong', text: 'Silakan pilih beberapa foto terlebih dahulu.', icon: 'info', confirmButtonColor: '#1e1e2d' });
                 return;
             }
@@ -9584,6 +9585,9 @@
 
             modal.classList.remove('hidden');
             setTimeout(function () { modal.classList.remove('opacity-0'); }, 10);
+            } catch (err) {
+                Swal.fire('Error Preview', err.toString(), 'error');
+            }
         }
 
         function closePreviewSelected() {
