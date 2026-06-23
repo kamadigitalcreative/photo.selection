@@ -4094,7 +4094,7 @@
                 <p id="viewerCaption" class="text-white font-semibold text-sm tracking-wide"></p>
                 <div class="w-px h-6 bg-white/20 hidden sm:block"></div>
                 <div class="flex gap-2">
-                    <button id="viewerNoteBtn" onclick="toggleNoteInput()" class="hidden px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-lg flex items-center gap-2 border bg-blue-500/20 border-blue-400 text-blue-300 hover:bg-blue-500/40">
+                    <button id="viewerNoteBtn" onclick="toggleNoteInput()" class="flex px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-lg items-center gap-2 border bg-blue-500/20 border-blue-400 text-blue-300 hover:bg-blue-500/40">
                         <i class="fa-solid fa-comment-dots"></i> <span id="tx-viewer-note">Catatan</span>
                     </button>
                     <button id="viewerSelectBtn"
@@ -8392,16 +8392,10 @@
             if (isSelected) {
                 btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> <span>' + (isEn ? 'Deselect' : 'Batalkan Pilihan') + '</span>';
                 btn.className = "px-6 py-2 rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] flex items-center gap-2 border bg-green-500 border-green-400 text-white hover:bg-green-600";
-                if (document.getElementById('viewerNoteBtn')) {
-                    document.getElementById('viewerNoteBtn').classList.remove('hidden');
-                    document.getElementById('viewerNoteBtn').classList.add('flex');
-                }
             } else {
                 btn.innerHTML = '<i class="fa-regular fa-square-check mr-2"></i> <span>' + (isEn ? 'Select Photo' : 'Pilih Foto') + '</span>';
                 btn.className = "px-6 py-2 rounded-xl font-bold text-sm transition-all shadow-lg flex items-center gap-2 border bg-white/20 border-white/40 text-white hover:bg-white/40";
-                if (document.getElementById('viewerNoteBtn')) {
-                    document.getElementById('viewerNoteBtn').classList.add('hidden');
-                    document.getElementById('viewerNoteBtn').classList.remove('flex');
+                if (document.getElementById('viewerNoteContainer')) {
                     document.getElementById('viewerNoteContainer').classList.add('hidden');
                 }
             }
@@ -8439,11 +8433,24 @@
             if (!window.viewerActiveList || window.currentViewerIndex === undefined) return;
             var activeImg = window.viewerActiveList[window.currentViewerIndex];
             if (!activeImg) return;
-            var fileId = activeImg.name + '_' + (activeImg.folder || clientState.currentFolderName);
+            var folder = activeImg.folder || clientState.currentFolderName;
+            var fileId = activeImg.name + '_' + folder;
             if (val.trim() === '') {
                 delete clientState.notes[fileId];
             } else {
                 clientState.notes[fileId] = val;
+                var isSelected = clientState.selectedImages.some(function (sel) {
+                    return sel.name === activeImg.name && sel.folder === folder;
+                });
+                if (!isSelected) {
+                    clientState.selectedImages.push({ name: activeImg.name, folder: folder, url: activeImg.url, category: activeImg.category });
+                    var cards = document.querySelectorAll('.photo-card');
+                    cards.forEach(function (c) { 
+                        if (c.dataset.filename === activeImg.name) c.classList.add('selected'); 
+                    });
+                    updateClientCounterUI();
+                    updateViewerUI(activeImg.name, activeImg.url);
+                }
             }
         }
 
@@ -8696,7 +8703,7 @@
         function performSelectionData(cardElement, filename, url, category, btnPilih, isEn) {
             clientState.selectedImages.push({ name: filename, folder: clientState.currentFolderName, url: url, category: category });
             if (cardElement && cardElement.classList) cardElement.classList.add('selected');
-            if (btnPilih && clientState.galleryMode !== 'download') btnPilih.innerHTML = '<i class="fa-solid fa-check"></i> ' + (isEn ? 'Deselect' : 'Batal');
+            if (btnPilih && clientState.galleryMode !== 'download') btnPilih.innerHTML = '<i class="fa-solid fa-check mr-2"></i> ' + (isEn ? 'Deselect' : 'Batal');
             updateClientCounterUI();
             var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
             if (!isSubmitted && clientState.galleryMode !== 'download') {
