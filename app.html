@@ -8846,7 +8846,14 @@
                 if (result.isConfirmed) {
                     clientState.selectedImages = [];
                     var cards = document.querySelectorAll('.photo-card.selected');
-                    for (var i = 0; i < cards.length; i++) { if (cards[i] && cards[i].classList) cards[i].classList.remove('selected'); }
+                    var isEn = localStorage.getItem('ps_lang') === 'en';
+                    for (var i = 0; i < cards.length; i++) { 
+                        if (cards[i] && cards[i].classList) {
+                            cards[i].classList.remove('selected');
+                            var btn = cards[i].querySelector('.btn-pilih-foto');
+                            if (btn) btn.innerHTML = '<i class="fa-regular fa-square-check mr-2"></i> ' + (isEn ? 'Select' : 'Pilih');
+                        }
+                    }
                     updateClientCounterUI();
                 }
             });
