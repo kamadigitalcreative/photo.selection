@@ -2226,7 +2226,7 @@
                                                     class="fa-solid fa-circle-info mr-1"></i> Kosongkan jika ingin
                                                 menggunakan logo inisial.</p>
                                         </div>
-                                        <div>
+                                        <div class="hidden">
                                             <label id="tx-st-watermark-url"
                                                 class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">URL Logo Watermark (Opsional)</label>
                                             <input type="text" id="settings-watermark-url"
@@ -4030,7 +4030,7 @@
     </div>
 
     <!-- PREVIEW MODAL -->
-    <div id="previewModal" class="fixed inset-0 z-[60] bg-gray-50 flex flex-col hidden opacity-0 transition-opacity duration-300">
+    <div id="previewModal" class="fixed inset-0 z-[100] bg-gray-50 flex flex-col hidden opacity-0 transition-opacity duration-300">
         <div class="px-4 py-3 sm:px-6 sm:py-4 bg-white border-b border-gray-200 flex items-center justify-between shrink-0 shadow-sm">
             <h2 class="text-base sm:text-lg font-bold text-gray-800 flex items-center"><i class="fa-regular fa-images text-blue-600 mr-2 sm:mr-3 text-lg sm:text-xl"></i> <span id="tx-preview-title">Preview Pilihan</span> (<span id="preview-count">0</span>)</h2>
             <button onclick="closePreviewSelected()" class="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors">
@@ -8360,6 +8360,7 @@
         }
 
         function handleViewerKeyboard(e) {
+            if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
             if (e.key === 'ArrowLeft') navigateViewer(-1, null);
             if (e.key === 'ArrowRight') navigateViewer(1, null);
             if (e.key === 'Escape') closeImageViewer();
@@ -8407,7 +8408,8 @@
             
             // Render note if open
             if (document.getElementById('viewerNoteInput')) {
-                var fileId = filename + '_' + clientState.currentFolderName;
+                var activeImg = window.viewerActiveList[window.currentViewerIndex];
+                var fileId = filename + '_' + (activeImg ? (activeImg.folder || clientState.currentFolderName) : clientState.currentFolderName);
                 document.getElementById('viewerNoteInput').value = clientState.notes[fileId] || '';
             }
 
@@ -8433,11 +8435,11 @@
         }
 
         function saveCurrentNote() {
-            var capEl = document.getElementById('viewerCaption');
-            if (!capEl) return;
-            var filename = capEl.innerText;
-            var fileId = filename + '_' + clientState.currentFolderName;
             var val = document.getElementById('viewerNoteInput').value;
+            if (!window.viewerActiveList || window.currentViewerIndex === undefined) return;
+            var activeImg = window.viewerActiveList[window.currentViewerIndex];
+            if (!activeImg) return;
+            var fileId = activeImg.name + '_' + (activeImg.folder || clientState.currentFolderName);
             if (val.trim() === '') {
                 delete clientState.notes[fileId];
             } else {
@@ -9523,7 +9525,7 @@
 
                 var modal = document.getElementById('previewModal');
                 if (!modal) {
-                    var modalHtml = '<div id="previewModal" class="fixed inset-0 z-[60] bg-gray-50 flex flex-col hidden opacity-0 transition-opacity duration-300">' +
+                    var modalHtml = '<div id="previewModal" class="fixed inset-0 z-[100] bg-gray-50 flex flex-col hidden opacity-0 transition-opacity duration-300">' +
                                     '<div class="px-4 py-3 sm:px-6 sm:py-4 bg-white border-b border-gray-200 flex items-center justify-between shrink-0 shadow-sm">' +
                                         '<h2 class="text-base sm:text-lg font-bold text-gray-800 flex items-center"><i class="fa-regular fa-images text-blue-600 mr-2 sm:mr-3 text-lg sm:text-xl"></i> <span id="tx-preview-title">Preview Pilihan</span> (<span id="preview-count">0</span>)</h2>' +
                                         '<button onclick="closePreviewSelected()" class="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors">' +
