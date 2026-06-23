@@ -9669,7 +9669,12 @@
                                     renderProjectsTable(resProjects.data);
                                 }
                             }
-                            renderClientProgress(resProjects.data);
+                            rawStatusData = resProjects.data;
+                            if (typeof filterClientStatus === 'function' && document.getElementById('search-client-status') && document.getElementById('search-client-status').value) {
+                                filterClientStatus();
+                            } else {
+                                renderClientProgress(rawStatusData);
+                            }
                         }
 
                         // --- 2. UPDATE NOTIFIKASI LONCENG ---
