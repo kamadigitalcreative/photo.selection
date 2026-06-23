@@ -4032,7 +4032,7 @@
     <!-- PREVIEW MODAL -->
     <div id="previewModal" class="fixed inset-0 z-[60] bg-gray-50 flex flex-col hidden opacity-0 transition-opacity duration-300">
         <div class="px-4 py-3 sm:px-6 sm:py-4 bg-white border-b border-gray-200 flex items-center justify-between shrink-0 shadow-sm">
-            <h2 class="text-base sm:text-lg font-bold text-gray-800 flex items-center"><i class="fa-regular fa-images text-blue-600 mr-2 sm:mr-3 text-lg sm:text-xl"></i> Preview Pilihan (<span id="preview-count">0</span>)</h2>
+            <h2 class="text-base sm:text-lg font-bold text-gray-800 flex items-center"><i class="fa-regular fa-images text-blue-600 mr-2 sm:mr-3 text-lg sm:text-xl"></i> <span id="tx-preview-title">Preview Pilihan</span> (<span id="preview-count">0</span>)</h2>
             <button onclick="closePreviewSelected()" class="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors">
                 <i class="fa-solid fa-xmark text-lg sm:text-xl"></i>
             </button>
@@ -4667,7 +4667,7 @@
 
             setTx('.action-bar span.tracking-wider', 'Status Pilihan', 'Selection Status');
             setTx('#bottom-counter + span', 'terpilih', 'selected');
-            setTx('#previewModal h2', 'Preview Pilihan', 'Selection Preview');
+            setTx('#tx-preview-title', 'Preview Pilihan', 'Selection Preview');
 
             var headerLabels = document.querySelectorAll('.shrink-0.flex.items-center.gap-3.sm\\:gap-4 .text-\\[9px\\].uppercase');
             if (headerLabels.length >= 2) {
@@ -8057,7 +8057,9 @@
             }
 
             updateTimer();
-            window.deadlineInterval = setInterval(updateTimer, 1000);
+            if (dDate - new Date() > 0) {
+                window.deadlineInterval = setInterval(updateTimer, 1000);
+            }
         }
 
         async function fetchClientContent(folderId, folderName) {
@@ -9523,7 +9525,7 @@
                 if (!modal) {
                     var modalHtml = '<div id="previewModal" class="fixed inset-0 z-[60] bg-gray-50 flex flex-col hidden opacity-0 transition-opacity duration-300">' +
                                     '<div class="px-4 py-3 sm:px-6 sm:py-4 bg-white border-b border-gray-200 flex items-center justify-between shrink-0 shadow-sm">' +
-                                        '<h2 class="text-base sm:text-lg font-bold text-gray-800 flex items-center"><i class="fa-regular fa-images text-blue-600 mr-2 sm:mr-3 text-lg sm:text-xl"></i> Preview Pilihan (<span id="preview-count">0</span>)</h2>' +
+                                        '<h2 class="text-base sm:text-lg font-bold text-gray-800 flex items-center"><i class="fa-regular fa-images text-blue-600 mr-2 sm:mr-3 text-lg sm:text-xl"></i> <span id="tx-preview-title">Preview Pilihan</span> (<span id="preview-count">0</span>)</h2>' +
                                         '<button onclick="closePreviewSelected()" class="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors">' +
                                             '<i class="fa-solid fa-xmark text-lg sm:text-xl"></i>' +
                                         '</button>' +
