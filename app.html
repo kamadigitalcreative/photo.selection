@@ -7871,7 +7871,8 @@
                 if (res.status === 'success' && res.data.success) {
                     processClientProjectData(res.data.project);
                 } else {
-                    Swal.fire({ icon: 'error', title: 'Akses Ditolak', text: res.message || res.data.message, allowOutsideClick: false });
+                    var errorMsg = res.message || (res.data ? res.data.message : 'Unknown error');
+                    Swal.fire({ icon: 'error', title: 'Akses Ditolak', text: errorMsg, allowOutsideClick: false });
                 }
             } catch (err) {
                 endLoading();
