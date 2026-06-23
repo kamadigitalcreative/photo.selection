@@ -7830,7 +7830,7 @@
         }
 
         // --- FUNGSI WATERMARK DINAMIS (PHASE 2) ---
-        function applyWatermark(brandName) {
+        function applyWatermark(brandName, watermarkUrl) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = 300;
@@ -7849,7 +7849,7 @@
             ctxLg.rotate(-Math.PI / 4);
 
             // Use custom watermark image if provided
-            if (projectData.watermarkUrl) {
+            if (watermarkUrl) {
                 var img = new Image();
                 img.crossOrigin = "Anonymous";
                 img.onload = function() {
@@ -7861,7 +7861,7 @@
                     var dataURLLg = canvasLg.toDataURL();
                     document.body.style.setProperty('--watermark-bg-large', `url(${dataURLLg})`);
                 };
-                img.src = projectData.watermarkUrl;
+                img.src = watermarkUrl;
                 return;
             }
 
@@ -7927,7 +7927,7 @@
 
             // Eksekusi Phase 2: Watermark Dinamis
             if (projectData.watermarkEnabled) {
-                applyWatermark(projectData.brandName || 'Kama Creative');
+                applyWatermark(projectData.brandName || 'Kama Creative', projectData.watermarkUrl);
             } else {
                 document.body.classList.remove('has-watermark');
                 document.body.style.removeProperty('--watermark-bg');
