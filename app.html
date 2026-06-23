@@ -6701,6 +6701,7 @@
 
                 tbody.appendChild(card);
             });
+            if (typeof applyProjectFilters === 'function') applyProjectFilters();
             if (typeof applyLanguage === 'function') applyLanguage(localStorage.getItem('ps_lang') || 'id');
         }
 
@@ -8991,10 +8992,20 @@
         }
 
         function filterClientStatus() {
-            var search = document.getElementById('search-client-status').value.toLowerCase();
+            var searchElem = document.getElementById('search-client-status');
+            var localSearch = searchElem ? searchElem.value.toLowerCase() : '';
+            var globalSearchElem = document.getElementById('global-search');
+            var globalSearch = globalSearchElem ? globalSearchElem.value.toLowerCase() : '';
+
             if (!rawStatusData) return;
             var filtered = rawStatusData.filter(function (row) {
-                return (row['Nama Client'] || '').toLowerCase().includes(search);
+                var matchLocal = (row['Nama Client'] || '').toLowerCase().includes(localSearch);
+                var matchGlobal = true;
+                if (globalSearch) {
+                    var combinedText = [row['Nama Client'], row['Short Slug'], row.Token].join(' ').toLowerCase();
+                    matchGlobal = combinedText.includes(globalSearch);
+                }
+                return matchLocal && matchGlobal;
             });
             renderClientProgress(filtered);
         }
@@ -10954,31 +10965,43 @@
             requestRenderCollage();
         }
 
+        window.currentProjectTabFilter = 'Semua';
+
         function filterProjectsTab(statusFilter, btnEl) {
+            window.currentProjectTabFilter = statusFilter;
             if (btnEl) {
                 btnEl.parentElement.querySelectorAll('button').forEach(btn => {
                     btn.className = 'px-4 py-2 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-white/60 font-medium text-sm whitespace-nowrap transition-all';
                 });
                 btnEl.className = 'px-4 py-2 bg-white rounded-lg shadow-sm text-blue-600 font-bold text-sm whitespace-nowrap border border-gray-100 transition-all';
             }
+            applyProjectFilters();
+        }
+
+        function applyProjectFilters() {
+            var searchInput = document.getElementById('global-search');
+            var query = searchInput ? searchInput.value.toLowerCase() : '';
+            var tabFilter = window.currentProjectTabFilter || 'Semua';
 
             var projectCards = document.querySelectorAll('#projectTableBody > div.bg-white');
             projectCards.forEach(function (card) {
                 var cardStatus = card.getAttribute('data-status');
-                if (statusFilter === 'Semua') {
+                var matchTab = true;
+                if (tabFilter === 'Menunggu Klien') {
+                    matchTab = (cardStatus === 'Belum Memilih' || cardStatus === 'Sedang Memilih');
+                } else if (tabFilter === 'Selesai') {
+                    matchTab = (cardStatus === 'Selesai');
+                }
+
+                var matchSearch = true;
+                if (query) {
+                    matchSearch = (card.textContent.toLowerCase().indexOf(query) > -1);
+                }
+
+                if (matchTab && matchSearch) {
                     card.style.display = '';
-                } else if (statusFilter === 'Menunggu Klien') {
-                    if (cardStatus === 'Belum Memilih' || cardStatus === 'Sedang Memilih') {
-                        card.style.display = '';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                } else if (statusFilter === 'Selesai') {
-                    if (cardStatus === 'Selesai') {
-                        card.style.display = '';
-                    } else {
-                        card.style.display = 'none';
-                    }
+                } else {
+                    card.style.display = 'none';
                 }
             });
         }
@@ -11008,27 +11031,8 @@
             var searchInput = document.getElementById('global-search');
             if (searchInput) {
                 searchInput.addEventListener('input', function (e) {
-                    var query = e.target.value.toLowerCase();
-
-                    // Filter di tab Projects
-                    var projectCards = document.querySelectorAll('#projectTableBody > div.bg-white');
-                    projectCards.forEach(function (card) {
-                        if (card.textContent.toLowerCase().indexOf(query) > -1) {
-                            card.style.display = '';
-                        } else {
-                            card.style.display = 'none';
-                        }
-                    });
-
-                    // Filter di tab Pantau Klien
-                    var clientStatusCards = document.querySelectorAll('#client-status-container > div.bg-white');
-                    clientStatusCards.forEach(function (card) {
-                        if (card.textContent.toLowerCase().indexOf(query) > -1) {
-                            card.style.display = '';
-                        } else {
-                            card.style.display = 'none';
-                        }
-                    });
+                    if (typeof applyProjectFilters === 'function') applyProjectFilters();
+                    if (typeof filterClientStatus === 'function') filterClientStatus();
                 });
             }
         });
