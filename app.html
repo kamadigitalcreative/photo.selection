@@ -6740,16 +6740,10 @@
                     '<i class="fa-regular fa-copy"></i></button>' +
                     '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="text-gray-400 hover:text-green-600 hover:bg-green-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Lihat Galeri">' +
                     '<i class="fa-solid fa-arrow-up-right-from-square"></i></button>' +
-                    '<button onclick="editPasswordPrompt(\'' + row.ID + '\', \'' + safeJSName + '\')" class="text-gray-400 hover:text-amber-500 hover:bg-amber-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Edit Password">' +
-                    '<i class="fa-solid fa-key"></i></button>' +
-                    '<button onclick="toggleWatermarkStatus(\'' + row.ID + '\')" class="w-8 h-8 flex items-center justify-center rounded-lg transition-colors ' + (isWmOn ? 'text-green-500 bg-green-50 hover:bg-green-100' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100') + '" title="Toggle Watermark">' +
-                    '<i class="fa-solid ' + wmIcon + '"></i></button>' +
-                    '<button onclick="editDeadlinePrompt(\'' + row.ID + '\', \'' + safeJSName + '\', \'' + (row['Deadline'] || '') + '\')" class="text-gray-400 hover:text-purple-500 hover:bg-purple-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Edit Batas Waktu Klien">' +
-                    '<i class="fa-solid fa-stopwatch"></i></button>' +
                     paymentActions +
                     (statusClient === 'Selesai' ? '<button onclick="reopenProject(\'' + row.ID + '\', \'' + row['Max Pilihan'] + '\', \'' + row['Foto Terpilih'] + '\')" class="text-gray-400 hover:text-purple-600 hover:bg-purple-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Buka Akses Klien (Tambah Kuota)"><i class="fa-solid fa-unlock"></i></button>' : '') +
-                    '<button onclick="deleteProject(\'' + row.ID + '\')" class="text-gray-400 hover:text-red-600 hover:bg-red-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Hapus Project">' +
-                    '<i class="fa-solid fa-trash-can"></i></button>';
+                    '<button onclick="openProjectSettings(\'' + row.ID + '\')" class="text-gray-400 hover:text-gray-800 hover:bg-gray-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Pengaturan Project">' +
+                    '<i class="fa-solid fa-gear"></i></button>';
 
                 var iconAvatar = '<div class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-full sm:rounded-2xl border border-blue-200 shadow-sm flex items-center justify-center text-blue-500 group-hover:scale-105 transition-transform"><i class="fa-solid fa-images text-xl sm:text-2xl opacity-80"></i></div>';
 
@@ -6768,16 +6762,10 @@
                     '<i class="fa-regular fa-copy"></i></button>' +
                     '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="' + btnClassGrid + '" title="Lihat Galeri">' +
                     '<i class="fa-solid fa-arrow-up-right-from-square"></i></button>' +
-                    '<button onclick="editPasswordPrompt(\'' + row.ID + '\', \'' + safeJSName + '\')" class="' + btnClassGrid.replace('blue', 'amber') + '" title="Edit Password">' +
-                    '<i class="fa-solid fa-key"></i></button>' +
-                    '<button onclick="toggleWatermarkStatus(\'' + row.ID + '\')" class="' + btnClassGrid.replace('blue', 'green') + (isWmOn ? ' text-green-500 bg-green-50' : '') + '" title="Toggle Watermark">' +
-                    '<i class="fa-solid ' + wmIcon + '"></i></button>' +
-                    '<button onclick="editDeadlinePrompt(\'' + row.ID + '\', \'' + safeJSName + '\', \'' + (row['Deadline'] || '') + '\')" class="' + btnClassGrid.replace('blue', 'purple') + '" title="Edit Batas Waktu Klien">' +
-                    '<i class="fa-solid fa-stopwatch"></i></button>' +
                     paymentActionsGrid +
                     (statusClient === 'Selesai' ? '<button onclick="reopenProject(\'' + row.ID + '\', \'' + row['Max Pilihan'] + '\', \'' + row['Foto Terpilih'] + '\')" class="' + btnClassGrid.replace('blue', 'purple') + '" title="Buka Akses Klien (Tambah Kuota)"><i class="fa-solid fa-unlock"></i></button>' : '') +
-                    '<button onclick="deleteProject(\'' + row.ID + '\')" class="' + btnClassGrid.replace('blue', 'red') + '" title="Hapus Project">' +
-                    '<i class="fa-solid fa-trash-can"></i></button>';
+                    '<button onclick="openProjectSettings(\'' + row.ID + '\')" class="' + btnClassGrid.replace('blue', 'gray') + '" title="Pengaturan Project">' +
+                    '<i class="fa-solid fa-gear"></i></button>';
 
                 if (isGrid) {
                     card.className = "bg-white border border-gray-100 rounded-[2rem] overflow-hidden flex flex-col shadow-sm hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-1 hover:border-indigo-100 transition-all duration-300 relative group h-full";
@@ -6904,6 +6892,49 @@
                 console.error('Error parsing list foto:', e);
                 Swal.fire({ title: 'Error', text: 'Gagal membaca data pilihan.', icon: 'error', confirmButtonColor: '#1e1e2d' });
             }
+        }
+
+        function openProjectSettings(projectId) {
+            if (!window.lastProjectsData) return;
+            var project = window.lastProjectsData.find(function(p) { return p.ID === projectId; });
+            if (!project) return;
+            var isEn = localStorage.getItem('ps_lang') === 'en';
+            
+            var isWmOn = project['UseWatermark'] === true || String(project['UseWatermark']).toUpperCase() === 'TRUE' || project['UseWatermark'] === 1;
+            var wmText = isWmOn ? (isEn ? 'Disable Watermark' : 'Matikan Watermark') : (isEn ? 'Enable Watermark' : 'Aktifkan Watermark');
+            var wmIcon = isWmOn ? 'fa-droplet-slash' : 'fa-droplet';
+            var wmColor = isWmOn ? 'text-green-600 bg-green-50 hover:bg-green-100' : 'text-gray-700 bg-gray-50 hover:bg-gray-100 hover:text-green-600';
+            
+            var safeJSName = (project['Nama Client'] || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            var deadline = project['Deadline'] || '';
+
+            var htmlContent = `
+                <div class="grid grid-cols-2 gap-3 mt-4">
+                    <button onclick="Swal.close(); setTimeout(() => editPasswordPrompt('${projectId}', '${safeJSName}'), 300)" class="flex flex-col items-center justify-center p-4 bg-gray-50 border border-gray-100 rounded-xl hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600 transition-colors text-gray-700">
+                        <i class="fa-solid fa-key text-2xl mb-2 text-gray-400"></i>
+                        <span class="text-xs font-bold">${isEn ? 'Edit Password' : 'Edit Password'}</span>
+                    </button>
+                    <button onclick="Swal.close(); setTimeout(() => toggleWatermarkStatus('${projectId}'), 300)" class="flex flex-col items-center justify-center p-4 border border-gray-100 rounded-xl transition-colors ${wmColor}">
+                        <i class="fa-solid ${wmIcon} text-2xl mb-2"></i>
+                        <span class="text-xs font-bold">${wmText}</span>
+                    </button>
+                    <button onclick="Swal.close(); setTimeout(() => editDeadlinePrompt('${projectId}', '${safeJSName}', '${deadline}'), 300)" class="flex flex-col items-center justify-center p-4 bg-gray-50 border border-gray-100 rounded-xl hover:bg-purple-50 hover:border-purple-200 hover:text-purple-600 transition-colors text-gray-700">
+                        <i class="fa-solid fa-stopwatch text-2xl mb-2 text-gray-400"></i>
+                        <span class="text-xs font-bold">${isEn ? 'Edit Deadline' : 'Batas Waktu'}</span>
+                    </button>
+                    <button onclick="Swal.close(); setTimeout(() => deleteProject('${projectId}'), 300)" class="flex flex-col items-center justify-center p-4 bg-red-50 border border-red-100 rounded-xl hover:bg-red-100 hover:border-red-200 text-red-600 transition-colors">
+                        <i class="fa-solid fa-trash-can text-2xl mb-2 text-red-400"></i>
+                        <span class="text-xs font-bold">${isEn ? 'Delete Project' : 'Hapus Project'}</span>
+                    </button>
+                </div>
+            `;
+
+            Swal.fire({
+                title: isEn ? 'Project Settings' : 'Pengaturan Project',
+                html: htmlContent,
+                showConfirmButton: false,
+                showCloseButton: true
+            });
         }
 
         function sortirLokalForProject(projectId) {
