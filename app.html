@@ -5163,8 +5163,9 @@
                 showPremiumAlert();
                 return;
             }
-            try { window.history.pushState({ view: 'local-sorter-view' }, '', '/projects/sortirlokal'); } catch (e) { }
-            showView('local-sorter-view');
+            try { window.history.pushState({ tab: 'sortir-lokal' }, '', '/sortirlokal'); } catch (e) { }
+            showView('admin-view');
+            switchAdminTab('sortir-lokal', true);
         }
 
         function closeSortirLokal() {
@@ -5906,9 +5907,10 @@
                     showView('admin-view');
 
                     // Buka tab sesuai link, jika link tidak dikenali, kembali ke dashboard
-                    var validAdminTabs = ['dashboard', 'projects', 'status', 'users', 'admin-feedback'];
-                    if (currentTab === 'sortirlokal') {
-                        showView('local-sorter-view');
+                    var validAdminTabs = ['dashboard', 'projects', 'status', 'users', 'admin-feedback', 'sortir-lokal'];
+                    if (currentTab === 'sortirlokal' || currentTab === 'sortir-lokal') {
+                        showView('admin-view');
+                        switchAdminTab('sortir-lokal', true);
                     } else {
                         showView('admin-view');
                         if (validAdminTabs.includes(currentTab)) { switchAdminTab(currentTab, true); }
@@ -5925,9 +5927,10 @@
                     for (var p = 0; p < photoCols.length; p++) { if (photoCols[p] && photoCols[p].classList) photoCols[p].classList.remove('hidden'); } // Tampilkan khusus fotografer
 
                     // Buka tab sesuai link, jika link tidak dikenali, kembali ke projects
-                    var validPhotoTabs = ['projects', 'status', 'panduan', 'feedback', 'collage'];
-                    if (currentTab === 'sortirlokal') {
-                        showView('local-sorter-view');
+                    var validPhotoTabs = ['projects', 'status', 'panduan', 'feedback', 'collage', 'sortir-lokal'];
+                    if (currentTab === 'sortirlokal' || currentTab === 'sortir-lokal') {
+                        showView('admin-view');
+                        switchAdminTab('sortir-lokal', true);
                     } else {
                         showView('admin-view');
                         if (validPhotoTabs.includes(currentTab)) { switchAdminTab(currentTab, true); }
@@ -6922,8 +6925,11 @@
                 
                 openSortirLokal();
                 setTimeout(function() {
-                    var el = document.getElementById('sorterClientList');
-                    if (el) { el.value = fileNames.join('\n'); }
+                    var el = document.getElementById('targetNames');
+                    if (el) { 
+                        el.value = fileNames.join('\n'); 
+                        if (typeof updateLineCount === 'function') updateLineCount();
+                    }
                 }, 100);
             } catch(e) {}
         }
@@ -7829,7 +7835,7 @@
             var lineCount = document.getElementById('lineCount');
             if (textarea && lineCount) {
                 var text = textarea.value.trim();
-                var lines = text ? text.split('\n').filter(l => l.trim().length > 0).length : 0;
+                var lines = text ? text.split(/[\n,]+/).filter(l => l.trim().length > 0).length : 0;
                 lineCount.textContent = lines;
             }
         }
@@ -7886,7 +7892,7 @@
             if (uploadedFilesSorter.length === 0) { Swal.fire('Peringatan', 'Silakan pilih folder sumber terlebih dahulu.', 'warning'); return; }
             if (!rawTargets.trim()) { Swal.fire('Peringatan', 'Silakan masukkan nomor/nama file.', 'warning'); return; }
 
-            var lines = rawTargets.split('\n');
+            var lines = rawTargets.split(/[\n,]+/);
             var currentFolder = "";
             var targets = [];
 
