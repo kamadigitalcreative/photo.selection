@@ -6724,6 +6724,13 @@
                 var wmBtnClass = isWmOn ? "bg-green-50 text-green-600 border-green-200 hover:bg-green-100" : "bg-white text-gray-400 border-gray-200 hover:bg-gray-50 hover:text-gray-600";
                 var wmIcon = isWmOn ? "fa-droplet" : "fa-droplet-slash";
 
+                var proofUrl = row['Payment Proof'] || '#';
+                var paymentActions = statusClient === 'Menunggu Konfirmasi Pembayaran' ?
+                    '<button onclick="window.open(\'' + proofUrl + '\', \'_blank\')" class="text-gray-400 hover:text-amber-500 hover:bg-amber-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Lihat Bukti Transfer"><i class="fa-solid fa-file-invoice"></i></button>' +
+                    '<button onclick="confirmClientPayment(\'' + row.ID + '\')" class="text-gray-400 hover:text-green-500 hover:bg-green-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Konfirmasi Lunas"><i class="fa-solid fa-check-double"></i></button>' +
+                    '<button onclick="rejectClientPayment(\'' + row.ID + '\')" class="text-gray-400 hover:text-red-500 hover:bg-red-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Tolak Pembayaran"><i class="fa-solid fa-ban"></i></button>'
+                    : '<button onclick="copyForLightroom(\'' + row.ID + '\')" class="text-gray-400 hover:text-blue-500 hover:bg-blue-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Copy for Lightroom"><i class="fa-solid fa-file-export"></i></button>';
+
                 var actionHtml =
                     '<button onclick="copyProjectInfo(\'' + safeJSName + '\', \'' + displayLink + '\', \'' + safePass + '\')" class="text-gray-400 hover:text-blue-600 hover:bg-blue-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Copy Link">' +
                     '<i class="fa-regular fa-copy"></i></button>' +
@@ -6735,8 +6742,7 @@
                     '<i class="fa-solid ' + wmIcon + '"></i></button>' +
                     '<button onclick="editDeadlinePrompt(\'' + row.ID + '\', \'' + safeJSName + '\', \'' + (row['Deadline'] || '') + '\')" class="text-gray-400 hover:text-purple-500 hover:bg-purple-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Edit Batas Waktu Klien">' +
                     '<i class="fa-solid fa-stopwatch"></i></button>' +
-                    (statusClient !== 'Menunggu Konfirmasi Pembayaran' ? '<button onclick="copyForLightroom(\'' + row.ID + '\')" class="text-gray-400 hover:text-blue-500 hover:bg-blue-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Copy for Lightroom">' +
-                    '<i class="fa-solid fa-file-export"></i></button>' : '') +
+                    paymentActions +
                     '<button onclick="deleteProject(\'' + row.ID + '\')" class="text-gray-400 hover:text-red-600 hover:bg-red-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Hapus Project">' +
                     '<i class="fa-solid fa-trash-can"></i></button>';
 
@@ -6745,6 +6751,12 @@
                 var iconAvatarGrid = '<div class="absolute -top-10 left-5 flex-shrink-0 w-20 h-20 bg-gradient-to-br from-white to-blue-50 rounded-3xl border-[4px] border-white shadow-[0_8px_20px_rgba(0,0,0,0.08)] flex items-center justify-center text-indigo-500 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 z-10"><i class="fa-solid fa-camera-retro text-3xl opacity-90 drop-shadow-sm"></i></div>';
                 
                 var btnClassGrid = "text-gray-500 hover:text-blue-600 hover:bg-blue-50 flex-1 h-10 flex items-center justify-center rounded-xl transition-colors";
+                var paymentActionsGrid = statusClient === 'Menunggu Konfirmasi Pembayaran' ?
+                    '<button onclick="window.open(\'' + proofUrl + '\', \'_blank\')" class="' + btnClassGrid.replace('blue', 'amber') + '" title="Lihat Bukti Transfer"><i class="fa-solid fa-file-invoice"></i></button>' +
+                    '<button onclick="confirmClientPayment(\'' + row.ID + '\')" class="' + btnClassGrid.replace('blue', 'green') + '" title="Konfirmasi Lunas"><i class="fa-solid fa-check-double"></i></button>' +
+                    '<button onclick="rejectClientPayment(\'' + row.ID + '\')" class="' + btnClassGrid.replace('blue', 'red') + '" title="Tolak Pembayaran"><i class="fa-solid fa-ban"></i></button>'
+                    : '<button onclick="copyForLightroom(\'' + row.ID + '\')" class="' + btnClassGrid.replace('blue', 'blue') + '" title="Copy for Lightroom"><i class="fa-solid fa-file-export"></i></button>';
+
                 var actionHtmlGrid =
                     '<button onclick="copyProjectInfo(\'' + safeJSName + '\', \'' + displayLink + '\', \'' + safePass + '\')" class="' + btnClassGrid + '" title="Copy Link">' +
                     '<i class="fa-regular fa-copy"></i></button>' +
@@ -6756,8 +6768,7 @@
                     '<i class="fa-solid ' + wmIcon + '"></i></button>' +
                     '<button onclick="editDeadlinePrompt(\'' + row.ID + '\', \'' + safeJSName + '\', \'' + (row['Deadline'] || '') + '\')" class="' + btnClassGrid.replace('blue', 'purple') + '" title="Edit Batas Waktu Klien">' +
                     '<i class="fa-solid fa-stopwatch"></i></button>' +
-                    (statusClient !== 'Menunggu Konfirmasi Pembayaran' ? '<button onclick="copyForLightroom(\'' + row.ID + '\')" class="' + btnClassGrid.replace('blue', 'blue') + '" title="Copy for Lightroom">' +
-                    '<i class="fa-solid fa-file-export"></i></button>' : '') +
+                    paymentActionsGrid +
                     '<button onclick="deleteProject(\'' + row.ID + '\')" class="' + btnClassGrid.replace('blue', 'red') + '" title="Hapus Project">' +
                     '<i class="fa-solid fa-trash-can"></i></button>';
 
@@ -9244,12 +9255,48 @@
                     }
 
                     try {
-                        const base64Data = await new Promise((resolve, reject) => {
+                        const fileDataUrl = await new Promise((resolve, reject) => {
                             const reader = new FileReader();
-                            reader.onload = () => resolve(reader.result.split(',')[1]);
+                            reader.onload = () => resolve(reader.result);
                             reader.onerror = error => reject(error);
                             reader.readAsDataURL(file);
                         });
+                        const base64Data = fileDataUrl.split(',')[1];
+
+                        // Load Tesseract.js dynamically if not loaded
+                        if (typeof Tesseract === 'undefined') {
+                            Swal.getConfirmButton().innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memuat OCR...';
+                            Swal.disableButtons();
+                            await new Promise((resolve, reject) => {
+                                const script = document.createElement('script');
+                                script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+                                script.onload = resolve;
+                                script.onerror = reject;
+                                document.head.appendChild(script);
+                            });
+                        }
+                        
+                        // Run OCR Validation
+                        Swal.getConfirmButton().innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Validasi Gambar...';
+                        Swal.disableButtons();
+                        try {
+                            const resultOCR = await Tesseract.recognize(fileDataUrl, 'ind+eng');
+                            const textOCR = resultOCR.data.text.toLowerCase();
+                            const validKeywords = ['transfer', 'berhasil', 'sukses', 'rp', 'idr', 'bank', 'dana', 'ovo', 'gopay', 'shopeepay', 'bca', 'mandiri', 'bri', 'bni', 'transaksi', 'struk', 'pembayaran', 'qris', 'seabank', 'jago'];
+                            const isValid = validKeywords.some(kw => textOCR.includes(kw));
+                            
+                            if (!isValid) {
+                                Swal.showValidationMessage(isEn ? 'Invalid proof. The image does not appear to be a valid transfer receipt.' : 'Bukti tidak valid. Gambar yang Anda unggah tidak terdeteksi sebagai struk/bukti transfer yang sah.');
+                                Swal.enableButtons();
+                                Swal.getConfirmButton().innerHTML = isEn ? '<i class="fa-solid fa-cloud-arrow-up"></i> Upload & Submit' : '<i class="fa-solid fa-cloud-arrow-up"></i> Upload & Selesai';
+                                return false;
+                            }
+                        } catch (ocrError) {
+                            console.error('OCR Error:', ocrError);
+                            // Proceed anyway if OCR errors out to avoid locking genuine users
+                        }
+
+                        Swal.getConfirmButton().innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengunggah...';
 
                         const response = await fetch(API_ENDPOINT, {
                             method: 'POST',
