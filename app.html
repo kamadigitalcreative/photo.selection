@@ -6729,8 +6729,8 @@
                     '<i class="fa-solid ' + wmIcon + '"></i></button>' +
                     '<button onclick="editDeadlinePrompt(\'' + row.ID + '\', \'' + safeJSName + '\', \'' + (row['Deadline'] || '') + '\')" class="text-gray-400 hover:text-purple-500 hover:bg-purple-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Edit Batas Waktu Klien">' +
                     '<i class="fa-solid fa-stopwatch"></i></button>' +
-                    '<button onclick="copyForLightroom(\'' + row.ID + '\')" class="text-gray-400 hover:text-blue-500 hover:bg-blue-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Copy for Lightroom">' +
-                    '<i class="fa-solid fa-file-export"></i></button>' +
+                    (statusClient !== 'Menunggu Konfirmasi Pembayaran' ? '<button onclick="copyForLightroom(\'' + row.ID + '\')" class="text-gray-400 hover:text-blue-500 hover:bg-blue-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Copy for Lightroom">' +
+                    '<i class="fa-solid fa-file-export"></i></button>' : '') +
                     '<button onclick="deleteProject(\'' + row.ID + '\')" class="text-gray-400 hover:text-red-600 hover:bg-red-50 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Hapus Project">' +
                     '<i class="fa-solid fa-trash-can"></i></button>';
 
@@ -6750,8 +6750,8 @@
                     '<i class="fa-solid ' + wmIcon + '"></i></button>' +
                     '<button onclick="editDeadlinePrompt(\'' + row.ID + '\', \'' + safeJSName + '\', \'' + (row['Deadline'] || '') + '\')" class="' + btnClassGrid.replace('blue', 'purple') + '" title="Edit Batas Waktu Klien">' +
                     '<i class="fa-solid fa-stopwatch"></i></button>' +
-                    '<button onclick="copyForLightroom(\'' + row.ID + '\')" class="' + btnClassGrid.replace('blue', 'blue') + '" title="Copy for Lightroom">' +
-                    '<i class="fa-solid fa-file-export"></i></button>' +
+                    (statusClient !== 'Menunggu Konfirmasi Pembayaran' ? '<button onclick="copyForLightroom(\'' + row.ID + '\')" class="' + btnClassGrid.replace('blue', 'blue') + '" title="Copy for Lightroom">' +
+                    '<i class="fa-solid fa-file-export"></i></button>' : '') +
                     '<button onclick="deleteProject(\'' + row.ID + '\')" class="' + btnClassGrid.replace('blue', 'red') + '" title="Hapus Project">' +
                     '<i class="fa-solid fa-trash-can"></i></button>';
 
@@ -6880,6 +6880,72 @@
                 console.error('Error parsing list foto:', e);
                 Swal.fire({ title: 'Error', text: 'Gagal membaca data pilihan.', icon: 'error', confirmButtonColor: '#1e1e2d' });
             }
+        }
+
+        async function confirmClientPayment(projectId) {
+            Swal.fire({
+                title: 'Konfirmasi Lunas',
+                text: 'Anda yakin pembayaran sudah lunas? Status klien akan diubah menjadi Selesai.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, Lunas!'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    startLoading('Memproses...');
+                    try {
+                        const token = localStorage.getItem('ps_admin_token');
+                        const response = await fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'processPayment', projectId: projectId, status: 'Selesai', token: token })
+                        });
+                        const res = await response.json();
+                        if (res.status === 'success' && res.data.success) {
+                            Swal.fire('Sukses', 'Pembayaran dikonfirmasi.', 'success');
+                            loadDashboardData(true);
+                        } else {
+                            throw new Error(res.message || 'Gagal mengubah status.');
+                        }
+                    } catch(err) {
+                        Swal.fire('Error', err.toString(), 'error');
+                    }
+                }
+            });
+        }
+
+        async function rejectClientPayment(projectId) {
+            Swal.fire({
+                title: 'Tolak Pembayaran',
+                text: 'Status akan dikembalikan ke Sedang Memilih agar klien bisa mengupload ulang.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, Tolak'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    startLoading('Memproses...');
+                    try {
+                        const token = localStorage.getItem('ps_admin_token');
+                        const response = await fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'processPayment', projectId: projectId, status: 'Sedang Memilih', token: token })
+                        });
+                        const res = await response.json();
+                        if (res.status === 'success' && res.data.success) {
+                            Swal.fire('Sukses', 'Pembayaran ditolak. Status kembali ke Sedang Memilih.', 'success');
+                            loadDashboardData(true);
+                        } else {
+                            throw new Error(res.message || 'Gagal mengubah status.');
+                        }
+                    } catch(err) {
+                        Swal.fire('Error', err.toString(), 'error');
+                    }
+                }
+            });
         }
 
         function simulateClientLink(token) {
@@ -8061,6 +8127,11 @@
             else {
                 showClientModeSelection();
             }
+            
+            if (projectData.statusClient === 'Selesai' || projectData.statusClient === 'Menunggu Konfirmasi Pembayaran') {
+                hasClientSubmitted = true;
+                setTimeout(updateGalleryLock, 500); // Ensure grid is locked after render
+            }
         }
 
         function startDeadlineTimer() {
@@ -8952,64 +9023,64 @@
 
         function formatSelectedText(proofUrl = null) {
             var isEn = (localStorage.getItem('ps_lang') === 'en');
-            var text = "Halo, ini dari *" + clientState.namaClient + "*.\nBerikut daftar foto pilihan kami (" + clientState.selectedImages.length + "/" + clientState.maxFoto + "):\n\n";
+            var extraCount = clientState.selectedImages.length - clientState.maxFoto;
+            var text = "";
 
-            if (clientState.categories && clientState.categories.length > 0) {
-                var groupedCat = {};
-                clientState.selectedImages.forEach(function (item) {
-                    var cName = item.category || 'Default';
-                    if (!groupedCat[cName]) groupedCat[cName] = [];
-                    groupedCat[cName].push(item);
-                });
-
-                for (var c in groupedCat) {
-                    text += "🏷️ KATEGORI: *" + c.toUpperCase() + "*\n";
-                    var sortedC = groupedCat[c].slice().sort(function(a, b) { return a.name.localeCompare(b.name); });
-                    for (var j = 0; j < sortedC.length; j++) { 
-                        var note = clientState.notes[sortedC[j].name + '_' + sortedC[j].folder];
-                        var noteStr = note ? " (Catatan: " + note + ")" : "";
-                        text += (j + 1) + ". " + sortedC[j].name + noteStr + "\n"; 
-                    }
+            if (isEn) {
+                text += "✨ Photo Selection Completed\n\n";
+                text += "Hello Photographer,\n\n";
+                text += "We from *" + clientState.namaClient + "* have finished the photo selection process";
+                if (extraCount > 0 && proofUrl) {
+                    text += " and made payment for extra photos.\n\n";
+                } else {
+                    text += ".\n\n";
+                }
+                text += "📊 *Selection Details*\n";
+                text += "• Package Quota: " + clientState.maxFoto + " Photos\n";
+                text += "• Total Selected: " + clientState.selectedImages.length + " Photos\n";
+                if (extraCount > 0) {
+                    text += "• Extra Photos: " + extraCount + " Photos\n\n";
+                    text += "💰 *Extra Photos Payment*\n";
+                    text += "Rp" + (extraCount * clientState.extraPrice).toLocaleString('id-ID') + "\n\n";
+                    text += "🧾 *Payment Proof*\n";
+                    text += proofUrl + "\n\n";
+                } else {
                     text += "\n";
                 }
+                text += "⚡ *Action Required*\n";
+                text += "Please open your Photo Selector Dashboard to check the payment validation and access our selected photo list.\n\n";
+                text += "Thank you.\n\n";
+                text += "*" + clientState.namaClient + "*";
             } else {
-                var grouped = {};
-                clientState.selectedImages.forEach(function (item) {
-                    if (!grouped[item.folder]) grouped[item.folder] = [];
-                    grouped[item.folder].push(item);
-                });
-
-                for (var folderName in grouped) {
-                    if (Object.keys(grouped).length > 1 || folderName !== clientState.namaClient) {
-                        text += "📁 *" + folderName + "*\n";
-                    }
-                    var sorted = grouped[folderName].slice().sort(function(a, b) { return a.name.localeCompare(b.name); });
-                    for (var i = 0; i < sorted.length; i++) { 
-                        var note = clientState.notes[sorted[i].name + '_' + sorted[i].folder];
-                        var noteStr = note ? " (Catatan: " + note + ")" : "";
-                        text += (i + 1) + ". " + sorted[i].name + noteStr + "\n"; 
-                    }
+                text += "✨ Pemilihan Foto Selesai\n\n";
+                text += "Halo Fotografer,\n\n";
+                text += "Kami dari *" + clientState.namaClient + "* telah menyelesaikan proses seleksi foto";
+                if (extraCount > 0 && proofUrl) {
+                    text += " dan melakukan pembayaran untuk foto tambahan.\n\n";
+                } else {
+                    text += ".\n\n";
+                }
+                text += "📊 *Detail Pemilihan*\n";
+                text += "• Kuota Paket: " + clientState.maxFoto + " Foto\n";
+                text += "• Total Dipilih: " + clientState.selectedImages.length + " Foto\n";
+                if (extraCount > 0) {
+                    text += "• Foto Tambahan: " + extraCount + " Foto\n\n";
+                    text += "💰 *Pembayaran Foto Tambahan*\n";
+                    text += "Rp" + (extraCount * clientState.extraPrice).toLocaleString('id-ID') + "\n\n";
+                    text += "🧾 *Bukti Pembayaran*\n";
+                    text += proofUrl + "\n\n";
+                } else {
                     text += "\n";
                 }
+                text += "⚡ *Mohon Verifikasi*\n";
+                if (extraCount > 0 && proofUrl) {
+                    text += "Silakan buka Dashboard Photo Selector Anda untuk memeriksa validasi pembayaran dan mengakses daftar foto yang telah kami pilih.\n\n";
+                } else {
+                    text += "Silakan buka Dashboard Photo Selector Anda untuk mengakses daftar foto yang telah kami pilih.\n\n";
+                }
+                text += "Terima kasih atas pelayanan dan kerja samanya.\n\n";
+                text += "Hormat kami,\n*" + clientState.namaClient + "*";
             }
-
-            if (clientState.extraPrice > 0 && clientState.selectedImages.length > clientState.maxFoto) {
-                var extraCount = clientState.selectedImages.length - clientState.maxFoto;
-                var extraFee = extraCount * clientState.extraPrice;
-                var isEn = localStorage.getItem('ps_lang') === 'en';
-                text += "💰 *" + (isEn ? "EXTRA PHOTO CHARGE" : "TAGIHAN FOTO TAMBAHAN") + "*\n";
-                text += (isEn ? "Quota: " : "Kuota: ") + clientState.maxFoto + "\n";
-                text += (isEn ? "Total Selected: " : "Total Dipilih: ") + clientState.selectedImages.length + "\n";
-                text += (isEn ? "Extra Photo: " : "Kelebihan: ") + extraCount + " x Rp " + clientState.extraPrice.toLocaleString('id-ID') + "\n";
-                text += (isEn ? "Total Extra Fee: " : "Total Biaya Tambahan: ") + "*Rp " + extraFee.toLocaleString('id-ID') + "*\n\n";
-            }
-
-            if (proofUrl) {
-                var isEn = localStorage.getItem('ps_lang') === 'en';
-                text += "🧾 *" + (isEn ? "PAYMENT PROOF" : "BUKTI PEMBAYARAN") + "*\n" + proofUrl + "\n\n";
-            }
-
-            text += "Terima kasih.";
             return text;
         }
 
@@ -9024,7 +9095,13 @@
             if (!text) { Swal.fire({ title: 'Kosong', text: 'Pilih foto terlebih dahulu.', icon: 'info', confirmButtonColor: '#1e1e2d' }); return; }
             doCopyText(text, 'Daftar foto siap dipaste.');
             hasClientSubmitted = true;
-            pingClientStatus('Selesai');
+            var extraCount = clientState.selectedImages.length - clientState.maxFoto;
+            if (extraCount > 0 && proofUrl) {
+                pingClientStatus('Menunggu Konfirmasi Pembayaran', proofUrl);
+            } else {
+                pingClientStatus('Selesai');
+            }
+            updateGalleryLock();
         }
 
         function sendToWA() {
@@ -9038,7 +9115,31 @@
             if (noWa.indexOf('0') === 0) noWa = '62' + noWa.substring(1);
             window.open("https://wa.me/" + noWa + "?text=" + encodeURIComponent(text), '_blank');
             hasClientSubmitted = true;
-            pingClientStatus('Selesai');
+            var extraCount = clientState.selectedImages.length - clientState.maxFoto;
+            if (extraCount > 0 && proofUrl) {
+                pingClientStatus('Menunggu Konfirmasi Pembayaran', proofUrl);
+            } else {
+                pingClientStatus('Selesai');
+            }
+            updateGalleryLock();
+        }
+
+        function updateGalleryLock() {
+            if (hasClientSubmitted) {
+                var grid = document.getElementById('photo-grid');
+                if (grid) {
+                    grid.style.pointerEvents = 'none';
+                    grid.style.opacity = '0.7';
+                }
+                var selectAllCheckbox = document.getElementById('selectAllCheckbox');
+                if (selectAllCheckbox) selectAllCheckbox.disabled = true;
+                
+                var btnSubmit = document.getElementById('btnSubmitClient');
+                if (btnSubmit) {
+                    btnSubmit.innerHTML = '<i class="fa-solid fa-lock mr-2"></i> Terkunci';
+                    btnSubmit.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            }
         }
 
         var uploadedPaymentProofUrl = null;
@@ -9170,7 +9271,7 @@
         // --- CLIENT TRACKER LOGIC ---
         var rawStatusData = [];
 
-        function pingClientStatus(status) {
+        function pingClientStatus(status, proofUrl = '') {
             if (!clientState.token) return;
             fetch(API_ENDPOINT, {
                 method: 'POST',
@@ -9182,7 +9283,8 @@
                     status: status,
                     selectedCount: clientState.selectedImages.length,
                     selectedFiles: JSON.stringify(clientState.selectedImages), // KIRIM DAFTAR FOTO LENGKAP
-                    notes: JSON.stringify(clientState.notes || {})
+                    notes: JSON.stringify(clientState.notes || {}),
+                    paymentProof: proofUrl
                 })
             }).catch(function (e) { console.log("Tracker ping failed:", e); });
         }
@@ -9411,6 +9513,26 @@
                                 <p class="text-[11px] font-bold text-green-800 mb-0.5">Siap Diproses</p>
                                 <p class="text-[10px] text-green-700 leading-tight mb-2">Klien <strong class="font-extrabold">${escapeHTML(row['Nama Client'])}</strong> telah selesai memilih foto.</p>
                                 <button onclick="switchMenu('sortir')" class="text-[9px] font-bold uppercase tracking-wider bg-white text-green-700 border border-green-300 px-3 py-1 rounded-full hover:bg-green-600 hover:text-white transition-colors shadow-sm">Mulai Sortir Lokal</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                else if (status === 'Menunggu Konfirmasi Pembayaran') {
+                    hasAction = true;
+                    var proofUrl = row['Payment Proof'] || '#';
+                    actionsHtml += `
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-3 flex gap-3 relative overflow-hidden group">
+                            <div class="w-8 h-8 rounded-full bg-yellow-200 text-yellow-700 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-file-invoice-dollar"></i>
+                            </div>
+                            <div class="w-full">
+                                <p class="text-[11px] font-bold text-yellow-800 mb-0.5">Menunggu Konfirmasi</p>
+                                <p class="text-[10px] text-yellow-700 leading-tight mb-2">Klien <strong class="font-extrabold">${escapeHTML(row['Nama Client'])}</strong> telah mengirim bukti bayar.</p>
+                                <div class="flex flex-wrap gap-1.5 mt-2">
+                                    <a href="${proofUrl}" target="_blank" class="text-[9px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-300 px-2.5 py-1 rounded-full hover:bg-blue-600 hover:text-white transition-colors shadow-sm"><i class="fa-solid fa-eye mr-1"></i> Bukti</a>
+                                    <button onclick="confirmClientPayment('${row.ID}')" class="text-[9px] font-bold uppercase tracking-wider bg-green-50 text-green-700 border border-green-300 px-2.5 py-1 rounded-full hover:bg-green-600 hover:text-white transition-colors shadow-sm"><i class="fa-solid fa-check mr-1"></i> Lunas</button>
+                                    <button onclick="rejectClientPayment('${row.ID}')" class="text-[9px] font-bold uppercase tracking-wider bg-red-50 text-red-700 border border-red-300 px-2.5 py-1 rounded-full hover:bg-red-600 hover:text-white transition-colors shadow-sm"><i class="fa-solid fa-xmark mr-1"></i> Tolak</button>
+                                </div>
                             </div>
                         </div>
                     `;
