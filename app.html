@@ -6916,15 +6916,15 @@
                         const response = await fetch(API_ENDPOINT, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'processPayment', projectId: projectId, status: 'Selesai', token: token })
+                            body: JSON.stringify({ action: 'processPayment', projectId: projectId, status: 'Selesai', token: token, currentUser: currentUser })
                         });
                         const res = await response.json();
                         endLoading();
-                        if (res.status === 'success' && res.data.success) {
+                        if (res.status === 'success' && res.data && res.data.success) {
                             Swal.fire('Sukses', 'Pembayaran dikonfirmasi.', 'success');
                             loadDashboardData(true);
                         } else {
-                            throw new Error(res.message || 'Gagal mengubah status.');
+                            throw new Error((res.data && res.data.message) || res.message || 'Gagal mengubah status.');
                         }
                     } catch(err) {
                         endLoading();
@@ -6951,15 +6951,15 @@
                         const response = await fetch(API_ENDPOINT, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'processPayment', projectId: projectId, status: 'Sedang Memilih', token: token })
+                            body: JSON.stringify({ action: 'processPayment', projectId: projectId, status: 'Sedang Memilih', token: token, currentUser: currentUser })
                         });
                         const res = await response.json();
                         endLoading();
-                        if (res.status === 'success' && res.data.success) {
+                        if (res.status === 'success' && res.data && res.data.success) {
                             Swal.fire('Sukses', 'Pembayaran ditolak. Status kembali ke Sedang Memilih.', 'success');
                             loadDashboardData(true);
                         } else {
-                            throw new Error(res.message || 'Gagal mengubah status.');
+                            throw new Error((res.data && res.data.message) || res.message || 'Gagal mengubah status.');
                         }
                     } catch(err) {
                         endLoading();
