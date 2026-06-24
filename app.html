@@ -6678,6 +6678,12 @@
                     statusColor = 'amber';
                     pulseHtml = '<div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse mr-1"></div>';
                     statusDisplay = isEnLocale ? 'Selecting' : 'Sedang Memilih';
+                } else if (statusClient === 'Menunggu Konfirmasi Pembayaran') {
+                    statusColor = 'yellow';
+                    pulseHtml = '<i class="fa-solid fa-file-invoice-dollar mr-1"></i>';
+                    statusDisplay = isEnLocale ? 'Pending Payment' : 'Menunggu Konfirmasi';
+                    progressColor = 'bg-yellow-500';
+                    progressPct = 100;
                 } else {
                     statusColor = 'green';
                     pulseHtml = '<div class="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-1"></div>';
@@ -7068,6 +7074,16 @@
                 if (!inputs[i].value && inputs[i].type !== 'checkbox') {
                     if (inputs[i].reportValidity) inputs[i].reportValidity();
                     return;
+                }
+            }
+            if (currentWizardStep === 1) {
+                var pWa = document.getElementById('p_wa');
+                if (pWa && pWa.value) {
+                    var waStr = pWa.value.replace(/\D/g, '');
+                    if (waStr.length < 9) {
+                        Swal.fire({ title: 'Nomor Tidak Valid', text: 'Nomor WhatsApp admin harus diisi dengan benar (minimal 9 digit, contoh: 08123...).', icon: 'error', confirmButtonColor: '#1e1e2d' });
+                        return;
+                    }
                 }
             }
             if (currentWizardStep < totalWizardSteps) {
@@ -8513,7 +8529,8 @@
 
             if (!btn) return;
 
-            if (clientState.galleryMode === 'download') {
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
+            if (clientState.galleryMode === 'download' || isSubmitted) {
                 btn.style.display = 'none';
                 return;
             } else {
@@ -8733,7 +8750,17 @@
         function toggleSelection(cardElement, filename, url) {
             var isEn = localStorage.getItem('ps_lang') === 'en';
 
-            // --- PHASE 13: CEK AKSES PILIH FOTO ---
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
+            if (isSubmitted) {
+                Swal.fire({
+                    icon: 'info',
+                    title: isEn ? 'Gallery Locked' : 'Galeri Terkunci',
+                    text: isEn ? 'You have completed the selection process or are awaiting payment confirmation.' : 'Anda telah selesai memilih foto atau sedang menunggu konfirmasi pembayaran.',
+                    confirmButtonColor: '#2563eb'
+                });
+                return;
+            }
+
             if (!clientState.isPilihActive) {
                 Swal.fire({
                     icon: 'warning',
@@ -8790,7 +8817,7 @@
                 // DESELECT
                 clientState.selectedImages.splice(index, 1);
                 if (cardElement && cardElement.classList) cardElement.classList.remove('selected');
-                if (btnPilih && clientState.galleryMode !== 'download') btnPilih.innerHTML = '<i class="fa-regular fa-square-check"></i> ' + (isEn ? 'Select' : 'Pilih');
+                if (btnPilih && clientState.galleryMode !== 'download') btnPilih.innerHTML = '<i class="fa-regular fa-square-check mr-2"></i> ' + (isEn ? 'Select' : 'Pilih');
             }
             updateClientCounterUI();
 
