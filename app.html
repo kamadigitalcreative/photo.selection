@@ -6731,7 +6731,7 @@
                     '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="text-green-600 bg-green-50 hover:bg-green-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Lihat Galeri">' +
                     '<i class="fa-solid fa-arrow-up-right-from-square"></i></button>' +
                     paymentActions +
-                    (statusClient === 'Selesai' ? '<button onclick="reopenProject(\'' + row.ID + '\', \'' + row['Max Pilihan'] + '\', \'' + row['Foto Terpilih'] + '\')" class="text-purple-600 bg-purple-50 hover:bg-purple-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Buka Akses Klien (Tambah Kuota)"><i class="fa-solid fa-unlock"></i></button>' : '') +
+                    (statusClient === 'Selesai' ? '<button onclick="reopenProject(\'' + row.ID + '\', \'' + row['Max Foto'] + '\', \'' + row['Foto Terpilih'] + '\')" class="text-purple-600 bg-purple-50 hover:bg-purple-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Buka Akses Klien (Tambah Kuota)"><i class="fa-solid fa-unlock"></i></button>' : '') +
                     '<button onclick="openProjectSettings(\'' + row.ID + '\')" class="text-gray-700 bg-gray-100 hover:bg-gray-200 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Pengaturan Project">' +
                     '<i class="fa-solid fa-gear"></i></button>';
 
@@ -6753,7 +6753,7 @@
                     '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="' + btnClassGridBase + 'text-green-600 bg-green-50 hover:bg-green-100" title="Lihat Galeri">' +
                     '<i class="fa-solid fa-arrow-up-right-from-square"></i></button>' +
                     paymentActionsGrid +
-                    (statusClient === 'Selesai' ? '<button onclick="reopenProject(\'' + row.ID + '\', \'' + row['Max Pilihan'] + '\', \'' + row['Foto Terpilih'] + '\')" class="' + btnClassGridBase + 'text-purple-600 bg-purple-50 hover:bg-purple-100" title="Buka Akses Klien (Tambah Kuota)"><i class="fa-solid fa-unlock"></i></button>' : '') +
+                    (statusClient === 'Selesai' ? '<button onclick="reopenProject(\'' + row.ID + '\', \'' + row['Max Foto'] + '\', \'' + row['Foto Terpilih'] + '\')" class="' + btnClassGridBase + 'text-purple-600 bg-purple-50 hover:bg-purple-100" title="Buka Akses Klien (Tambah Kuota)"><i class="fa-solid fa-unlock"></i></button>' : '') +
                     '<button onclick="openProjectSettings(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-gray-700 bg-gray-100 hover:bg-gray-200" title="Pengaturan Project">' +
                     '<i class="fa-solid fa-gear"></i></button>';
 
