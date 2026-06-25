@@ -8762,9 +8762,9 @@
                 container.className = 'max-w-[1600px] mx-auto';
 
                 // TERAPKAN LAYOUT SESUAI PHASE 12
-                if (clientState.clientLayout === 'masonry') {
-                    container.classList.add('columns-2', 'sm:columns-3', 'md:columns-4', 'lg:columns-5', 'gap-4', 'space-y-4', 'p-4');
-                } else if (clientState.clientLayout === 'adaptive') {
+                if (clientState.clientLayout === 'masonry' || clientState.clientLayout === 'adaptive') {
+                    // FIX: Menggunakan adaptive grid (Flickr style) untuk masonry agar urutan ke kanan (1,2,3) dan tidak loncat saat load
+                    container.classList.add('adaptive-grid');
                     container.classList.add('adaptive-grid');
                 } else if (clientState.clientLayout === 'horizontal') {
                     container.classList.add('flex', 'overflow-x-auto', 'snap-x', 'snap-mandatory', 'gap-4', 'p-4', 'hide-scrollbar', 'items-center', 'h-full');
@@ -8828,9 +8828,7 @@
                     var card = document.createElement('div');
 
                     // PENYESUAIAN CSS LAYOUT PHASE 12
-                    if (clientState.clientLayout === 'masonry') {
-                        card.className = "photo-card group break-inside-avoid mb-4 masonry-card";
-                    } else if (clientState.clientLayout === 'adaptive') {
+                    if (clientState.clientLayout === 'masonry' || clientState.clientLayout === 'adaptive') {
                         card.className = "photo-card group adaptive-card";
                     } else if (clientState.clientLayout === 'horizontal') {
                         card.className = "photo-card group shrink-0 snap-center w-[80vw] sm:w-[400px] h-auto max-h-[80vh] horizontal-card";
