@@ -117,7 +117,7 @@
             z-index: 100;
         }
 
-        .has-watermark #viewerImageContainer::after {
+        .has-watermark #viewerImageWrapper::after {
             content: "";
             position: absolute;
             inset: 0;
@@ -4069,11 +4069,13 @@
         <div id="viewerImageContainer"
             class="relative max-w-full max-h-[85vh] flex flex-col items-center justify-center overflow-hidden"
             onclick="event.stopPropagation()">
-            <img id="viewerImage" src="" onwheel="handleViewerWheel(event)" onmousedown="startDragViewer(event)"
+            <div id="viewerImageWrapper" class="relative inline-flex max-w-full max-h-[75vh] items-center justify-center rounded-lg shadow-2xl transition-transform duration-300 z-40 origin-center scale-95"
+                onwheel="handleViewerWheel(event)" onmousedown="startDragViewer(event)"
                 onmousemove="dragViewer(event)" onmouseup="endDragViewer()" onmouseleave="endDragViewer()"
                 ontouchstart="startDragViewerTouch(event)" ontouchmove="dragViewerTouch(event)"
-                ontouchend="endDragViewer()"
-                class="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl transition-transform duration-300 bg-black/50 relative z-40 origin-center scale-95">
+                ontouchend="endDragViewer()">
+                <img id="viewerImage" src="" class="max-w-full max-h-[75vh] object-contain rounded-lg bg-black/50 pointer-events-none">
+            </div>
 
             <div
                 class="relative flex flex-col sm:flex-row items-center gap-3 sm:gap-6 mt-4 bg-black/60 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 shadow-xl z-50">
@@ -8446,7 +8448,7 @@
         window.dragStartY = 0;
 
         function applyViewerTransform() {
-            var img = document.getElementById('viewerImage');
+            var img = document.getElementById('viewerImageWrapper');
             if (!img) return;
             img.style.transform = 'translate(' + window.viewerPanX + 'px, ' + window.viewerPanY + 'px) scale(' + window.viewerZoom + ')';
             img.style.cursor = window.viewerZoom > 1 ? (window.isDraggingViewer ? 'grabbing' : 'grab') : 'default';
@@ -8462,7 +8464,7 @@
             }
             if (window.viewerZoom > 5) window.viewerZoom = 5; // Batas zoom maksimal 5x
 
-            var img = document.getElementById('viewerImage');
+            var img = document.getElementById('viewerImageWrapper');
             img.style.transition = 'transform 0.1s ease-out'; // Animasi mulus
             applyViewerTransform();
         }
@@ -8471,7 +8473,7 @@
             window.viewerZoom = 1;
             window.viewerPanX = 0;
             window.viewerPanY = 0;
-            var img = document.getElementById('viewerImage');
+            var img = document.getElementById('viewerImageWrapper');
             if (img) {
                 img.style.transform = ''; // Biarkan Tailwind mengambil alih animasi normal
                 img.style.transition = '';
@@ -8497,7 +8499,7 @@
             e.preventDefault();
             window.viewerPanX = e.clientX - window.dragStartX;
             window.viewerPanY = e.clientY - window.dragStartY;
-            var img = document.getElementById('viewerImage');
+            var img = document.getElementById('viewerImageWrapper');
             img.style.transition = 'none'; // Drag sangat responsif (tanpa animasi delay)
             applyViewerTransform();
         }
@@ -8518,7 +8520,7 @@
             if (!window.isDraggingViewer || e.touches.length !== 1) return;
             window.viewerPanX = e.touches[0].clientX - window.dragStartX;
             window.viewerPanY = e.touches[0].clientY - window.dragStartY;
-            var img = document.getElementById('viewerImage');
+            var img = document.getElementById('viewerImageWrapper');
             img.style.transition = 'none';
             applyViewerTransform();
         }
@@ -8539,6 +8541,7 @@
 
             var modal = document.getElementById('imageViewerModal');
             var img = document.getElementById('viewerImage');
+            var wrapper = document.getElementById('viewerImageWrapper');
             var cap = document.getElementById('viewerCaption');
 
             var hdUrl = url.replace('=w1000', '=s0');
@@ -8550,8 +8553,8 @@
             modal.classList.remove('hidden');
             void modal.offsetWidth;
             modal.classList.remove('opacity-0');
-            img.classList.remove('scale-95');
-            img.classList.add('scale-100');
+            wrapper.classList.remove('scale-95');
+            wrapper.classList.add('scale-100');
 
             document.addEventListener('keydown', handleViewerKeyboard);
         }
@@ -8559,12 +8562,13 @@
         function closeImageViewer() {
             var modal = document.getElementById('imageViewerModal');
             var img = document.getElementById('viewerImage');
+            var wrapper = document.getElementById('viewerImageWrapper');
 
             resetZoom(); // Reset gambar ke ukuran asli sebelum ditutup
 
             modal.classList.add('opacity-0');
-            img.classList.remove('scale-100');
-            img.classList.add('scale-95');
+            wrapper.classList.remove('scale-100');
+            wrapper.classList.add('scale-95');
 
             setTimeout(function () {
                 modal.classList.add('hidden');
