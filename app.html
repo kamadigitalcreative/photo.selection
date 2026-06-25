@@ -106,7 +106,7 @@
         }
 
         /* Phase 2: Watermark Dinamis */
-        .has-watermark .photo-card::after {
+        .has-watermark .photo-card:not(.is-folder)::after {
             content: "";
             position: absolute;
             inset: 0;
@@ -8778,7 +8778,7 @@
             if (hasFolders) {
                 clientState.currentContent.folders.forEach(function (folder) {
                     var fCard = document.createElement('div');
-                    var baseClass = "photo-card bg-white flex flex-col items-center justify-center border border-gray-100 hover:border-blue-300 transition-colors shadow-sm cursor-pointer p-6 group break-inside-avoid ";
+                    var baseClass = "is-folder photo-card bg-white flex flex-col items-center justify-center border border-gray-100 hover:border-blue-300 transition-colors shadow-sm cursor-pointer p-6 group break-inside-avoid ";
 
                     if (clientState.clientLayout === 'horizontal' || clientState.clientLayout === 'slideshow') {
                         fCard.className = baseClass + "shrink-0 snap-center w-32 h-32 sm:w-40 sm:h-40 mb-0 mx-2 rounded-xl aspect-auto";
