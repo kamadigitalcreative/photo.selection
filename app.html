@@ -6961,10 +6961,9 @@
             if (!project) return;
             var isEn = localStorage.getItem('ps_lang') === 'en';
             
-            var isWmOn = project['UseWatermark'] === true || String(project['UseWatermark']).toUpperCase() === 'TRUE' || project['UseWatermark'] === 1;
-            var wmText = isWmOn ? (isEn ? 'Disable Watermark' : 'Matikan Watermark') : (isEn ? 'Enable Watermark' : 'Aktifkan Watermark');
-            var wmIcon = isWmOn ? 'fa-droplet-slash' : 'fa-droplet';
-            var wmColor = isWmOn ? 'text-green-600 bg-green-50 hover:bg-green-100' : 'text-gray-700 bg-gray-50 hover:bg-gray-100 hover:text-green-600';
+            var wmText = isEn ? 'Watermark Settings' : 'Pengaturan Watermark';
+            var wmIcon = 'fa-shield-halved';
+            var wmColor = 'text-blue-600 bg-blue-50 hover:bg-blue-100 hover:border-blue-200';
             
             var safeJSName = (project['Nama Client'] || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             var deadline = project['Deadline'] || '';
@@ -7758,9 +7757,57 @@
                 return;
             }
 
+            if (!window.lastProjectsData) return;
+            var project = window.lastProjectsData.find(function (p) { return p.ID === id; });
+            if (!project) return;
+
+            var isWmOn = project['UseWatermark'] === true || String(project['UseWatermark']).toUpperCase() === 'TRUE' || project['UseWatermark'] === 1;
+            var isWmTiledOn = project['UseWatermarkTiled'] === true || String(project['UseWatermarkTiled']).toUpperCase() === 'TRUE' || project['UseWatermarkTiled'] === 1;
+
+            var isEn = localStorage.getItem('ps_lang') === 'en';
+
+            var wmLogoText = isWmOn ? (isEn ? 'Disable Logo Watermark' : 'Matikan Watermark Logo') : (isEn ? 'Enable Logo Watermark' : 'Hidupkan Watermark Logo');
+            var wmLogoIcon = isWmOn ? 'fa-droplet-slash text-red-500' : 'fa-droplet text-green-500';
+
+            var wmTiledText = isWmTiledOn ? (isEn ? 'Disable Tiled Watermark' : 'Matikan Watermark Penuh (Tiled)') : (isEn ? 'Enable Tiled Watermark' : 'Hidupkan Watermark Penuh (Tiled)');
+            var wmTiledIcon = isWmTiledOn ? 'fa-border-none text-red-500' : 'fa-border-all text-green-500';
+
+            var htmlContent = `
+                <div class="grid grid-cols-1 gap-3 mt-4">
+                    <button onclick="Swal.close(); setTimeout(() => executeWatermarkToggle('${id}', 'logo'), 300)" class="flex items-center gap-4 p-4 bg-gray-50 border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-200 transition-colors text-left group">
+                        <div class="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                            <i class="fa-solid ${wmLogoIcon}"></i>
+                        </div>
+                        <div>
+                            <span class="block text-sm font-bold text-gray-800">${wmLogoText}</span>
+                            <span class="block text-xs text-gray-500">Tampilkan logo perlindungan di bagian tengah.</span>
+                        </div>
+                    </button>
+
+                    <button onclick="Swal.close(); setTimeout(() => executeWatermarkToggle('${id}', 'tiled'), 300)" class="flex items-center gap-4 p-4 bg-gray-50 border border-gray-200 rounded-xl hover:bg-cyan-50 hover:border-cyan-200 transition-colors text-left group">
+                        <div class="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                            <i class="fa-solid ${wmTiledIcon}"></i>
+                        </div>
+                        <div>
+                            <span class="block text-sm font-bold text-gray-800">${wmTiledText}</span>
+                            <span class="block text-xs text-gray-500">Teks perlindungan berulang di seluruh area.</span>
+                        </div>
+                    </button>
+                </div>
+            `;
+
+            Swal.fire({
+                title: isEn ? 'Watermark Settings' : 'Pengaturan Watermark',
+                html: htmlContent,
+                showConfirmButton: false,
+                showCloseButton: true
+            });
+        }
+
+        function executeWatermarkToggle(id, wmType) {
             Swal.fire({
                 title: 'Ubah Status Watermark?',
-                text: 'Klien akan melihat/tidak melihat tombol Download sesuai status watermark.',
+                text: 'Klien akan melihat perubahan status watermark seketika saat halamannya di-refresh.',
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#3b82f6',
@@ -7775,6 +7822,7 @@
                             body: JSON.stringify({
                                 action: 'toggleProjectWatermark',
                                 id: id,
+                                wmType: wmType,
                                 currentUser: currentUser
                             })
                         });
@@ -7791,7 +7839,13 @@
                                     var projs = JSON.parse(cachedProjectsStr);
                                     for (var i = 0; i < projs.length; i++) {
                                         if (projs[i].ID === id) {
-                                            projs[i]['UseWatermark'] = res.data.newValue;
+                                            if (res.data.type === 'tiled') {
+                                                projs[i]['UseWatermarkTiled'] = res.data.newValue;
+                                                if (res.data.newValue) projs[i]['UseWatermark'] = false; // Karena eksklusif
+                                            } else {
+                                                projs[i]['UseWatermark'] = res.data.newValue;
+                                                if (res.data.newValue) projs[i]['UseWatermarkTiled'] = false; // Karena eksklusif
+                                            }
                                             break;
                                         }
                                     }
