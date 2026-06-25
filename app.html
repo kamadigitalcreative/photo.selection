@@ -9168,7 +9168,17 @@
 
             // Text Header UI Baru
             var headerTerpilih = document.getElementById('header-terpilih-foto');
-            if (headerTerpilih) headerTerpilih.innerText = clientState.selectedImages.length;
+            if (headerTerpilih) {
+                headerTerpilih.innerText = count;
+                var headerLabel = headerTerpilih.previousElementSibling;
+                if (headerLabel) {
+                    if (clientState.galleryMode === 'download') {
+                        headerLabel.innerText = isEn ? 'To Download' : 'Diunduh';
+                    } else {
+                        headerLabel.innerText = isEn ? 'Selected' : 'Terpilih';
+                    }
+                }
+            }
 
             var bottomBar = document.getElementById('bottom-bar');
 
