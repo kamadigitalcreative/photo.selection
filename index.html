@@ -775,15 +775,40 @@
 
             <!-- Promo Banner -->
             <div
-                class="max-w-3xl mx-auto mb-14 bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center shadow-sm">
-                <p class="text-yellow-800 font-medium">
-                    <i class="fa-solid fa-star text-yellow-500 mr-2"></i>
-                    <strong class="font-bold">Promo Spesial:</strong> Gratis percobaan 1 project, akun aktif 1 bulan,
-                    tanpa kartu kredit, tanpa auto-debit!
+                class="max-w-3xl mx-auto mb-14 bg-green-50 border border-green-200 rounded-xl p-4 text-center shadow-sm">
+                <p class="text-green-800 font-medium">
+                    <i class="fa-solid fa-gift text-green-500 mr-2"></i>
+                    <strong class="font-bold">Penawaran Menarik:</strong> Kami menyediakan Paket Gratis untuk Anda yang baru memulai! Tanpa kartu kredit.
                 </p>
             </div>
 
-            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto items-center">
+            <div class="grid lg:grid-cols-4 md:grid-cols-2 gap-6 max-w-7xl mx-auto items-center">
+                <!-- Paket Gratis -->
+                <div
+                    class="bg-white rounded-3xl p-8 md:p-8 border-2 border-green-400 shadow-lg hover:shadow-xl transition relative overflow-hidden transform md:-translate-y-2">
+                    <div class="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase tracking-wider">Tanpa Biaya</div>
+                    <h3 class="text-2xl font-black text-slate-800 mb-2">Gratis</h3>
+                    <p class="text-slate-500 text-sm mb-6">Paket starter selamanya</p>
+                    <div class="mb-6 flex items-baseline">
+                        <span class="text-4xl font-extrabold text-green-600">Rp0</span><span class="text-slate-400 font-medium ml-1"> / selamanya</span>
+                    </div>
+                    <p class="text-xs text-slate-600 mb-8 bg-green-50 p-2.5 rounded-lg border border-green-100 font-medium">✨ Tanpa kartu kredit & batas waktu.</p>
+                    <ul class="space-y-4 mb-10 text-sm">
+                        <li class="flex items-center text-slate-700 font-medium"><i
+                                class="fa-solid fa-check text-green-500 mr-3 w-5"></i> 1 Project Aktif</li>
+                        <li class="flex items-center text-slate-700 font-medium"><i
+                                class="fa-solid fa-check text-green-500 mr-3 w-5"></i> Max 50 Photos</li>
+                        <li class="flex items-center text-slate-600"><i
+                                class="fa-solid fa-check text-green-500 mr-3 w-5"></i> Auto-Sort RAW Files</li>
+                        <li class="flex items-center text-slate-600"><i
+                                class="fa-solid fa-check text-green-500 mr-3 w-5"></i> Client Gallery Link</li>
+                        <li class="flex items-center text-slate-400"><i
+                                class="fa-solid fa-xmark text-slate-300 mr-3 w-5"></i> Tanpa Custom Branding</li>
+                    </ul>
+                    <a href="app.html?auth=register" onclick="trackEvent('click_harga_trial');"
+                        class="w-full py-3.5 px-6 rounded-xl font-bold bg-green-500 text-white hover:bg-green-600 shadow-[0_0_15px_rgba(34,197,94,0.3)] transition block text-center">Mulai Gratis Sekarang</a>
+                </div>
+
                 <!-- Paket 1 -->
                 <div
                     class="bg-white rounded-3xl p-8 md:p-10 border border-slate-200 shadow-sm hover:shadow-md transition relative">
@@ -809,9 +834,8 @@
                         <li class="flex items-center text-slate-600"><i
                                 class="fa-solid fa-check text-green-500 mr-3 w-5"></i> Basic Support</li>
                     </ul>
-                    <a href="app.html?auth=register" onclick="trackEvent('click_harga_trial');"
-                        class="w-full py-3.5 px-6 rounded-xl font-bold border-2 border-primary-100 text-primary-600 hover:bg-primary-50 hover:border-primary-200 transition block text-center">Coba
-                        Gratis Dulu</a>
+                    <a href="app.html?auth=register" onclick="trackEvent('click_harga_1bulan');"
+                        class="w-full py-3.5 px-6 rounded-xl font-bold border-2 border-primary-100 text-primary-600 hover:bg-primary-50 hover:border-primary-200 transition block text-center">Pilih Paket 1 Bulan</a>
                 </div>
 
                 <!-- Paket 2 (Popular) -->
@@ -847,9 +871,8 @@
                         <li class="flex items-center text-slate-300"><i
                                 class="fa-solid fa-check text-primary-400 mr-3 w-5"></i> VIP Support 24/7</li>
                     </ul>
-                    <a href="app.html?auth=register" onclick="trackEvent('click_harga_trial');"
-                        class="w-full py-3.5 px-6 rounded-xl font-bold bg-primary-600 text-white hover:bg-primary-500 shadow-[0_0_15px_rgba(59,130,246,0.4)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] transition transform hover:-translate-y-0.5 block text-center">Mulai
-                        dari 1 Project Gratis</a>
+                    <a href="app.html?auth=register" onclick="trackEvent('click_harga_1tahun');"
+                        class="w-full py-3.5 px-6 rounded-xl font-bold bg-primary-600 text-white hover:bg-primary-500 shadow-[0_0_15px_rgba(59,130,246,0.4)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] transition transform hover:-translate-y-0.5 block text-center">Berlangganan 1 Tahun</a>
                 </div>
 
                 <!-- Paket 3 -->
@@ -877,9 +900,8 @@
                         <li class="flex items-center text-slate-600"><i
                                 class="fa-solid fa-check text-green-500 mr-3 w-5"></i> Prioritas Support</li>
                     </ul>
-                    <a href="app.html?auth=register" onclick="trackEvent('click_harga_trial');"
-                        class="w-full py-3.5 px-6 rounded-xl font-bold border-2 border-primary-100 text-primary-600 hover:bg-primary-50 hover:border-primary-200 transition block text-center">Coba
-                        Gratis Dulu</a>
+                    <a href="app.html?auth=register" onclick="trackEvent('click_harga_6bulan');"
+                        class="w-full py-3.5 px-6 rounded-xl font-bold border-2 border-primary-100 text-primary-600 hover:bg-primary-50 hover:border-primary-200 transition block text-center">Pilih Paket 6 Bulan</a>
                 </div>
             </div>
 
@@ -1596,35 +1618,43 @@
             setT('#harga span.text-primary-600.uppercase', 'Investasi Super Terjangkau', 'Super Affordable Investment');
             setT('#harga h2.text-3xl', 'Fitur Kelas Dunia, Harga Lokal', 'World Class Features, Local Price');
             setT('#harga p.text-lg', 'Berhenti membuang waktu berjam-jam untuk sortir foto manual. Dapatkan fitur <span class="font-bold text-primary-600">Auto-Sort RAW</span> yang tidak dimiliki kompetitor dengan harga secangkir kopi.', 'Stop wasting hours on manual photo sorting. Get the <span class="font-bold text-primary-600">Auto-Sort RAW</span> feature that competitors don\'t have for the price of a cup of coffee.', true);
-            setT('#harga .bg-yellow-50 p', '<i class="fa-solid fa-star text-yellow-500 mr-2"></i> <strong class="font-bold">Promo Spesial Peluncuran:</strong> Gratis percobaan 1 project, akun aktif 1 bulan!', '<i class="fa-solid fa-star text-yellow-500 mr-2"></i> <strong class="font-bold">Special Launch Promo:</strong> Try 1 project free, account active for 1 month!', true);
+            setT('#harga .bg-green-50 p', '<i class="fa-solid fa-gift text-green-500 mr-2"></i> <strong class="font-bold">Penawaran Menarik:</strong> Kami menyediakan Paket Gratis untuk Anda yang baru memulai! Tanpa kartu kredit.', '<i class="fa-solid fa-gift text-green-500 mr-2"></i> <strong class="font-bold">Special Offer:</strong> We provide a Free Forever plan for you to start! No credit card.', true);
 
             var priceCards = document.querySelectorAll('#harga .grid > div');
-            if (priceCards.length >= 3) {
+            if (priceCards.length >= 4) {
+                // Gratis
+                priceCards[0].querySelector('h3').innerText = isEn ? 'Free' : 'Gratis';
+                priceCards[0].querySelector('p.text-sm').innerText = isEn ? 'Forever starter pack' : 'Paket starter selamanya';
+                priceCards[0].querySelector('.text-4xl').innerText = isEn ? 'Rp0' : 'Rp0';
+                priceCards[0].querySelector('.text-4xl + span').innerText = isEn ? ' / forever' : ' / selamanya';
+                priceCards[0].querySelector('p.text-xs').innerHTML = isEn ? '✨ No credit card & time limit.' : '✨ Tanpa kartu kredit & batas waktu.';
+                priceCards[0].querySelector('a').innerText = isEn ? 'Start Free Now' : 'Mulai Gratis Sekarang';
+
                 // 1 Bulan
-                priceCards[0].querySelector('h3').innerText = isEn ? '1 Month' : '1 Bulan';
-                priceCards[0].querySelector('p.text-sm').innerText = isEn ? 'Perfect for freelance projects' : 'Sempurna untuk project lepas';
-                priceCards[0].querySelector('.text-4xl').innerText = isEn ? '25k' : '25rb';
-                priceCards[0].querySelector('.text-4xl + span').innerText = isEn ? ' / month' : ' / bulan';
-                priceCards[0].querySelector('p.text-xs').innerText = isEn ? 'No auto-debit. Manual renewal.' : 'Tidak auto-debit. Perpanjangan manual.';
-                priceCards[0].querySelector('a').innerText = isEn ? 'Try for Free' : 'Coba Gratis Dulu';
+                priceCards[1].querySelector('h3').innerText = isEn ? '1 Month' : '1 Bulan';
+                priceCards[1].querySelector('p.text-sm').innerText = isEn ? 'Perfect for freelance projects' : 'Sempurna untuk project lepas';
+                priceCards[1].querySelector('.text-4xl').innerText = isEn ? '25k' : '25rb';
+                priceCards[1].querySelector('.text-4xl + span').innerText = isEn ? ' / month' : ' / bulan';
+                priceCards[1].querySelector('p.text-xs').innerText = isEn ? 'No auto-debit. Manual renewal.' : 'Tidak auto-debit. Perpanjangan manual.';
+                priceCards[1].querySelector('a').innerText = isEn ? 'Select 1 Month' : 'Pilih Paket 1 Bulan';
 
                 // 1 Tahun
-                priceCards[1].querySelector('span.bg-gradient-to-r').innerText = isEn ? 'MOST POPULAR & BEST VALUE' : 'PALING POPULER & HEMAT';
-                priceCards[1].querySelector('h3').innerText = isEn ? '1 Year' : '1 Tahun';
-                priceCards[1].querySelector('p.text-sm').innerText = isEn ? 'Smart investment for pro studios' : 'Investasi cerdas studio pro';
-                priceCards[1].querySelector('.text-4xl').innerText = isEn ? '199k' : '199rb';
-                priceCards[1].querySelector('.text-4xl + span').innerText = isEn ? ' / year' : ' / tahun';
-                priceCards[1].querySelector('p.text-xs').innerHTML = isEn ? '<i class="fa-solid fa-tags mr-1"></i> Only <strong>Rp16,500/month!</strong> Super value.' : '<i class="fa-solid fa-tags mr-1"></i> Hanya <strong>Rp16.500/bulan!</strong> Super hemat.';
-                priceCards[1].querySelectorAll('ul li')[0].innerHTML = isEn ? '<i class="fa-solid fa-check text-primary-400 mr-3 w-5"></i> <span class="font-bold">Save 33% more</span>' : '<i class="fa-solid fa-check text-primary-400 mr-3 w-5"></i> <span class="font-bold">Lebih hemat 33%</span>';
-                priceCards[1].querySelector('a').innerText = isEn ? 'Start with 1 Free Project' : 'Mulai dari 1 Project Gratis';
+                priceCards[2].querySelector('span.bg-gradient-to-r').innerText = isEn ? 'MOST POPULAR & BEST VALUE' : 'PALING POPULER & HEMAT';
+                priceCards[2].querySelector('h3').innerText = isEn ? '1 Year' : '1 Tahun';
+                priceCards[2].querySelector('p.text-sm').innerText = isEn ? 'Smart investment for pro studios' : 'Investasi cerdas studio pro';
+                priceCards[2].querySelector('.text-4xl').innerText = isEn ? '199k' : '199rb';
+                priceCards[2].querySelector('.text-4xl + span').innerText = isEn ? ' / year' : ' / tahun';
+                priceCards[2].querySelector('p.text-xs').innerHTML = isEn ? '<i class="fa-solid fa-tags mr-1"></i> Only <strong>Rp16,500/month!</strong> Super value.' : '<i class="fa-solid fa-tags mr-1"></i> Hanya <strong>Rp16.500/bulan!</strong> Super hemat.';
+                priceCards[2].querySelectorAll('ul li')[0].innerHTML = isEn ? '<i class="fa-solid fa-check text-primary-400 mr-3 w-5"></i> <span class="font-bold">Save 33% more</span>' : '<i class="fa-solid fa-check text-primary-400 mr-3 w-5"></i> <span class="font-bold">Lebih hemat 33%</span>';
+                priceCards[2].querySelector('a').innerText = isEn ? 'Subscribe 1 Year' : 'Berlangganan 1 Tahun';
 
                 // 6 Bulan
-                priceCards[2].querySelector('h3').innerText = isEn ? '6 Months' : '6 Bulan';
-                priceCards[2].querySelector('p.text-sm').innerText = isEn ? 'The perfect middle choice' : 'Pilihan tengah yang pas';
-                priceCards[2].querySelector('.text-4xl').innerText = isEn ? '120k' : '120rb';
-                priceCards[2].querySelector('.text-4xl + span').innerText = isEn ? ' / 6 mos' : ' / 6 bln';
-                priceCards[2].querySelector('p.text-xs').innerText = isEn ? 'It fields out to Rp20,000/month.' : 'Jatuhnya Rp20.000/bulan.';
-                priceCards[2].querySelector('a').innerText = isEn ? 'Try for Free' : 'Coba Gratis Dulu';
+                priceCards[3].querySelector('h3').innerText = isEn ? '6 Months' : '6 Bulan';
+                priceCards[3].querySelector('p.text-sm').innerText = isEn ? 'The perfect middle choice' : 'Pilihan tengah yang pas';
+                priceCards[3].querySelector('.text-4xl').innerText = isEn ? '120k' : '120rb';
+                priceCards[3].querySelector('.text-4xl + span').innerText = isEn ? ' / 6 mos' : ' / 6 bln';
+                priceCards[3].querySelector('p.text-xs').innerText = isEn ? 'It fields out to Rp20,000/month.' : 'Jatuhnya Rp20.000/bulan.';
+                priceCards[3].querySelector('a').innerText = isEn ? 'Select 6 Months' : 'Pilih Paket 6 Bulan';
             }
             setT('#harga .mt-12 p', 'Pembayaran diproses dengan aman dan otomatis oleh <strong>Mayar.id</strong>.<br>Mendukung QRIS, E-Wallet (GoPay, OVO), dan Virtual Account.', 'Payments are processed securely and automatically by <strong>Mayar.id</strong>.<br>Supports QRIS, E-Wallet (GoPay, OVO), and Virtual Account.', true);
 
