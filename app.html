@@ -9139,15 +9139,36 @@
         }
 
         function updateClientCounterUI() {
-            var count = clientState.selectedImages.length;
+            var isEn = localStorage.getItem('ps_lang') === 'en';
+            var count = clientState.galleryMode === 'download' 
+                ? clientState.downloadImages.length 
+                : clientState.selectedImages.length;
 
             // Text counter bawah
             var bCounter = document.getElementById('bottom-counter');
             if (bCounter) bCounter.innerText = count;
 
+            var statusLabel = document.querySelector('.action-bar span.tracking-wider');
+            if (statusLabel) {
+                if (clientState.galleryMode === 'download') {
+                    statusLabel.innerText = isEn ? 'Download Status' : 'Status Unduhan';
+                } else {
+                    statusLabel.innerText = isEn ? 'Selection Status' : 'Status Pilihan';
+                }
+            }
+
+            var terpilihLabel = document.querySelector('#bottom-counter + span');
+            if (terpilihLabel) {
+                if (clientState.galleryMode === 'download') {
+                    terpilihLabel.innerText = isEn ? 'to download' : 'diunduh';
+                } else {
+                    terpilihLabel.innerText = isEn ? 'selected' : 'terpilih';
+                }
+            }
+
             // Text Header UI Baru
             var headerTerpilih = document.getElementById('header-terpilih-foto');
-            if (headerTerpilih) headerTerpilih.innerText = count;
+            if (headerTerpilih) headerTerpilih.innerText = clientState.selectedImages.length;
 
             var bottomBar = document.getElementById('bottom-bar');
 
@@ -9163,7 +9184,7 @@
                 }
             }
 
-            if (count > 0) {
+            if (count > 0 || clientState.galleryMode === 'download') {
                 if (bottomBar) {
                     bottomBar.classList.remove('translate-y-full');
                 }
