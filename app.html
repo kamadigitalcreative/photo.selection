@@ -129,6 +129,28 @@
             z-index: 100;
         }
 
+        .has-watermark-tiled .photo-card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image: var(--watermark-bg-tiled);
+            background-position: top left;
+            background-repeat: repeat;
+            z-index: 100;
+        }
+
+        .has-watermark-tiled #viewerImageContainer::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image: var(--watermark-bg-tiled);
+            background-position: top left;
+            background-repeat: repeat;
+            z-index: 100;
+        }
+
         /* PREMIUM UI UPGRADES (Landing Page Match) */
         .glass-header {
             background: rgba(255, 255, 255, 0.9);
@@ -3703,10 +3725,10 @@
 
                             <!-- FITUR PREMIUM TAMBAHAN -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <!-- UI WATERMARK DINAMIS (PHASE 2) -->
-                                <div id="wrapper-watermark"
-                                    class="flex items-center justify-between p-4 bg-blue-50/80 border border-blue-200 rounded-2xl hidden shadow-sm">
-                                    <div class="flex items-start gap-3">
+                                <!-- Switch Watermark -->
+                                <div class="relative bg-blue-50/50 border border-blue-100 rounded-2xl p-4 flex items-center justify-between group hover:bg-blue-50 transition-colors cursor-pointer"
+                                    onclick="document.getElementById('p_watermark').click()">
+                                    <div class="flex items-center gap-4">
                                         <div
                                             class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shrink-0 border border-blue-200 shadow-sm">
                                             <i class="fa-solid fa-droplet"></i>
@@ -3723,9 +3745,36 @@
                                     <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
                                         <input type="checkbox" class="sr-only peer" id="p_watermark"
                                             onclick="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ showPremiumAlert(); return false; }"
+                                            onchange="if(this.checked) { document.getElementById('p_watermark_tiled').checked = false; }"
                                             checked>
                                         <div
                                             class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 shadow-inner">
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <!-- Switch Watermark Tiled -->
+                                <div class="relative bg-cyan-50/50 border border-cyan-100 rounded-2xl p-4 flex items-center justify-between group hover:bg-cyan-50 transition-colors cursor-pointer"
+                                    onclick="document.getElementById('p_watermark_tiled').click()">
+                                    <div class="flex items-center gap-4">
+                                        <div
+                                            class="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center text-cyan-600 shrink-0 border border-cyan-200 shadow-sm">
+                                            <i class="fa-solid fa-border-all"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-800 text-sm flex items-center gap-2"
+                                                id="lbl-p-wmtiled-title">Watermark Penuh (Tiled) <i
+                                                    class="fa-solid fa-crown text-yellow-500 text-[11px]"
+                                                    title="Fitur PRO"></i></h4>
+                                            <p class="text-[10px] text-gray-500 mt-0.5" id="lbl-p-wmtiled-desc">Teks polos diulangi di seluruh foto.</p>
+                                        </div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
+                                        <input type="checkbox" class="sr-only peer" id="p_watermark_tiled"
+                                            onclick="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ showPremiumAlert(); return false; }"
+                                            onchange="if(this.checked) { document.getElementById('p_watermark').checked = false; }">
+                                        <div
+                                            class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600 shadow-inner">
                                         </div>
                                     </label>
                                 </div>
@@ -4355,6 +4404,8 @@
 
             setLbl('#lbl-p-wm-title', 'Keamanan Watermark <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i>', 'Watermark Security <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i>');
             setLbl('#lbl-p-wm-desc', 'Tampilkan watermark logo.', 'Show logo watermark.');
+            setLbl('#lbl-p-wmtiled-title', 'Watermark Penuh (Tiled) <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i>', 'Tiled Watermark <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i>');
+            setLbl('#lbl-p-wmtiled-desc', 'Teks polos diulangi di seluruh foto.', 'Plain text repeated across the photo.');
             setLbl('#lbl-p-cat-title', 'Multi-Kategori <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i>', 'Multi-Category <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i>');
             setLbl('#lbl-p-cat-desc', 'Pisahkan kuota foto per kategori.', 'Separate photo quota per category.');
             setPh('#global-search', 'Cari project, klien, atau link...', 'Search project, client, or link...');
@@ -7594,6 +7645,7 @@
             var pMax = document.getElementById('p_max');
             var pPass = document.getElementById('p_pass');
             var pWatermark = document.getElementById('p_watermark');
+            var pWatermarkTiled = document.getElementById('p_watermark_tiled');
             var pUseCategory = document.getElementById('p_use_category');
 
             var pAksesPilih = document.getElementById('p_akses_pilih');
@@ -7632,6 +7684,7 @@
                 maxFoto: finalMaxFoto,
                 passwordClient: pPass ? pPass.value.trim() : '',
                 useWatermark: pWatermark ? pWatermark.checked : false,
+                useWatermarkTiled: pWatermarkTiled ? pWatermarkTiled.checked : false,
                 categories: categoriesData,
                 clientLayout: document.getElementById('p_client_layout') ? document.getElementById('p_client_layout').value : 'masonry',
                 extraPrice: document.getElementById('p_extra_price') ? document.getElementById('p_extra_price').value : 0,
@@ -8191,6 +8244,30 @@
             document.body.classList.add('has-watermark');
         }
 
+        function applyWatermarkTiled(brandName) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 300;
+            canvas.height = 300;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(-Math.PI / 4);
+
+            ctx.font = 'bold 24px "Inter", sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'; // 20% opacity
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(brandName, 0, 0);
+
+            ctx.font = '600 12px "Inter", sans-serif';
+            ctx.fillText('CONFIDENTIAL', 0, 30);
+
+            const dataURL = canvas.toDataURL('image/png');
+            document.body.style.setProperty('--watermark-bg-tiled', `url(${dataURL})`);
+            document.body.classList.add('has-watermark-tiled');
+        }
+
         function processClientProjectData(projectData) {
             clientState.namaClient = projectData.namaClient;
             clientState.nomorWA = projectData.nomorWA;
@@ -8219,11 +8296,18 @@
             clientState.folderHistory = [];
 
             // Eksekusi Phase 2: Watermark Dinamis
-            if (projectData.watermarkEnabled) {
+            // Eksekusi Phase 2: Watermark Dinamis & Tiled
+            if (projectData.watermarkTiledEnabled) {
+                applyWatermarkTiled(projectData.brandName || 'Kama Creative');
+                document.body.classList.remove('has-watermark');
+            } else if (projectData.watermarkEnabled) {
                 applyWatermark(projectData.brandName || 'Kama Creative', projectData.watermarkUrl);
+                document.body.classList.remove('has-watermark-tiled');
             } else {
                 document.body.classList.remove('has-watermark');
+                document.body.classList.remove('has-watermark-tiled');
                 document.body.style.removeProperty('--watermark-bg');
+                document.body.style.removeProperty('--watermark-bg-tiled');
             }
 
             // Eksekusi Phase 13: Download Toggle Dinamis
