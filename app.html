@@ -3727,7 +3727,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <!-- Switch Watermark -->
                                 <div class="relative bg-blue-50/50 border border-blue-100 rounded-2xl p-4 flex items-center justify-between group hover:bg-blue-50 transition-colors cursor-pointer"
-                                    onclick="document.getElementById('p_watermark').click()">
+                                    onclick="if(!event.target.closest('label')) document.getElementById('p_watermark').click()">
                                     <div class="flex items-center gap-4">
                                         <div
                                             class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shrink-0 border border-blue-200 shadow-sm">
@@ -3755,7 +3755,7 @@
 
                                 <!-- Switch Watermark Tiled -->
                                 <div class="relative bg-cyan-50/50 border border-cyan-100 rounded-2xl p-4 flex items-center justify-between group hover:bg-cyan-50 transition-colors cursor-pointer"
-                                    onclick="document.getElementById('p_watermark_tiled').click()">
+                                    onclick="if(!event.target.closest('label')) document.getElementById('p_watermark_tiled').click()">
                                     <div class="flex items-center gap-4">
                                         <div
                                             class="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center text-cyan-600 shrink-0 border border-cyan-200 shadow-sm">
@@ -6800,7 +6800,9 @@
                     paymentActions +
                     (statusClient === 'Selesai' ? '<button onclick="reopenProject(\'' + row.ID + '\', \'' + row['Max Foto'] + '\', \'' + row['Foto Terpilih'] + '\')" class="text-purple-600 bg-purple-50 hover:bg-purple-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Buka Akses Klien (Tambah Kuota)"><i class="fa-solid fa-unlock"></i></button>' : '') +
                     '<button onclick="openProjectSettings(\'' + row.ID + '\')" class="text-gray-700 bg-gray-100 hover:bg-gray-200 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Pengaturan Project">' +
-                    '<i class="fa-solid fa-gear"></i></button>';
+                    '<i class="fa-solid fa-gear"></i></button>' +
+                    '<button onclick="deleteProject(\'' + row.ID + '\')" class="text-red-600 bg-red-50 hover:bg-red-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Hapus Project">' +
+                    '<i class="fa-solid fa-trash-can"></i></button>';
 
                 var iconAvatar = '<div class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-indigo-50 to-blue-100 rounded-full sm:rounded-2xl border border-blue-200 shadow-sm flex items-center justify-center text-blue-500 group-hover:scale-105 transition-transform"><i class="fa-solid fa-images text-xl sm:text-2xl opacity-80"></i></div>';
 
@@ -6822,7 +6824,9 @@
                     paymentActionsGrid +
                     (statusClient === 'Selesai' ? '<button onclick="reopenProject(\'' + row.ID + '\', \'' + row['Max Foto'] + '\', \'' + row['Foto Terpilih'] + '\')" class="' + btnClassGridBase + 'text-purple-600 bg-purple-50 hover:bg-purple-100" title="Buka Akses Klien (Tambah Kuota)"><i class="fa-solid fa-unlock"></i></button>' : '') +
                     '<button onclick="openProjectSettings(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-gray-700 bg-gray-100 hover:bg-gray-200" title="Pengaturan Project">' +
-                    '<i class="fa-solid fa-gear"></i></button>';
+                    '<i class="fa-solid fa-gear"></i></button>' +
+                    '<button onclick="deleteProject(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-red-600 bg-red-50 hover:bg-red-100" title="Hapus Project">' +
+                    '<i class="fa-solid fa-trash-can"></i></button>';
 
                 if (isGrid) {
                     card.className = "bg-white border border-gray-100 rounded-[2rem] overflow-hidden flex flex-col shadow-sm hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-1 hover:border-indigo-100 transition-all duration-300 relative group h-full";
