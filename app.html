@@ -5835,6 +5835,20 @@
                 appBranding.logo = currentUser.brandLogo || '';
                 applyBranding();
 
+                var badgeEl = document.getElementById('badge-pro-status');
+                if (badgeEl) {
+                    var paketStr = currentUser.paket || (currentUser.isPremiumAddon ? 'PRO PLAN' : 'FREE PLAN');
+                    var isPro = currentUser.isPremiumAddon || paketStr.toUpperCase().includes('PRO') || paketStr.toUpperCase().includes('BULAN') || paketStr.toUpperCase().includes('TAHUN') || paketStr.toUpperCase().includes('LIFETIME');
+                    
+                    if (isPro) {
+                        badgeEl.className = "hidden sm:flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full text-amber-700 font-bold text-[10px] tracking-wide uppercase shadow-sm";
+                        badgeEl.innerHTML = '<i class="fa-solid fa-crown"></i> ' + paketStr;
+                    } else {
+                        badgeEl.className = "hidden sm:flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-full text-slate-500 font-bold text-[10px] tracking-wide uppercase shadow-sm";
+                        badgeEl.innerHTML = '<i class="fa-solid fa-user-tag"></i> ' + paketStr;
+                    }
+                }
+
                 var adminNavTabs = document.getElementById('admin-nav-tabs');
                 var adminNavTabsMobile = document.getElementById('admin-nav-tabs-mobile');
                 var adminCols = document.querySelectorAll('.admin-only-col');
