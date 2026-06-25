@@ -8917,6 +8917,7 @@
                     if (cardElement && cardElement.classList) cardElement.classList.remove('selected');
                     if (btnPilih) btnPilih.innerHTML = '<i class="fa-solid fa-cloud-arrow-down mr-1.5"></i> ' + (isEn ? 'Select' : 'Pilih Unduh');
                 }
+                updateClientCounterUI();
                 return; // Keluar tanpa trigger validasi kuota & update status
             }
 
@@ -9160,7 +9161,7 @@
             var terpilihLabel = document.querySelector('#bottom-counter + span');
             if (terpilihLabel) {
                 if (clientState.galleryMode === 'download') {
-                    terpilihLabel.innerText = isEn ? 'to download' : 'diunduh';
+                    terpilihLabel.innerText = isEn ? 'selected for download' : 'pilihan unduhan';
                 } else {
                     terpilihLabel.innerText = isEn ? 'selected' : 'terpilih';
                 }
