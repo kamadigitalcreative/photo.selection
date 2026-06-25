@@ -8659,9 +8659,11 @@
             if (!btn) return;
 
             var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
+            var noteBtn = document.getElementById('viewerNoteBtn');
             
             if (clientState.galleryMode === 'download') {
                 btn.style.display = 'flex';
+                if (noteBtn) noteBtn.style.display = 'none';
                 var dIndex = clientState.downloadImages.findIndex(function (sel) {
                     return sel.name === filename && sel.folder === clientState.currentFolderName;
                 });
@@ -8671,9 +8673,11 @@
                     : '<i class="fa-solid fa-cloud-arrow-down mr-2"></i> ' + (localStorage.getItem('ps_lang') === 'en' ? 'Select' : 'Pilih Unduh');
             } else if (isSubmitted) {
                 btn.style.display = 'none';
+                if (noteBtn) noteBtn.style.display = 'none';
                 return;
             } else {
                 btn.style.display = 'flex';
+                if (noteBtn) noteBtn.style.display = 'flex';
             }
 
             // Fix akurasi cek foto saat pindah folder
@@ -9187,8 +9191,9 @@
                 if (clientState.currentContent.images.length === 0) {
                     selectAllCheckbox.checked = false;
                 } else {
+                    var targetArray = clientState.galleryMode === 'download' ? clientState.downloadImages : clientState.selectedImages;
                     var allCurrentSelected = clientState.currentContent.images.every(function (imgData) {
-                        return clientState.selectedImages.some(function (sel) { return sel.name === imgData.name && sel.folder === clientState.currentFolderName; });
+                        return targetArray.some(function (sel) { return sel.name === imgData.name && sel.folder === clientState.currentFolderName; });
                     });
                     selectAllCheckbox.checked = allCurrentSelected;
                 }
