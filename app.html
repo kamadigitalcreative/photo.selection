@@ -4803,7 +4803,7 @@
         var baseAppUrl = "";
         var clientState = {
             token: '', namaClient: '', nomorWA: '', maxFoto: 0, driveLink: '',
-            selectedImages: [], folderHistory: [], currentFolderId: '', currentFolderName: '', currentContent: { folders: [], images: [] }, isPreviewMode: false, isFinished: false,
+            selectedImages: [], downloadImages: [], folderHistory: [], currentFolderId: '', currentFolderName: '', currentContent: { folders: [], images: [] }, isPreviewMode: false, isFinished: false,
             galleryMode: 'selection', // BARU: 'selection' atau 'download'
             notes: {} // Untuk menyimpan catatan per foto (format: { "id_foto": "catatan..." })
         };
@@ -8659,7 +8659,17 @@
             if (!btn) return;
 
             var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
-            if (clientState.galleryMode === 'download' || isSubmitted) {
+            
+            if (clientState.galleryMode === 'download') {
+                btn.style.display = 'flex';
+                var dIndex = clientState.downloadImages.findIndex(function (sel) {
+                    return sel.name === filename && sel.folder === clientState.currentFolderName;
+                });
+                var isDownSelected = dIndex !== -1;
+                btn.innerHTML = isDownSelected 
+                    ? '<i class="fa-solid fa-check mr-2"></i> ' + (localStorage.getItem('ps_lang') === 'en' ? 'Deselect' : 'Batal')
+                    : '<i class="fa-solid fa-cloud-arrow-down mr-2"></i> ' + (localStorage.getItem('ps_lang') === 'en' ? 'Select' : 'Pilih Unduh');
+            } else if (isSubmitted) {
                 btn.style.display = 'none';
                 return;
             } else {
@@ -8828,9 +8838,16 @@
 
                     card.dataset.filename = imgData.name;
 
-                    var isSelected = clientState.selectedImages.some(function (sel) {
-                        return sel.name === imgData.name && sel.folder === clientState.currentFolderName;
-                    });
+                    var isSelected = false;
+                    if (clientState.galleryMode === 'download') {
+                        isSelected = clientState.downloadImages.some(function (sel) {
+                            return sel.name === imgData.name && sel.folder === clientState.currentFolderName;
+                        });
+                    } else {
+                        isSelected = clientState.selectedImages.some(function (sel) {
+                            return sel.name === imgData.name && sel.folder === clientState.currentFolderName;
+                        });
+                    }
                     if (isSelected) card.classList.add('selected');
 
                     // 1. UBAH KLIK KARTU/FOTO MENJADI BUKA VIEWER (PERBESAR FOTO)
@@ -8841,7 +8858,9 @@
 
                     var btnText = '';
                     if (clientState.galleryMode === 'download') {
-                        btnText = '<i class="fa-solid fa-cloud-arrow-down mr-1.5"></i> Download';
+                        btnText = isSelected
+                            ? '<i class="fa-solid fa-check mr-1.5"></i> ' + (isEn ? 'Deselect' : 'Batal')
+                            : '<i class="fa-solid fa-cloud-arrow-down mr-1.5"></i> ' + (isEn ? 'Select' : 'Pilih Unduh');
                     } else {
                         btnText = isSelected
                             ? '<i class="fa-solid fa-check mr-2"></i> ' + (isEn ? 'Deselect' : 'Batal')
@@ -8878,6 +8897,24 @@
 
         function toggleSelection(cardElement, filename, url) {
             var isEn = localStorage.getItem('ps_lang') === 'en';
+
+            if (clientState.galleryMode === 'download') {
+                var dIndex = clientState.downloadImages.findIndex(function (sel) {
+                    return sel.name === filename && sel.folder === clientState.currentFolderName;
+                });
+                var btnPilih = cardElement ? cardElement.querySelector('.btn-pilih-foto') : null;
+
+                if (dIndex === -1) {
+                    clientState.downloadImages.push({ name: filename, folder: clientState.currentFolderName, url: url });
+                    if (cardElement && cardElement.classList) cardElement.classList.add('selected');
+                    if (btnPilih) btnPilih.innerHTML = '<i class="fa-solid fa-check mr-1.5"></i> ' + (isEn ? 'Deselect' : 'Batal');
+                } else {
+                    clientState.downloadImages.splice(dIndex, 1);
+                    if (cardElement && cardElement.classList) cardElement.classList.remove('selected');
+                    if (btnPilih) btnPilih.innerHTML = '<i class="fa-solid fa-cloud-arrow-down mr-1.5"></i> ' + (isEn ? 'Select' : 'Pilih Unduh');
+                }
+                return; // Keluar tanpa trigger validasi kuota & update status
+            }
 
             var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
             if (isSubmitted) {
@@ -10249,16 +10286,16 @@
 
             if (isChecked) {
                 clientState.currentContent.images.forEach(function (imgData) {
-                    var exists = clientState.selectedImages.some(function (sel) { return sel.name === imgData.name && sel.folder === clientState.currentFolderName; });
+                    var exists = clientState.downloadImages.some(function (sel) { return sel.name === imgData.name && sel.folder === clientState.currentFolderName; });
                     if (!exists) {
-                        clientState.selectedImages.push({ name: imgData.name, folder: clientState.currentFolderName, url: imgData.url });
+                        clientState.downloadImages.push({ name: imgData.name, folder: clientState.currentFolderName, url: imgData.url });
                     }
                 });
             } else {
                 clientState.currentContent.images.forEach(function (imgData) {
-                    var index = clientState.selectedImages.findIndex(function (sel) { return sel.name === imgData.name && sel.folder === clientState.currentFolderName; });
+                    var index = clientState.downloadImages.findIndex(function (sel) { return sel.name === imgData.name && sel.folder === clientState.currentFolderName; });
                     if (index !== -1) {
-                        clientState.selectedImages.splice(index, 1);
+                        clientState.downloadImages.splice(index, 1);
                     }
                 });
             }
@@ -10268,18 +10305,18 @@
         }
 
         async function downloadSelectedAsZip() {
-            if (clientState.selectedImages.length === 0) {
+            if (clientState.downloadImages.length === 0) {
                 Swal.fire({ title: 'Masih Kosong', text: 'Pilih foto yang ingin di-download terlebih dahulu.', icon: 'info', confirmButtonColor: '#2563eb' });
                 return;
             }
 
-            startLoading("Mendownload " + clientState.selectedImages.length + " foto...");
+            startLoading("Mendownload " + clientState.downloadImages.length + " foto...");
             try {
                 var zip = new JSZip();
                 var folderName = clientState.namaClient.replace(/[^a-zA-Z0-9]/g, '_');
                 var rootFolder = zip.folder(folderName);
 
-                var promises = clientState.selectedImages.map(async function (img) {
+                var promises = clientState.downloadImages.map(async function (img) {
                     try {
                         const response = await fetch(img.url);
                         if (!response.ok) throw new Error("Gagal mengambil data dari Google Drive");
