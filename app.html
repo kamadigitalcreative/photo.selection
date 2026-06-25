@@ -2347,10 +2347,10 @@
                                 <p class="text-sm text-slate-600 leading-relaxed mb-4 guide-step3-desc">Setelah project
                                     berhasil dibuat, temukan nama klien Anda di daftar tabel Project.</p>
                                 <div
-                                    class="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 flex items-start gap-3">
-                                    <i class="fa-regular fa-copy text-emerald-600 mt-0.5 text-lg"></i>
+                                    class="bg-blue-50/50 border border-blue-100 rounded-xl p-3 flex items-start gap-3">
+                                    <i class="fa-regular fa-copy text-blue-600 mt-0.5 text-lg"></i>
                                     <p class="text-xs text-slate-600 font-medium leading-relaxed guide-step3-note">Klik
-                                        tombol <b>Copy</b> berwarna hijau. Sistem akan menyalin teks sapaan otomatis
+                                        tombol <b>Copy</b> berwarna biru pada kartu project. Sistem akan menyalin teks sapaan otomatis
                                         beserta link galeri. Anda tinggal <b>Paste</b> di chat WhatsApp klien.</p>
                                 </div>
                             </div>
@@ -2411,8 +2411,7 @@
                                         <li class="flex items-start gap-2">
                                             <div
                                                 class="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center shrink-0 mt-0.5 font-bold text-[10px]">
-                                                2</div> <span>Masuk ke menu <b>Projects</b> > klik tombol abu-abu
-                                                <b>Sortir Lokal</b>.</span>
+                                                2</div> <span>Di menu <b>Projects</b>, klik tombol <b><i class="fa-solid fa-folder-tree"></i> Sortir Lokal</b> (berwarna ungu) di bagian bawah kartu project.</span>
                                         </li>
                                     </ul>
                                     <ul class="text-xs text-slate-500 space-y-3 font-medium guide-step5-list2">
@@ -4936,7 +4935,7 @@
                             <i class="fa-solid fa-circle-check"></i>
                         </div>
                         <h2 class="text-2xl font-black text-slate-800 mb-2">${isEn ? 'PRO Subscription Active' : 'Langganan PRO Aktif'}</h2>
-                        <p class="text-slate-600 max-w-md mx-auto mb-6">${isEn ? 'Thank you for subscribing! All premium features like Watermark, Collage, Multi-Category, Gallery Music, and Upsell System are unlocked and ready to skyrocket your profits.' : 'Terima kasih telah berlangganan! Semua fitur premium seperti Watermark, Kolase, Multi-Kategori, Musik Galeri, dan Sistem Upsell sudah terbuka dan siap digunakan untuk meroketkan cuan Anda.'}</p>
+                        <p class="text-slate-600 max-w-md mx-auto mb-6">${isEn ? 'Thank you for subscribing! All premium features like Watermark, Collage, Multi-Category, Gallery Music, Auto Sort, and Upsell System are unlocked and ready to skyrocket your profits.' : 'Terima kasih telah berlangganan! Semua fitur premium seperti Watermark, Kolase, Multi-Kategori, Musik Galeri, Sortir Lokal, dan Sistem Upsell sudah terbuka dan siap digunakan untuk meroketkan cuan Anda.'}</p>
                         <button onclick="switchAdminTab('projects')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2.5 px-6 rounded-full transition-colors shadow-md">
                             ${isEn ? 'Start Creating Project' : 'Mulai Buat Project'}
                         </button>
@@ -4978,11 +4977,16 @@
                                 <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Create aesthetic social media teasers instantly without opening Photoshop at all.' : 'Bikin bahan teaser sosial media estetik secara instan tanpa perlu repot buka Photoshop sama sekali.'}</p>
                             </div>
                             <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                                <div class="w-10 h-10 bg-purple-100 text-purple-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-layer-group"></i></div>
+                                <div class="w-10 h-10 bg-purple-100 text-purple-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-folder-tree"></i></div>
+                                <h3 class="font-bold text-slate-800 text-sm mb-1">${isEn ? 'Local File Sorting' : 'Sortir Lokal Otomatis'}</h3>
+                                <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Sort hundreds of client-selected files securely offline on your computer in just seconds. No server needed!' : 'Pisahkan ratusan foto pilihan klien secara aman (offline) di komputer Anda hanya dalam hitungan detik. Tanpa server!'}</p>
+                            </div>
+
+                            <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                                <div class="w-10 h-10 bg-amber-100 text-amber-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-layer-group"></i></div>
                                 <h3 class="font-bold text-slate-800 text-sm mb-1">${isEn ? 'Multi-Category' : 'Multi-Kategori'}</h3>
                                 <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Neatly separate photo quotas. E.g., Max 50 for Morning Session, Max 100 for Reception. Keep everything organized.' : 'Pisahkan jatah foto dengan rapi. Misal Max 50 untuk Akad, Max 100 untuk Resepsi. Semua lebih terorganisir.'}</p>
                             </div>
-
                             <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                                 <div class="w-10 h-10 bg-rose-100 text-rose-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-music"></i></div>
                                 <h3 class="font-bold text-slate-800 text-sm mb-1">${isEn ? 'Gallery Music' : 'Musik Galeri'}</h3>
