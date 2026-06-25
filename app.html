@@ -3918,6 +3918,17 @@
                     <i class="fa-solid fa-music"></i>
                 </button>
             </div>
+            
+            <div id="deadline-banner" class="hidden flex shrink-0 items-center gap-2 sm:gap-3 bg-red-50 border border-red-200 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl shadow-[0_2px_10px_rgb(0,0,0,0.02)] mr-2 sm:mr-4">
+                <div class="hidden sm:flex w-7 h-7 rounded-full bg-red-100 items-center justify-center shrink-0 text-red-500">
+                    <i class="fa-solid fa-clock animate-pulse"></i>
+                </div>
+                <div class="flex flex-col justify-center">
+                    <span class="text-[9px] sm:text-[10px] font-extrabold text-red-800 uppercase tracking-tighter" id="deadline-text">Batas Waktu: -</span>
+                    <span class="text-[10px] sm:text-xs font-semibold text-red-600 leading-none mt-0.5" id="deadline-timer">Sisa waktu: -</span>
+                </div>
+            </div>
+
             <div
                 class="shrink-0 flex items-center gap-3 sm:gap-4 bg-white border border-slate-200 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
                 <div class="text-center px-2 border-r border-slate-100">
@@ -3935,15 +3946,6 @@
             </div>
         </header>
 
-        <div id="deadline-banner" class="hidden shrink-0 w-full bg-red-50 border-b border-red-200 p-2 sm:p-3 shadow-sm z-[90]">
-            <div class="max-w-[1600px] mx-auto flex items-center justify-center gap-3">
-                <i class="fa-solid fa-clock text-red-500 animate-pulse text-lg"></i>
-                <div class="flex flex-col">
-                    <span class="text-xs sm:text-sm font-bold text-red-800" id="deadline-text">Batas Waktu: -</span>
-                    <span class="text-[10px] sm:text-xs font-semibold text-red-600" id="deadline-timer">Sisa waktu: -</span>
-                </div>
-            </div>
-        </div>
 
         <div class="scrollable-content relative" id="gallery-scroll-area">
             <!-- Nav Arrows for Horizontal Layout -->
