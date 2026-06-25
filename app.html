@@ -2924,12 +2924,11 @@
                         </div>
                     </div>
                 </div>
+                <footer class="py-6 mt-8 w-full text-center text-[10px] text-gray-400">
+                    Made with ❤️ from <a href="https://www.instagram.com/kamadigitalcreative/" target="_blank"
+                        class="font-medium text-gray-500 hover:text-blue-500 transition-colors">@kamacreative</a>
+                </footer>
             </main>
-
-            <footer class="bg-white border-t border-gray-100 py-3 text-center text-[10px] text-gray-400">
-                Made with ❤️ from <a href="https://www.instagram.com/kamadigitalcreative/" target="_blank"
-                    class="font-medium text-gray-500 hover:text-blue-500 transition-colors">@kamacreative</a>
-            </footer>
         </div>
 
         <!-- Custom Ukuran Modal -->
@@ -6737,22 +6736,22 @@
 
                 var iconAvatarGrid = '<div class="absolute -top-10 left-5 flex-shrink-0 w-20 h-20 bg-gradient-to-br from-white to-blue-50 rounded-3xl border-[4px] border-white shadow-[0_8px_20px_rgba(0,0,0,0.08)] flex items-center justify-center text-indigo-500 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 z-10"><i class="fa-solid fa-camera-retro text-3xl opacity-90 drop-shadow-sm"></i></div>';
                 
-                var btnClassGridBase = "flex-1 h-10 flex items-center justify-center rounded-xl transition-colors ";
+                var btnClassGridBase = "flex-1 h-10 flex items-center justify-center rounded-xl transition-colors text-gray-400 ";
                 var paymentActionsGrid = statusClient === 'Menunggu Konfirmasi Pembayaran' ?
-                    '<button onclick="window.open(\'' + proofUrl + '\', \'_blank\')" class="' + btnClassGridBase + 'text-amber-600 bg-amber-50" title="Lihat Bukti Transfer"><i class="fa-solid fa-file-invoice"></i></button>' +
-                    '<button onclick="confirmClientPayment(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-green-600 bg-green-50" title="Konfirmasi Lunas"><i class="fa-solid fa-check-double"></i></button>' +
-                    '<button onclick="rejectClientPayment(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-red-600 bg-red-50" title="Tolak Pembayaran"><i class="fa-solid fa-ban"></i></button>'
-                    : '<button onclick="copyForLightroom(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-blue-600 bg-blue-50" title="Copy to Lightroom"><i class="fa-solid fa-file-export"></i></button>' +
-                      '<button onclick="sortirLokalForProject(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-indigo-600 bg-indigo-50" title="Sortir Lokal"><i class="fa-solid fa-folder-tree"></i></button>';
+                    '<button onclick="window.open(\'' + proofUrl + '\', \'_blank\')" class="' + btnClassGridBase + 'hover:text-amber-500 hover:bg-amber-50" title="Lihat Bukti Transfer"><i class="fa-solid fa-file-invoice"></i></button>' +
+                    '<button onclick="confirmClientPayment(\'' + row.ID + '\')" class="' + btnClassGridBase + 'hover:text-green-500 hover:bg-green-50" title="Konfirmasi Lunas"><i class="fa-solid fa-check-double"></i></button>' +
+                    '<button onclick="rejectClientPayment(\'' + row.ID + '\')" class="' + btnClassGridBase + 'hover:text-red-500 hover:bg-red-50" title="Tolak Pembayaran"><i class="fa-solid fa-ban"></i></button>'
+                    : '<button onclick="copyForLightroom(\'' + row.ID + '\')" class="' + btnClassGridBase + 'hover:text-blue-500 hover:bg-blue-50" title="Copy to Lightroom"><i class="fa-solid fa-file-export"></i></button>' +
+                      '<button onclick="sortirLokalForProject(\'' + row.ID + '\')" class="' + btnClassGridBase + 'hover:text-indigo-500 hover:bg-indigo-50" title="Sortir Lokal"><i class="fa-solid fa-folder-tree"></i></button>';
 
                 var actionHtmlGrid =
-                    '<button onclick="copyProjectInfo(\'' + safeJSName + '\', \'' + displayLink + '\', \'' + safePass + '\')" class="' + btnClassGridBase + 'text-blue-600 bg-blue-50" title="Copy Link">' +
+                    '<button onclick="copyProjectInfo(\'' + safeJSName + '\', \'' + displayLink + '\', \'' + safePass + '\')" class="' + btnClassGridBase + 'hover:text-blue-600 hover:bg-blue-50" title="Copy Link">' +
                     '<i class="fa-regular fa-copy"></i></button>' +
-                    '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="' + btnClassGridBase + 'text-green-600 bg-green-50" title="Lihat Galeri">' +
+                    '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="' + btnClassGridBase + 'hover:text-green-600 hover:bg-green-50" title="Lihat Galeri">' +
                     '<i class="fa-solid fa-arrow-up-right-from-square"></i></button>' +
                     paymentActionsGrid +
-                    (statusClient === 'Selesai' ? '<button onclick="reopenProject(\'' + row.ID + '\', \'' + row['Max Pilihan'] + '\', \'' + row['Foto Terpilih'] + '\')" class="' + btnClassGridBase + 'text-purple-600 bg-purple-50" title="Buka Akses Klien (Tambah Kuota)"><i class="fa-solid fa-unlock"></i></button>' : '') +
-                    '<button onclick="openProjectSettings(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-gray-700 bg-gray-100 hover:bg-gray-200 hover:text-gray-900" title="Pengaturan Project">' +
+                    (statusClient === 'Selesai' ? '<button onclick="reopenProject(\'' + row.ID + '\', \'' + row['Max Pilihan'] + '\', \'' + row['Foto Terpilih'] + '\')" class="' + btnClassGridBase + 'hover:text-purple-600 hover:bg-purple-50" title="Buka Akses Klien (Tambah Kuota)"><i class="fa-solid fa-unlock"></i></button>' : '') +
+                    '<button onclick="openProjectSettings(\'' + row.ID + '\')" class="' + btnClassGridBase + 'hover:text-gray-800 hover:bg-gray-100" title="Pengaturan Project">' +
                     '<i class="fa-solid fa-gear"></i></button>';
 
                 if (isGrid) {
