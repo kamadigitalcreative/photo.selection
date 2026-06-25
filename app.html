@@ -11663,7 +11663,7 @@
             var projectCards = document.querySelectorAll('#projectTableBody > div.bg-white');
             projectCards.forEach(function (card) {
                 var cardStatus = card.getAttribute('data-status');
-                var cardNameElem = card.querySelector('h3.text-base, h3\\.sm\\:text-lg, h3');
+                var cardNameElem = card.querySelector('h3');
                 var cardName = cardNameElem ? cardNameElem.textContent.toLowerCase() : '';
                 
                 var matchTab = true;
