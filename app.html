@@ -112,8 +112,8 @@
             inset: 0;
             pointer-events: none;
             background-image: var(--watermark-bg);
-            background-position: center;
-            background-repeat: no-repeat;
+            background-position: top left;
+            background-repeat: repeat;
             z-index: 100;
         }
 
@@ -122,30 +122,7 @@
             position: absolute;
             inset: 0;
             pointer-events: none;
-            background-image: var(--watermark-bg-large);
-            background-position: center;
-            background-repeat: no-repeat;
-            background-size: contain;
-            z-index: 100;
-        }
-
-        .has-watermark-tiled .photo-card::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            background-image: var(--watermark-bg-tiled);
-            background-position: top left;
-            background-repeat: repeat;
-            z-index: 100;
-        }
-
-        .has-watermark-tiled #viewerImageContainer::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            background-image: var(--watermark-bg-tiled);
+            background-image: var(--watermark-bg);
             background-position: top left;
             background-repeat: repeat;
             z-index: 100;
@@ -3749,35 +3726,8 @@
                                             checked>
                                         <div
                                             class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 shadow-inner">
-                                        </div>
-                                    </label>
-                                </div>
-
-                                <!-- Switch Watermark Tiled -->
-                                <div class="relative bg-cyan-50/50 border border-cyan-100 rounded-2xl p-4 flex items-center justify-between group hover:bg-cyan-50 transition-colors cursor-pointer"
-                                    onclick="if(!event.target.closest('label')) document.getElementById('p_watermark_tiled').click()">
-                                    <div class="flex items-center gap-4">
-                                        <div
-                                            class="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center text-cyan-600 shrink-0 border border-cyan-200 shadow-sm">
-                                            <i class="fa-solid fa-border-all"></i>
-                                        </div>
-                                        <div>
-                                            <h4 class="font-bold text-gray-800 text-sm flex items-center gap-2"
-                                                id="lbl-p-wmtiled-title">Watermark Penuh (Tiled) <i
-                                                    class="fa-solid fa-crown text-yellow-500 text-[11px]"
-                                                    title="Fitur PRO"></i></h4>
-                                            <p class="text-[10px] text-gray-500 mt-0.5" id="lbl-p-wmtiled-desc">Teks polos diulangi di seluruh foto.</p>
-                                        </div>
-                                    </div>
-                                    <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
-                                        <input type="checkbox" class="sr-only peer" id="p_watermark_tiled"
-                                            onclick="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ showPremiumAlert(); return false; }"
-                                            onchange="if(this.checked) { document.getElementById('p_watermark').checked = false; }">
-                                        <div
-                                            class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600 shadow-inner">
-                                        </div>
-                                    </label>
-                                </div>
+                                                                            </label>
+                                </div>  </div>
 
                                 <!-- UI MULTI-KATEGORI (PHASE 3) -->
                                 <div id="wrapper-multicategory"
@@ -6961,9 +6911,10 @@
             if (!project) return;
             var isEn = localStorage.getItem('ps_lang') === 'en';
             
-            var wmText = isEn ? 'Watermark Settings' : 'Pengaturan Watermark';
-            var wmIcon = 'fa-shield-halved';
-            var wmColor = 'text-blue-600 bg-blue-50 hover:bg-blue-100 hover:border-blue-200';
+            var isWmOn = project['UseWatermark'] === true || String(project['UseWatermark']).toUpperCase() === 'TRUE' || project['UseWatermark'] === 1;
+            var wmText = isWmOn ? (isEn ? 'Disable Watermark' : 'Matikan Watermark') : (isEn ? 'Enable Watermark' : 'Aktifkan Watermark');
+            var wmIcon = isWmOn ? 'fa-droplet-slash' : 'fa-droplet';
+            var wmColor = isWmOn ? 'text-green-600 bg-green-50 hover:bg-green-100' : 'text-gray-700 bg-gray-50 hover:bg-gray-100 hover:text-green-600';
             
             var safeJSName = (project['Nama Client'] || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             var deadline = project['Deadline'] || '';
@@ -7757,57 +7708,9 @@
                 return;
             }
 
-            if (!window.lastProjectsData) return;
-            var project = window.lastProjectsData.find(function (p) { return p.ID === id; });
-            if (!project) return;
-
-            var isWmOn = project['UseWatermark'] === true || String(project['UseWatermark']).toUpperCase() === 'TRUE' || project['UseWatermark'] === 1;
-            var isWmTiledOn = project['UseWatermarkTiled'] === true || String(project['UseWatermarkTiled']).toUpperCase() === 'TRUE' || project['UseWatermarkTiled'] === 1;
-
-            var isEn = localStorage.getItem('ps_lang') === 'en';
-
-            var wmLogoText = isWmOn ? (isEn ? 'Disable Logo Watermark' : 'Matikan Watermark Logo') : (isEn ? 'Enable Logo Watermark' : 'Hidupkan Watermark Logo');
-            var wmLogoIcon = isWmOn ? 'fa-droplet-slash text-red-500' : 'fa-droplet text-green-500';
-
-            var wmTiledText = isWmTiledOn ? (isEn ? 'Disable Tiled Watermark' : 'Matikan Watermark Penuh (Tiled)') : (isEn ? 'Enable Tiled Watermark' : 'Hidupkan Watermark Penuh (Tiled)');
-            var wmTiledIcon = isWmTiledOn ? 'fa-border-none text-red-500' : 'fa-border-all text-green-500';
-
-            var htmlContent = `
-                <div class="grid grid-cols-1 gap-3 mt-4">
-                    <button onclick="Swal.close(); setTimeout(() => executeWatermarkToggle('${id}', 'logo'), 300)" class="flex items-center gap-4 p-4 bg-gray-50 border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-200 transition-colors text-left group">
-                        <div class="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
-                            <i class="fa-solid ${wmLogoIcon}"></i>
-                        </div>
-                        <div>
-                            <span class="block text-sm font-bold text-gray-800">${wmLogoText}</span>
-                            <span class="block text-xs text-gray-500">Tampilkan logo perlindungan di bagian tengah.</span>
-                        </div>
-                    </button>
-
-                    <button onclick="Swal.close(); setTimeout(() => executeWatermarkToggle('${id}', 'tiled'), 300)" class="flex items-center gap-4 p-4 bg-gray-50 border border-gray-200 rounded-xl hover:bg-cyan-50 hover:border-cyan-200 transition-colors text-left group">
-                        <div class="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
-                            <i class="fa-solid ${wmTiledIcon}"></i>
-                        </div>
-                        <div>
-                            <span class="block text-sm font-bold text-gray-800">${wmTiledText}</span>
-                            <span class="block text-xs text-gray-500">Teks perlindungan berulang di seluruh area.</span>
-                        </div>
-                    </button>
-                </div>
-            `;
-
-            Swal.fire({
-                title: isEn ? 'Watermark Settings' : 'Pengaturan Watermark',
-                html: htmlContent,
-                showConfirmButton: false,
-                showCloseButton: true
-            });
-        }
-
-        function executeWatermarkToggle(id, wmType) {
             Swal.fire({
                 title: 'Ubah Status Watermark?',
-                text: 'Klien akan melihat perubahan status watermark seketika saat halamannya di-refresh.',
+                text: 'Klien akan melihat/tidak melihat watermark secara instan setelah halaman direfresh.',
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#3b82f6',
@@ -7822,7 +7725,6 @@
                             body: JSON.stringify({
                                 action: 'toggleProjectWatermark',
                                 id: id,
-                                wmType: wmType,
                                 currentUser: currentUser
                             })
                         });
@@ -7839,13 +7741,7 @@
                                     var projs = JSON.parse(cachedProjectsStr);
                                     for (var i = 0; i < projs.length; i++) {
                                         if (projs[i].ID === id) {
-                                            if (res.data.type === 'tiled') {
-                                                projs[i]['UseWatermarkTiled'] = res.data.newValue;
-                                                if (res.data.newValue) projs[i]['UseWatermark'] = false; // Karena eksklusif
-                                            } else {
-                                                projs[i]['UseWatermark'] = res.data.newValue;
-                                                if (res.data.newValue) projs[i]['UseWatermarkTiled'] = false; // Karena eksklusif
-                                            }
+                                            projs[i]['UseWatermark'] = res.data.newValue;
                                             break;
                                         }
                                     }
@@ -8234,96 +8130,33 @@
         }
 
         // --- FUNGSI WATERMARK DINAMIS (PHASE 2) ---
-        function applyWatermark(brandName, watermarkUrl) {
+        function applyWatermark(brandName) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            canvas.width = 300;
-            canvas.height = 300;
+            
+            // Lebih padat (banyak) dan lebih kecil
+            canvas.width = 120;
+            canvas.height = 120;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.translate(canvas.width / 2, canvas.height / 2);
             ctx.rotate(-Math.PI / 4);
 
-            const canvasLg = document.createElement('canvas');
-            const ctxLg = canvasLg.getContext('2d');
-            canvasLg.width = 1000;
-            canvasLg.height = 1000;
-            ctxLg.clearRect(0, 0, canvasLg.width, canvasLg.height);
-            ctxLg.translate(canvasLg.width / 2, canvasLg.height / 2);
-            ctxLg.rotate(-Math.PI / 4);
-
-            // Use custom watermark image if provided
-            if (watermarkUrl) {
-                var img = new Image();
-                img.crossOrigin = "Anonymous";
-                img.onload = function() {
-                    ctx.drawImage(img, 0, 0, 150, 50); // Set watermark tile size
-                    var dataURL = canvas.toDataURL();
-                    document.body.style.setProperty('--watermark-bg', `url(${dataURL})`);
-
-                    ctxLg.drawImage(img, 0, 0, 250, 83);
-                    var dataURLLg = canvasLg.toDataURL();
-                    document.body.style.setProperty('--watermark-bg-large', `url(${dataURLLg})`);
-                };
-                img.src = watermarkUrl;
-                return;
-            }
-
-            ctx.font = 'bold 24px "Inter", sans-serif';
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.font = 'bold 16px "Inter", sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'; // Opacity 20%
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
-            // Draw text without outline
-            ctx.fillText(brandName, 0, 0);
+            // Shadow tipis agar terlihat di background putih
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+            ctx.shadowBlur = 3;
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 1;
 
-            // Add a smaller sub-text
-            ctx.font = '600 12px "Inter", sans-serif';
-            ctx.fillText('CONFIDENTIAL', 0, 30);
+            ctx.fillText(brandName, 0, 0);
 
             const dataURL = canvas.toDataURL('image/png');
             document.body.style.setProperty('--watermark-bg', `url(${dataURL})`);
-
-            // --- Large watermark for Fullscreen Viewer ---
-
-
-            ctxLg.font = 'bold 80px "Inter", sans-serif';
-            ctxLg.fillStyle = 'rgba(255, 255, 255, 0.35)'; // Sedikit lebih transparan
-            ctxLg.textAlign = 'center';
-            ctxLg.textBaseline = 'middle';
-            ctxLg.fillText(brandName, 0, 0);
-
-            ctxLg.font = '600 40px "Inter", sans-serif';
-            ctxLg.fillText('CONFIDENTIAL', 0, 100);
-
-            const dataURLLg = canvasLg.toDataURL('image/png');
-            document.body.style.setProperty('--watermark-bg-large', `url(${dataURLLg})`);
-
-            document.body.classList.add('has-watermark');
-        }
-
-        function applyWatermarkTiled(brandName) {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = 300;
-            canvas.height = 300;
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.rotate(-Math.PI / 4);
-
-            ctx.font = 'bold 24px "Inter", sans-serif';
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'; // 20% opacity
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(brandName, 0, 0);
-
-            ctx.font = '600 12px "Inter", sans-serif';
-            ctx.fillText('CONFIDENTIAL', 0, 30);
-
-            const dataURL = canvas.toDataURL('image/png');
-            document.body.style.setProperty('--watermark-bg-tiled', `url(${dataURL})`);
-            document.body.classList.add('has-watermark-tiled');
         }
 
         function processClientProjectData(projectData) {
@@ -8354,18 +8187,12 @@
             clientState.folderHistory = [];
 
             // Eksekusi Phase 2: Watermark Dinamis
-            // Eksekusi Phase 2: Watermark Dinamis & Tiled
-            if (projectData.watermarkTiledEnabled) {
-                applyWatermarkTiled(projectData.brandName || 'Kama Creative');
-                document.body.classList.remove('has-watermark');
-            } else if (projectData.watermarkEnabled) {
-                applyWatermark(projectData.brandName || 'Kama Creative', projectData.watermarkUrl);
-                document.body.classList.remove('has-watermark-tiled');
+            if (projectData.watermarkEnabled) {
+                document.body.classList.add('has-watermark');
+                applyWatermark(projectData.brandName || 'Kama Creative');
             } else {
                 document.body.classList.remove('has-watermark');
-                document.body.classList.remove('has-watermark-tiled');
                 document.body.style.removeProperty('--watermark-bg');
-                document.body.style.removeProperty('--watermark-bg-tiled');
             }
 
             // Eksekusi Phase 13: Download Toggle Dinamis
