@@ -7876,14 +7876,101 @@
         var isCancelledSorter = false;
         var uploadedFilesSorter = [];
 
+        function formatBytes(bytes) {
+            if (!bytes || bytes === 0) return '0 B';
+            var k = 1024;
+            var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            var i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function parseTargetList() {
+            var textarea = document.getElementById('targetNames');
+            var rawTargets = textarea ? textarea.value : '';
+            if (!rawTargets.trim()) return [];
+
+            var lines = rawTargets.split(/[\n,]+/);
+            var currentFolder = "";
+            var targets = [];
+
+            for (var j = 0; j < lines.length; j++) {
+                var line = lines[j].trim();
+                if (line === "") continue;
+
+                if (line.indexOf('📁') !== -1 || line.startsWith('*')) {
+                    currentFolder = line.replace('📁', '').replace(/\*/g, '').trim();
+                    continue;
+                }
+
+                if (line.toLowerCase().indexOf('halo, ini dari') !== -1 || line.toLowerCase().indexOf('berikut daftar foto') !== -1 || line.toLowerCase().indexOf('terima kasih') !== -1) {
+                    continue;
+                }
+
+                var cleanTarget = line.replace(/^\d+[\.\)]\s*/, '').trim();
+                var extRemoved = cleanTarget.replace(/\.[^/.]+$/, "").toLowerCase();
+
+                if (cleanTarget && cleanTarget.length > 0) {
+                    targets.push({
+                        raw: line,
+                        clean: cleanTarget,
+                        cleanLower: cleanTarget.toLowerCase(),
+                        baseLower: extRemoved.length > 0 ? extRemoved : cleanTarget.toLowerCase(),
+                        folder: currentFolder
+                    });
+                }
+            }
+            return targets;
+        }
+
         function updateLineCount() {
             var textarea = document.getElementById('targetNames');
             var lineCount = document.getElementById('lineCount');
             if (textarea && lineCount) {
                 var text = textarea.value.trim();
-                var lines = text ? text.split(/[\n,]+/).filter(l => l.trim().length > 0).length : 0;
+                var lines = text ? text.split(/[\n,]+/).filter(function (l) { return l.trim().length > 0; }).length : 0;
                 lineCount.textContent = lines;
             }
+            updateDetectionSummary();
+        }
+
+        function updateDetectionSummary() {
+            var targets = parseTargetList();
+            var totalTargets = targets.length;
+
+            if (uploadedFilesSorter.length === 0 || totalTargets === 0) {
+                var df = document.getElementById('detect-found');
+                var dm = document.getElementById('detect-missing');
+                var dr = document.getElementById('detect-ready');
+                if (df) df.textContent = '0';
+                if (dm) dm.textContent = '0';
+                if (dr) dr.textContent = '0';
+                return;
+            }
+
+            var foundCount = 0;
+            var missingCount = 0;
+
+            targets.forEach(function (t) {
+                var found = uploadedFilesSorter.some(function (file) {
+                    var fileNameLower = file.name.toLowerCase();
+                    return fileNameLower === t.cleanLower ||
+                        fileNameLower.includes(t.baseLower) ||
+                        t.cleanLower.includes(fileNameLower);
+                });
+                if (found) {
+                    foundCount++;
+                } else {
+                    missingCount++;
+                }
+            });
+
+            var df = document.getElementById('detect-found');
+            var dm = document.getElementById('detect-missing');
+            var dr = document.getElementById('detect-ready');
+
+            if (df) df.textContent = foundCount;
+            if (dm) dm.textContent = missingCount;
+            if (dr) dr.textContent = foundCount;
         }
 
         function updateFolderInfo() {
@@ -7907,6 +7994,7 @@
                 if (folderInfoActive && folderInfoActive.classList) { folderInfoActive.classList.remove('hidden'); folderInfoActive.classList.add('flex'); }
             }
             if (fileInput) fileInput.value = "";
+            updateDetectionSummary();
         }
 
         function clearUploadedFiles() {
@@ -7921,9 +8009,9 @@
             // Reset results panel
             var resStatusBadge = document.getElementById('resStatusBadge');
             if (resStatusBadge) { resStatusBadge.textContent = 'Belum diproses'; resStatusBadge.className = 'px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full border border-gray-200'; }
-            ['resFoundCount', 'resMissingCount', 'resReadyCount'].forEach(id => { if (document.getElementById(id)) document.getElementById(id).textContent = '0'; });
-            ['resFoundSize', 'resMissingSize', 'resReadySize'].forEach(id => { if (document.getElementById(id)) document.getElementById(id).textContent = '0 B'; });
-            ['detect-found', 'detect-missing', 'detect-ready'].forEach(id => { if (document.getElementById(id)) document.getElementById(id).textContent = '0'; });
+            ['resFoundCount', 'resMissingCount', 'resReadyCount'].forEach(function (id) { if (document.getElementById(id)) document.getElementById(id).textContent = '0'; });
+            ['resFoundSize', 'resMissingSize', 'resReadySize'].forEach(function (id) { if (document.getElementById(id)) document.getElementById(id).textContent = '0 B'; });
+            ['detect-found', 'detect-missing', 'detect-ready'].forEach(function (id) { if (document.getElementById(id)) document.getElementById(id).textContent = '0'; });
             var mfa = document.getElementById('missingFilesArea');
             if (mfa) mfa.classList.add('hidden');
             var mfl = document.getElementById('missingFilesList');
@@ -7932,96 +8020,113 @@
 
         function handleProsesSorter(event) {
             event.preventDefault();
-            var targetsInputEl = document.getElementById('targetNames');
-            var rawTargets = targetsInputEl ? targetsInputEl.value : '';
+            var targets = parseTargetList();
 
             if (uploadedFilesSorter.length === 0) { Swal.fire('Peringatan', 'Silakan pilih folder sumber terlebih dahulu.', 'warning'); return; }
-            if (!rawTargets.trim()) { Swal.fire('Peringatan', 'Silakan masukkan nomor/nama file.', 'warning'); return; }
-
-            var lines = rawTargets.split(/[\n,]+/);
-            var currentFolder = "";
-            var targets = [];
-
-            for (var j = 0; j < lines.length; j++) {
-                var line = lines[j].trim();
-                if (line === "") continue;
-
-                if (line.indexOf('📁') !== -1) {
-                    currentFolder = line.replace('📁', '').replace(/\*/g, '').trim();
-                    continue;
-                }
-
-                if (line.toLowerCase().indexOf('halo, ini dari') !== -1 || line.toLowerCase().indexOf('berikut daftar foto') !== -1 || line.toLowerCase().indexOf('terima kasih') !== -1) {
-                    continue;
-                }
-
-                var cleanTarget = line.replace(/^\d+[\.\)]\s*/, '').trim();
-                var extRemoved = cleanTarget.replace(/\.[^/.]+$/, "").toLowerCase();
-
-                if (extRemoved && extRemoved.length > 2) { // Mencegah crash memori jika ada karakter nyasar
-                    targets.push({ raw: line.toLowerCase(), clean: extRemoved, folder: currentFolder });
-                }
-            }
-
-            if (targets.length === 0) { Swal.fire('Peringatan', 'Format nama file tidak valid atau tidak ada file terdeteksi.', 'warning'); return; }
+            if (targets.length === 0) { Swal.fire('Peringatan', 'Silakan masukkan nomor/nama file klien.', 'warning'); return; }
 
             startSorterLoading();
-            var zip = new JSZip(); var rootFolder = zip.folder("Hasil_Sortir_Foto");
-            var matchCount = 0; var totalFiles = uploadedFilesSorter.length;
-            var currentIndex = 0;
 
-            function processNextBatch() {
-                if (isCancelledSorter) {
-                    updateProgress("Dibatalkan!", 0, "Proses dihentikan.");
-                    endSorterLoading();
-                    Swal.fire('Dibatalkan', 'Proses sortir telah dihentikan.', 'info');
-                    return;
-                }
+            var matchedFiles = [];
+            var missingTargets = [];
+            var totalFoundSize = 0;
 
-                var batchSize = 20;
-                var end = Math.min(currentIndex + batchSize, totalFiles);
-
-                for (var i = currentIndex; i < end; i++) {
-                    var file = uploadedFilesSorter[i];
+            targets.forEach(function (t) {
+                var match = uploadedFilesSorter.find(function (file) {
                     var fileNameLower = file.name.toLowerCase();
-
-                    var matchedTarget = targets.find(function (t) {
-                        return fileNameLower.includes(t.clean) || fileNameLower.includes(t.raw);
-                    });
-
-                    if (matchedTarget) {
-                        if (matchedTarget.folder) {
-                            rootFolder.folder(matchedTarget.folder).file(file.name, file);
-                        } else {
-                            rootFolder.file(file.name, file);
-                        }
-                        matchCount++;
-                    }
-                }
-
-                currentIndex = end;
-                updateProgress("Menyortir...", Math.round((currentIndex / totalFiles) * 100), "Mengecek file " + currentIndex + "/" + totalFiles + ". (Cocok: " + matchCount + ")");
-
-                if (currentIndex < totalFiles) { setTimeout(processNextBatch, 0); } else { finishZip(); }
-            }
-
-            function finishZip() {
-                if (matchCount === 0) { Swal.fire('Hasil Sortir', 'Tidak ada foto yang cocok.', 'info'); endSorterLoading(); return; }
-
-                updateProgress("Membuat ZIP...", 100, "Menyatukan " + matchCount + " file (Tanpa kompresi ulang)...");
-                zip.generateAsync({ type: "blob", compression: "STORE" }, function (metadata) {
-                    updateProgress("Membuat ZIP...", metadata.percent.toFixed(0), "Menyatukan: " + metadata.percent.toFixed(0) + "%");
-                }).then(function (blob) {
-                    saveAs(blob, "Hasil_Sortir_Foto.zip");
-                    Swal.fire('Selesai!', "Berhasil menyortir " + matchCount + " file. ZIP diunduh.", 'success');
-                    endSorterLoading();
-                }).catch(function (err) {
-                    Swal.fire('Error', err.message, 'error');
-                    endSorterLoading();
+                    return fileNameLower === t.cleanLower ||
+                        fileNameLower.includes(t.baseLower) ||
+                        t.cleanLower.includes(fileNameLower);
                 });
+
+                if (match) {
+                    matchedFiles.push({ file: match, folder: t.folder, target: t });
+                    totalFoundSize += match.size || 0;
+                } else {
+                    missingTargets.push(t);
+                }
+            });
+
+            // Update DOM Hasil Proses Panel
+            var resFoundCount = document.getElementById('resFoundCount');
+            var resMissingCount = document.getElementById('resMissingCount');
+            var resReadyCount = document.getElementById('resReadyCount');
+            var resFoundSize = document.getElementById('resFoundSize');
+            var resMissingSize = document.getElementById('resMissingSize');
+            var resReadySize = document.getElementById('resReadySize');
+            var resStatusBadge = document.getElementById('resStatusBadge');
+
+            if (resFoundCount) resFoundCount.textContent = matchedFiles.length;
+            if (resMissingCount) resMissingCount.textContent = missingTargets.length;
+            if (resReadyCount) resReadyCount.textContent = matchedFiles.length;
+
+            if (resFoundSize) resFoundSize.textContent = formatBytes(totalFoundSize);
+            if (resMissingSize) resMissingSize.textContent = '0 B';
+            if (resReadySize) resReadySize.textContent = formatBytes(totalFoundSize);
+
+            // Update Missing Files List
+            var mfa = document.getElementById('missingFilesArea');
+            var mfl = document.getElementById('missingFilesList');
+            if (missingTargets.length > 0) {
+                if (mfa) mfa.classList.remove('hidden');
+                if (mfl) {
+                    mfl.innerHTML = missingTargets.map(function (t) {
+                        return '<li><i class="fa-solid fa-xmark text-red-400 mr-1.5"></i>' + escapeHTML(t.raw) + '</li>';
+                    }).join('');
+                }
+            } else {
+                if (mfa) mfa.classList.add('hidden');
             }
 
-            setTimeout(processNextBatch, 0);
+            if (matchedFiles.length === 0) {
+                if (resStatusBadge) { resStatusBadge.textContent = 'Tidak Ada Cocok'; resStatusBadge.className = 'px-3 py-1 bg-red-100 text-red-600 text-xs font-bold rounded-full border border-red-200'; }
+                Swal.fire('Hasil Sortir', 'Tidak ada foto yang cocok dari daftar yang dimasukkan.', 'info');
+                endSorterLoading();
+                return;
+            }
+
+            if (resStatusBadge) { resStatusBadge.textContent = 'Sedang Mengemas'; resStatusBadge.className = 'px-3 py-1 bg-blue-100 text-blue-600 text-xs font-bold rounded-full border border-blue-200'; }
+
+            var zip = new JSZip();
+            var rootFolder = zip.folder("Hasil_Sortir_Foto");
+
+            matchedFiles.forEach(function (item) {
+                if (item.folder) {
+                    rootFolder.folder(item.folder).file(item.file.name, item.file);
+                } else {
+                    rootFolder.file(item.file.name, item.file);
+                }
+            });
+
+            updateProgress("Membuat ZIP...", 50, "Menyatukan " + matchedFiles.length + " file (" + formatBytes(totalFoundSize) + ")...");
+
+            zip.generateAsync({ type: "blob", compression: "STORE" }, function (metadata) {
+                updateProgress("Membuat ZIP...", metadata.percent.toFixed(0), "Mengemas: " + metadata.percent.toFixed(0) + "%");
+            }).then(function (blob) {
+                saveAs(blob, "Hasil_Sortir_Foto.zip");
+                if (resStatusBadge) { resStatusBadge.textContent = 'Selesai & Diunduh'; resStatusBadge.className = 'px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full border border-green-200'; }
+                Swal.fire('Selesai!', "Berhasil menyortir " + matchedFiles.length + " file foto (" + formatBytes(totalFoundSize) + "). File ZIP telah diunduh.", 'success');
+                endSorterLoading();
+            }).catch(function (err) {
+                if (resStatusBadge) { resStatusBadge.textContent = 'Gagal (Memori Penuh)'; resStatusBadge.className = 'px-3 py-1 bg-red-100 text-red-600 text-xs font-bold rounded-full border border-red-200'; }
+
+                if (err.message && err.message.toLowerCase().includes('array buffer')) {
+                    Swal.fire({
+                        title: 'Ukuran Foto Terlalu Besar ⚠️',
+                        html: '<div class="text-left text-xs text-slate-600 space-y-2">' +
+                            '<p>Browser kehabisan memori (RAM) saat membuat 1 file ZIP raksasa sebesar <b>' + formatBytes(totalFoundSize) + '</b>.</p>' +
+                            '<p class="font-bold text-slate-800">Solusi:</p>' +
+                            '<ul class="list-disc pl-4 space-y-1 text-left">' +
+                            '<li>Silakan bagi daftar foto ke dalam 2-3 kali sortir agar ukuran ZIP lebih kecil.</li>' +
+                            '<li>Atau gunakan browser desktop dengan sisa RAM lebih besar.</li>' +
+                            '</ul></div>',
+                        icon: 'warning'
+                    });
+                } else {
+                    Swal.fire('Gagal Membuat ZIP', err.message || 'Terjadi kesalahan saat memproses file.', 'error');
+                }
+                endSorterLoading();
+            });
         }
 
         function handleCancelSorter() {
