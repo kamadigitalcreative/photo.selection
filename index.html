@@ -12,8 +12,8 @@
         href="https://cdn.phototourl.com/free/2026-05-02-c6dcdc8e-17e9-419a-ac71-37a9635e6eb3.png">
 
     <script>
-        // Deteksi jika ini adalah link klien (mengandung ?c= atau ?token=) dan lempar ke aplikasi
-        if (window.location.search.includes('?c=') || window.location.search.includes('?token=')) {
+        // Deteksi jika ini adalah link klien (mengandung ?c= atau ?token=) atau konfirmasi email (?confirm=) dan lempar ke aplikasi
+        if (window.location.search.includes('?c=') || window.location.search.includes('?token=') || window.location.search.includes('?confirm=')) {
             window.location.replace('app.html' + window.location.search);
         }
     </script>
