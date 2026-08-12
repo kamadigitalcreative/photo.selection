@@ -6812,7 +6812,7 @@
                 var isLockedClient = (statusClient === 'Selesai' || statusClient === 'Menunggu Konfirmasi Pembayaran');
 
                 var lockBtnHtml = isLockedClient
-                    ? '<button onclick="reopenProject(\'' + row.ID + '\', \'' + row['Max Foto'] + '\', \'' + row['Foto Terpilih'] + '\')" class="text-purple-600 bg-purple-50 hover:bg-purple-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Akses Terkunci - Klik untuk Buka Akses Klien"><i class="fa-solid fa-lock"></i></button>'
+                    ? '<button onclick="reopenProject(\'' + row.ID + '\', \'' + maxFoto + '\', \'' + fotoTerpilih + '\')" class="text-purple-600 bg-purple-50 hover:bg-purple-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Akses Terkunci - Klik untuk Buka Akses Klien"><i class="fa-solid fa-lock"></i></button>'
                     : '<button onclick="lockProjectAccess(\'' + row.ID + '\')" class="text-emerald-600 bg-emerald-50 hover:bg-emerald-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Akses Terbuka - Klik untuk Kunci Akses Klien"><i class="fa-solid fa-lock-open"></i></button>';
 
                 var actionHtml =
@@ -6840,7 +6840,7 @@
                     '<button onclick="sortirLokalForProject(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100" title="Sortir Lokal"><i class="fa-solid fa-folder-tree"></i></button>';
 
                 var lockBtnHtmlGrid = isLockedClient
-                    ? '<button onclick="reopenProject(\'' + row.ID + '\', \'' + row['Max Foto'] + '\', \'' + row['Foto Terpilih'] + '\')" class="' + btnClassGridBase + 'text-purple-600 bg-purple-50 hover:bg-purple-100" title="Akses Terkunci - Klik untuk Buka Akses Klien"><i class="fa-solid fa-lock"></i></button>'
+                    ? '<button onclick="reopenProject(\'' + row.ID + '\', \'' + maxFoto + '\', \'' + fotoTerpilih + '\')" class="' + btnClassGridBase + 'text-purple-600 bg-purple-50 hover:bg-purple-100" title="Akses Terkunci - Klik untuk Buka Akses Klien"><i class="fa-solid fa-lock"></i></button>'
                     : '<button onclick="lockProjectAccess(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100" title="Akses Terbuka - Klik untuk Kunci Akses Klien"><i class="fa-solid fa-lock-open"></i></button>';
 
                 var actionHtmlGrid =
