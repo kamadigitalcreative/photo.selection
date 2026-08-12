@@ -6809,13 +6809,19 @@
                     : '<button onclick="copyForLightroom(\'' + row.ID + '\')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Copy to Lightroom"><i class="fa-solid fa-file-export"></i></button>' +
                     '<button onclick="sortirLokalForProject(\'' + row.ID + '\')" class="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Sortir Lokal"><i class="fa-solid fa-folder-tree"></i></button>';
 
+                var isLockedClient = (statusClient === 'Selesai' || statusClient === 'Menunggu Konfirmasi Pembayaran');
+
+                var lockBtnHtml = isLockedClient
+                    ? '<button onclick="reopenProject(\'' + row.ID + '\', \'' + row['Max Foto'] + '\', \'' + row['Foto Terpilih'] + '\')" class="text-purple-600 bg-purple-50 hover:bg-purple-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Akses Terkunci - Klik untuk Buka Akses Klien"><i class="fa-solid fa-lock"></i></button>'
+                    : '<button onclick="lockProjectAccess(\'' + row.ID + '\')" class="text-emerald-600 bg-emerald-50 hover:bg-emerald-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Akses Terbuka - Klik untuk Kunci Akses Klien"><i class="fa-solid fa-lock-open"></i></button>';
+
                 var actionHtml =
                     '<button onclick="copyProjectInfo(\'' + safeJSName + '\', \'' + displayLink + '\', \'' + safePass + '\')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Copy Link">' +
                     '<i class="fa-regular fa-copy"></i></button>' +
                     '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="text-green-600 bg-green-50 hover:bg-green-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Lihat Galeri">' +
                     '<i class="fa-solid fa-arrow-up-right-from-square"></i></button>' +
                     paymentActions +
-                    (statusClient === 'Selesai' ? '<button onclick="reopenProject(\'' + row.ID + '\', \'' + row['Max Foto'] + '\', \'' + row['Foto Terpilih'] + '\')" class="text-purple-600 bg-purple-50 hover:bg-purple-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Buka Akses Klien (Tambah Kuota)"><i class="fa-solid fa-unlock"></i></button>' : '') +
+                    lockBtnHtml +
                     '<button onclick="openProjectSettings(\'' + row.ID + '\')" class="text-gray-700 bg-gray-100 hover:bg-gray-200 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Pengaturan Project">' +
                     '<i class="fa-solid fa-gear"></i></button>' +
                     '<button onclick="deleteProject(\'' + row.ID + '\')" class="text-red-600 bg-red-50 hover:bg-red-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Hapus Project">' +
@@ -6833,13 +6839,17 @@
                     : '<button onclick="copyForLightroom(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-blue-600 bg-blue-50 hover:bg-blue-100" title="Copy to Lightroom"><i class="fa-solid fa-file-export"></i></button>' +
                     '<button onclick="sortirLokalForProject(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100" title="Sortir Lokal"><i class="fa-solid fa-folder-tree"></i></button>';
 
+                var lockBtnHtmlGrid = isLockedClient
+                    ? '<button onclick="reopenProject(\'' + row.ID + '\', \'' + row['Max Foto'] + '\', \'' + row['Foto Terpilih'] + '\')" class="' + btnClassGridBase + 'text-purple-600 bg-purple-50 hover:bg-purple-100" title="Akses Terkunci - Klik untuk Buka Akses Klien"><i class="fa-solid fa-lock"></i></button>'
+                    : '<button onclick="lockProjectAccess(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100" title="Akses Terbuka - Klik untuk Kunci Akses Klien"><i class="fa-solid fa-lock-open"></i></button>';
+
                 var actionHtmlGrid =
                     '<button onclick="copyProjectInfo(\'' + safeJSName + '\', \'' + displayLink + '\', \'' + safePass + '\')" class="' + btnClassGridBase + 'text-blue-600 bg-blue-50 hover:bg-blue-100" title="Copy Link">' +
                     '<i class="fa-regular fa-copy"></i></button>' +
                     '<button onclick="simulateClientLink(\'' + row.Token + '\')" class="' + btnClassGridBase + 'text-green-600 bg-green-50 hover:bg-green-100" title="Lihat Galeri">' +
                     '<i class="fa-solid fa-arrow-up-right-from-square"></i></button>' +
                     paymentActionsGrid +
-                    (statusClient === 'Selesai' ? '<button onclick="reopenProject(\'' + row.ID + '\', \'' + row['Max Foto'] + '\', \'' + row['Foto Terpilih'] + '\')" class="' + btnClassGridBase + 'text-purple-600 bg-purple-50 hover:bg-purple-100" title="Buka Akses Klien (Tambah Kuota)"><i class="fa-solid fa-unlock"></i></button>' : '') +
+                    lockBtnHtmlGrid +
                     '<button onclick="openProjectSettings(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-gray-700 bg-gray-100 hover:bg-gray-200" title="Pengaturan Project">' +
                     '<i class="fa-solid fa-gear"></i></button>' +
                     '<button onclick="deleteProject(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-red-600 bg-red-50 hover:bg-red-100" title="Hapus Project">' +
@@ -7078,6 +7088,41 @@
                             loadDashboardData(true);
                         } else {
                             throw new Error((res.data && res.data.message) || res.message || 'Gagal merubah status.');
+                        }
+                    } catch (e) {
+                        endLoading();
+                        Swal.fire('Error', e.toString(), 'error');
+                    }
+                }
+            });
+        }
+
+        async function lockProjectAccess(projectId) {
+            Swal.fire({
+                title: 'Kunci Akses Klien?',
+                html: 'Akses klien akan dikunci (Status menjadi <b>Selesai</b>). Klien tidak akan bisa menambah/mengubah pilihan foto.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#9333ea',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, Kunci Akses!'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    startLoading('Mengunci akses...');
+                    try {
+                        const token = localStorage.getItem('ps_admin_token');
+                        const response = await fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'processPayment', projectId: projectId, status: 'Selesai', token: token, currentUser: currentUser })
+                        });
+                        const res = await response.json();
+                        endLoading();
+                        if (res.status === 'success' && res.data && res.data.success) {
+                            Swal.fire('Sukses', 'Akses klien berhasil dikunci (Status: Selesai).', 'success');
+                            loadDashboardData(true);
+                        } else {
+                            throw new Error((res.data && res.data.message) || res.message || 'Gagal mengubah status.');
                         }
                     } catch (e) {
                         endLoading();
