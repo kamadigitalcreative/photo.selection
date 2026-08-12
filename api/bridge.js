@@ -1,17 +1,17 @@
 export default async function handler(req, res) {
-  const allowedOrigin = 'https://ps.kamacreative.my.id'; 
+  const allowedOrigin = 'https://ps.kamacreative.my.id';
   const origin = req.headers.origin;
 
   // --- SECURITY PATCH: Strict CORS & VERCEL PREVIEW SUPPORT ---
   const isLocal = origin === 'http://localhost:3000' || origin === 'http://localhost:5500';
   const isVercelPreview = origin && origin.endsWith('.vercel.app');
 
-  if (origin === allowedOrigin || isLocal || isVercelPreview) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+  if (!origin || origin === allowedOrigin || isLocal || isVercelPreview) {
+    res.setHeader('Access-Control-Allow-Origin', origin || allowedOrigin);
   } else {
     return res.status(403).json({ error: 'Akses ditolak: Beda Domain' });
   }
-  
+
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
