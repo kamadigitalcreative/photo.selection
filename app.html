@@ -7083,15 +7083,17 @@
                         });
                         const res = await response.json();
                         endLoading();
-                        if (res.status === 'success' && res.data && res.data.success) {
-                            Swal.fire('Sukses', 'Akses klien berhasil dibuka. Batas gratis baru: ' + newMax, 'success');
+                        const isSuccess = (res.status === 'success' && res.data && res.data.success) || (res.data && res.data.success) || res.success === true || res.status === 'success';
+                        if (isSuccess) {
+                            Swal.fire('Sukses', (res.data && res.data.message) || 'Akses klien berhasil dibuka. Batas gratis baru: ' + newMax, 'success');
                             loadDashboardData(true);
                         } else {
-                            throw new Error((res.data && res.data.message) || res.message || 'Gagal merubah status.');
+                            const msg = (res.data && res.data.message) || res.message || 'Gagal mengubah status.';
+                            throw new Error(msg);
                         }
                     } catch (e) {
                         endLoading();
-                        Swal.fire('Error', e.toString(), 'error');
+                        Swal.fire('Error', e.message || e.toString(), 'error');
                     }
                 }
             });
@@ -7118,9 +7120,9 @@
                         });
                         const res = await response.json();
                         endLoading();
-                        const isSuccess = (res.status === 'success' && res.data && res.data.success) || res.success || (res.data && res.data.status === 'success');
+                        const isSuccess = (res.status === 'success' && res.data && res.data.success) || (res.data && res.data.success) || res.success === true || res.status === 'success';
                         if (isSuccess) {
-                            Swal.fire('Sukses', 'Akses klien berhasil dikunci (Status: Selesai).', 'success');
+                            Swal.fire('Sukses', (res.data && res.data.message) || 'Akses klien berhasil dikunci (Status: Selesai).', 'success');
                             loadDashboardData(true);
                         } else {
                             const msg = (res.data && res.data.message) || res.message || 'Gagal mengubah status.';
@@ -7155,15 +7157,17 @@
                         });
                         const res = await response.json();
                         endLoading();
-                        if (res.status === 'success' && res.data && res.data.success) {
-                            Swal.fire('Sukses', 'Pembayaran dikonfirmasi.', 'success');
+                        const isSuccess = (res.status === 'success' && res.data && res.data.success) || (res.data && res.data.success) || res.success === true || res.status === 'success';
+                        if (isSuccess) {
+                            Swal.fire('Sukses', (res.data && res.data.message) || 'Pembayaran dikonfirmasi.', 'success');
                             loadDashboardData(true);
                         } else {
-                            throw new Error((res.data && res.data.message) || res.message || 'Gagal mengubah status.');
+                            const msg = (res.data && res.data.message) || res.message || 'Gagal mengubah status.';
+                            throw new Error(msg);
                         }
                     } catch (err) {
                         endLoading();
-                        Swal.fire('Error', err.toString(), 'error');
+                        Swal.fire('Error', err.message || err.toString(), 'error');
                     }
                 }
             });
@@ -7190,15 +7194,17 @@
                         });
                         const res = await response.json();
                         endLoading();
-                        if (res.status === 'success' && res.data && res.data.success) {
-                            Swal.fire('Sukses', 'Pembayaran ditolak. Status kembali ke Sedang Memilih.', 'success');
+                        const isSuccess = (res.status === 'success' && res.data && res.data.success) || (res.data && res.data.success) || res.success === true || res.status === 'success';
+                        if (isSuccess) {
+                            Swal.fire('Sukses', (res.data && res.data.message) || 'Pembayaran ditolak. Status kembali ke Sedang Memilih.', 'success');
                             loadDashboardData(true);
                         } else {
-                            throw new Error((res.data && res.data.message) || res.message || 'Gagal mengubah status.');
+                            const msg = (res.data && res.data.message) || res.message || 'Gagal mengubah status.';
+                            throw new Error(msg);
                         }
                     } catch (err) {
                         endLoading();
-                        Swal.fire('Error', err.toString(), 'error');
+                        Swal.fire('Error', err.message || err.toString(), 'error');
                     }
                 }
             });
