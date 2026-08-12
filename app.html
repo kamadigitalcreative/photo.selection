@@ -7073,9 +7073,19 @@
                 confirmButtonText: 'Ya, Buka Akses!'
             }).then(async (result) => {
                 if (result.isConfirmed) {
+                    // Optimistic UI update
+                    if (window.lastProjectsData) {
+                        var p = window.lastProjectsData.find(function (x) { return String(x.ID) === String(projectId); });
+                        if (p) {
+                            p['Status Client'] = 'Sedang Memilih';
+                            p['Max Foto'] = newMax;
+                            renderProjectsTable(window.lastProjectsData);
+                        }
+                    }
+
                     startLoading('Membuka akses...');
                     try {
-                        const token = localStorage.getItem('ps_admin_token');
+                        const token = (currentUser && currentUser.sessionId) ? currentUser.sessionId : (localStorage.getItem('ps_admin_token') || '');
                         const response = await fetch(API_ENDPOINT, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -7093,6 +7103,7 @@
                         }
                     } catch (e) {
                         endLoading();
+                        loadDashboardData(true); // Re-sync in case of network issue
                         Swal.fire('Error', e.message || e.toString(), 'error');
                     }
                 }
@@ -7110,9 +7121,18 @@
                 confirmButtonText: 'Ya, Kunci Akses!'
             }).then(async (result) => {
                 if (result.isConfirmed) {
+                    // Optimistic UI update
+                    if (window.lastProjectsData) {
+                        var p = window.lastProjectsData.find(function (x) { return String(x.ID) === String(projectId); });
+                        if (p) {
+                            p['Status Client'] = 'Selesai';
+                            renderProjectsTable(window.lastProjectsData);
+                        }
+                    }
+
                     startLoading('Mengunci akses...');
                     try {
-                        const token = localStorage.getItem('ps_admin_token');
+                        const token = (currentUser && currentUser.sessionId) ? currentUser.sessionId : (localStorage.getItem('ps_admin_token') || '');
                         const response = await fetch(API_ENDPOINT, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -7130,6 +7150,7 @@
                         }
                     } catch (e) {
                         endLoading();
+                        loadDashboardData(true); // Re-sync
                         Swal.fire('Error', e.message || e.toString(), 'error');
                     }
                 }
@@ -7147,9 +7168,13 @@
                 confirmButtonText: 'Ya, Lunas!'
             }).then(async (result) => {
                 if (result.isConfirmed) {
+                    if (window.lastProjectsData) {
+                        var p = window.lastProjectsData.find(function (x) { return String(x.ID) === String(projectId); });
+                        if (p) { p['Status Client'] = 'Selesai'; renderProjectsTable(window.lastProjectsData); }
+                    }
                     startLoading('Memproses...');
                     try {
-                        const token = localStorage.getItem('ps_admin_token');
+                        const token = (currentUser && currentUser.sessionId) ? currentUser.sessionId : (localStorage.getItem('ps_admin_token') || '');
                         const response = await fetch(API_ENDPOINT, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -7167,6 +7192,7 @@
                         }
                     } catch (err) {
                         endLoading();
+                        loadDashboardData(true);
                         Swal.fire('Error', err.message || err.toString(), 'error');
                     }
                 }
@@ -7184,9 +7210,13 @@
                 confirmButtonText: 'Ya, Tolak'
             }).then(async (result) => {
                 if (result.isConfirmed) {
+                    if (window.lastProjectsData) {
+                        var p = window.lastProjectsData.find(function (x) { return String(x.ID) === String(projectId); });
+                        if (p) { p['Status Client'] = 'Sedang Memilih'; renderProjectsTable(window.lastProjectsData); }
+                    }
                     startLoading('Memproses...');
                     try {
-                        const token = localStorage.getItem('ps_admin_token');
+                        const token = (currentUser && currentUser.sessionId) ? currentUser.sessionId : (localStorage.getItem('ps_admin_token') || '');
                         const response = await fetch(API_ENDPOINT, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -7204,6 +7234,7 @@
                         }
                     } catch (err) {
                         endLoading();
+                        loadDashboardData(true);
                         Swal.fire('Error', err.message || err.toString(), 'error');
                     }
                 }
