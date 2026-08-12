@@ -7073,16 +7073,6 @@
                 confirmButtonText: 'Ya, Buka Akses!'
             }).then(async (result) => {
                 if (result.isConfirmed) {
-                    // Optimistic UI update
-                    if (window.lastProjectsData) {
-                        var p = window.lastProjectsData.find(function (x) { return String(x.ID) === String(projectId); });
-                        if (p) {
-                            p['Status Client'] = 'Sedang Memilih';
-                            p['Max Foto'] = newMax;
-                            renderProjectsTable(window.lastProjectsData);
-                        }
-                    }
-
                     startLoading('Membuka akses...');
                     try {
                         const token = (currentUser && currentUser.sessionId) ? currentUser.sessionId : (localStorage.getItem('ps_admin_token') || '');
@@ -7095,15 +7085,23 @@
                         endLoading();
                         const isSuccess = (res.status === 'success' && res.data && res.data.success) || (res.data && res.data.success) || res.success === true || res.status === 'success';
                         if (isSuccess) {
-                            Swal.fire('Sukses', (res.data && res.data.message) || 'Akses klien berhasil dibuka. Batas gratis baru: ' + newMax, 'success');
+                            if (window.lastProjectsData) {
+                                var p = window.lastProjectsData.find(function (x) { return String(x.ID).trim().toLowerCase() === String(projectId).trim().toLowerCase(); });
+                                if (p) {
+                                    p['Status Client'] = 'Sedang Memilih';
+                                    p['Max Foto'] = newMax;
+                                    renderProjectsTable(window.lastProjectsData);
+                                }
+                            }
+                            Swal.fire('Sukses', (res.data && res.data.message) || res.message || 'Akses klien berhasil dibuka. Batas gratis baru: ' + newMax, 'success');
                             loadDashboardData(true);
                         } else {
-                            const msg = (res.data && res.data.message) || res.message || 'Gagal mengubah status.';
+                            const msg = (res.data && res.data.message) || res.message || res.error || 'Gagal mengubah status.';
                             throw new Error(msg);
                         }
                     } catch (e) {
                         endLoading();
-                        loadDashboardData(true); // Re-sync in case of network issue
+                        loadDashboardData(true);
                         Swal.fire('Error', e.message || e.toString(), 'error');
                     }
                 }
@@ -7121,15 +7119,6 @@
                 confirmButtonText: 'Ya, Kunci Akses!'
             }).then(async (result) => {
                 if (result.isConfirmed) {
-                    // Optimistic UI update
-                    if (window.lastProjectsData) {
-                        var p = window.lastProjectsData.find(function (x) { return String(x.ID) === String(projectId); });
-                        if (p) {
-                            p['Status Client'] = 'Selesai';
-                            renderProjectsTable(window.lastProjectsData);
-                        }
-                    }
-
                     startLoading('Mengunci akses...');
                     try {
                         const token = (currentUser && currentUser.sessionId) ? currentUser.sessionId : (localStorage.getItem('ps_admin_token') || '');
@@ -7142,15 +7131,22 @@
                         endLoading();
                         const isSuccess = (res.status === 'success' && res.data && res.data.success) || (res.data && res.data.success) || res.success === true || res.status === 'success';
                         if (isSuccess) {
-                            Swal.fire('Sukses', (res.data && res.data.message) || 'Akses klien berhasil dikunci (Status: Selesai).', 'success');
+                            if (window.lastProjectsData) {
+                                var p = window.lastProjectsData.find(function (x) { return String(x.ID).trim().toLowerCase() === String(projectId).trim().toLowerCase(); });
+                                if (p) {
+                                    p['Status Client'] = 'Selesai';
+                                    renderProjectsTable(window.lastProjectsData);
+                                }
+                            }
+                            Swal.fire('Sukses', (res.data && res.data.message) || res.message || 'Akses klien berhasil dikunci (Status: Selesai).', 'success');
                             loadDashboardData(true);
                         } else {
-                            const msg = (res.data && res.data.message) || res.message || 'Gagal mengubah status.';
+                            const msg = (res.data && res.data.message) || res.message || res.error || 'Gagal mengubah status.';
                             throw new Error(msg);
                         }
                     } catch (e) {
                         endLoading();
-                        loadDashboardData(true); // Re-sync
+                        loadDashboardData(true);
                         Swal.fire('Error', e.message || e.toString(), 'error');
                     }
                 }
@@ -7168,10 +7164,6 @@
                 confirmButtonText: 'Ya, Lunas!'
             }).then(async (result) => {
                 if (result.isConfirmed) {
-                    if (window.lastProjectsData) {
-                        var p = window.lastProjectsData.find(function (x) { return String(x.ID) === String(projectId); });
-                        if (p) { p['Status Client'] = 'Selesai'; renderProjectsTable(window.lastProjectsData); }
-                    }
                     startLoading('Memproses...');
                     try {
                         const token = (currentUser && currentUser.sessionId) ? currentUser.sessionId : (localStorage.getItem('ps_admin_token') || '');
@@ -7184,10 +7176,14 @@
                         endLoading();
                         const isSuccess = (res.status === 'success' && res.data && res.data.success) || (res.data && res.data.success) || res.success === true || res.status === 'success';
                         if (isSuccess) {
-                            Swal.fire('Sukses', (res.data && res.data.message) || 'Pembayaran dikonfirmasi.', 'success');
+                            if (window.lastProjectsData) {
+                                var p = window.lastProjectsData.find(function (x) { return String(x.ID).trim().toLowerCase() === String(projectId).trim().toLowerCase(); });
+                                if (p) { p['Status Client'] = 'Selesai'; renderProjectsTable(window.lastProjectsData); }
+                            }
+                            Swal.fire('Sukses', (res.data && res.data.message) || res.message || 'Pembayaran dikonfirmasi.', 'success');
                             loadDashboardData(true);
                         } else {
-                            const msg = (res.data && res.data.message) || res.message || 'Gagal mengubah status.';
+                            const msg = (res.data && res.data.message) || res.message || res.error || 'Gagal mengubah status.';
                             throw new Error(msg);
                         }
                     } catch (err) {
@@ -7210,10 +7206,6 @@
                 confirmButtonText: 'Ya, Tolak'
             }).then(async (result) => {
                 if (result.isConfirmed) {
-                    if (window.lastProjectsData) {
-                        var p = window.lastProjectsData.find(function (x) { return String(x.ID) === String(projectId); });
-                        if (p) { p['Status Client'] = 'Sedang Memilih'; renderProjectsTable(window.lastProjectsData); }
-                    }
                     startLoading('Memproses...');
                     try {
                         const token = (currentUser && currentUser.sessionId) ? currentUser.sessionId : (localStorage.getItem('ps_admin_token') || '');
@@ -7226,10 +7218,14 @@
                         endLoading();
                         const isSuccess = (res.status === 'success' && res.data && res.data.success) || (res.data && res.data.success) || res.success === true || res.status === 'success';
                         if (isSuccess) {
-                            Swal.fire('Sukses', (res.data && res.data.message) || 'Pembayaran ditolak. Status kembali ke Sedang Memilih.', 'success');
+                            if (window.lastProjectsData) {
+                                var p = window.lastProjectsData.find(function (x) { return String(x.ID).trim().toLowerCase() === String(projectId).trim().toLowerCase(); });
+                                if (p) { p['Status Client'] = 'Sedang Memilih'; renderProjectsTable(window.lastProjectsData); }
+                            }
+                            Swal.fire('Sukses', (res.data && res.data.message) || res.message || 'Pembayaran ditolak. Status kembali ke Sedang Memilih.', 'success');
                             loadDashboardData(true);
                         } else {
-                            const msg = (res.data && res.data.message) || res.message || 'Gagal mengubah status.';
+                            const msg = (res.data && res.data.message) || res.message || res.error || 'Gagal mengubah status.';
                             throw new Error(msg);
                         }
                     } catch (err) {
