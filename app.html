@@ -7118,15 +7118,17 @@
                         });
                         const res = await response.json();
                         endLoading();
-                        if (res.status === 'success' && res.data && res.data.success) {
+                        const isSuccess = (res.status === 'success' && res.data && res.data.success) || res.success || (res.data && res.data.status === 'success');
+                        if (isSuccess) {
                             Swal.fire('Sukses', 'Akses klien berhasil dikunci (Status: Selesai).', 'success');
                             loadDashboardData(true);
                         } else {
-                            throw new Error((res.data && res.data.message) || res.message || 'Gagal mengubah status.');
+                            const msg = (res.data && res.data.message) || res.message || 'Gagal mengubah status.';
+                            throw new Error(msg);
                         }
                     } catch (e) {
                         endLoading();
-                        Swal.fire('Error', e.toString(), 'error');
+                        Swal.fire('Error', e.message || e.toString(), 'error');
                     }
                 }
             });
