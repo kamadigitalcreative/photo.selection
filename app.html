@@ -4572,8 +4572,8 @@
             setTx('#section-dashboard .grid > div:nth-child(1) p', 'Total Project', 'Total Projects');
             setTx('#section-dashboard .grid > div:nth-child(2) p', 'Semua Fotografer', 'All Photographers');
             setTx('#section-dashboard .grid > div:nth-child(3) p', 'Fotografer Aktif', 'Active Photographers');
-            setTx('#section-dashboard .grid > div:nth-child(4) p', 'Pending ACC', 'Pending ACC');
-            setTx('#section-dashboard .grid > div:nth-child(5) p', 'Tidak Aktif', 'Inactive');
+            setTx('#section-dashboard .grid > div:nth-child(4) p', 'Expired ≤ 1 Bulan', 'Expiring ≤ 1 Month');
+            setTx('#section-dashboard .grid > div:nth-child(5) p', 'Pending ACC', 'Pending ACC');
 
             setTx('#section-projects h2', 'Daftar Project', 'Project List');
             setTx('#section-projects > div.grid > div:nth-child(1) p', 'Project Aktif', 'Active Projects');
@@ -4823,14 +4823,15 @@
             setTx('#btn-custom', '<i class="fa-solid fa-filter text-[10px]"></i> Cari', '<i class="fa-solid fa-filter text-[10px]"></i> Search', true);
 
             var dashCards = document.querySelectorAll('#section-dashboard .uppercase.tracking-wider');
-            if (dashCards.length >= 7) {
+            if (dashCards.length >= 8) {
                 dashCards[0].innerText = isEn ? 'Total Views' : 'Total Tayangan';
                 dashCards[1].innerText = isEn ? 'Unique Visitors' : 'Pengunjung Unik';
                 dashCards[2].innerText = isEn ? 'Projects Created' : 'Project Dibuat';
                 dashCards[3].innerText = isEn ? 'Total Team/Users' : 'Total Tim/User';
                 dashCards[4].innerText = isEn ? 'Active Team' : 'Tim Aktif';
                 dashCards[5].innerText = isEn ? 'Inactive Team' : 'Tim Non-Aktif';
-                dashCards[6].innerText = isEn ? 'Pending ACC' : 'Pending ACC';
+                dashCards[6].innerText = isEn ? 'Expiring ≤ 1 Month' : 'Expired ≤ 1 Bulan';
+                dashCards[7].innerText = isEn ? 'Pending ACC' : 'Pending ACC';
             }
 
             var projTh = document.querySelectorAll('#section-projects thead th');
