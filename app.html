@@ -1080,7 +1080,7 @@
 
                 <!-- Global search removed per user request to avoid duplication -->
 
-                <div class="flex items-center gap-3 sm:gap-5 ml-auto shrink-0 pl-3">
+                <div class="flex items-center gap-2 sm:gap-4 ml-auto shrink-0 pl-3">
                     <!-- Notification -->
                     <button onclick="openModalNotification()"
                         class="relative text-gray-500 hover:text-kama-800 w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors">
@@ -1094,6 +1094,14 @@
                         class="hidden sm:flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full text-amber-700 font-bold text-[10px] tracking-wide uppercase shadow-sm">
                         <i class="fa-solid fa-crown"></i> PRO PLAN
                     </div>
+
+                    <!-- Tombol Perpanjang Masa Aktif Fotografer -->
+                    <button id="btn-renew-package-header" onclick="showExpiredAlert()"
+                        class="hidden items-center gap-1.5 px-3 py-1.5 rounded-full font-bold text-[11px] shadow-sm transition-all duration-300 cursor-pointer"
+                        title="Perpanjang Masa Aktif Paket">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                        <span>Perpanjang Paket</span>
+                    </button>
 
                     <!-- Profile Dropdown Trigger -->
                     <div class="flex items-center gap-3 pl-3 sm:pl-5 sm:border-l sm:border-gray-200 cursor-pointer group"
@@ -4968,6 +4976,55 @@
         var appBranding = { name: 'Kama Creative', logo: '' };
         var currentUser = null;
 
+        function updateRenewPackageHeaderButton() {
+            var btn = document.getElementById('btn-renew-package-header');
+            if (!btn) return;
+
+            if (!currentUser || currentUser.role === 'Admin' || currentUser.expiredAt === 'Lifetime') {
+                btn.classList.add('hidden');
+                btn.classList.remove('flex');
+                return;
+            }
+
+            if (!currentUser.expiredAt) {
+                btn.classList.add('hidden');
+                btn.classList.remove('flex');
+                return;
+            }
+
+            var todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+
+            var expDate = new Date(currentUser.expiredAt);
+            expDate.setHours(23, 59, 59, 999);
+
+            var diffMs = expDate.getTime() - todayStart.getTime();
+            var daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+            var isEn = localStorage.getItem('ps_lang') === 'en';
+            btn.classList.remove('hidden');
+
+            if (daysLeft > 30) {
+                // EXPIRED MASIH 1 BULAN KE ATAS -> WARNA HIJAU
+                btn.className = "flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-full font-bold text-[11px] shadow-sm shadow-emerald-500/20 transition-all cursor-pointer";
+                btn.innerHTML = '<i class="fa-solid fa-arrows-rotate text-xs"></i> <span class="hidden md:inline">' + (isEn ? 'Renew Plan' : 'Perpanjang Paket') + '</span>';
+                btn.title = (isEn ? 'Active period: ' : 'Masa aktif: ') + daysLeft + (isEn ? ' days remaining' : ' hari lagi. Klik untuk perpanjang.');
+            } else if (daysLeft > 7) {
+                // EXPIRED DI BAWAH 1 BULAN -> WARNA KUNING / AMBER
+                btn.className = "flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-full font-bold text-[11px] shadow-md shadow-amber-500/20 transition-all cursor-pointer";
+                btn.innerHTML = '<i class="fa-solid fa-clock-rotate-left text-xs"></i> <span>' + (isEn ? 'Renew (' : 'Perpanjang (') + daysLeft + (isEn ? 'd)' : ' Hari)') + '</span>';
+                btn.title = (isEn ? 'Active period expires in ' : 'Masa aktif tinggal ') + daysLeft + (isEn ? ' days!' : ' hari lagi! Klik untuk perpanjang.');
+            } else {
+                // EXPIRED DI BAWAH 1 MINGGU ATAU SUDAH EXPIRED -> WARNA MERAH + PULSING ANIMATION
+                btn.className = "flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white px-3.5 py-1.5 rounded-full font-extrabold text-[11px] shadow-lg shadow-red-500/40 animate-pulse transition-all cursor-pointer";
+                var labelText = daysLeft <= 0 
+                    ? (isEn ? 'Renew Now!' : 'Perpanjang Sekarang!') 
+                    : (isEn ? 'Renew (' + daysLeft + 'd)' : 'Perpanjang (' + daysLeft + ' Hari)');
+                btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-xs"></i> <span>' + labelText + '</span>';
+                btn.title = (isEn ? 'CRITICAL: Subscription expires soon! Click to renew now.' : 'PENTING: Masa aktif segera berakhir! Klik untuk perpanjang sekarang.');
+            }
+        }
+
         function isAccountExpired() {
             if (!currentUser || currentUser.role === 'Admin') return false;
             if (currentUser.expiredAt === 'Lifetime' || !currentUser.expiredAt) return false;
@@ -4978,12 +5035,34 @@
 
         function showExpiredAlert() {
             var isEn = document.getElementById('langSelector') && document.getElementById('langSelector').value === 'en';
+
+            var expInfoText = '';
+            if (currentUser && currentUser.expiredAt && currentUser.expiredAt !== 'Lifetime') {
+                var todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+                var expDate = new Date(currentUser.expiredAt); expDate.setHours(23, 59, 59, 999);
+                var daysLeft = Math.ceil((expDate.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24));
+                var paketName = currentUser.paket || 'Berlangganan';
+                var statusText = daysLeft <= 0 ? 'SUDAH HABIS' : (daysLeft + ' HARI LAGI');
+                var colorBadge = daysLeft <= 7 ? 'bg-red-100 text-red-700 border-red-200' : (daysLeft <= 30 ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-emerald-100 text-emerald-800 border-emerald-200');
+
+                expInfoText = `
+                    <div class="p-3 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-between text-xs mb-3">
+                        <div>
+                            <p class="text-gray-400 font-bold uppercase text-[9px]">Paket & Tanggal Expired</p>
+                            <p class="font-bold text-gray-800 mt-0.5">${escapeHTML(paketName)} (${currentUser.expiredAt.substring(0, 10)})</p>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full font-extrabold text-[10px] border ${colorBadge}">${statusText}</span>
+                    </div>
+                `;
+            }
+
             Swal.fire({
-                title: isEn ? 'Subscription Expired 🔒' : 'Masa Aktif Habis 🔒',
+                title: isEn ? 'Renew Subscription ⚡' : 'Perpanjang Masa Aktif Paket ⚡',
                 html: `
                     <div class="text-left text-sm text-slate-600 space-y-3">
-                        <p>${isEn ? 'Your premium features access is temporarily disabled because your account subscription has expired.' : 'Akses fitur premium Anda (Watermark, Kolase Premium, Ekstra Kategori, New Project, Copy Teks, dan Edit Brand) dinonaktifkan sementara karena akun Anda telah melewati batas masa aktif langganan.'}</p>
-                        <p class="font-bold text-slate-800 text-xs uppercase border-b pb-1 pt-1"><i class="fa-solid fa-wallet text-blue-500 mr-1"></i> ${isEn ? 'Choose Instant Renewal Package:' : 'Pilih Paket Perpanjangan Instan (Mayar):'}</p>
+                        ${expInfoText}
+                        <p>${isEn ? 'Select a package below to renew your subscription instantly via Mayar.id and keep your galleries & automation features active uninterrupted.' : 'Pilih paket di bawah untuk memperpanjang masa aktif akun Anda secara otomatis via Mayar.id agar galeri klien dan fitur otomatisasi tetap aktif tanpa kendala.'}</p>
+                        <p class="font-bold text-slate-800 text-xs uppercase border-b pb-1 pt-1"><i class="fa-solid fa-wallet text-blue-500 mr-1"></i> ${isEn ? 'Choose Renewal Package:' : 'Pilih Paket Perpanjangan Instan (Mayar):'}</p>
                         <div class="grid grid-cols-1 gap-2 pt-1">
                             <a href="https://kamacreative.myr.id/pl/paket-1-bulan-photo-selection" target="_blank" class="flex justify-between items-center bg-blue-50 border border-blue-200 hover:bg-blue-100 p-3 rounded-xl transition-all text-blue-700 font-bold shadow-sm">
                                 <span><i class="fa-solid fa-box mr-1.5"></i> ${isEn ? '1 Month Subscription' : 'Paket Langganan 1 Bulan'}</span>
@@ -4998,7 +5077,7 @@
                                 <i class="fa-solid fa-chevron-right text-xs"></i>
                             </a>
                         </div>
-                        <p class="text-[10px] text-gray-400 text-center pt-2"><i class="fa-solid fa-circle-info mr-1"></i> ${isEn ? 'After successful payment, your account will be automatically reactivated.' : 'Setelah pembayaran sukses di Mayar, akun Anda otomatis aktif kembali tanpa perlu konfirmasi Admin.'}</p>
+                        <p class="text-[10px] text-gray-400 text-center pt-2"><i class="fa-solid fa-circle-info mr-1"></i> ${isEn ? 'After successful payment, your account will be automatically extended.' : 'Setelah pembayaran sukses di Mayar, masa aktif akun Anda otomatis diperpanjang tanpa konfirmasi Admin.'}</p>
                     </div>
                 `,
                 showCancelButton: true,
@@ -5996,6 +6075,10 @@
                         badgeEl.className = "hidden sm:flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-full text-slate-500 font-bold text-[10px] tracking-wide uppercase shadow-sm";
                         badgeEl.innerHTML = '<i class="fa-solid fa-user-tag"></i> ' + paketStr;
                     }
+                }
+
+                if (typeof updateRenewPackageHeaderButton === 'function') {
+                    updateRenewPackageHeaderButton();
                 }
 
                 var adminNavTabs = document.getElementById('admin-nav-tabs');
