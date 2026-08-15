@@ -1350,7 +1350,7 @@
                                     <i class="fa-solid fa-clock-rotate-left"></i>
                                 </div>
                                 <div>
-                                    <p class="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Expired ≤ 7 Hari
+                                    <p class="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Expired ≤ 1 Bulan
                                     </p>
                                     <h4 class="text-lg font-bold text-amber-900 leading-none mt-0.5"
                                         id="stat-expiring-soon">0</h4>
@@ -1377,9 +1377,9 @@
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 pb-3 border-b border-amber-100">
                                 <div>
                                     <h3 class="font-bold text-amber-900 text-base flex items-center gap-2">
-                                        <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Fotografer Akan Expired dalam 1 Minggu
+                                        <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Fotografer Akan Expired dalam 1 Bulan
                                     </h3>
-                                    <p class="text-xs text-amber-700 mt-0.5">Daftar akun fotografer berlangganan yang masa aktifnya akan habis dalam 7 hari ke depan.</p>
+                                    <p class="text-xs text-amber-700 mt-0.5">Daftar akun fotografer berlangganan yang masa aktifnya akan habis dalam 30 hari ke depan.</p>
                                 </div>
                                 <span class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full border border-amber-200" id="expiring-widget-badge">0 Akun</span>
                             </div>
@@ -11169,6 +11169,7 @@
                         if (document.getElementById('stat-users')) document.getElementById('stat-users').innerText = d.totalUsers || 0;
                         if (document.getElementById('stat-active-users')) document.getElementById('stat-active-users').innerText = d.activeUsers || 0;
                         if (document.getElementById('stat-inactive-users')) document.getElementById('stat-inactive-users').innerText = d.inactiveUsers || 0;
+                        if (document.getElementById('stat-expiring-soon')) document.getElementById('stat-expiring-soon').innerText = d.expiringSoonCount || 0;
                         if (document.getElementById('stat-pending-users')) document.getElementById('stat-pending-users').innerText = d.pendingUsers || 0;
 
                         // Animasi angka baru
