@@ -8154,12 +8154,13 @@
                 endLoading();
                 setButtonState('btnCreate', false, 'Generate Link');
 
-                if (res.status === 'success' && res.data.success) {
+                if (res.status === 'success' && res.data && res.data.success) {
                     closeModalCreate();
                     Swal.fire({ icon: 'success', title: 'Berhasil Dibuat', timer: 1500, showConfirmButton: false });
                     loadDataProjects();
                 } else {
-                    Swal.fire('Error', res.message || res.data.message, 'error');
+                    var errorMsg = (res.data ? res.data.message : null) || res.message || 'Gagal membuat project.';
+                    Swal.fire('Error', errorMsg, 'error');
                 }
             } catch (err) {
                 endLoading();
@@ -8249,11 +8250,11 @@
                             });
                             const res = await response.json();
                             endLoading();
-                            if (res.status === 'success' && res.data.success) {
+                            if (res.status === 'success' && res.data && res.data.success) {
                                 Swal.fire({ icon: 'success', title: 'Dihapus', timer: 1500, showConfirmButton: false });
                                 loadDataProjects();
                             } else {
-                                Swal.fire('Error', res.message || res.data.message, 'error');
+                                Swal.fire('Error', (res.data ? res.data.message : null) || res.message || 'Gagal menghapus project.', 'error');
                             }
                         } catch (err) {
                             endLoading();
@@ -8287,10 +8288,10 @@
                         });
                         const res = await response.json();
                         endLoading();
-                        if (res.status === 'success' && res.data.success) {
+                        if (res.status === 'success' && res.data && res.data.success) {
                             Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Password untuk ' + clientName + ' telah diperbarui.', timer: 2000, showConfirmButton: false });
                         } else {
-                            Swal.fire('Error', res.message || res.data.message, 'error');
+                            Swal.fire('Error', (res.data ? res.data.message : null) || res.message || 'Gagal mengubah password.', 'error');
                         }
                     } catch (err) {
                         endLoading();
@@ -8325,11 +8326,11 @@
                         });
                         const res = await response.json();
                         endLoading();
-                        if (res.status === 'success' && res.data.success) {
+                        if (res.status === 'success' && res.data && res.data.success) {
                             Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Batas waktu untuk ' + clientName + ' telah diperbarui.', timer: 2000, showConfirmButton: false });
                             setTimeout(() => { if (typeof pingClientStatus === 'function') pingClientStatus('Sedang Memilih'); }, 2000); // Trigger update jika perlu
                         } else {
-                            Swal.fire('Error', res.message || res.data.message, 'error');
+                            Swal.fire('Error', (res.data ? res.data.message : null) || res.message || 'Gagal memperbarui batas waktu.', 'error');
                         }
                     } catch (err) {
                         endLoading();
@@ -8753,10 +8754,10 @@
                 endLoading();
                 setButtonState('btnClientAuth', false, 'Unlock Gallery');
 
-                if (res.status === 'success' && res.data.success) {
+                if (res.status === 'success' && res.data && res.data.success) {
                     showClientModeSelection();
                 } else {
-                    Swal.fire('Ditolak', res.message || res.data.message, 'error');
+                    Swal.fire('Ditolak', (res.data ? res.data.message : null) || res.message || 'Password galeri salah.', 'error');
                 }
             } catch (err) {
                 endLoading();
@@ -10526,7 +10527,9 @@
                             body: JSON.stringify({ action: 'requestOTP', username: user.trim() })
                         });
                         const res = await response.json();
-                        if (res.status !== 'success' || !res.data.success) { throw new Error(res.message || res.data.message); }
+                        if (res.status !== 'success' || !res.data || !res.data.success) {
+                            throw new Error((res.data ? res.data.message : null) || res.message || 'Gagal meminta kode OTP.');
+                        }
                         return { username: user.trim(), message: res.data.message };
                     } catch (error) { Swal.showValidationMessage(`Gagal: ${error.message}`); }
                 },
@@ -10568,7 +10571,9 @@
                                 })
                             });
                             const res = await response.json();
-                            if (res.status !== 'success' || !res.data.success) { throw new Error(res.message || res.data.message); }
+                            if (res.status !== 'success' || !res.data || !res.data.success) {
+                                throw new Error((res.data ? res.data.message : null) || res.message || 'Gagal mereset password.');
+                            }
                             return res.data;
                         } catch (error) { Swal.showValidationMessage(`Gagal: ${error.message}`); }
                     }
