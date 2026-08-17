@@ -5757,7 +5757,7 @@
                     Swal.fire({ icon: 'success', title: (localStorage.getItem('ps_lang') === 'en' ? 'Saved' : 'Tersimpan'), timer: 1500, showConfirmButton: false });
                     loadDataProjects();
                 } else {
-                    Swal.fire('Error', res.message || res.data.message, 'error');
+                    Swal.fire('Error', (res.data ? res.data.message : null) || res.message || 'Gagal menyimpan pengaturan.', 'error');
                 }
             } catch (err) {
                 endLoading();
@@ -5801,7 +5801,7 @@
                         if (res.status === 'success' && res.data.success) {
                             finishSaveSettings(nameInput, res.data.url);
                         } else {
-                            Swal.fire('Upload Gagal', res.message || res.data.message, 'error');
+                            Swal.fire('Upload Gagal', (res.data ? res.data.message : null) || res.message || 'Gagal mengunggah file.', 'error');
                         }
                     } catch (err) {
                         endLoading();
@@ -5837,7 +5837,7 @@
                     Swal.fire({ icon: 'success', title: (localStorage.getItem('ps_lang') === 'en' ? 'Saved' : 'Tersimpan'), timer: 1500, showConfirmButton: false });
                     loadDataProjects();
                 } else {
-                    Swal.fire('Error', res.message || res.data.message, 'error');
+                    Swal.fire('Error', (res.data ? res.data.message : null) || res.message || 'Gagal menyimpan brand settings.', 'error');
                 }
             } catch (err) {
                 endLoading();
@@ -6264,7 +6264,7 @@
                 endLoading();
                 setButtonState('btnRegister', false, 'Daftar Sekarang');
 
-                if (res.status === 'success' && res.data.success) {
+                if (res.status === 'success' && res.data && res.data.success) {
                     document.getElementById('register-form-wrapper').classList.add('hidden');
                     document.querySelector('#register-form-wrapper form').reset();
 
@@ -6295,7 +6295,8 @@
                         document.getElementById('verify-email-wrapper').classList.remove('hidden');
                     }
                 } else {
-                    Swal.fire('Gagal', res.message || res.data.message, 'error');
+                    var errorMsg = (res.data ? res.data.message : null) || res.message || 'Gagal mendaftar. Silakan coba lagi.';
+                    Swal.fire('Gagal', errorMsg, 'error');
                 }
             } catch (err) {
                 endLoading();
@@ -6565,7 +6566,7 @@
                 if (res.status === 'success' && res.data.success) {
                     renderDashboardStats(res.data.data);
                 } else {
-                    console.error(res.message || res.data.message);
+                    console.error((res.data ? res.data.message : null) || res.message);
                 }
             } catch (err) {
                 endLoading();
@@ -6648,7 +6649,7 @@
                     window.allUsersData = res.data.data || [];
                     filterUsersTable();
                 } else {
-                    if (!isSilent) Swal.fire('Error', res.message || res.data.message, 'error');
+                    if (!isSilent) Swal.fire('Error', (res.data ? res.data.message : null) || res.message || 'Gagal memuat data.', 'error');
                 }
             } catch (err) {
                 if (!isSilent) endLoading();
@@ -6896,7 +6897,7 @@
                             Swal.fire({ icon: 'success', title: isApproval ? 'Di-ACC!' : 'Diperbarui!', timer: 1500, showConfirmButton: false });
                             loadDataUsers();
                         } else {
-                            Swal.fire('Error', res.message || res.data.message, 'error');
+                            Swal.fire('Error', (res.data ? res.data.message : null) || res.message || 'Gagal memperbarui status user.', 'error');
                         }
                     } catch (err) {
                         endLoading();
@@ -6922,7 +6923,7 @@
                             if (res.status === 'success' && res.data.success) {
                                 loadDataUsers();
                             } else {
-                                Swal.fire('Error', res.message || res.data.message, 'error');
+                                Swal.fire('Error', (res.data ? res.data.message : null) || res.message || 'Gagal menghapus user.', 'error');
                             }
                         } catch (err) {
                             endLoading();
