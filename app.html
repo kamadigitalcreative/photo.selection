@@ -5374,10 +5374,6 @@
                 showExpiredAlert();
                 return;
             }
-            if (typeof isDemoAccount === 'function' && isDemoAccount()) {
-                showDemoSubscribeAlert();
-                return;
-            }
             try { window.history.pushState({ tab: 'sortir-lokal' }, '', '/sortirlokal'); } catch (e) { }
             showView('admin-view');
             switchAdminTab('sortir-lokal', true);
