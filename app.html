@@ -3617,9 +3617,7 @@
                                             class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Layout
                                             Galeri Klien</label>
                                         <select id="p_client_layout"
-                                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all text-sm font-medium text-gray-800"
-                                            onclick="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ showPremiumAlert(); this.blur(); return false; }"
-                                            onkeydown="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ return false; }">
+                                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all text-sm font-medium text-gray-800">
                                             <option value="masonry">Pinterest (Masonry Grid)</option>
                                             <option value="adaptive">Adaptive Grid (Sesuai Orientasi)</option>
                                             <option value="horizontal">Filmstrip (Horizontal)</option>
@@ -3643,8 +3641,8 @@
                                     </div>
                                     <div class="md:col-span-2">
                                         <label id="lbl-p-music"
-                                            class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Musik
-                                            Latar / BGM (Opsional)</label>
+                                            class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">Musik
+                                            Latar / BGM <span class="text-gray-400 font-normal lowercase">(Opsional)</span> <i class="fa-solid fa-crown text-yellow-500 text-[11px]" title="Fitur PRO"></i></label>
                                         <div
                                             class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center bg-purple-50/30 p-4 border border-purple-100 rounded-xl">
                                             <div>
@@ -3653,6 +3651,7 @@
                                                         class="fa-solid fa-upload text-purple-500 mr-1"></i> Upload file
                                                     MP3 (Max 4MB)</p>
                                                 <input type="file" id="p_music_file" accept=".mp3,audio/mpeg"
+                                                    onclick="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ showPremiumAlert(); this.blur(); return false; }"
                                                     class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer border border-purple-200 rounded-lg bg-white shadow-sm">
                                             </div>
                                             <div>
@@ -3661,6 +3660,8 @@
                                                         class="fa-solid fa-link text-purple-500 mr-1"></i> Tempel Link
                                                     MP3 Eksternal</p>
                                                 <input type="url" id="p_music_url" placeholder="https://.../lagu.mp3"
+                                                    onclick="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ showPremiumAlert(); this.blur(); return false; }"
+                                                    onkeydown="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ showPremiumAlert(); return false; }"
                                                     class="w-full px-4 py-2 bg-white border border-purple-200 rounded-lg focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all text-sm shadow-sm">
                                             </div>
                                         </div>
@@ -3703,7 +3704,7 @@
                                         <input type="number" id="p_extra_price" min="0" placeholder="0 = Gratis"
                                             class="w-full px-4 py-3 bg-white border border-green-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-500 outline-none transition-all text-lg font-black text-gray-800 shadow-sm"
                                             onclick="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ showPremiumAlert(); this.blur(); return false; }"
-                                            onkeydown="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ return false; }">
+                                            onkeydown="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ showPremiumAlert(); return false; }">
                                         <p id="tx-p-extra-desc" class="text-xs text-gray-500 mt-2"><i
                                                 class="fa-solid fa-circle-info mr-1"></i> Biarkan 0 jika Anda
                                             mengizinkan klien memilih lebih tanpa bayar ekstra.</p>
@@ -3717,7 +3718,7 @@
                                         <input type="datetime-local" id="p_deadline"
                                             class="w-full px-4 py-3 bg-white border border-red-300 rounded-xl focus:border-red-500 focus:ring-2 focus:ring-red-500 outline-none transition-all text-sm font-bold text-gray-800 shadow-sm"
                                             onclick="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ showPremiumAlert(); this.blur(); return false; }"
-                                            onkeydown="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ return false; }">
+                                            onkeydown="if(typeof isPremiumAddon === 'function' && !isPremiumAddon()){ showPremiumAlert(); return false; }">
                                         <p id="tx-p-deadline-desc" class="text-xs text-gray-500 mt-2"><i
                                                 class="fa-solid fa-circle-info mr-1"></i> Kosongkan jika tidak ada batas
                                             waktu. Klien akan dikunci jika lewat.</p>
@@ -5193,37 +5194,31 @@
                             ${isEn ? 'Turn standard selection galleries into an <b>automated money-making machine</b> and look much more professional to your VIP clients.' : 'Ubah galeri seleksi biasa menjadi <b>mesin pencetak uang otomatis</b> dan tampil jauh lebih profesional di mata klien VIP Anda.'}
                         </p>
                         
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto mb-8 text-left">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto mb-8 text-left">
                             <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                                 <div class="w-10 h-10 bg-green-100 text-green-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-sack-dollar"></i></div>
-                                <h3 class="font-bold text-slate-800 text-sm mb-1">${isEn ? 'Automated Upsell System' : 'Sistem Upsell Otomatis'}</h3>
-                                <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Client selects more than their quota? The system automatically calculates the bill. Extra profit without the hassle of asking!' : 'Klien mau pilih foto lebih dari jatah? Sistem otomatis menghitung tagihannya. Cuan ekstra tanpa repot nagih!'}</p>
+                                <h3 class="font-bold text-slate-800 text-sm mb-1">1. ${isEn ? 'Automated Upsell System' : 'Sistem Upsell Otomatis'}</h3>
+                                <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Client selects more than their quota? The system automatically calculates the extra fee per photo.' : 'Klien memilih foto melebihi kuota? Sistem otomatis menghitung biaya tambahan per foto ekstra.'}</p>
                             </div>
                             <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                                 <div class="w-10 h-10 bg-blue-100 text-blue-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-shield-halved"></i></div>
-                                <h3 class="font-bold text-slate-800 text-sm mb-1">${isEn ? 'Dynamic Watermark' : 'Watermark Dinamis'}</h3>
-                                <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Photographer rests easy, work is safe. Share galleries before full payment without fear of photos being screenshotted/stolen.' : 'Fotografer tenang, karya aman. Bagikan galeri sebelum pelunasan tanpa takut foto discreenshot/dicuri.'}</p>
+                                <h3 class="font-bold text-slate-800 text-sm mb-1">2. ${isEn ? 'Dynamic Watermark' : 'Watermark Dinamis'}</h3>
+                                <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Protect your work with automated custom watermark overlays on client galleries.' : 'Lindungi karya Anda dengan watermark logo otomatis di seluruh galeri foto klien.'}</p>
                             </div>
                             <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                                 <div class="w-10 h-10 bg-fuchsia-100 text-fuchsia-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-                                <h3 class="font-bold text-slate-800 text-sm mb-1">${isEn ? '1-Click Premium Collage' : 'Kolase Premium 1-Klik'}</h3>
-                                <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Create aesthetic social media teasers instantly without opening Photoshop at all.' : 'Bikin bahan teaser sosial media estetik secara instan tanpa perlu repot buka Photoshop sama sekali.'}</p>
+                                <h3 class="font-bold text-slate-800 text-sm mb-1">3. ${isEn ? '1-Click Premium Collage' : 'Kolase Premium 1-Klik'}</h3>
+                                <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Generate aesthetic social media grid teasers with 1 click.' : 'Buat kolase estetik untuk teaser Instagram / media sosial instan dalam 1 klik.'}</p>
                             </div>
-                            <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                                <div class="w-10 h-10 bg-purple-100 text-purple-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-folder-tree"></i></div>
-                                <h3 class="font-bold text-slate-800 text-sm mb-1">${isEn ? 'Local File Sorting' : 'Sortir Lokal Otomatis'}</h3>
-                                <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Sort hundreds of client-selected files securely offline on your computer in just seconds. No server needed!' : 'Pisahkan ratusan foto pilihan klien secara aman (offline) di komputer Anda hanya dalam hitungan detik. Tanpa server!'}</p>
-                            </div>
-
                             <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                                 <div class="w-10 h-10 bg-amber-100 text-amber-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-layer-group"></i></div>
-                                <h3 class="font-bold text-slate-800 text-sm mb-1">${isEn ? 'Multi-Category' : 'Multi-Kategori'}</h3>
-                                <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Neatly separate photo quotas. E.g., Max 50 for Morning Session, Max 100 for Reception. Keep everything organized.' : 'Pisahkan jatah foto dengan rapi. Misal Max 50 untuk Akad, Max 100 untuk Resepsi. Semua lebih terorganisir.'}</p>
+                                <h3 class="font-bold text-slate-800 text-sm mb-1">4. ${isEn ? 'Multi-Category' : 'Multi-Kategori'}</h3>
+                                <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Separate selection quotas by category (e.g. Ceremony, Reception, Family).' : 'Pisahkan jatah kuota seleksi per kategori (misal: Akad, Resepsi, Keluarga).'}</p>
                             </div>
-                            <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                            <div class="bg-white/80 backdrop-blur border border-white p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow sm:col-span-2 md:col-span-1">
                                 <div class="w-10 h-10 bg-rose-100 text-rose-600 flex items-center justify-center rounded-xl mb-3 text-lg"><i class="fa-solid fa-music"></i></div>
-                                <h3 class="font-bold text-slate-800 text-sm mb-1">${isEn ? 'Gallery Music' : 'Musik Galeri'}</h3>
-                                <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Give an emotional touch! Add romantic background music so clients feel more engaged while selecting photos.' : 'Beri sentuhan emosional! Tambahkan musik latar romantis agar klien makin baper saat memilih foto.'}</p>
+                                <h3 class="font-bold text-slate-800 text-sm mb-1">5. ${isEn ? 'Gallery Music' : 'Musik Galeri'}</h3>
+                                <p class="text-xs text-slate-500 leading-relaxed">${isEn ? 'Add romantic background music (BGM) to engage clients while selecting photos.' : 'Tambahkan musik latar audio (BGM) romantis saat klien membuka dan memilih foto di galeri.'}</p>
                             </div>
                         </div>
 
