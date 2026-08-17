@@ -5378,10 +5378,6 @@
                 showDemoSubscribeAlert();
                 return;
             }
-            if (typeof isPremiumAddon === 'function' && !isPremiumAddon()) {
-                showPremiumAlert();
-                return;
-            }
             try { window.history.pushState({ tab: 'sortir-lokal' }, '', '/sortirlokal'); } catch (e) { }
             showView('admin-view');
             switchAdminTab('sortir-lokal', true);
@@ -8547,24 +8543,30 @@
 
             if (resStatusBadge) { resStatusBadge.textContent = 'Sedang Mengemas'; resStatusBadge.className = 'px-3 py-1 bg-blue-100 text-blue-600 text-xs font-bold rounded-full border border-blue-200'; }
 
-            // --- AUTOMATIC MULTI-PART CHUNKING ENGINE (SAFE RAM THRESHOLD: 600 MB PER ZIP PART) ---
-            var MAX_PART_BYTES = 600 * 1024 * 1024; // 600 MB per ZIP file safe limit
+            // --- AUTOMATIC CHUNKING ENGINE (1 SINGLE ZIP IF FEW/SAFE SIZE, MULTI-PART IF LARGE > 2 GB) ---
+            var MAX_PART_BYTES = 2000 * 1024 * 1024; // 2 GB (2000 MB) safe limit per ZIP file
             var parts = [];
-            var currentPartItems = [];
-            var currentPartSize = 0;
 
-            matchedFiles.forEach(function (item) {
-                var fSize = item.file.size || 0;
-                if (currentPartSize + fSize > MAX_PART_BYTES && currentPartItems.length > 0) {
+            // Kondisi: Jika total file <= 250 ATAU total ukuran <= 2 GB, kemas dalam 1 file ZIP tunggal
+            if (matchedFiles.length <= 250 || totalFoundSize <= MAX_PART_BYTES) {
+                parts = [matchedFiles];
+            } else {
+                var currentPartItems = [];
+                var currentPartSize = 0;
+
+                matchedFiles.forEach(function (item) {
+                    var fSize = item.file.size || 0;
+                    if (currentPartSize + fSize > MAX_PART_BYTES && currentPartItems.length > 0) {
+                        parts.push(currentPartItems);
+                        currentPartItems = [];
+                        currentPartSize = 0;
+                    }
+                    currentPartItems.push(item);
+                    currentPartSize += fSize;
+                });
+                if (currentPartItems.length > 0) {
                     parts.push(currentPartItems);
-                    currentPartItems = [];
-                    currentPartSize = 0;
                 }
-                currentPartItems.push(item);
-                currentPartSize += fSize;
-            });
-            if (currentPartItems.length > 0) {
-                parts.push(currentPartItems);
             }
 
             var totalParts = parts.length;
