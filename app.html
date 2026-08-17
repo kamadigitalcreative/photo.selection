@@ -10700,12 +10700,13 @@
                 // Bersihkan URL dari token agar rapi kembali
                 window.history.replaceState({}, document.title, window.location.pathname);
 
-                if (res.status === 'success' && res.data.success) {
+                if (res.status === 'success' && res.data && res.data.success) {
                     Swal.fire({
                         icon: 'success', title: 'Berhasil!', text: res.data.message, confirmButtonColor: '#1e1e2d'
                     }).then(() => { toggleAuth('login'); });
                 } else {
-                    Swal.fire('Verifikasi Gagal', res.message || res.data.message, 'error').then(() => { toggleAuth('login'); });
+                    var errorMsg = (res.data ? res.data.message : null) || res.message || 'Link verifikasi tidak valid atau sudah kadaluarsa.';
+                    Swal.fire('Verifikasi Gagal', errorMsg, 'error').then(() => { toggleAuth('login'); });
                 }
             } catch (err) {
                 endLoading();
