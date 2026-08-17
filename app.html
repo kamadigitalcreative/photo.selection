@@ -5118,7 +5118,11 @@
         }
 
         function isDemoAccount() {
-            return currentUser && currentUser.role !== 'Admin' && (!currentUser.paket || currentUser.paket === '-' || currentUser.paket === '');
+            if (!currentUser || currentUser.role === 'Admin') return false;
+            if (currentUser.role === 'Demo') return true;
+            if (!currentUser.paket || currentUser.paket === '-' || currentUser.paket === '') return true;
+            var p = String(currentUser.paket).toUpperCase();
+            return p.includes('DEMO') || p.includes('FREE PLAN');
         }
 
         function showDemoSubscribeAlert() {
@@ -6058,15 +6062,26 @@
 
                 var badgeEl = document.getElementById('badge-pro-status');
                 if (badgeEl) {
-                    var paketStr = currentUser.paket || (currentUser.isPremiumAddon ? 'PRO PLAN' : 'FREE PLAN');
-                    var isPro = currentUser.isPremiumAddon || paketStr.toUpperCase().includes('PRO') || paketStr.toUpperCase().includes('BULAN') || paketStr.toUpperCase().includes('TAHUN') || paketStr.toUpperCase().includes('LIFETIME');
-
-                    if (isPro) {
-                        badgeEl.className = "hidden sm:flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full text-amber-700 font-bold text-[10px] tracking-wide uppercase shadow-sm";
-                        badgeEl.innerHTML = '<i class="fa-solid fa-crown"></i> ' + paketStr;
+                    if (currentUser.role === 'Admin') {
+                        badgeEl.className = "hidden sm:flex items-center gap-1.5 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-full text-indigo-700 font-bold text-[10px] tracking-wide uppercase shadow-sm";
+                        badgeEl.innerHTML = '<i class="fa-solid fa-user-shield"></i> ADMIN';
                     } else {
-                        badgeEl.className = "hidden sm:flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-full text-slate-500 font-bold text-[10px] tracking-wide uppercase shadow-sm";
-                        badgeEl.innerHTML = '<i class="fa-solid fa-user-tag"></i> ' + paketStr;
+                        var rawPaket = currentUser.paket || '';
+                        var isDemo = (!rawPaket || rawPaket === '-' || rawPaket === '' || rawPaket.toUpperCase().includes('DEMO') || currentUser.role === 'Demo' || rawPaket.toUpperCase().includes('FREE PLAN'));
+                        var isPro = currentUser.isPremiumAddon || rawPaket.toUpperCase().includes('PRO');
+                        var expStr = currentUser.expiredAt === 'Lifetime' ? 'Lifetime' : (currentUser.expiredAt ? currentUser.expiredAt.substring(0, 10) : '-');
+
+                        if (isPro) {
+                            badgeEl.className = "hidden sm:flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full text-amber-700 font-bold text-[10px] tracking-wide uppercase shadow-sm";
+                            badgeEl.innerHTML = '<i class="fa-solid fa-crown"></i> PRO PLAN (EXP: ' + expStr + ')';
+                        } else if (!isDemo) {
+                            var displayPaket = rawPaket ? rawPaket.toUpperCase() : 'BERLANGGANAN';
+                            badgeEl.className = "hidden sm:flex items-center gap-1.5 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-full text-blue-700 font-bold text-[10px] tracking-wide uppercase shadow-sm";
+                            badgeEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> ' + displayPaket + ' (EXP: ' + expStr + ')';
+                        } else {
+                            badgeEl.className = "hidden sm:flex items-center gap-1.5 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-full text-slate-600 font-bold text-[10px] tracking-wide uppercase shadow-sm";
+                            badgeEl.innerHTML = '<i class="fa-solid fa-user-clock"></i> PAKET DEMO';
+                        }
                     }
                 }
 
