@@ -6847,8 +6847,11 @@
                 defaultDate = currentExpiry.split(' ')[0];
             } else {
                 var d = new Date();
-                d.setDate(d.getDate() + 30);
-                defaultDate = d.toISOString().split('T')[0];
+                d.setMonth(d.getMonth() + 1);
+                var year = d.getFullYear();
+                var month = String(d.getMonth() + 1).padStart(2, '0');
+                var day = String(d.getDate()).padStart(2, '0');
+                defaultDate = year + '-' + month + '-' + day;
             }
 
             var titleStr = isApproval ? 'Approve & Set Masa Aktif' : 'Atur Masa Aktif';
