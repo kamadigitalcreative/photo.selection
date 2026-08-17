@@ -9565,27 +9565,34 @@
 
                 // Normal Select
                 if (clientState.galleryMode !== 'download' && clientState.selectedImages.length >= clientState.maxFoto) {
-                    if (!clientState.agreedToExtraCharge) {
-                        var htmlText = '';
-                        if (clientState.extraPrice > 0) {
-                            htmlText = (isEn ? 'You have reached your quota. Any extra photo selected from now on will be charged <b>Rp ' : 'Kuota foto Anda sudah habis. Jika ingin memilih foto lebih dari kuota, Anda akan dikenakan biaya tambahan sebesar <b>Rp ') + clientState.extraPrice.toLocaleString('id-ID') + (isEn ? '</b> per photo.<br><br>Do you want to continue?' : '</b> per foto.<br><br>Apakah Anda ingin melanjutkan?');
-                        } else {
-                            htmlText = (isEn ? 'You have reached your quota. Continue selecting extra photos for free?' : 'Kuota foto Anda sudah habis. Apakah Anda ingin melanjutkan memilih foto tambahan secara gratis?');
-                        }
+                    if (clientState.extraPrice > 0) {
+                        // Fitur Premium: Pengenaan Biaya Tambahan per Foto
+                        if (!clientState.agreedToExtraCharge) {
+                            var htmlText = (isEn ? 'You have reached your quota. Any extra photo selected from now on will be charged <b>Rp ' : 'Kuota foto Anda sudah habis. Jika ingin memilih foto lebih dari kuota, Anda akan dikenakan biaya tambahan sebesar <b>Rp ') + clientState.extraPrice.toLocaleString('id-ID') + (isEn ? '</b> per photo.<br><br>Do you want to continue?' : '</b> per foto.<br><br>Apakah Anda ingin melanjutkan?');
 
+                            Swal.fire({
+                                title: (isEn ? 'Quota Exceeded' : 'Kuota Habis'),
+                                html: htmlText,
+                                icon: 'info',
+                                showCancelButton: true,
+                                confirmButtonText: (isEn ? 'Yes, Continue' : 'Ya, Lanjutkan'),
+                                cancelButtonText: (isEn ? 'Cancel' : 'Batal'),
+                                confirmButtonColor: '#1e1e2d'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    clientState.agreedToExtraCharge = true;
+                                    performSelectionData(cardElement, filename, url, 'Default', btnPilih, isEn);
+                                }
+                            });
+                            return;
+                        }
+                    } else {
+                        // Akun Demo / Tanpa Fee Tambahan: KUNCI MAKSIMAL, TIDAK BISA PILIH LEBIH
                         Swal.fire({
-                            title: (isEn ? 'Quota Exceeded' : 'Kuota Habis'),
-                            html: htmlText,
-                            icon: 'info',
-                            showCancelButton: true,
-                            confirmButtonText: (isEn ? 'Yes, Continue' : 'Ya, Lanjutkan'),
-                            cancelButtonText: (isEn ? 'Cancel' : 'Batal'),
+                            icon: 'warning',
+                            title: (isEn ? 'Quota Full' : 'Batas Maksimal Tercapai'),
+                            text: (isEn ? 'You have reached the maximum photo selection quota (' + clientState.maxFoto + ' photos). Please unselect another photo first if you wish to change your selection.' : 'Anda telah memilih foto sesuai batas maksimal (' + clientState.maxFoto + ' foto). Silakan batalkan salah satu foto terlebih dahulu jika ingin menggantinya dengan foto lain.'),
                             confirmButtonColor: '#1e1e2d'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                clientState.agreedToExtraCharge = true;
-                                performSelectionData(cardElement, filename, url, 'Default', btnPilih, isEn);
-                            }
                         });
                         return;
                     }
@@ -9720,6 +9727,15 @@
                                     performSelectionData(cardElement, filename, url, cat.name, btnPilih, isEn);
                                     closeCategorySelector();
                                 }
+                            });
+                        };
+                    } else {
+                        btn.onclick = function () {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: (isEn ? 'Category Full' : 'Kuota Kategori Penuh'),
+                                text: (isEn ? 'This category has reached its maximum limit (' + cat.max + ' photos).' : 'Kategori ini sudah mencapai batas maksimal (' + cat.max + ' foto). Silakan batalkan foto lain dalam kategori ini terlebih dahulu.'),
+                                confirmButtonColor: '#1e1e2d'
                             });
                         };
                     }
