@@ -7156,7 +7156,7 @@
                     '<button onclick="window.open(\'' + proofUrl + '\', \'_blank\')" class="text-amber-600 bg-amber-50 hover:bg-amber-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Lihat Bukti Transfer"><i class="fa-solid fa-file-invoice"></i></button>' +
                     '<button onclick="confirmClientPayment(\'' + row.ID + '\')" class="text-green-600 bg-green-50 hover:bg-green-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Konfirmasi Lunas"><i class="fa-solid fa-check-double"></i></button>' +
                     '<button onclick="rejectClientPayment(\'' + row.ID + '\')" class="text-red-600 bg-red-50 hover:bg-red-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Tolak Pembayaran"><i class="fa-solid fa-ban"></i></button>'
-                    : '<button onclick="copyForLightroom(\'' + row.ID + '\')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Copy to Lightroom"><i class="fa-solid fa-file-export"></i></button>' +
+                    : '<button onclick="previewClientSelection(\'' + row.ID + '\')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Preview Pilihan Client"><i class="fa-solid fa-eye"></i></button>' +
                     '<button onclick="sortirLokalForProject(\'' + row.ID + '\')" class="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Sortir Lokal"><i class="fa-solid fa-folder-tree"></i></button>';
 
                 var isLockedClient = (statusClient === 'Selesai' || statusClient === 'Menunggu Konfirmasi Pembayaran');
@@ -7186,7 +7186,7 @@
                     '<button onclick="window.open(\'' + proofUrl + '\', \'_blank\')" class="' + btnClassGridBase + 'text-amber-600 bg-amber-50 hover:bg-amber-100" title="Lihat Bukti Transfer"><i class="fa-solid fa-file-invoice"></i></button>' +
                     '<button onclick="confirmClientPayment(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-green-600 bg-green-50 hover:bg-green-100" title="Konfirmasi Lunas"><i class="fa-solid fa-check-double"></i></button>' +
                     '<button onclick="rejectClientPayment(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-red-600 bg-red-50 hover:bg-red-100" title="Tolak Pembayaran"><i class="fa-solid fa-ban"></i></button>'
-                    : '<button onclick="copyForLightroom(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-blue-600 bg-blue-50 hover:bg-blue-100" title="Copy to Lightroom"><i class="fa-solid fa-file-export"></i></button>' +
+                    : '<button onclick="previewClientSelection(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-blue-600 bg-blue-50 hover:bg-blue-100" title="Preview Pilihan Client"><i class="fa-solid fa-eye"></i></button>' +
                     '<button onclick="sortirLokalForProject(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100" title="Sortir Lokal"><i class="fa-solid fa-folder-tree"></i></button>';
 
                 var lockBtnHtmlGrid = isLockedClient
@@ -7293,42 +7293,152 @@
             doCopyText(textToCopy, 'Pesan link klien berhasil disalin.');
         }
 
-        function copyForLightroom(projectId) {
+        function previewClientSelection(projectId) {
             if (!window.lastProjectsData) return;
             var project = window.lastProjectsData.find(function (p) { return p.ID === projectId; });
             if (!project) return;
 
             var listJson = project['Daftar Pilihan'];
-            if (!listJson || listJson === "") {
-                Swal.fire({ title: 'Kosong', text: 'Klien belum memilih foto apapun.', icon: 'info', confirmButtonColor: '#1e1e2d' });
+            if (!listJson || listJson === "" || listJson === "[]") {
+                Swal.fire({ 
+                    title: 'Belum Ada Foto', 
+                    text: 'Klien belum memilih foto apapun pada project ini.', 
+                    icon: 'info', 
+                    confirmButtonColor: '#4f46e5' 
+                });
                 return;
             }
             try {
-                var list = JSON.parse(listJson);
-                if (!list || list.length === 0) {
-                    Swal.fire({ title: 'Kosong', text: 'Klien belum memilih foto apapun.', icon: 'info', confirmButtonColor: '#1e1e2d' });
+                var list = typeof listJson === 'string' ? JSON.parse(listJson) : listJson;
+                if (!list || !Array.isArray(list) || list.length === 0) {
+                    Swal.fire({ 
+                        title: 'Belum Ada Foto', 
+                        text: 'Klien belum memilih foto apapun pada project ini.', 
+                        icon: 'info', 
+                        confirmButtonColor: '#4f46e5' 
+                    });
                     return;
                 }
-                var fileNames = list.map(function (item) {
-                    var name = item.name || '';
-                    // Hapus ekstensi (.jpg, .jpeg, .png, dll)
-                    var lastDotIndex = name.lastIndexOf('.');
-                    if (lastDotIndex > 0) {
-                        name = name.substring(0, lastDotIndex);
+
+                var clientName = project['Nama Client'] || 'Klien';
+                var modal = document.getElementById('photographerPreviewModal');
+                if (!modal) {
+                    var modalHtml = 
+                        '<div id="photographerPreviewModal" class="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex flex-col hidden opacity-0 transition-opacity duration-300">' +
+                        '  <div class="px-4 py-3 sm:px-6 sm:py-4 bg-white border-b border-gray-200 flex items-center justify-between shrink-0 shadow-sm">' +
+                        '    <div class="flex items-center gap-3">' +
+                        '      <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shrink-0"><i class="fa-solid fa-images text-lg"></i></div>' +
+                        '      <div>' +
+                        '        <h2 class="text-base sm:text-lg font-bold text-gray-800 flex items-center gap-2">' +
+                        '          <span>Pilihan: <span id="photo-preview-client-name" class="text-indigo-600"></span></span>' +
+                        '          <span id="photo-preview-count-badge" class="bg-indigo-50 text-indigo-700 text-xs px-2.5 py-0.5 rounded-full font-extrabold border border-indigo-200">0 Foto</span>' +
+                        '        </h2>' +
+                        '        <p class="text-xs text-gray-400">Klik foto untuk memperbesar / zoom</p>' +
+                        '      </div>' +
+                        '    </div>' +
+                        '    <div class="flex items-center gap-2">' +
+                        '      <button id="btn-copy-preview-names" class="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-xl text-xs font-bold transition-all border border-indigo-200" title="Salin Semua Nama File">' +
+                        '        <i class="fa-regular fa-copy"></i> Salin Nama File' +
+                        '      </button>' +
+                        '      <button onclick="closePhotographerPreview()" class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors">' +
+                        '        <i class="fa-solid fa-xmark text-lg sm:text-xl"></i>' +
+                        '      </button>' +
+                        '    </div>' +
+                        '  </div>' +
+                        '  <div class="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50" id="photographerPreviewScroll">' +
+                        '    <div id="photographer-preview-grid" class="gallery-grid max-w-[1600px] mx-auto"></div>' +
+                        '  </div>' +
+                        '</div>';
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                    modal = document.getElementById('photographerPreviewModal');
+                }
+
+                document.getElementById('photo-preview-client-name').innerText = clientName;
+                document.getElementById('photo-preview-count-badge').innerText = list.length + ' Foto Terpilih';
+
+                var btnCopy = document.getElementById('btn-copy-preview-names');
+                if (btnCopy) {
+                    btnCopy.onclick = function() {
+                        var names = list.map(function(item) { return item.name; }).filter(Boolean).join('\n');
+                        doCopyText(names, 'Daftar ' + list.length + ' nama file berhasil disalin.');
+                    };
+                }
+
+                var grid = document.getElementById('photographer-preview-grid');
+                grid.innerHTML = '';
+
+                var groupedCat = {};
+                var hasCategories = false;
+                list.forEach(function (img) {
+                    if (img.category && img.category.trim() !== '') {
+                        hasCategories = true;
                     }
-                    return name;
-                }).filter(Boolean);
+                    var cName = img.category || 'Pilihan Foto';
+                    if (!groupedCat[cName]) groupedCat[cName] = [];
+                    groupedCat[cName].push(img);
+                });
 
-                var copyText = fileNames.join(', ');
-                if (!copyText) {
-                    Swal.fire({ title: 'Gagal', text: 'Gagal mengekstrak nama file.', icon: 'error', confirmButtonColor: '#1e1e2d' });
-                    return;
+                if (hasCategories) {
+                    var globalIndex = 0;
+                    for (var c in groupedCat) {
+                        var headerDiv = document.createElement('div');
+                        headerDiv.className = "col-span-full mt-3 mb-2 px-4 py-2.5 bg-blue-50/80 border-l-4 border-blue-500 rounded-r-xl shadow-sm";
+                        headerDiv.innerHTML = '<h3 class="font-bold text-blue-800 text-sm sm:text-base uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-tag"></i> ' + c + ' (' + groupedCat[c].length + ')</h3>';
+                        grid.appendChild(headerDiv);
+
+                        groupedCat[c].forEach(function (img) {
+                            var card = document.createElement('div');
+                            card.className = "photo-card border border-gray-200 group bg-white shadow-sm hover:shadow-md transition-all";
+                            var safeUrl = img.url || 'https://placehold.co/400x400?text=' + encodeURIComponent(img.name || 'Foto');
+                            var shortName = (img.name && img.name.length > 22) ? img.name.substring(0, 19) + '...' : (img.name || 'Foto');
+
+                            card.innerHTML =
+                                '<div class="number-badge">' + (globalIndex + 1) + '</div>' +
+                                '<img src="' + safeUrl + '" alt="' + (img.name || '') + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=\'https://placehold.co/400x400?text=' + encodeURIComponent(img.name || 'Error') + '\'">' +
+                                '<div class="info-overlay pb-2">' +
+                                '<span class="filename-text w-full truncate mb-1" title="' + (img.name || '') + '">' + shortName + '</span>' +
+                                (img.folder ? '<span class="text-[9px] text-gray-300 font-semibold bg-black/40 px-2 py-0.5 rounded inline-block self-start"><i class="fa-regular fa-folder-open mr-1"></i>' + img.folder + '</span>' : '') +
+                                '</div>';
+
+                            let currIndex = globalIndex;
+                            card.onclick = function (e) { openImageViewer(safeUrl, img.name, e, currIndex, list); };
+                            grid.appendChild(card);
+                            globalIndex++;
+                        });
+                    }
+                } else {
+                    list.forEach(function (img, index) {
+                        var card = document.createElement('div');
+                        card.className = "photo-card border border-gray-200 group bg-white shadow-sm hover:shadow-md transition-all";
+                        var safeUrl = img.url || 'https://placehold.co/400x400?text=' + encodeURIComponent(img.name || 'Foto');
+                        var shortName = (img.name && img.name.length > 22) ? img.name.substring(0, 19) + '...' : (img.name || 'Foto');
+
+                        card.innerHTML =
+                            '<div class="number-badge">' + (index + 1) + '</div>' +
+                            '<img src="' + safeUrl + '" alt="' + (img.name || '') + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.src=\'https://placehold.co/400x400?text=' + encodeURIComponent(img.name || 'Error') + '\'">' +
+                            '<div class="info-overlay pb-2">' +
+                            '<span class="filename-text w-full truncate mb-1" title="' + (img.name || '') + '">' + shortName + '</span>' +
+                            (img.folder ? '<span class="text-[9px] text-gray-300 font-semibold bg-black/40 px-2 py-0.5 rounded inline-block self-start"><i class="fa-regular fa-folder-open mr-1"></i>' + img.folder + '</span>' : '') +
+                            '</div>';
+
+                        card.onclick = function (e) { openImageViewer(safeUrl, img.name, e, index, list); };
+                        grid.appendChild(card);
+                    });
                 }
 
-                doCopyText(copyText, 'Format Lightroom tersalin (' + fileNames.length + ' file).');
+                modal.classList.remove('hidden');
+                setTimeout(function () { modal.classList.remove('opacity-0'); }, 10);
             } catch (e) {
-                console.error('Error parsing list foto:', e);
-                Swal.fire({ title: 'Error', text: 'Gagal membaca data pilihan.', icon: 'error', confirmButtonColor: '#1e1e2d' });
+                console.error('Error preview client selection:', e);
+                Swal.fire({ title: 'Gagal Membaca Data', text: 'Format data pilihan klien tidak valid.', icon: 'error', confirmButtonColor: '#4f46e5' });
+            }
+        }
+
+        function closePhotographerPreview() {
+            var modal = document.getElementById('photographerPreviewModal');
+            if (modal) {
+                modal.classList.add('opacity-0');
+                setTimeout(function () { modal.classList.add('hidden'); }, 300);
             }
         }
 
