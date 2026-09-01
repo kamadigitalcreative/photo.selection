@@ -4180,7 +4180,7 @@
         onclick="closeImageViewer()">
 
         <div class="absolute top-4 left-4 right-4 flex justify-between items-center z-50 pointer-events-none">
-            <div
+            <div id="viewerCounterBadge"
                 class="bg-black/50 backdrop-blur-md border border-white/20 text-white px-4 py-2 rounded-full font-semibold text-sm shadow-lg pointer-events-auto flex items-center gap-2">
                 <i class="fa-solid fa-check-double text-green-400"></i>
                 <span><span id="viewerCounter">0</span> / <span id="viewerMaxCounter">0</span> Terpilih</span>
@@ -4238,8 +4238,12 @@
                 </div>
 
                 <p id="viewerCaption" class="text-white font-semibold text-sm tracking-wide"></p>
-                <div class="w-px h-6 bg-white/20 hidden sm:block"></div>
-                <div class="flex gap-2">
+                <div id="viewerDivider" class="w-px h-6 bg-white/20 hidden sm:block"></div>
+                <div id="viewerDirectNote" class="hidden max-w-md px-3 py-1.5 bg-amber-500/20 border border-amber-400/40 rounded-xl text-amber-300 text-xs font-medium flex items-center gap-2">
+                    <i class="fa-solid fa-comment-dots text-amber-400 text-sm shrink-0"></i>
+                    <span id="viewerDirectNoteText" class="truncate"></span>
+                </div>
+                <div id="viewerActionButtons" class="flex gap-2">
                     <button id="viewerNoteBtn" onclick="toggleNoteInput()"
                         class="flex px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-lg items-center gap-2 border bg-blue-500/20 border-blue-400 text-blue-300 hover:bg-blue-500/40">
                         <i class="fa-solid fa-comment-dots"></i> <span id="tx-viewer-note">Catatan</span>
@@ -7401,6 +7405,13 @@
 
             try {
                 var clientName = project['Nama Client'] || 'Klien';
+                var projectNotes = {};
+                try {
+                    projectNotes = typeof project['Notes'] === 'string' ? JSON.parse(project['Notes'] || '{}') : (project['Notes'] || {});
+                } catch(e) { projectNotes = {}; }
+                window.photographerPreviewNotes = projectNotes;
+                window.isPhotographerPreviewMode = true;
+
                 var modal = document.getElementById('photographerPreviewModal');
                 if (!modal) {
                     var modalHtml = 
@@ -7515,6 +7526,8 @@
         }
 
         function closePhotographerPreview() {
+            window.isPhotographerPreviewMode = false;
+            window.photographerPreviewNotes = {};
             var modal = document.getElementById('photographerPreviewModal');
             if (modal) {
                 modal.classList.add('opacity-0');
@@ -9476,16 +9489,66 @@
 
         function updateViewerUI(filename, url) {
             var btn = document.getElementById('viewerSelectBtn');
+            var noteBtn = document.getElementById('viewerNoteBtn');
+            var actionBtns = document.getElementById('viewerActionButtons');
+            var counterBadge = document.getElementById('viewerCounterBadge');
+            var divider = document.getElementById('viewerDivider');
+            var directNote = document.getElementById('viewerDirectNote');
+            var directNoteText = document.getElementById('viewerDirectNoteText');
             var countEl = document.getElementById('viewerCounter');
             var maxEl = document.getElementById('viewerMaxCounter');
 
             if (maxEl) maxEl.innerText = clientState.maxFoto;
             if (countEl) countEl.innerText = clientState.selectedImages.length;
 
+            var activeImg = window.viewerActiveList ? window.viewerActiveList[window.currentViewerIndex] : null;
+            var folder = activeImg ? (activeImg.folder || clientState.currentFolderName || '') : '';
+            var fileId = filename + '_' + folder;
+
+            // JIKA DALAM MODE PREVIEW FOTOGRAFER
+            if (window.isPhotographerPreviewMode) {
+                if (counterBadge) counterBadge.style.display = 'none';
+                if (btn) btn.style.display = 'none';
+                if (noteBtn) noteBtn.style.display = 'none';
+                if (actionBtns) actionBtns.style.display = 'none';
+                if (divider) divider.style.display = 'none';
+
+                var noteVal = '';
+                if (window.photographerPreviewNotes) {
+                    noteVal = window.photographerPreviewNotes[fileId] || window.photographerPreviewNotes[filename] || '';
+                    if (!noteVal) {
+                        var foundKey = Object.keys(window.photographerPreviewNotes).find(k => k === filename || k.startsWith(filename + '_'));
+                        if (foundKey) noteVal = window.photographerPreviewNotes[foundKey];
+                    }
+                }
+                if (noteVal && noteVal.trim() !== '') {
+                    if (directNote) {
+                        directNote.classList.remove('hidden');
+                        directNote.style.display = 'flex';
+                    }
+                    if (directNoteText) directNoteText.innerText = noteVal;
+                    if (divider) divider.style.display = 'block';
+                } else {
+                    if (directNote) {
+                        directNote.classList.add('hidden');
+                        directNote.style.display = 'none';
+                    }
+                }
+                return;
+            }
+
+            // MODE KLIEN NORMAL
+            if (counterBadge) counterBadge.style.display = 'flex';
+            if (actionBtns) actionBtns.style.display = 'flex';
+            if (directNote) {
+                directNote.classList.add('hidden');
+                directNote.style.display = 'none';
+            }
+            if (divider) divider.style.display = 'block';
+
             if (!btn) return;
 
             var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
-            var noteBtn = document.getElementById('viewerNoteBtn');
 
             if (clientState.galleryMode === 'download') {
                 btn.style.display = 'flex';
@@ -9525,9 +9588,7 @@
 
             // Render note if open
             if (document.getElementById('viewerNoteInput')) {
-                var activeImg = window.viewerActiveList[window.currentViewerIndex];
-                var fileId = filename + '_' + (activeImg ? (activeImg.folder || clientState.currentFolderName) : clientState.currentFolderName);
-                document.getElementById('viewerNoteInput').value = clientState.notes[fileId] || '';
+                document.getElementById('viewerNoteInput').value = clientState.notes[fileId] || clientState.notes[filename] || '';
             }
 
             btn.onclick = function (e) {
