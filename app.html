@@ -5893,42 +5893,57 @@
         }
 
         function doCopyText(text, successMsg) {
-            // Sistem Copy Modern (Mendukung hampir semua HP kekinian)
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(text).then(function () {
-                    Swal.fire({ icon: 'success', title: 'Berhasil', text: successMsg, timer: 1500, showConfirmButton: false });
-                }).catch(function () {
-                    fallbackCopyText(text);
-                });
-            } else {
-                fallbackCopyText(text);
-            }
+            var isEn = (localStorage.getItem('ps_lang') === 'en');
+            var msg = successMsg || (isEn ? 'Photo list copied to clipboard.' : 'Daftar foto berhasil disalin ke clipboard.');
 
-            // Sistem Copy Lama (Cadangan untuk HP jadul)
-            function fallbackCopyText(txt) {
+            var copySuccess = false;
+
+            // 1. Coba Synchronous Document ExecCommand (Paling ampuh di iOS Safari & Android)
+            try {
                 var textArea = document.createElement("textarea");
-                textArea.value = txt;
-                textArea.style.position = "fixed"; textArea.style.opacity = "0";
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                textArea.style.top = "-9999px";
+                textArea.style.opacity = "0";
+                textArea.setAttribute("readonly", "");
                 document.body.appendChild(textArea);
 
                 if (navigator.userAgent.match(/ipad|iphone/i)) {
-                    var range = document.createRange(); range.selectNodeContents(textArea);
-                    var selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range);
+                    var range = document.createRange();
+                    range.selectNodeContents(textArea);
+                    var selection = window.getSelection();
+                    if (selection) {
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    }
                     textArea.setSelectionRange(0, 999999);
-                } else { textArea.select(); }
-
-                var success = false;
-                try { success = document.execCommand('copy'); } catch (err) { success = false; }
-                document.body.removeChild(textArea);
-
-                if (success) { Swal.fire({ icon: 'success', title: 'Berhasil', text: successMsg, timer: 1500, showConfirmButton: false }); }
-                else {
-                    Swal.fire({
-                        title: 'Copy Manual', html: '<textarea readonly class="w-full text-sm p-3 border rounded-lg bg-gray-50 outline-none" rows="6">' + txt + '</textarea>',
-                        confirmButtonText: 'Tutup', confirmButtonColor: '#1e1e2d'
-                    });
+                } else {
+                    textArea.select();
                 }
+
+                copySuccess = document.execCommand('copy');
+                document.body.removeChild(textArea);
+            } catch (err) {
+                copySuccess = false;
             }
+
+            // 2. Coba Navigator Clipboard API modern
+            if (!copySuccess && navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).catch(function () {});
+            }
+
+            // 3. Notifikasi Toast Elegan & Simpel (Klien langsung tahu sudah tercopy tanpa modal ribet)
+            Swal.fire({
+                icon: 'success',
+                title: isEn ? 'Copied! ✨' : 'Berhasil Disalin! ✨',
+                text: msg,
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top',
+                timerProgressBar: true
+            });
         }
 
         // PERBAIKAN: Fungsi Mata Password
@@ -10391,25 +10406,25 @@
 
         async function copyOnly_Proceed(proofUrl) {
             var isEn = localStorage.getItem('ps_lang') === 'en';
-            startLoading(isEn ? "Preparing data..." : "Menyiapkan data...");
             var extraCount = clientState.selectedImages.length - clientState.maxFoto;
             var targetStatus = (extraCount > 0 && proofUrl) ? 'Menunggu Konfirmasi Pembayaran' : 'Selesai';
             
-            var backupUrl = '';
-            try {
-                var pingRes = await pingClientStatus(targetStatus, proofUrl);
-                if (pingRes && pingRes.data && pingRes.data.backupUrl) {
-                    backupUrl = pingRes.data.backupUrl;
-                    clientState.backupUrl = backupUrl;
-                }
-            } catch (e) {}
-
-            endLoading();
-            var text = formatSelectedText(proofUrl, backupUrl);
-            if (!text) { Swal.fire({ title: 'Kosong', text: 'Pilih foto terlebih dahulu.', icon: 'info', confirmButtonColor: '#1e1e2d' }); return; }
-            doCopyText(text, isEn ? 'Photo list copied.' : 'Daftar foto siap dipaste.');
+            // 1. Copy secara instan saat tombol diklik (Menjamin izin clipboard browser tidak kadaluarsa)
+            var text = formatSelectedText(proofUrl, clientState.backupUrl || '');
+            if (!text) { 
+                Swal.fire({ title: 'Kosong', text: 'Pilih foto terlebih dahulu.', icon: 'info', confirmButtonColor: '#1e1e2d' }); 
+                return; 
+            }
+            doCopyText(text, isEn ? 'Photo list copied! You can paste it now.' : 'Daftar foto & catatan berhasil disalin! Tinggal paste di chat.');
             hasClientSubmitted = true;
             updateGalleryLock();
+
+            // 2. Sinkronkan status & buat file backup Drive di latar belakang (tanpa memblokir klien)
+            pingClientStatus(targetStatus, proofUrl).then(function (pingRes) {
+                if (pingRes && pingRes.data && pingRes.data.backupUrl) {
+                    clientState.backupUrl = pingRes.data.backupUrl;
+                }
+            }).catch(function () {});
         }
 
         function sendToWA() {
