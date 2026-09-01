@@ -8963,57 +8963,80 @@
         }
 
         // --- CLIENT (GUEST) LOGIC ---
-        async function initClientApp() {
+        var clientSessionId = sessionStorage.getItem('ps_client_tab_id');
+        if (!clientSessionId) {
+            clientSessionId = 'tab_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now();
+            sessionStorage.setItem('ps_client_tab_id', clientSessionId);
+        }
+
+        async function initClientApp(takeOver = false) {
             document.documentElement.classList.remove('dark');
+            var isEn = (localStorage.getItem('ps_lang') === 'en');
+            startLoading(isEn ? "Verifying..." : "Memverifikasi...");
 
-            // 1. Coba recover project data dari cache lokal (0ms)
-            var projCacheKey = 'ps_proj_cache_' + clientState.token;
-            var hasCachedProj = false;
-            try {
-                var cachedRaw = sessionStorage.getItem(projCacheKey) || localStorage.getItem(projCacheKey);
-                if (cachedRaw) {
-                    var cachedObj = JSON.parse(cachedRaw);
-                    if (cachedObj && cachedObj.namaClient) {
-                        processClientProjectData(cachedObj);
-                        hasCachedProj = true;
-                    }
-                }
-            } catch(e) {}
-
-            if (!hasCachedProj) {
-                startLoading("Memverifikasi...");
-            }
+            var deviceName = 'Browser';
+            if (/iphone|ipad|ipod/i.test(navigator.userAgent)) deviceName = 'iPhone / iPad';
+            else if (/android/i.test(navigator.userAgent)) deviceName = 'Android Phone';
+            else if (/windows/i.test(navigator.userAgent)) deviceName = 'Windows PC';
+            else if (/mac/i.test(navigator.userAgent)) deviceName = 'MacBook / Mac';
 
             try {
-                var res = null;
-                var retryCount = 0;
-                while (retryCount < 2) {
-                    try {
-                        const response = await fetch(API_ENDPOINT, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'getProjectForClient', token: clientState.token })
-                        });
-                        res = await response.json();
-                        if (res && res.status === 'success') break;
-                    } catch (netErr) {}
-                    retryCount++;
-                    if (retryCount < 2) await new Promise(r => setTimeout(r, 1000));
-                }
-
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'getProjectForClient',
+                        token: clientState.token,
+                        sessionId: clientSessionId,
+                        takeOver: takeOver,
+                        deviceName: deviceName
+                    })
+                });
+                const res = await response.json();
                 endLoading();
 
-                if (res && res.status === 'success' && res.data && res.data.success) {
-                    try { sessionStorage.setItem(projCacheKey, JSON.stringify(res.data.project)); } catch(e) {}
-                    processClientProjectData(res.data.project);
+                if (res && res.status === 'success' && res.data) {
+                    if (res.data.isSessionLocked) {
+                        // Sesi sedang aktif di perangkat lain!
+                        Swal.fire({
+                            icon: 'warning',
+                            title: isEn ? 'Gallery Active on Another Device' : 'Galeri Sedang Dibuka di Perangkat Lain 📱',
+                            html: `
+                                <div class="text-xs sm:text-sm text-gray-600 mb-3 text-left leading-relaxed">
+                                    ${isEn 
+                                        ? 'This link is currently being accessed on another device (' + (res.data.activeDevice || 'another device') + '). To prevent selection conflicts and ensure quota accuracy, access is limited to 1 active device at a time.' 
+                                        : 'Link pemilihan foto ini sedang aktif dibuka pada perangkat lain (<b>' + (res.data.activeDevice || 'Perangkat Lain') + '</b>). Untuk mencegah perbedaan pilihan dan menjaga batas kuota foto, akses dibatasi maksimal <b>1 perangkat</b> pada satu waktu.'}
+                                </div>
+                                <div class="text-xs text-blue-700 bg-blue-50 p-3 rounded-xl border border-blue-200 mb-3 text-left">
+                                    <i class="fa-solid fa-circle-info text-blue-500 mr-1"></i> ${isEn ? 'Do you want to transfer the session and continue on this device?' : 'Apakah Anda ingin memindahkan sesi dan melanjutkan memilih foto di perangkat ini?'}
+                                </div>
+                            `,
+                            showCancelButton: true,
+                            confirmButtonText: isEn ? 'Continue on This Device' : 'Pindahkan Sesi ke Sini',
+                            cancelButtonText: isEn ? 'Close' : 'Tutup',
+                            confirmButtonColor: '#2563eb',
+                            cancelButtonColor: '#6b7280',
+                            allowOutsideClick: false
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                initClientApp(true);
+                            }
+                        });
+                        return;
+                    }
+
+                    if (res.data.success && res.data.project) {
+                        processClientProjectData(res.data.project);
+                    } else {
+                        var errorMsg = res.message || (res.data ? res.data.message : '') || 'Link galeri tidak dapat diakses.';
+                        Swal.fire({ icon: 'error', title: 'Akses Ditolak', text: errorMsg, allowOutsideClick: false });
+                    }
                 } else {
-                    if (hasCachedProj) return; // Jika sudah ada data dari cache, jangan ganggu pengguna
                     var errorMsg = (res && (res.message || (res.data ? res.data.message : ''))) || 'Link galeri tidak dapat diakses.';
                     Swal.fire({ icon: 'error', title: 'Akses Ditolak', text: errorMsg, allowOutsideClick: false });
                 }
             } catch (err) {
                 endLoading();
-                if (hasCachedProj) return;
                 Swal.fire('Error', 'Gagal memuat galeri: ' + err.message, 'error');
             }
         }
@@ -10419,17 +10442,14 @@
             var waLink = "https://wa.me/" + noWa + "?text=" + encodeURIComponent(text);
             var previewEscaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-            // 3. Tampilkan dialog interaktif dengan opsi Salin Ulang, Bagikan, dan WA
+            // 3. Tampilkan dialog interaktif dengan opsi Bagikan dan WA (Tanpa tombol salin duplikat & Pratinjau Terkunci Aman)
             Swal.fire({
                 title: isEn ? '✨ Selection Completed' : '✨ Seleksi Foto Selesai',
                 html: `
                     <div class="text-left text-xs sm:text-sm text-gray-600 mb-3">
-                        ${isEn ? 'Your photo list is ready. You can copy or send it now:' : 'Daftar pilihan foto Anda sudah siap. Anda dapat menyalin atau mengirimkannya langsung:'}
+                        ${isEn ? 'Your photo list is ready. You can send it directly below:' : 'Daftar pilihan foto Anda sudah siap. Silakan kirimkan langsung:'}
                     </div>
                     <div class="space-y-2 mb-3 text-left">
-                        <button id="swalBtnCopyDirect" type="button" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer">
-                            <i class="fa-regular fa-copy text-base"></i> <span>${isEn ? 'Copy Text to Clipboard' : 'Salin Teks (Copy)'}</span>
-                        </button>
                         ${navigator.share ? `
                         <button id="swalBtnShareNative" type="button" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer">
                             <i class="fa-solid fa-share-nodes text-base"></i> <span>${isEn ? 'Share to Other Apps' : 'Bagikan ke Aplikasi Lain'}</span>
@@ -10440,29 +10460,13 @@
                     </div>
                     <div class="mt-3 text-left">
                         <p class="text-[11px] font-bold text-gray-500 mb-1">${isEn ? 'Photo List Preview:' : 'Pratinjau Pesan:'}</p>
-                        <pre id="swalTextPreview" class="p-3 bg-gray-50 rounded-lg text-[11px] text-gray-700 font-mono whitespace-pre-wrap border border-gray-200 select-all max-h-32 overflow-y-auto leading-relaxed">${previewEscaped}</pre>
+                        <pre id="swalTextPreview" class="p-3 bg-gray-50 rounded-lg text-[11px] text-gray-700 font-mono whitespace-pre-wrap border border-gray-200 select-none pointer-events-none max-h-32 overflow-y-auto leading-relaxed">${previewEscaped}</pre>
                     </div>
                 `,
                 showConfirmButton: true,
                 confirmButtonText: isEn ? 'Close' : 'Tutup',
                 confirmButtonColor: '#1e1e2d',
                 didOpen: () => {
-                    var btnDirect = document.getElementById('swalBtnCopyDirect');
-                    if (btnDirect) {
-                        btnDirect.onclick = function() {
-                            doCopyText(text);
-                            btnDirect.innerHTML = '<i class="fa-solid fa-check text-green-300"></i> <span>' + (isEn ? 'Copied!' : 'Berhasil Disalin! ✨') + '</span>';
-                            btnDirect.classList.remove('bg-indigo-600');
-                            btnDirect.classList.add('bg-green-600');
-                            setTimeout(() => {
-                                if (btnDirect) {
-                                    btnDirect.innerHTML = '<i class="fa-regular fa-copy text-base"></i> <span>' + (isEn ? 'Copy Text to Clipboard' : 'Salin Teks (Copy)') + '</span>';
-                                    btnDirect.classList.remove('bg-green-600');
-                                    btnDirect.classList.add('bg-indigo-600');
-                                }
-                            }, 2000);
-                        };
-                    }
                     var btnShare = document.getElementById('swalBtnShareNative');
                     if (btnShare) {
                         btnShare.onclick = function() {
@@ -10841,7 +10845,7 @@
 
         function startClientRealtimeSync() {
             if (clientSyncTimer) clearInterval(clientSyncTimer);
-            clientSyncTimer = setInterval(syncClientSelectionsSilently, 5000); // Polling otomatis tiap 5 detik
+            clientSyncTimer = setInterval(syncClientSelectionsSilently, 8000); // Polling deteksi sesi tiap 8 detik
         }
 
         // Pendeteksi Klien Keluar / Pindah Aplikasi / Tab Fokus (HP & PC)
@@ -10850,10 +10854,19 @@
             if (!clientState.token || isSubmitted) return;
 
             if (document.visibilityState === 'hidden') {
-                pingClientStatus('Belum Memilih', '', false); // Kirim heartbeat status saja, JANGAN timpa pilihan
+                pingClientStatus('Belum Memilih', '', false);
+                // Lepaskan sesi saat tab ditutup/di-minimize agar device lain bisa langsung membuka
+                try {
+                    fetch(API_ENDPOINT, {
+                        method: 'POST',
+                        keepalive: true,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'releaseClientSession', token: clientState.token, sessionId: clientSessionId })
+                    });
+                } catch(e) {}
             } else if (document.visibilityState === 'visible') {
                 pingClientStatus('Sedang Memilih', '', false);
-                syncClientSelectionsSilently(); // Tarik update instan dari database
+                syncClientSelectionsSilently();
             }
         });
 
@@ -10877,11 +10890,12 @@
             var payload = {
                 action: 'updateClientStatus',
                 token: clientState.token,
+                sessionId: clientSessionId,
                 status: status,
                 paymentProof: proofUrl
             };
 
-            // Hanya sertakan array foto jika dipanggil saat aksi klik memilih foto (mencegah overwrite data antar HP)
+            // Hanya sertakan array foto jika dipanggil saat aksi klik memilih foto
             if (sendSelections) {
                 var compactList = (clientState.selectedImages || []).map(function (img) {
                     var u = img.url || '';
@@ -10908,7 +10922,34 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                return await response.json();
+                const res = await response.json();
+
+                // Deteksi jika sesi telah dipindahkan / diambil alih di perangkat lain
+                if (res && res.data && res.data.sessionTakenOver) {
+                    var isEn = (localStorage.getItem('ps_lang') === 'en');
+                    if (clientSyncTimer) clearInterval(clientSyncTimer);
+                    Swal.fire({
+                        icon: 'info',
+                        title: isEn ? 'Session Transferred 🔒' : 'Sesi Telah Dipindahkan 🔒',
+                        html: `
+                            <div class="text-xs sm:text-sm text-gray-600 mb-3 text-left leading-relaxed">
+                                ${isEn 
+                                    ? 'This photo gallery has been opened and taken over by another device. This page has been paused to prevent selection conflicts.' 
+                                    : 'Galeri foto ini telah dibuka dan dipindahkan ke perangkat lain. Halaman pada perangkat ini dinonaktifkan agar pilihan foto Anda tetap sinkron dan tidak tumpang tindih.'}
+                            </div>
+                        `,
+                        allowOutsideClick: false,
+                        showConfirmButton: true,
+                        confirmButtonText: isEn ? 'Reopen on This Device' : 'Buka Kembali di Sini',
+                        confirmButtonColor: '#2563eb'
+                    }).then((r) => {
+                        if (r.isConfirmed) {
+                            initClientApp(true);
+                        }
+                    });
+                }
+
+                return res;
             } catch (e) {
                 console.log("Tracker ping failed:", e);
                 return null;
