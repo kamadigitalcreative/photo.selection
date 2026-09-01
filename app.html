@@ -8950,24 +8950,55 @@
         // --- CLIENT (GUEST) LOGIC ---
         async function initClientApp() {
             document.documentElement.classList.remove('dark');
-            startLoading("Memverifikasi...");
+
+            // 1. Coba recover project data dari cache lokal (0ms)
+            var projCacheKey = 'ps_proj_cache_' + clientState.token;
+            var hasCachedProj = false;
             try {
-                const response = await fetch(API_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'getProjectForClient', token: clientState.token })
-                });
-                const res = await response.json();
+                var cachedRaw = sessionStorage.getItem(projCacheKey) || localStorage.getItem(projCacheKey);
+                if (cachedRaw) {
+                    var cachedObj = JSON.parse(cachedRaw);
+                    if (cachedObj && cachedObj.namaClient) {
+                        processClientProjectData(cachedObj);
+                        hasCachedProj = true;
+                    }
+                }
+            } catch(e) {}
+
+            if (!hasCachedProj) {
+                startLoading("Memverifikasi...");
+            }
+
+            try {
+                var res = null;
+                var retryCount = 0;
+                while (retryCount < 2) {
+                    try {
+                        const response = await fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'getProjectForClient', token: clientState.token })
+                        });
+                        res = await response.json();
+                        if (res && res.status === 'success') break;
+                    } catch (netErr) {}
+                    retryCount++;
+                    if (retryCount < 2) await new Promise(r => setTimeout(r, 1000));
+                }
+
                 endLoading();
 
-                if (res.status === 'success' && res.data && res.data.success) {
+                if (res && res.status === 'success' && res.data && res.data.success) {
+                    try { sessionStorage.setItem(projCacheKey, JSON.stringify(res.data.project)); } catch(e) {}
                     processClientProjectData(res.data.project);
                 } else {
-                    var errorMsg = res.message || (res.data ? res.data.message : 'Unknown error');
+                    if (hasCachedProj) return; // Jika sudah ada data dari cache, jangan ganggu pengguna
+                    var errorMsg = (res && (res.message || (res.data ? res.data.message : ''))) || 'Link galeri tidak dapat diakses.';
                     Swal.fire({ icon: 'error', title: 'Akses Ditolak', text: errorMsg, allowOutsideClick: false });
                 }
             } catch (err) {
                 endLoading();
+                if (hasCachedProj) return;
                 Swal.fire('Error', 'Gagal memuat galeri: ' + err.message, 'error');
             }
         }
@@ -9207,10 +9238,28 @@
 
         async function fetchClientContent(folderId, folderName) {
             showView('client-gallery-view');
-            startLoading("Memuat Data...");
 
             var gTitle = document.getElementById('gallery-title');
             if (gTitle) gTitle.innerText = folderName || clientState.namaClient;
+
+            // 1. RENDER INSTAN DARI CACHE (0ms - Mencegah layar kedip/kosong saat HP bangun dari sleep)
+            var cacheFolderKey = 'ps_folder_cache_' + folderId;
+            var hasCached = false;
+            try {
+                var cachedRaw = sessionStorage.getItem(cacheFolderKey) || localStorage.getItem(cacheFolderKey);
+                if (cachedRaw) {
+                    var cachedObj = JSON.parse(cachedRaw);
+                    if (cachedObj && ((cachedObj.images && cachedObj.images.length > 0) || (cachedObj.folders && cachedObj.folders.length > 0))) {
+                        clientState.currentContent = cachedObj;
+                        renderClientGallery();
+                        hasCached = true;
+                    }
+                }
+            } catch(e) {}
+
+            if (!hasCached) {
+                startLoading("Memuat Data...");
+            }
 
             // SETUP BGM PLAYER
             var bgmContainer = document.getElementById('bgm-player-container');
@@ -9246,6 +9295,7 @@
                         if (playPromise !== undefined) {
                             playPromise.then(() => {
                                 var btnIcon = document.querySelector('#btn-toggle-bgm i');
+                                brainIcon = document.querySelector('#btn-toggle-bgm i');
                                 if (btnIcon) btnIcon.className = 'fa-solid fa-music animate-spin';
                                 var btn = document.getElementById('btn-toggle-bgm');
                                 if (btn) { btn.classList.remove('bg-gray-100', 'text-gray-500'); btn.classList.add('bg-pink-50', 'text-pink-500'); }
@@ -9269,20 +9319,30 @@
             }
 
             try {
-                const response = await fetch(API_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'getDriveContent',
-                        folder_id: folderId
-                    })
-                });
+                var res = null;
+                var retryCount = 0;
+                while (retryCount < 2) {
+                    try {
+                        const response = await fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                action: 'getDriveContent',
+                                folder_id: folderId
+                            })
+                        });
+                        res = await response.json();
+                        if (res && res.status === 'success') break;
+                    } catch (netErr) {}
+                    retryCount++;
+                    if (retryCount < 2) await new Promise(r => setTimeout(r, 1000));
+                }
 
-                const res = await response.json();
                 endLoading();
 
-                if (res.status === 'success' && res.data) {
+                if (res && res.status === 'success' && res.data) {
                     clientState.currentContent = { folders: res.data.folders || [], images: res.data.images || [] };
+                    try { sessionStorage.setItem(cacheFolderKey, JSON.stringify(clientState.currentContent)); } catch(e) {}
                     renderClientGallery();
                     var isSubmitted = (typeof hasClientSubmitted !== 'undefined' && hasClientSubmitted) || 
                                       (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran'));
@@ -9290,7 +9350,12 @@
                         pingClientStatus('Sedang Memilih');
                     }
                 } else {
-                    var errorMsg = res.message || res.error || (res.data ? res.data.message : '') || 'Gagal memuat isi folder Google Drive.';
+                    // Jika data foto sudah aktif ditampilkan di layar dari cache, jangan pernah ganggu klien dengan popup error
+                    if (clientState.currentContent && ((clientState.currentContent.images && clientState.currentContent.images.length > 0) || (clientState.currentContent.folders && clientState.currentContent.folders.length > 0))) {
+                        console.warn("Background sync paused during sleep/wake:", res);
+                        return;
+                    }
+                    var errorMsg = (res && (res.message || res.error)) || (res && res.data ? res.data.message : '') || 'Gagal memuat isi folder Google Drive.';
                     Swal.fire({
                         icon: 'error',
                         title: 'Gagal Memuat Galeri',
@@ -9302,6 +9367,10 @@
 
             } catch (err) {
                 endLoading();
+                if (clientState.currentContent && ((clientState.currentContent.images && clientState.currentContent.images.length > 0) || (clientState.currentContent.folders && clientState.currentContent.folders.length > 0))) {
+                    console.warn("Network reconnecting on wake:", err);
+                    return;
+                }
                 var emptyState = document.getElementById('gallery-empty');
                 if (emptyState) emptyState.classList.remove('hidden');
                 Swal.fire({
