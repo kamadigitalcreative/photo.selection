@@ -4120,22 +4120,22 @@
                 </div>
             </div>
             <div id="action-selection-mode" class="controls flex gap-2 sm:gap-3">
-                <button onclick="resetSelection()"
+                <button id="btn-client-reset" onclick="resetSelection()"
                     class="px-3 py-2 sm:px-4 sm:py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium flex items-center justify-center shadow-sm"
                     title="Reset">
                     <i class="fa-solid fa-rotate-left"></i> <span class="hidden sm:inline sm:ml-2">Reset</span>
                 </button>
-                <button onclick="showPreviewSelected()"
+                <button id="btn-client-preview" onclick="showPreviewSelected()"
                     class="px-3 py-2 sm:px-4 sm:py-2.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors text-sm font-semibold flex items-center justify-center shadow-sm"
                     title="Preview">
                     <i class="fa-regular fa-images"></i> <span class="hidden sm:inline sm:ml-2">Preview</span>
                 </button>
-                <button onclick="copyOnly()"
+                <button id="btn-client-copy" onclick="copyOnly()"
                     class="px-3 py-2 sm:px-4 sm:py-2.5 bg-kama-800 text-white rounded-xl hover:bg-kama-900 transition-colors text-sm font-semibold flex items-center justify-center shadow-md"
                     title="Copy Text">
                     <i class="fa-regular fa-copy"></i>
                 </button>
-                <button onclick="sendToWA()"
+                <button id="btn-client-wa" onclick="sendToWA()"
                     class="px-4 py-2 sm:px-6 sm:py-2.5 bg-[#25D366] text-white rounded-xl hover:bg-[#128C7E] transition-colors text-sm font-semibold flex items-center justify-center shadow-md shadow-green-500/20 flex-1 sm:flex-none">
                     <i class="fa-brands fa-whatsapp sm:mr-2 text-lg"></i> <span>Kirim WA</span>
                 </button>
@@ -9021,6 +9021,7 @@
             clientState.bankName = projectData.bankName || '';
             clientState.bankAccount = projectData.bankAccount || '';
             clientState.bankAccountName = projectData.bankAccountName || '';
+            clientState.statusClient = projectData.statusClient || 'Belum Memilih';
 
             // LOAD PILIHAN LAMA DARI DATABASE (AUTO-RESUME)
             clientState.selectedImages = parseSelectedPhotosList(projectData.selectedFiles);
@@ -9722,6 +9723,7 @@
 
             var scrollArea = document.getElementById('gallery-scroll-area');
             if (scrollArea) scrollArea.scrollTop = 0;
+            updateGalleryLock();
         }
 
         function toggleSelection(cardElement, filename, url) {
@@ -10071,6 +10073,9 @@
                     selectAllCheckbox.checked = allCurrentSelected;
                 }
             }
+            if (hasClientSubmitted) {
+                updateGalleryLock();
+            }
         }
 
         function resetSelection() {
@@ -10207,11 +10212,67 @@
         }
 
         function updateGalleryLock() {
+            var isEn = localStorage.getItem('ps_lang') === 'en';
+            var subtitle = document.getElementById('gallery-subtitle');
+            var btnReset = document.getElementById('btn-client-reset');
+            var btnPreview = document.getElementById('btn-client-preview');
+            var btnCopy = document.getElementById('btn-client-copy');
+            var btnWA = document.getElementById('btn-client-wa');
+
             if (hasClientSubmitted) {
-                var isEn = localStorage.getItem('ps_lang') === 'en';
-                var subtitle = document.getElementById('gallery-subtitle');
                 if (subtitle && clientState.galleryMode !== 'download') {
                     subtitle.innerHTML = '<span class="text-green-600 font-bold"><i class="fa-solid fa-lock mr-1"></i> ' + (isEn ? 'Status: Completed (Locked)' : 'Status: Selesai (Terkunci)') + '</span>';
+                }
+
+                // Sembunyikan tombol Reset, Copy, dan WA agar klien tidak bisa mengkliknya sama sekali
+                if (btnReset) {
+                    btnReset.classList.add('hidden');
+                    btnReset.disabled = true;
+                }
+                if (btnCopy) {
+                    btnCopy.classList.add('hidden');
+                    btnCopy.disabled = true;
+                }
+                if (btnWA) {
+                    btnWA.classList.add('hidden');
+                    btnWA.disabled = true;
+                }
+
+                // Ubah tombol Preview menjadi tombol utama untuk melihat foto yang telah dipilih
+                if (btnPreview) {
+                    btnPreview.className = "px-4 py-2 sm:px-6 sm:py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm font-semibold flex items-center justify-center shadow-md shadow-blue-500/20 flex-1 sm:flex-none";
+                    btnPreview.innerHTML = '<i class="fa-regular fa-images mr-2 text-lg"></i> <span>' + (isEn ? 'Preview Selected (' + clientState.selectedImages.length + ')' : 'Lihat Pilihan (' + clientState.selectedImages.length + ')') + '</span>';
+                }
+
+                var container = document.getElementById('gallery-container');
+                if (container) {
+                    var btnPilihList = container.querySelectorAll('.btn-pilih-foto');
+                    btnPilihList.forEach(function (btn) {
+                        var card = btn.closest('.photo-card');
+                        var isSel = card && card.classList.contains('selected');
+                        if (isSel) {
+                            btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> ' + (isEn ? 'Selected (Locked)' : 'Terpilih (Terkunci)');
+                        } else {
+                            btn.innerHTML = '<i class="fa-solid fa-lock mr-2"></i> ' + (isEn ? 'Locked' : 'Terkunci');
+                        }
+                    });
+                }
+            } else {
+                if (btnReset) {
+                    btnReset.classList.remove('hidden');
+                    btnReset.disabled = false;
+                }
+                if (btnCopy) {
+                    btnCopy.classList.remove('hidden');
+                    btnCopy.disabled = false;
+                }
+                if (btnWA) {
+                    btnWA.classList.remove('hidden');
+                    btnWA.disabled = false;
+                }
+                if (btnPreview) {
+                    btnPreview.className = "px-3 py-2 sm:px-4 sm:py-2.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors text-sm font-semibold flex items-center justify-center shadow-sm";
+                    btnPreview.innerHTML = '<i class="fa-regular fa-images"></i> <span class="hidden sm:inline sm:ml-2">' + (isEn ? 'Preview' : 'Preview') + '</span>';
                 }
             }
         }
