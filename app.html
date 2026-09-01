@@ -4120,22 +4120,22 @@
                 </div>
             </div>
             <div id="action-selection-mode" class="controls flex gap-2 sm:gap-3">
-                <button onclick="resetSelection()"
+                <button id="btn-client-reset" onclick="resetSelection()"
                     class="px-3 py-2 sm:px-4 sm:py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium flex items-center justify-center shadow-sm"
                     title="Reset">
                     <i class="fa-solid fa-rotate-left"></i> <span class="hidden sm:inline sm:ml-2">Reset</span>
                 </button>
-                <button onclick="showPreviewSelected()"
+                <button id="btn-client-preview" onclick="showPreviewSelected()"
                     class="px-3 py-2 sm:px-4 sm:py-2.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors text-sm font-semibold flex items-center justify-center shadow-sm"
                     title="Preview">
                     <i class="fa-regular fa-images"></i> <span class="hidden sm:inline sm:ml-2">Preview</span>
                 </button>
-                <button onclick="copyOnly()"
+                <button id="btn-client-copy" onclick="copyOnly()"
                     class="px-3 py-2 sm:px-4 sm:py-2.5 bg-kama-800 text-white rounded-xl hover:bg-kama-900 transition-colors text-sm font-semibold flex items-center justify-center shadow-md"
                     title="Copy Text">
                     <i class="fa-regular fa-copy"></i>
                 </button>
-                <button onclick="sendToWA()"
+                <button id="btn-client-wa" onclick="sendToWA()"
                     class="px-4 py-2 sm:px-6 sm:py-2.5 bg-[#25D366] text-white rounded-xl hover:bg-[#128C7E] transition-colors text-sm font-semibold flex items-center justify-center shadow-md shadow-green-500/20 flex-1 sm:flex-none">
                     <i class="fa-brands fa-whatsapp sm:mr-2 text-lg"></i> <span>Kirim WA</span>
                 </button>
@@ -7293,13 +7293,103 @@
             doCopyText(textToCopy, 'Pesan link klien berhasil disalin.');
         }
 
+        // --- PARSER UNIVERSAL DAFTAR PILIHAN FOTO ---
+        function parseSelectedPhotosList(rawInput) {
+            if (!rawInput) return [];
+            var list = [];
+
+            if (Array.isArray(rawInput)) {
+                list = rawInput;
+            } else if (typeof rawInput === 'object' && rawInput !== null) {
+                list = [rawInput];
+            } else if (typeof rawInput === 'string') {
+                var trimmed = rawInput.trim();
+                if (trimmed === "" || trimmed === "[]" || trimmed === "null" || trimmed === "{}") return [];
+
+                try {
+                    var decompressed = trimmed
+                        .replace(/lh3::/g, "https://lh3.googleusercontent.com/d/")
+                        .replace(/::w1/g, "=w1000");
+                    list = JSON.parse(decompressed);
+                } catch (e) {
+                    try {
+                        var fixedStr = trimmed;
+                        if (fixedStr.startsWith('[') && !fixedStr.endsWith(']')) {
+                            var lastObj = fixedStr.lastIndexOf('}');
+                            if (lastObj !== -1) {
+                                fixedStr = fixedStr.substring(0, lastObj + 1) + ']';
+                                list = JSON.parse(fixedStr);
+                            }
+                        }
+                    } catch (e2) {
+                        var lines = trimmed.split(/[\r\n,]+/);
+                        lines.forEach(function (l) {
+                            var clean = l.replace(/^["'\[\]\s]+|["'\[\]\s]+$/g, '').trim();
+                            if (clean && clean.length > 0 && !clean.startsWith('{') && !clean.startsWith('}')) {
+                                list.push({ name: clean });
+                            }
+                        });
+                    }
+                }
+            }
+
+            if (!Array.isArray(list)) {
+                if (typeof list === 'object' && list !== null) list = [list];
+                else return [];
+            }
+
+            return list.map(function (item) {
+                if (!item) return null;
+                if (typeof item === 'string') {
+                    return { name: item, folder: '', url: 'https://placehold.co/400x400?text=' + encodeURIComponent(item), category: '' };
+                }
+                var name = item.name || item.n || item.filename || item.fileName || (Array.isArray(item) ? item[0] : '') || '';
+                var folder = item.folder || item.f || (Array.isArray(item) ? item[1] : '') || '';
+                var rawUrl = item.url || item.u || item.id || (Array.isArray(item) ? item[2] : '') || '';
+                var category = item.category || item.c || item.kategori || (Array.isArray(item) ? item[3] : '') || '';
+
+                var url = rawUrl;
+                if (url) {
+                    url = url.replace(/lh3::/g, "https://lh3.googleusercontent.com/d/").replace(/::w1/g, "=w1000");
+                    if (!url.startsWith('http') && !url.startsWith('data:') && !url.startsWith('blob:') && url.length >= 20) {
+                        url = "https://lh3.googleusercontent.com/d/" + url + "=w1000";
+                    }
+                }
+                if (!url && name) {
+                    url = 'https://placehold.co/400x400?text=' + encodeURIComponent(name);
+                }
+
+                return {
+                    name: name,
+                    folder: folder,
+                    url: url,
+                    category: category
+                };
+            }).filter(function (item) {
+                return item && item.name && item.name.trim() !== '';
+            });
+        }
+
         function previewClientSelection(projectId) {
             if (!window.lastProjectsData) return;
             var project = window.lastProjectsData.find(function (p) { return p.ID === projectId; });
             if (!project) return;
 
             var listJson = project['Daftar Pilihan'];
-            if (!listJson || listJson === "" || listJson === "[]") {
+            var list = parseSelectedPhotosList(listJson);
+
+            if (list.length === 0) {
+                var fotoTerpilihCount = parseInt(project['Foto Terpilih']) || 0;
+                if (fotoTerpilihCount > 0) {
+                    Swal.fire({ 
+                        title: 'Data Pilihan Belum Sinkron', 
+                        html: `Tercatat klien telah memilih <b>${fotoTerpilihCount} foto</b>, namun daftar rincian file foto belum sempat tersinkronkan ke server cloud (terjadi saat jaringan klien terputus sebelum klik Selesai).<br><br>Silakan hubungi klien untuk membuka link galeri dan menekan tombol <b>Kirim / Selesai</b> untuk menyinkronkan daftar foto.`, 
+                        icon: 'info', 
+                        confirmButtonColor: '#4f46e5' 
+                    });
+                    return;
+                }
+
                 Swal.fire({ 
                     title: 'Belum Ada Foto', 
                     text: 'Klien belum memilih foto apapun pada project ini.', 
@@ -7308,18 +7398,8 @@
                 });
                 return;
             }
-            try {
-                var list = typeof listJson === 'string' ? JSON.parse(listJson) : listJson;
-                if (!list || !Array.isArray(list) || list.length === 0) {
-                    Swal.fire({ 
-                        title: 'Belum Ada Foto', 
-                        text: 'Klien belum memilih foto apapun pada project ini.', 
-                        icon: 'info', 
-                        confirmButtonColor: '#4f46e5' 
-                    });
-                    return;
-                }
 
+            try {
                 var clientName = project['Nama Client'] || 'Klien';
                 var modal = document.getElementById('photographerPreviewModal');
                 if (!modal) {
@@ -7490,27 +7570,23 @@
             var project = window.lastProjectsData.find(function (p) { return p.ID === projectId; });
             if (!project) return;
             var listJson = project['Daftar Pilihan'];
-            if (!listJson || listJson === "") {
+            var list = parseSelectedPhotosList(listJson);
+            if (!list || list.length === 0) {
                 Swal.fire({ title: 'Kosong', text: 'Klien belum memilih foto apapun.', icon: 'info' });
                 return;
             }
-            try {
-                var list = JSON.parse(listJson);
-                if (!list || list.length === 0) return;
-                var fileNames = list.map(function (item) {
-                    var name = item.name || '';
-                    return name; // Don't remove extension to keep standard sorting matching
-                }).filter(Boolean);
+            var fileNames = list.map(function (item) {
+                return item.name || '';
+            }).filter(Boolean);
 
-                openSortirLokal();
-                setTimeout(function () {
-                    var el = document.getElementById('targetNames');
-                    if (el) {
-                        el.value = fileNames.join('\n');
-                        if (typeof updateLineCount === 'function') updateLineCount();
-                    }
-                }, 100);
-            } catch (e) { }
+            openSortirLokal();
+            setTimeout(function () {
+                var el = document.getElementById('targetNames');
+                if (el) {
+                    el.value = fileNames.join('\n');
+                    if (typeof updateLineCount === 'function') updateLineCount();
+                }
+            }, 100);
         }
 
         async function reopenProject(projectId, currentMax, totalSelected) {
@@ -8945,13 +9021,10 @@
             clientState.bankName = projectData.bankName || '';
             clientState.bankAccount = projectData.bankAccount || '';
             clientState.bankAccountName = projectData.bankAccountName || '';
+            clientState.statusClient = projectData.statusClient || 'Belum Memilih';
 
             // LOAD PILIHAN LAMA DARI DATABASE (AUTO-RESUME)
-            try {
-                clientState.selectedImages = JSON.parse(projectData.selectedFiles || "[]");
-            } catch (e) {
-                clientState.selectedImages = [];
-            }
+            clientState.selectedImages = parseSelectedPhotosList(projectData.selectedFiles);
             try {
                 clientState.notes = JSON.parse(projectData.notes || "{}");
             } catch (e) {
@@ -9021,6 +9094,8 @@
             if (projectData.statusClient === 'Selesai' || projectData.statusClient === 'Menunggu Konfirmasi Pembayaran') {
                 hasClientSubmitted = true;
                 setTimeout(updateGalleryLock, 500); // Ensure grid is locked after render
+            } else {
+                hasClientSubmitted = false;
             }
         }
 
@@ -9168,7 +9243,11 @@
                 if (res.status === 'success') {
                     clientState.currentContent = { folders: res.data.folders, images: res.data.images };
                     renderClientGallery();
-                    pingClientStatus('Sedang Memilih');
+                    var isSubmitted = (typeof hasClientSubmitted !== 'undefined' && hasClientSubmitted) || 
+                                      (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran'));
+                    if (!isSubmitted) {
+                        pingClientStatus('Sedang Memilih');
+                    }
                 } else {
                     Swal.fire('Error', res.message, 'error');
                     var emptyState = document.getElementById('gallery-empty');
@@ -9473,6 +9552,8 @@
         }
 
         function saveCurrentNote() {
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
+            if (isSubmitted) return;
             var val = document.getElementById('viewerNoteInput').value;
             if (!window.viewerActiveList || window.currentViewerIndex === undefined) return;
             var activeImg = window.viewerActiveList[window.currentViewerIndex];
@@ -9610,6 +9691,10 @@
                         btnText = isSelected
                             ? '<i class="fa-solid fa-check mr-1.5"></i> ' + (isEn ? 'Deselect' : 'Batal')
                             : '<i class="fa-solid fa-cloud-arrow-down mr-1.5"></i> ' + (isEn ? 'Select' : 'Pilih Unduh');
+                    } else if (hasClientSubmitted) {
+                        btnText = isSelected
+                            ? '<i class="fa-solid fa-check mr-2"></i> ' + (isEn ? 'Selected (Locked)' : 'Terpilih (Terkunci)')
+                            : '<i class="fa-solid fa-lock mr-2"></i> ' + (isEn ? 'Locked' : 'Terkunci');
                     } else {
                         btnText = isSelected
                             ? '<i class="fa-solid fa-check mr-2"></i> ' + (isEn ? 'Deselect' : 'Batal')
@@ -9642,6 +9727,7 @@
 
             var scrollArea = document.getElementById('gallery-scroll-area');
             if (scrollArea) scrollArea.scrollTop = 0;
+            updateGalleryLock();
         }
 
         function toggleSelection(cardElement, filename, url) {
@@ -9991,9 +10077,23 @@
                     selectAllCheckbox.checked = allCurrentSelected;
                 }
             }
+            if (hasClientSubmitted) {
+                updateGalleryLock();
+            }
         }
 
         function resetSelection() {
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
+            if (isSubmitted || (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran'))) {
+                var isEn = localStorage.getItem('ps_lang') === 'en';
+                Swal.fire({
+                    icon: 'info',
+                    title: isEn ? 'Gallery Locked' : 'Galeri Terkunci',
+                    text: isEn ? 'You have completed the selection process or are awaiting payment confirmation. Selections cannot be reset without photographer approval.' : 'Anda telah selesai memilih foto atau sedang menunggu konfirmasi pembayaran. Pilihan tidak dapat di-reset tanpa persetujuan fotografer.',
+                    confirmButtonColor: '#1e1e2d'
+                });
+                return;
+            }
             if (clientState.selectedImages.length === 0) return;
             Swal.fire({ title: 'Reset Pilihan?', text: 'Semua foto yang telah Anda pilih dari seluruh folder akan dihapus.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Reset' }).then(function (result) {
                 if (result.isConfirmed) {
@@ -10116,19 +10216,75 @@
         }
 
         function updateGalleryLock() {
-            if (hasClientSubmitted) {
-                var grid = document.getElementById('photo-grid');
-                if (grid) {
-                    grid.style.pointerEvents = 'none';
-                    grid.style.opacity = '0.7';
-                }
-                var selectAllCheckbox = document.getElementById('selectAllCheckbox');
-                if (selectAllCheckbox) selectAllCheckbox.disabled = true;
+            var isEn = localStorage.getItem('ps_lang') === 'en';
+            var subtitle = document.getElementById('gallery-subtitle');
+            var btnReset = document.getElementById('btn-client-reset');
+            var btnPreview = document.getElementById('btn-client-preview');
+            var btnCopy = document.getElementById('btn-client-copy');
+            var btnWA = document.getElementById('btn-client-wa');
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined' && hasClientSubmitted) || 
+                              (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran'));
 
-                var btnSubmit = document.getElementById('btnSubmitClient');
-                if (btnSubmit) {
-                    btnSubmit.innerHTML = '<i class="fa-solid fa-lock mr-2"></i> Terkunci';
-                    btnSubmit.classList.add('opacity-50', 'cursor-not-allowed');
+            if (isSubmitted) {
+                hasClientSubmitted = true;
+                if (subtitle && clientState.galleryMode !== 'download') {
+                    subtitle.innerHTML = '<span class="text-green-600 font-bold"><i class="fa-solid fa-lock mr-1"></i> ' + (isEn ? 'Status: Completed (Locked)' : 'Status: Selesai (Terkunci)') + '</span>';
+                }
+
+                // Sembunyikan tombol Reset, Copy, dan WA secara mutlak
+                if (btnReset) {
+                    btnReset.style.display = 'none';
+                    btnReset.disabled = true;
+                    btnReset.setAttribute('disabled', 'true');
+                }
+                if (btnCopy) {
+                    btnCopy.style.display = 'none';
+                    btnCopy.disabled = true;
+                }
+                if (btnWA) {
+                    btnWA.style.display = 'none';
+                    btnWA.disabled = true;
+                }
+
+                // Ubah tombol Preview menjadi tombol utama untuk melihat foto yang telah dipilih
+                if (btnPreview) {
+                    btnPreview.className = "px-4 py-2 sm:px-6 sm:py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm font-semibold flex items-center justify-center shadow-md shadow-blue-500/20 flex-1 sm:flex-none";
+                    btnPreview.innerHTML = '<i class="fa-regular fa-images mr-2 text-lg"></i> <span>' + (isEn ? 'Preview Selected (' + clientState.selectedImages.length + ')' : 'Lihat Pilihan (' + clientState.selectedImages.length + ')') + '</span>';
+                }
+
+                var container = document.getElementById('gallery-container');
+                if (container) {
+                    var btnPilihList = container.querySelectorAll('.btn-pilih-foto');
+                    btnPilihList.forEach(function (btn) {
+                        var card = btn.closest('.photo-card');
+                        var isSel = card && card.classList.contains('selected');
+                        if (isSel) {
+                            btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> ' + (isEn ? 'Selected (Locked)' : 'Terpilih (Terkunci)');
+                        } else {
+                            btn.innerHTML = '<i class="fa-solid fa-lock mr-2"></i> ' + (isEn ? 'Locked' : 'Terkunci');
+                        }
+                    });
+                }
+            } else {
+                if (btnReset) {
+                    btnReset.style.display = '';
+                    btnReset.classList.remove('hidden');
+                    btnReset.disabled = false;
+                    btnReset.removeAttribute('disabled');
+                }
+                if (btnCopy) {
+                    btnCopy.style.display = '';
+                    btnCopy.classList.remove('hidden');
+                    btnCopy.disabled = false;
+                }
+                if (btnWA) {
+                    btnWA.style.display = '';
+                    btnWA.classList.remove('hidden');
+                    btnWA.disabled = false;
+                }
+                if (btnPreview) {
+                    btnPreview.className = "px-3 py-2 sm:px-4 sm:py-2.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors text-sm font-semibold flex items-center justify-center shadow-sm";
+                    btnPreview.innerHTML = '<i class="fa-regular fa-images"></i> <span class="hidden sm:inline sm:ml-2">' + (isEn ? 'Preview' : 'Preview') + '</span>';
                 }
             }
         }
@@ -10302,6 +10458,27 @@
 
         function pingClientStatus(status, proofUrl = '') {
             if (!clientState.token) return;
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined' && hasClientSubmitted) || 
+                              (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran'));
+            if (isSubmitted && status !== 'Selesai' && status !== 'Menunggu Konfirmasi Pembayaran') {
+                return;
+            }
+
+            // Optimasi kompresi data foto agar hemat bandwidth & tidak menabrak batas karakter database
+            var compactList = (clientState.selectedImages || []).map(function (img) {
+                var u = img.url || '';
+                var m = u.match(/https:\/\/lh3\.googleusercontent\.com\/d\/([-\w]+)/);
+                if (m && m[1]) {
+                    u = m[1];
+                }
+                return {
+                    n: img.name || '',
+                    f: img.folder || '',
+                    u: u,
+                    c: img.category || ''
+                };
+            });
+
             fetch(API_ENDPOINT, {
                 method: 'POST',
                 keepalive: true, // WAJIB: Memaksa sinyal tetap jalan walau tab di-close
@@ -10311,7 +10488,7 @@
                     token: clientState.token,
                     status: status,
                     selectedCount: clientState.selectedImages.length,
-                    selectedFiles: JSON.stringify(clientState.selectedImages), // KIRIM DAFTAR FOTO LENGKAP
+                    selectedFiles: JSON.stringify(compactList),
                     notes: JSON.stringify(clientState.notes || {}),
                     paymentProof: proofUrl
                 })
@@ -11069,6 +11246,8 @@
             var modeSelection = document.getElementById('action-selection-mode');
             var modeDownload = document.getElementById('action-download-mode');
             var subtitle = document.getElementById('gallery-subtitle');
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined' && hasClientSubmitted) || 
+                              (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran'));
 
             if (mode === 'download') {
                 if (modeSelection) modeSelection.classList.add('hidden');
@@ -11078,10 +11257,26 @@
                 if (modeSelection) modeSelection.classList.remove('hidden');
                 if (modeDownload) modeDownload.classList.add('hidden');
                 if (subtitle) subtitle.classList.remove('hidden');
+
+                if (isSubmitted) {
+                    hasClientSubmitted = true;
+                    var isEn = localStorage.getItem('ps_lang') === 'en';
+                    setTimeout(function () {
+                        Swal.fire({
+                            icon: 'info',
+                            title: isEn ? 'Gallery Locked' : 'Galeri Terkunci',
+                            text: isEn ? 'You have completed the photo selection process or are awaiting payment confirmation. You can view your selected photos using the Preview button.' : 'Anda telah selesai memilih foto atau sedang menunggu konfirmasi pembayaran. Anda tetap dapat melihat foto pilihan Anda melalui tombol Preview.',
+                            confirmButtonColor: '#1e1e2d'
+                        });
+                    }, 400);
+                }
             }
 
             fetchClientContent(clientState.currentFolderId, clientState.currentFolderName);
             updateClientCounterUI();
+            if (isSubmitted) {
+                updateGalleryLock();
+            }
         }
 
         function toggleSelectAllClient() {
