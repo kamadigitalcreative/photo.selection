@@ -10112,65 +10112,49 @@
             });
         }
 
-        function formatSelectedText(proofUrl = null) {
+        function formatSelectedText(proofUrl = null, backupUrl = '') {
             var isEn = (localStorage.getItem('ps_lang') === 'en');
             var extraCount = clientState.selectedImages.length - clientState.maxFoto;
             var text = "";
 
             if (isEn) {
-                text += "✨ Photo Selection Completed\n\n";
-                text += "Hello Photographer,\n\n";
-                text += "We from *" + clientState.namaClient + "* have finished the photo selection process";
+                text += "✨ *PHOTO SELECTION COMPLETED*\n\n";
                 if (extraCount > 0 && proofUrl) {
-                    text += " and made payment for extra photos.\n\n";
+                    text += "Hello Photographer, we from *" + clientState.namaClient + "* have finished selecting photos & completed extra payment.\n\n";
                 } else {
-                    text += ".\n\n";
+                    text += "Hello Photographer, we from *" + clientState.namaClient + "* have finished selecting photos.\n\n";
                 }
-                text += "📊 *Selection Details*\n";
-                text += "• Package Quota: " + clientState.maxFoto + " Photos\n";
-                text += "• Total Selected: " + clientState.selectedImages.length + " Photos\n";
+                text += "📋 *Summary:*\n";
                 if (extraCount > 0) {
-                    text += "• Extra Photos: " + extraCount + " Photos\n\n";
-                    text += "💰 *Extra Photos Payment*\n";
-                    text += "Rp" + (extraCount * clientState.extraPrice).toLocaleString('id-ID') + "\n\n";
-                    text += "🧾 *Payment Proof*\n";
-                    text += proofUrl + "\n\n";
+                    text += "• Selected: " + clientState.selectedImages.length + " Photos (Extra: +" + extraCount + " Photos)\n";
+                    text += "• Extra Total: Rp" + (extraCount * clientState.extraPrice).toLocaleString('id-ID') + "\n";
+                    text += "• Payment Proof: " + proofUrl + "\n";
                 } else {
-                    text += "\n";
+                    text += "• Selected: " + clientState.selectedImages.length + " / " + clientState.maxFoto + " Photos\n";
                 }
-                text += "⚡ *Action Required*\n";
-                text += "Please open your Photo Selector Dashboard to check the payment validation and access our selected photo list.\n\n";
-                text += "Thank you.\n\n";
-                text += "*" + clientState.namaClient + "*";
+                if (backupUrl) {
+                    text += "• Photo List & Notes (Drive):\n" + backupUrl + "\n";
+                }
+                text += "\nPlease verify in Photo Selector Dashboard. Thank you! 🙏";
             } else {
-                text += "✨ Pemilihan Foto Selesai\n\n";
-                text += "Halo Fotografer,\n\n";
-                text += "Kami dari *" + clientState.namaClient + "* telah menyelesaikan proses seleksi foto";
+                text += "✨ *SELEKSI FOTO SELESAI*\n\n";
                 if (extraCount > 0 && proofUrl) {
-                    text += " dan melakukan pembayaran untuk foto tambahan.\n\n";
+                    text += "Halo Fotografer, kami dari *" + clientState.namaClient + "* telah selesai memilih foto & menyelesaikan pembayaran ekstra.\n\n";
                 } else {
-                    text += ".\n\n";
+                    text += "Halo Fotografer, kami dari *" + clientState.namaClient + "* telah selesai memilih foto.\n\n";
                 }
-                text += "📊 *Detail Pemilihan*\n";
-                text += "• Kuota Paket: " + clientState.maxFoto + " Foto\n";
-                text += "• Total Dipilih: " + clientState.selectedImages.length + " Foto\n";
+                text += "📋 *Ringkasan:*\n";
                 if (extraCount > 0) {
-                    text += "• Foto Tambahan: " + extraCount + " Foto\n\n";
-                    text += "💰 *Pembayaran Foto Tambahan*\n";
-                    text += "Rp" + (extraCount * clientState.extraPrice).toLocaleString('id-ID') + "\n\n";
-                    text += "🧾 *Bukti Pembayaran*\n";
-                    text += proofUrl + "\n\n";
+                    text += "• Terpilih: " + clientState.selectedImages.length + " Foto (Ekstra: +" + extraCount + " Foto)\n";
+                    text += "• Total Bayar: Rp" + (extraCount * clientState.extraPrice).toLocaleString('id-ID') + "\n";
+                    text += "• Bukti Transfer: " + proofUrl + "\n";
                 } else {
-                    text += "\n";
+                    text += "• Terpilih: " + clientState.selectedImages.length + " / " + clientState.maxFoto + " Foto\n";
                 }
-                text += "⚡ *Mohon Verifikasi*\n";
-                if (extraCount > 0 && proofUrl) {
-                    text += "Silakan buka Dashboard Photo Selector Anda untuk memeriksa validasi pembayaran dan mengakses daftar foto yang telah kami pilih.\n\n";
-                } else {
-                    text += "Silakan buka Dashboard Photo Selector Anda untuk mengakses daftar foto yang telah kami pilih.\n\n";
+                if (backupUrl) {
+                    text += "• File Daftar & Catatan (Drive):\n" + backupUrl + "\n";
                 }
-                text += "Terima kasih atas pelayanan dan kerja samanya.\n\n";
-                text += "Hormat kami,\n*" + clientState.namaClient + "*";
+                text += "\nMohon dicek pada Dashboard Photo Selector. Terima kasih! 🙏";
             }
             return text;
         }
@@ -10181,17 +10165,25 @@
             promptExtraPayment('copy');
         }
 
-        function copyOnly_Proceed(proofUrl) {
-            var text = formatSelectedText(proofUrl);
-            if (!text) { Swal.fire({ title: 'Kosong', text: 'Pilih foto terlebih dahulu.', icon: 'info', confirmButtonColor: '#1e1e2d' }); return; }
-            doCopyText(text, 'Daftar foto siap dipaste.');
-            hasClientSubmitted = true;
+        async function copyOnly_Proceed(proofUrl) {
+            var isEn = localStorage.getItem('ps_lang') === 'en';
+            startLoading(isEn ? "Preparing data..." : "Menyiapkan data...");
             var extraCount = clientState.selectedImages.length - clientState.maxFoto;
-            if (extraCount > 0 && proofUrl) {
-                pingClientStatus('Menunggu Konfirmasi Pembayaran', proofUrl);
-            } else {
-                pingClientStatus('Selesai');
-            }
+            var targetStatus = (extraCount > 0 && proofUrl) ? 'Menunggu Konfirmasi Pembayaran' : 'Selesai';
+            
+            var backupUrl = '';
+            try {
+                var pingRes = await pingClientStatus(targetStatus, proofUrl);
+                if (pingRes && pingRes.data && pingRes.data.backupUrl) {
+                    backupUrl = pingRes.data.backupUrl;
+                }
+            } catch (e) {}
+
+            endLoading();
+            var text = formatSelectedText(proofUrl, backupUrl);
+            if (!text) { Swal.fire({ title: 'Kosong', text: 'Pilih foto terlebih dahulu.', icon: 'info', confirmButtonColor: '#1e1e2d' }); return; }
+            doCopyText(text, isEn ? 'Photo list copied.' : 'Daftar foto siap dipaste.');
+            hasClientSubmitted = true;
             updateGalleryLock();
         }
 
@@ -10199,19 +10191,27 @@
             promptExtraPayment('wa');
         }
 
-        function sendToWA_Proceed(proofUrl) {
-            var text = formatSelectedText(proofUrl);
+        async function sendToWA_Proceed(proofUrl) {
+            var isEn = localStorage.getItem('ps_lang') === 'en';
+            startLoading(isEn ? "Preparing WhatsApp..." : "Menyiapkan pesan WhatsApp...");
+            var extraCount = clientState.selectedImages.length - clientState.maxFoto;
+            var targetStatus = (extraCount > 0 && proofUrl) ? 'Menunggu Konfirmasi Pembayaran' : 'Selesai';
+
+            var backupUrl = '';
+            try {
+                var pingRes = await pingClientStatus(targetStatus, proofUrl);
+                if (pingRes && pingRes.data && pingRes.data.backupUrl) {
+                    backupUrl = pingRes.data.backupUrl;
+                }
+            } catch (e) {}
+
+            endLoading();
+            var text = formatSelectedText(proofUrl, backupUrl);
             if (!text) { Swal.fire({ title: 'Kosong', text: 'Pilih foto terlebih dahulu.', icon: 'info', confirmButtonColor: '#1e1e2d' }); return; }
             var noWa = clientState.nomorWA.replace(/\D/g, '');
             if (noWa.indexOf('0') === 0) noWa = '62' + noWa.substring(1);
             window.open("https://wa.me/" + noWa + "?text=" + encodeURIComponent(text), '_blank');
             hasClientSubmitted = true;
-            var extraCount = clientState.selectedImages.length - clientState.maxFoto;
-            if (extraCount > 0 && proofUrl) {
-                pingClientStatus('Menunggu Konfirmasi Pembayaran', proofUrl);
-            } else {
-                pingClientStatus('Selesai');
-            }
             updateGalleryLock();
         }
 
@@ -10456,12 +10456,12 @@
         // --- CLIENT TRACKER LOGIC ---
         var rawStatusData = [];
 
-        function pingClientStatus(status, proofUrl = '') {
-            if (!clientState.token) return;
+        async function pingClientStatus(status, proofUrl = '') {
+            if (!clientState.token) return null;
             var isSubmitted = (typeof hasClientSubmitted !== 'undefined' && hasClientSubmitted) || 
                               (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran'));
             if (isSubmitted && status !== 'Selesai' && status !== 'Menunggu Konfirmasi Pembayaran') {
-                return;
+                return null;
             }
 
             // Optimasi kompresi data foto agar hemat bandwidth & tidak menabrak batas karakter database
@@ -10479,20 +10479,26 @@
                 };
             });
 
-            fetch(API_ENDPOINT, {
-                method: 'POST',
-                keepalive: true, // WAJIB: Memaksa sinyal tetap jalan walau tab di-close
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'updateClientStatus',
-                    token: clientState.token,
-                    status: status,
-                    selectedCount: clientState.selectedImages.length,
-                    selectedFiles: JSON.stringify(compactList),
-                    notes: JSON.stringify(clientState.notes || {}),
-                    paymentProof: proofUrl
-                })
-            }).catch(function (e) { console.log("Tracker ping failed:", e); });
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    keepalive: true, // WAJIB: Memaksa sinyal tetap jalan walau tab di-close
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'updateClientStatus',
+                        token: clientState.token,
+                        status: status,
+                        selectedCount: clientState.selectedImages.length,
+                        selectedFiles: JSON.stringify(compactList),
+                        notes: JSON.stringify(clientState.notes || {}),
+                        paymentProof: proofUrl
+                    })
+                });
+                return await response.json();
+            } catch (e) {
+                console.log("Tracker ping failed:", e);
+                return null;
+            }
         }
 
         async function loadClientProgress(isSilent = false) {
