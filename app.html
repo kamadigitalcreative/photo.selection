@@ -9092,7 +9092,7 @@
             clientState.statusClient = projectData.statusClient || 'Belum Memilih';
             clientState.backupUrl = projectData.backupDrive || '';
 
-            // LOAD PILIHAN LAMA DARI DATABASE & LOCAL STORAGE (MULTI-LAYER AUTO-RESUME)
+            // LOAD PILIHAN DARI DATABASE (SUMBER DATA UTAMA MULTI-DEVICE)
             clientState.selectedImages = parseSelectedPhotosList(projectData.selectedFiles);
             try {
                 clientState.notes = JSON.parse(projectData.notes || "{}");
@@ -9100,23 +9100,16 @@
                 clientState.notes = {};
             }
 
-            // AUTO-RECOVER DARI MEMORI BROWSER JIKA CLIENT ME-REFRESH HALAMAN
+            // Simpan cache lokal
             if (clientState.token) {
                 try {
-                    var localSaved = localStorage.getItem('ps_client_selected_' + clientState.token);
-                    if (localSaved) {
-                        var localList = parseSelectedPhotosList(localSaved);
-                        if (localList && localList.length > clientState.selectedImages.length) {
-                            clientState.selectedImages = localList;
-                        }
-                    }
-                    var localNotes = localStorage.getItem('ps_client_notes_' + clientState.token);
-                    if (localNotes) {
-                        var parsedNotes = JSON.parse(localNotes);
-                        clientState.notes = Object.assign({}, parsedNotes, clientState.notes);
-                    }
+                    localStorage.setItem('ps_client_selected_' + clientState.token, JSON.stringify(clientState.selectedImages));
+                    localStorage.setItem('ps_client_notes_' + clientState.token, JSON.stringify(clientState.notes));
                 } catch (errRec) {}
             }
+
+            // Mulai robot sinkronisasi real-time multi-device (HP 1, HP 2, Laptop)
+            startClientRealtimeSync();
 
             clientState.folderHistory = [];
 
@@ -10683,7 +10676,104 @@
             }
         }
 
-        // Pendeteksi Klien Keluar / Pindah Aplikasi (HP & PC)
+        // --- SISTEM SINKRONISASI REAL-TIME MULTI-DEVICE (HP 1, HP 2, LAPTOP) ---
+        var clientSyncTimer = null;
+        var isClientSyncing = false;
+
+        function refreshCardSelectionUI() {
+            var isEn = (localStorage.getItem('ps_lang') === 'en');
+            var cards = document.querySelectorAll('.photo-card:not(.is-folder)');
+            cards.forEach(function (card) {
+                var filename = card.dataset.filename;
+                if (!filename) return;
+                var isSelected = clientState.selectedImages.some(function (sel) {
+                    return sel.name === filename && (sel.folder === clientState.currentFolderName || !sel.folder || !clientState.currentFolderName);
+                });
+                var btnPilih = card.querySelector('.btn-pilih-foto');
+                if (isSelected) {
+                    card.classList.add('selected');
+                    if (btnPilih && clientState.galleryMode !== 'download') {
+                        btnPilih.innerHTML = hasClientSubmitted
+                            ? '<i class="fa-solid fa-check mr-2"></i> ' + (isEn ? 'Selected (Locked)' : 'Terpilih (Terkunci)')
+                            : '<i class="fa-solid fa-check mr-2"></i> ' + (isEn ? 'Deselect' : 'Batal');
+                    }
+                } else {
+                    card.classList.remove('selected');
+                    if (btnPilih && clientState.galleryMode !== 'download') {
+                        btnPilih.innerHTML = hasClientSubmitted
+                            ? '<i class="fa-solid fa-lock mr-2"></i> ' + (isEn ? 'Locked' : 'Terkunci')
+                            : '<i class="fa-regular fa-square-check mr-2"></i> ' + (isEn ? 'Select' : 'Pilih');
+                    }
+                }
+            });
+            updateClientCounterUI();
+        }
+
+        async function syncClientSelectionsSilently() {
+            if (!clientState.token || isClientSyncing) return;
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined' && hasClientSubmitted) || 
+                              (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran'));
+            
+            isClientSyncing = true;
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'getProjectForClient', token: clientState.token })
+                });
+                const res = await response.json();
+                if (res && res.status === 'success' && res.data && res.data.project) {
+                    var serverProj = res.data.project;
+                    var serverSelected = parseSelectedPhotosList(serverProj.selectedFiles);
+                    
+                    // Cek apakah ada perubahan daftar foto dari device lain
+                    var isDifferent = false;
+                    if (serverSelected.length !== clientState.selectedImages.length) {
+                        isDifferent = true;
+                    } else {
+                        for (var i = 0; i < serverSelected.length; i++) {
+                            if (!clientState.selectedImages.some(function(local) { return local.name === serverSelected[i].name && local.folder === serverSelected[i].folder; })) {
+                                isDifferent = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (isDifferent) {
+                        clientState.selectedImages = serverSelected;
+                        try {
+                            localStorage.setItem('ps_client_selected_' + clientState.token, JSON.stringify(clientState.selectedImages));
+                        } catch(e) {}
+                        try {
+                            clientState.notes = JSON.parse(serverProj.notes || "{}");
+                            localStorage.setItem('ps_client_notes_' + clientState.token, JSON.stringify(clientState.notes));
+                        } catch(e) {}
+                        
+                        refreshCardSelectionUI();
+                    }
+
+                    if (serverProj.statusClient === 'Selesai' || serverProj.statusClient === 'Menunggu Konfirmasi Pembayaran') {
+                        if (!hasClientSubmitted) {
+                            hasClientSubmitted = true;
+                            clientState.statusClient = serverProj.statusClient;
+                            updateGalleryLock();
+                            refreshCardSelectionUI();
+                        }
+                    }
+                }
+            } catch (err) {
+                // Abaikan kesalahan jaringan sementara
+            } finally {
+                isClientSyncing = false;
+            }
+        }
+
+        function startClientRealtimeSync() {
+            if (clientSyncTimer) clearInterval(clientSyncTimer);
+            clientSyncTimer = setInterval(syncClientSelectionsSilently, 6000); // Polling otomatis tiap 6 detik
+        }
+
+        // Pendeteksi Klien Keluar / Pindah Aplikasi / Tab Fokus (HP & PC)
         document.addEventListener('visibilitychange', function () {
             var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
             if (!clientState.token || isSubmitted) return;
@@ -10691,8 +10781,14 @@
             if (document.visibilityState === 'hidden') {
                 pingClientStatus('Belum Memilih');
             } else if (document.visibilityState === 'visible') {
-                // PC FIX: Pokoknya asal tab dilihat lagi, langsung paksa jadi Sedang Memilih
                 pingClientStatus('Sedang Memilih');
+                syncClientSelectionsSilently(); // Tarik update instan saat tab dibuka lagi
+            }
+        });
+
+        window.addEventListener('focus', function () {
+            if (clientState.token) {
+                syncClientSelectionsSilently();
             }
         });
 
