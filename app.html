@@ -9243,7 +9243,11 @@
                 if (res.status === 'success') {
                     clientState.currentContent = { folders: res.data.folders, images: res.data.images };
                     renderClientGallery();
-                    pingClientStatus('Sedang Memilih');
+                    var isSubmitted = (typeof hasClientSubmitted !== 'undefined' && hasClientSubmitted) || 
+                                      (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran'));
+                    if (!isSubmitted) {
+                        pingClientStatus('Sedang Memilih');
+                    }
                 } else {
                     Swal.fire('Error', res.message, 'error');
                     var emptyState = document.getElementById('gallery-empty');
@@ -10218,23 +10222,27 @@
             var btnPreview = document.getElementById('btn-client-preview');
             var btnCopy = document.getElementById('btn-client-copy');
             var btnWA = document.getElementById('btn-client-wa');
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined' && hasClientSubmitted) || 
+                              (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran'));
 
-            if (hasClientSubmitted) {
+            if (isSubmitted) {
+                hasClientSubmitted = true;
                 if (subtitle && clientState.galleryMode !== 'download') {
                     subtitle.innerHTML = '<span class="text-green-600 font-bold"><i class="fa-solid fa-lock mr-1"></i> ' + (isEn ? 'Status: Completed (Locked)' : 'Status: Selesai (Terkunci)') + '</span>';
                 }
 
-                // Sembunyikan tombol Reset, Copy, dan WA agar klien tidak bisa mengkliknya sama sekali
+                // Sembunyikan tombol Reset, Copy, dan WA secara mutlak
                 if (btnReset) {
-                    btnReset.classList.add('hidden');
+                    btnReset.style.display = 'none';
                     btnReset.disabled = true;
+                    btnReset.setAttribute('disabled', 'true');
                 }
                 if (btnCopy) {
-                    btnCopy.classList.add('hidden');
+                    btnCopy.style.display = 'none';
                     btnCopy.disabled = true;
                 }
                 if (btnWA) {
-                    btnWA.classList.add('hidden');
+                    btnWA.style.display = 'none';
                     btnWA.disabled = true;
                 }
 
@@ -10259,14 +10267,18 @@
                 }
             } else {
                 if (btnReset) {
+                    btnReset.style.display = '';
                     btnReset.classList.remove('hidden');
                     btnReset.disabled = false;
+                    btnReset.removeAttribute('disabled');
                 }
                 if (btnCopy) {
+                    btnCopy.style.display = '';
                     btnCopy.classList.remove('hidden');
                     btnCopy.disabled = false;
                 }
                 if (btnWA) {
+                    btnWA.style.display = '';
                     btnWA.classList.remove('hidden');
                     btnWA.disabled = false;
                 }
@@ -10446,6 +10458,11 @@
 
         function pingClientStatus(status, proofUrl = '') {
             if (!clientState.token) return;
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined' && hasClientSubmitted) || 
+                              (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran'));
+            if (isSubmitted && status !== 'Selesai' && status !== 'Menunggu Konfirmasi Pembayaran') {
+                return;
+            }
 
             // Optimasi kompresi data foto agar hemat bandwidth & tidak menabrak batas karakter database
             var compactList = (clientState.selectedImages || []).map(function (img) {
@@ -11229,6 +11246,8 @@
             var modeSelection = document.getElementById('action-selection-mode');
             var modeDownload = document.getElementById('action-download-mode');
             var subtitle = document.getElementById('gallery-subtitle');
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined' && hasClientSubmitted) || 
+                              (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran'));
 
             if (mode === 'download') {
                 if (modeSelection) modeSelection.classList.add('hidden');
@@ -11239,7 +11258,8 @@
                 if (modeDownload) modeDownload.classList.add('hidden');
                 if (subtitle) subtitle.classList.remove('hidden');
 
-                if (hasClientSubmitted) {
+                if (isSubmitted) {
+                    hasClientSubmitted = true;
                     var isEn = localStorage.getItem('ps_lang') === 'en';
                     setTimeout(function () {
                         Swal.fire({
@@ -11254,7 +11274,7 @@
 
             fetchClientContent(clientState.currentFolderId, clientState.currentFolderName);
             updateClientCounterUI();
-            if (hasClientSubmitted) {
+            if (isSubmitted) {
                 updateGalleryLock();
             }
         }
