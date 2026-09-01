@@ -9542,6 +9542,27 @@
         }
 
         function toggleNoteInput() {
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
+            if (isSubmitted) return;
+            if (!window.viewerActiveList || window.currentViewerIndex === undefined) return;
+            var activeImg = window.viewerActiveList[window.currentViewerIndex];
+            if (!activeImg) return;
+            var folder = activeImg.folder || clientState.currentFolderName;
+            var isSelected = clientState.selectedImages.some(function (sel) {
+                return sel.name === activeImg.name && sel.folder === folder;
+            });
+            var isEn = localStorage.getItem('ps_lang') === 'en';
+
+            if (!isSelected && clientState.selectedImages.length >= clientState.maxFoto && (!clientState.extraPrice || clientState.extraPrice <= 0)) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: isEn ? 'Quota Full' : 'Batas Maksimal Tercapai',
+                    text: isEn ? 'You have reached the maximum photo selection quota (' + clientState.maxFoto + ' photos). Please unselect another photo first before adding notes to a new photo.' : 'Anda telah memilih foto sesuai batas maksimal (' + clientState.maxFoto + ' foto). Silakan batalkan salah satu foto terlebih dahulu jika ingin memilih & memberi catatan pada foto ini.',
+                    confirmButtonColor: '#1e1e2d'
+                });
+                return;
+            }
+
             var container = document.getElementById('viewerNoteContainer');
             if (container.classList.contains('hidden')) {
                 container.classList.remove('hidden');
@@ -9560,14 +9581,33 @@
             if (!activeImg) return;
             var folder = activeImg.folder || clientState.currentFolderName;
             var fileId = activeImg.name + '_' + folder;
+            var isEn = localStorage.getItem('ps_lang') === 'en';
+
+            var isSelected = clientState.selectedImages.some(function (sel) {
+                return sel.name === activeImg.name && sel.folder === folder;
+            });
+
             if (val.trim() === '') {
                 delete clientState.notes[fileId];
             } else {
-                clientState.notes[fileId] = val;
-                var isSelected = clientState.selectedImages.some(function (sel) {
-                    return sel.name === activeImg.name && sel.folder === folder;
-                });
                 if (!isSelected) {
+                    if (clientState.selectedImages.length >= clientState.maxFoto) {
+                        if (!clientState.extraPrice || clientState.extraPrice <= 0) {
+                            document.getElementById('viewerNoteInput').value = '';
+                            delete clientState.notes[fileId];
+                            var noteContainer = document.getElementById('viewerNoteContainer');
+                            if (noteContainer) noteContainer.classList.add('hidden');
+                            Swal.fire({
+                                icon: 'warning',
+                                title: isEn ? 'Quota Full' : 'Batas Maksimal Tercapai',
+                                text: isEn ? 'You have reached the maximum photo selection quota (' + clientState.maxFoto + ' photos). Please unselect another photo first before adding notes to a new photo.' : 'Anda telah memilih foto sesuai batas maksimal (' + clientState.maxFoto + ' foto). Silakan batalkan salah satu foto terlebih dahulu jika ingin memilih & memberi catatan pada foto ini.',
+                                confirmButtonColor: '#1e1e2d'
+                            });
+                            return;
+                        }
+                    }
+
+                    clientState.notes[fileId] = val;
                     clientState.selectedImages.push({ name: activeImg.name, folder: folder, url: activeImg.url, category: activeImg.category });
                     var cards = document.querySelectorAll('.photo-card');
                     cards.forEach(function (c) {
@@ -9575,6 +9615,8 @@
                     });
                     updateClientCounterUI();
                     updateViewerUI(activeImg.name, activeImg.url);
+                } else {
+                    clientState.notes[fileId] = val;
                 }
             }
         }
