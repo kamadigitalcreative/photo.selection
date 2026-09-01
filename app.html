@@ -6360,35 +6360,44 @@
         }
 
         async function handleLogout() {
-            try { window.history.pushState({ auth: 'login' }, '', '/login'); } catch (e) { } // Arahkan ke login saat logout
+            try { window.history.pushState({ auth: 'login' }, '', '/login'); } catch (e) { }
             localStorage.removeItem('ps_user');
             sessionStorage.removeItem('ps_user');
             currentUser = null;
             var loginForm = document.querySelector('#login-form-wrapper form');
             if (loginForm) loginForm.reset();
 
-            startLoading("Keluar...");
+            // Kembalikan branding admin secara instan dari memori
             try {
-                const response = await fetch(API_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'getGlobalBranding' })
-                });
-                const res = await response.json();
-                endLoading();
-                if (res.status === 'success' && res.data && res.data.success) {
-                    appBranding.name = res.data.brandName || 'Photo Selection';
-                    appBranding.logo = res.data.brandLogo || '';
+                var cachedBrand = localStorage.getItem('ps_branding');
+                if (cachedBrand) {
+                    var parsedBrand = JSON.parse(cachedBrand);
+                    appBranding.name = parsedBrand.name || 'Photo Selection';
+                    appBranding.logo = parsedBrand.logo || '';
                 } else {
                     appBranding.name = 'Photo Selection';
                     appBranding.logo = '';
                 }
             } catch (e) {
-                endLoading();
                 appBranding.name = 'Photo Selection';
                 appBranding.logo = '';
             }
+            applyBranding();
             checkLoginState();
+
+            // Refresh branding di background secara hening
+            fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'getGlobalBranding' })
+            }).then(r => r.json()).then(res => {
+                if (res.status === 'success' && res.data && res.data.success) {
+                    appBranding.name = res.data.brandName || 'Photo Selection';
+                    appBranding.logo = res.data.brandLogo || '';
+                    localStorage.setItem('ps_branding', JSON.stringify({ name: appBranding.name, logo: appBranding.logo }));
+                    applyBranding();
+                }
+            }).catch(() => {});
         }
 
         // --- DASHBOARD TABS ---
