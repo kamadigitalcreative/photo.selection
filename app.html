@@ -8972,7 +8972,24 @@
         async function initClientApp(takeOver = false) {
             document.documentElement.classList.remove('dark');
             var isEn = (localStorage.getItem('ps_lang') === 'en');
-            startLoading(isEn ? "Verifying..." : "Memverifikasi...");
+
+            // 1. Tampilkan data dari cache lokal secara instan (0ms / super cepat)
+            var projCacheKey = 'ps_proj_cache_' + clientState.token;
+            var hasCachedProj = false;
+            try {
+                var cachedRaw = sessionStorage.getItem(projCacheKey) || localStorage.getItem(projCacheKey);
+                if (cachedRaw) {
+                    var cachedObj = JSON.parse(cachedRaw);
+                    if (cachedObj && (cachedObj.namaClient || cachedObj.name)) {
+                        processClientProjectData(cachedObj);
+                        hasCachedProj = true;
+                    }
+                }
+            } catch(e) {}
+
+            if (!hasCachedProj) {
+                startLoading(isEn ? "Verifying..." : "Memverifikasi...");
+            }
 
             var deviceName = 'Browser';
             if (/iphone|ipad|ipod/i.test(navigator.userAgent)) deviceName = 'iPhone / iPad';
@@ -8981,18 +8998,28 @@
             else if (/mac/i.test(navigator.userAgent)) deviceName = 'MacBook / Mac';
 
             try {
-                const response = await fetch(API_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'getProjectForClient',
-                        token: clientState.token,
-                        sessionId: clientSessionId,
-                        takeOver: takeOver,
-                        deviceName: deviceName
-                    })
-                });
-                const res = await response.json();
+                var res = null;
+                var retryCount = 0;
+                while (retryCount < 2) {
+                    try {
+                        const response = await fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                action: 'getProjectForClient',
+                                token: clientState.token,
+                                sessionId: clientSessionId,
+                                takeOver: takeOver,
+                                deviceName: deviceName
+                            })
+                        });
+                        res = await response.json();
+                        if (res && res.status === 'success') break;
+                    } catch (netErr) {}
+                    retryCount++;
+                    if (retryCount < 2) await new Promise(r => setTimeout(r, 800));
+                }
+
                 endLoading();
 
                 if (res && res.status === 'success' && res.data) {
@@ -9026,17 +9053,21 @@
                     }
 
                     if (res.data.success && res.data.project) {
+                        try { sessionStorage.setItem(projCacheKey, JSON.stringify(res.data.project)); } catch(e) {}
                         processClientProjectData(res.data.project);
                     } else {
+                        if (hasCachedProj) return; // Jika sudah ada data dari cache, jangan ganggu pengguna
                         var errorMsg = (res.data ? res.data.message : '') || res.message || 'Link galeri tidak dapat diakses.';
                         Swal.fire({ icon: 'error', title: 'Gagal Memuat Galeri', text: errorMsg, allowOutsideClick: false });
                     }
                 } else {
+                    if (hasCachedProj) return;
                     var errorMsg = (res && (res.message || (res.data ? res.data.message : ''))) || 'Link galeri tidak dapat diakses.';
                     Swal.fire({ icon: 'error', title: 'Gagal Memuat Galeri', text: errorMsg, allowOutsideClick: false });
                 }
             } catch (err) {
                 endLoading();
+                if (hasCachedProj) return;
                 Swal.fire('Error', 'Gagal memuat galeri: ' + err.message, 'error');
             }
         }
@@ -10854,7 +10885,7 @@
 
         function startClientRealtimeSync() {
             if (clientSyncTimer) clearInterval(clientSyncTimer);
-            clientSyncTimer = setInterval(syncClientSelectionsSilently, 2500); // Deteksi super cepat tiap 2.5 detik
+            clientSyncTimer = setInterval(syncClientSelectionsSilently, 20000); // Heartbeat stabil tiap 20 detik (ringan & cepat)
         }
 
         // Pendeteksi Klien Keluar / Pindah Aplikasi / Tab Fokus (HP & PC)
