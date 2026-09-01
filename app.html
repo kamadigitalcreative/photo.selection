@@ -9093,6 +9093,8 @@
             if (projectData.statusClient === 'Selesai' || projectData.statusClient === 'Menunggu Konfirmasi Pembayaran') {
                 hasClientSubmitted = true;
                 setTimeout(updateGalleryLock, 500); // Ensure grid is locked after render
+            } else {
+                hasClientSubmitted = false;
             }
         }
 
@@ -9545,6 +9547,8 @@
         }
 
         function saveCurrentNote() {
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
+            if (isSubmitted) return;
             var val = document.getElementById('viewerNoteInput').value;
             if (!window.viewerActiveList || window.currentViewerIndex === undefined) return;
             var activeImg = window.viewerActiveList[window.currentViewerIndex];
@@ -9682,6 +9686,10 @@
                         btnText = isSelected
                             ? '<i class="fa-solid fa-check mr-1.5"></i> ' + (isEn ? 'Deselect' : 'Batal')
                             : '<i class="fa-solid fa-cloud-arrow-down mr-1.5"></i> ' + (isEn ? 'Select' : 'Pilih Unduh');
+                    } else if (hasClientSubmitted) {
+                        btnText = isSelected
+                            ? '<i class="fa-solid fa-check mr-2"></i> ' + (isEn ? 'Selected (Locked)' : 'Terpilih (Terkunci)')
+                            : '<i class="fa-solid fa-lock mr-2"></i> ' + (isEn ? 'Locked' : 'Terkunci');
                     } else {
                         btnText = isSelected
                             ? '<i class="fa-solid fa-check mr-2"></i> ' + (isEn ? 'Deselect' : 'Batal')
@@ -10066,6 +10074,17 @@
         }
 
         function resetSelection() {
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
+            if (isSubmitted || (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran'))) {
+                var isEn = localStorage.getItem('ps_lang') === 'en';
+                Swal.fire({
+                    icon: 'info',
+                    title: isEn ? 'Gallery Locked' : 'Galeri Terkunci',
+                    text: isEn ? 'You have completed the selection process or are awaiting payment confirmation. Selections cannot be reset without photographer approval.' : 'Anda telah selesai memilih foto atau sedang menunggu konfirmasi pembayaran. Pilihan tidak dapat di-reset tanpa persetujuan fotografer.',
+                    confirmButtonColor: '#1e1e2d'
+                });
+                return;
+            }
             if (clientState.selectedImages.length === 0) return;
             Swal.fire({ title: 'Reset Pilihan?', text: 'Semua foto yang telah Anda pilih dari seluruh folder akan dihapus.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Reset' }).then(function (result) {
                 if (result.isConfirmed) {
@@ -10189,18 +10208,10 @@
 
         function updateGalleryLock() {
             if (hasClientSubmitted) {
-                var grid = document.getElementById('photo-grid');
-                if (grid) {
-                    grid.style.pointerEvents = 'none';
-                    grid.style.opacity = '0.7';
-                }
-                var selectAllCheckbox = document.getElementById('selectAllCheckbox');
-                if (selectAllCheckbox) selectAllCheckbox.disabled = true;
-
-                var btnSubmit = document.getElementById('btnSubmitClient');
-                if (btnSubmit) {
-                    btnSubmit.innerHTML = '<i class="fa-solid fa-lock mr-2"></i> Terkunci';
-                    btnSubmit.classList.add('opacity-50', 'cursor-not-allowed');
+                var isEn = localStorage.getItem('ps_lang') === 'en';
+                var subtitle = document.getElementById('gallery-subtitle');
+                if (subtitle && clientState.galleryMode !== 'download') {
+                    subtitle.innerHTML = '<span class="text-green-600 font-bold"><i class="fa-solid fa-lock mr-1"></i> ' + (isEn ? 'Status: Completed (Locked)' : 'Status: Selesai (Terkunci)') + '</span>';
                 }
             }
         }
@@ -11166,10 +11177,25 @@
                 if (modeSelection) modeSelection.classList.remove('hidden');
                 if (modeDownload) modeDownload.classList.add('hidden');
                 if (subtitle) subtitle.classList.remove('hidden');
+
+                if (hasClientSubmitted) {
+                    var isEn = localStorage.getItem('ps_lang') === 'en';
+                    setTimeout(function () {
+                        Swal.fire({
+                            icon: 'info',
+                            title: isEn ? 'Gallery Locked' : 'Galeri Terkunci',
+                            text: isEn ? 'You have completed the photo selection process or are awaiting payment confirmation. You can view your selected photos using the Preview button.' : 'Anda telah selesai memilih foto atau sedang menunggu konfirmasi pembayaran. Anda tetap dapat melihat foto pilihan Anda melalui tombol Preview.',
+                            confirmButtonColor: '#1e1e2d'
+                        });
+                    }, 400);
+                }
             }
 
             fetchClientContent(clientState.currentFolderId, clientState.currentFolderName);
             updateClientCounterUI();
+            if (hasClientSubmitted) {
+                updateGalleryLock();
+            }
         }
 
         function toggleSelectAllClient() {
