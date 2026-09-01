@@ -2,12 +2,13 @@ export default async function handler(req, res) {
   const allowedOrigin = 'https://ps.kamacreative.my.id';
   const origin = req.headers.origin;
 
-  // --- SECURITY PATCH: Strict CORS & VERCEL PREVIEW SUPPORT ---
+  // --- SECURITY PATCH: Strict CORS, Mayar Webhook & VERCEL PREVIEW SUPPORT ---
   const isLocal = origin === 'http://localhost:3000' || origin === 'http://localhost:5500';
   const isVercelPreview = origin && origin.endsWith('.vercel.app');
+  const isMayar = origin && (origin.includes('mayar.id') || origin.includes('myr.id'));
 
-  if (!origin || origin === allowedOrigin || isLocal || isVercelPreview) {
-    res.setHeader('Access-Control-Allow-Origin', origin || allowedOrigin);
+  if (!origin || origin === allowedOrigin || isLocal || isVercelPreview || isMayar) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
   } else {
     return res.status(403).json({ error: 'Akses ditolak: Beda Domain' });
   }
@@ -19,7 +20,16 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Metode tidak diizinkan' });
 
   try {
-    if (!req.body || Object.keys(req.body).length === 0 || !req.body.action) {
+    // Deteksi jika payload berasal dari Webhook Mayar (tidak memiliki field 'action')
+    const isWebhook = req.body && (
+      req.body.event || 
+      req.body.data || 
+      req.body.payment_id || 
+      req.body.transaction_id || 
+      req.body.invoice_id
+    );
+
+    if (!req.body || Object.keys(req.body).length === 0 || (!req.body.action && !isWebhook)) {
       return res.status(400).json({ error: 'Bad Request: Payload tidak valid' });
     }
 
@@ -38,8 +48,9 @@ export default async function handler(req, res) {
     });
 
     const data = await gasResponse.json();
-    return res.status(200).json(data);
+    return res.status(gasResponse.ok ? 200 : gasResponse.status || 500).json(data);
   } catch (error) {
-    return res.status(500).json({ error: 'Internal Server Error' });
+    console.error("Bridge proxy error:", error);
+    return res.status(500).json({ status: 'error', message: 'Koneksi ke server terganggu: ' + (error.message || String(error)), error: error.message || String(error) });
   }
 }
