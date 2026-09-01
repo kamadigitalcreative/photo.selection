@@ -9035,13 +9035,32 @@
             clientState.bankAccount = projectData.bankAccount || '';
             clientState.bankAccountName = projectData.bankAccountName || '';
             clientState.statusClient = projectData.statusClient || 'Belum Memilih';
+            clientState.backupUrl = projectData.backupDrive || '';
 
-            // LOAD PILIHAN LAMA DARI DATABASE (AUTO-RESUME)
+            // LOAD PILIHAN LAMA DARI DATABASE & LOCAL STORAGE (MULTI-LAYER AUTO-RESUME)
             clientState.selectedImages = parseSelectedPhotosList(projectData.selectedFiles);
             try {
                 clientState.notes = JSON.parse(projectData.notes || "{}");
             } catch (e) {
                 clientState.notes = {};
+            }
+
+            // AUTO-RECOVER DARI MEMORI BROWSER JIKA CLIENT ME-REFRESH HALAMAN
+            if (clientState.token) {
+                try {
+                    var localSaved = localStorage.getItem('ps_client_selected_' + clientState.token);
+                    if (localSaved) {
+                        var localList = parseSelectedPhotosList(localSaved);
+                        if (localList && localList.length > clientState.selectedImages.length) {
+                            clientState.selectedImages = localList;
+                        }
+                    }
+                    var localNotes = localStorage.getItem('ps_client_notes_' + clientState.token);
+                    if (localNotes) {
+                        var parsedNotes = JSON.parse(localNotes);
+                        clientState.notes = Object.assign({}, parsedNotes, clientState.notes);
+                    }
+                } catch (errRec) {}
             }
 
             clientState.folderHistory = [];
@@ -9689,6 +9708,14 @@
                     clientState.notes[fileId] = val;
                 }
             }
+
+            if (clientState.token) {
+                try { localStorage.setItem('ps_client_notes_' + clientState.token, JSON.stringify(clientState.notes)); } catch(e) {}
+            }
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
+            if (!isSubmitted && clientState.galleryMode !== 'download') {
+                pingClientStatus('Sedang Memilih');
+            }
         }
 
         function renderClientGallery() {
@@ -9939,6 +9966,9 @@
                 clientState.selectedImages.splice(index, 1);
                 if (cardElement && cardElement.classList) cardElement.classList.remove('selected');
                 if (btnPilih && clientState.galleryMode !== 'download') btnPilih.innerHTML = '<i class="fa-regular fa-square-check mr-2"></i> ' + (isEn ? 'Select' : 'Pilih');
+                if (clientState.token) {
+                    try { localStorage.setItem('ps_client_selected_' + clientState.token, JSON.stringify(clientState.selectedImages)); } catch(e) {}
+                }
             }
             updateClientCounterUI();
 
@@ -9987,6 +10017,9 @@
 
         function performSelectionData(cardElement, filename, url, category, btnPilih, isEn) {
             clientState.selectedImages.push({ name: filename, folder: clientState.currentFolderName, url: url, category: category });
+            if (clientState.token) {
+                try { localStorage.setItem('ps_client_selected_' + clientState.token, JSON.stringify(clientState.selectedImages)); } catch(e) {}
+            }
             if (cardElement && cardElement.classList) cardElement.classList.add('selected');
             if (btnPilih && clientState.galleryMode !== 'download') btnPilih.innerHTML = '<i class="fa-solid fa-check mr-2"></i> ' + (isEn ? 'Deselect' : 'Batal');
             updateClientCounterUI();
@@ -10228,6 +10261,7 @@
             var isEn = (localStorage.getItem('ps_lang') === 'en');
             var extraCount = clientState.selectedImages.length - clientState.maxFoto;
             var text = "";
+            var driveUrl = backupUrl || clientState.backupUrl || '';
 
             if (isEn) {
                 text += "✨ *PHOTO SELECTION COMPLETED*\n\n";
@@ -10244,8 +10278,8 @@
                 } else {
                     text += "• Selected: " + clientState.selectedImages.length + " / " + clientState.maxFoto + " Photos\n";
                 }
-                if (backupUrl) {
-                    text += "• Photo List & Notes (Drive):\n" + backupUrl + "\n";
+                if (driveUrl) {
+                    text += "• Photo List & Notes (Drive):\n" + driveUrl + "\n";
                 }
                 text += "\nPlease verify in Photo Selector Dashboard. Thank you! 🙏";
             } else {
@@ -10263,8 +10297,8 @@
                 } else {
                     text += "• Terpilih: " + clientState.selectedImages.length + " / " + clientState.maxFoto + " Foto\n";
                 }
-                if (backupUrl) {
-                    text += "• File Daftar & Catatan (Drive):\n" + backupUrl + "\n";
+                if (driveUrl) {
+                    text += "• File Daftar & Catatan (Drive):\n" + driveUrl + "\n";
                 }
                 text += "\nMohon dicek pada Dashboard Photo Selector. Terima kasih! 🙏";
             }
@@ -10288,6 +10322,7 @@
                 var pingRes = await pingClientStatus(targetStatus, proofUrl);
                 if (pingRes && pingRes.data && pingRes.data.backupUrl) {
                     backupUrl = pingRes.data.backupUrl;
+                    clientState.backupUrl = backupUrl;
                 }
             } catch (e) {}
 
@@ -10314,6 +10349,7 @@
                 var pingRes = await pingClientStatus(targetStatus, proofUrl);
                 if (pingRes && pingRes.data && pingRes.data.backupUrl) {
                     backupUrl = pingRes.data.backupUrl;
+                    clientState.backupUrl = backupUrl;
                 }
             } catch (e) {}
 
