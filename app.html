@@ -7293,13 +7293,103 @@
             doCopyText(textToCopy, 'Pesan link klien berhasil disalin.');
         }
 
+        // --- PARSER UNIVERSAL DAFTAR PILIHAN FOTO ---
+        function parseSelectedPhotosList(rawInput) {
+            if (!rawInput) return [];
+            var list = [];
+
+            if (Array.isArray(rawInput)) {
+                list = rawInput;
+            } else if (typeof rawInput === 'object' && rawInput !== null) {
+                list = [rawInput];
+            } else if (typeof rawInput === 'string') {
+                var trimmed = rawInput.trim();
+                if (trimmed === "" || trimmed === "[]" || trimmed === "null" || trimmed === "{}") return [];
+
+                try {
+                    var decompressed = trimmed
+                        .replace(/lh3::/g, "https://lh3.googleusercontent.com/d/")
+                        .replace(/::w1/g, "=w1000");
+                    list = JSON.parse(decompressed);
+                } catch (e) {
+                    try {
+                        var fixedStr = trimmed;
+                        if (fixedStr.startsWith('[') && !fixedStr.endsWith(']')) {
+                            var lastObj = fixedStr.lastIndexOf('}');
+                            if (lastObj !== -1) {
+                                fixedStr = fixedStr.substring(0, lastObj + 1) + ']';
+                                list = JSON.parse(fixedStr);
+                            }
+                        }
+                    } catch (e2) {
+                        var lines = trimmed.split(/[\r\n,]+/);
+                        lines.forEach(function (l) {
+                            var clean = l.replace(/^["'\[\]\s]+|["'\[\]\s]+$/g, '').trim();
+                            if (clean && clean.length > 0 && !clean.startsWith('{') && !clean.startsWith('}')) {
+                                list.push({ name: clean });
+                            }
+                        });
+                    }
+                }
+            }
+
+            if (!Array.isArray(list)) {
+                if (typeof list === 'object' && list !== null) list = [list];
+                else return [];
+            }
+
+            return list.map(function (item) {
+                if (!item) return null;
+                if (typeof item === 'string') {
+                    return { name: item, folder: '', url: 'https://placehold.co/400x400?text=' + encodeURIComponent(item), category: '' };
+                }
+                var name = item.name || item.n || item.filename || item.fileName || (Array.isArray(item) ? item[0] : '') || '';
+                var folder = item.folder || item.f || (Array.isArray(item) ? item[1] : '') || '';
+                var rawUrl = item.url || item.u || item.id || (Array.isArray(item) ? item[2] : '') || '';
+                var category = item.category || item.c || item.kategori || (Array.isArray(item) ? item[3] : '') || '';
+
+                var url = rawUrl;
+                if (url) {
+                    url = url.replace(/lh3::/g, "https://lh3.googleusercontent.com/d/").replace(/::w1/g, "=w1000");
+                    if (!url.startsWith('http') && !url.startsWith('data:') && !url.startsWith('blob:') && url.length >= 20) {
+                        url = "https://lh3.googleusercontent.com/d/" + url + "=w1000";
+                    }
+                }
+                if (!url && name) {
+                    url = 'https://placehold.co/400x400?text=' + encodeURIComponent(name);
+                }
+
+                return {
+                    name: name,
+                    folder: folder,
+                    url: url,
+                    category: category
+                };
+            }).filter(function (item) {
+                return item && item.name && item.name.trim() !== '';
+            });
+        }
+
         function previewClientSelection(projectId) {
             if (!window.lastProjectsData) return;
             var project = window.lastProjectsData.find(function (p) { return p.ID === projectId; });
             if (!project) return;
 
             var listJson = project['Daftar Pilihan'];
-            if (!listJson || listJson === "" || listJson === "[]") {
+            var list = parseSelectedPhotosList(listJson);
+
+            if (list.length === 0) {
+                var fotoTerpilihCount = parseInt(project['Foto Terpilih']) || 0;
+                if (fotoTerpilihCount > 0) {
+                    Swal.fire({ 
+                        title: 'Data Pilihan Belum Sinkron', 
+                        html: `Tercatat klien telah memilih <b>${fotoTerpilihCount} foto</b>, namun daftar rincian file foto belum sempat tersimpan ke database Google Sheets (terjadi saat jaringan klien terputus sebelum klik Selesai).<br><br>Silakan hubungi klien untuk membuka link galeri dan menekan tombol <b>Kirim / Selesai</b> untuk menyinkronkan daftar foto.`, 
+                        icon: 'info', 
+                        confirmButtonColor: '#4f46e5' 
+                    });
+                    return;
+                }
+
                 Swal.fire({ 
                     title: 'Belum Ada Foto', 
                     text: 'Klien belum memilih foto apapun pada project ini.', 
@@ -7308,18 +7398,8 @@
                 });
                 return;
             }
-            try {
-                var list = typeof listJson === 'string' ? JSON.parse(listJson) : listJson;
-                if (!list || !Array.isArray(list) || list.length === 0) {
-                    Swal.fire({ 
-                        title: 'Belum Ada Foto', 
-                        text: 'Klien belum memilih foto apapun pada project ini.', 
-                        icon: 'info', 
-                        confirmButtonColor: '#4f46e5' 
-                    });
-                    return;
-                }
 
+            try {
                 var clientName = project['Nama Client'] || 'Klien';
                 var modal = document.getElementById('photographerPreviewModal');
                 if (!modal) {
@@ -7490,27 +7570,23 @@
             var project = window.lastProjectsData.find(function (p) { return p.ID === projectId; });
             if (!project) return;
             var listJson = project['Daftar Pilihan'];
-            if (!listJson || listJson === "") {
+            var list = parseSelectedPhotosList(listJson);
+            if (!list || list.length === 0) {
                 Swal.fire({ title: 'Kosong', text: 'Klien belum memilih foto apapun.', icon: 'info' });
                 return;
             }
-            try {
-                var list = JSON.parse(listJson);
-                if (!list || list.length === 0) return;
-                var fileNames = list.map(function (item) {
-                    var name = item.name || '';
-                    return name; // Don't remove extension to keep standard sorting matching
-                }).filter(Boolean);
+            var fileNames = list.map(function (item) {
+                return item.name || '';
+            }).filter(Boolean);
 
-                openSortirLokal();
-                setTimeout(function () {
-                    var el = document.getElementById('targetNames');
-                    if (el) {
-                        el.value = fileNames.join('\n');
-                        if (typeof updateLineCount === 'function') updateLineCount();
-                    }
-                }, 100);
-            } catch (e) { }
+            openSortirLokal();
+            setTimeout(function () {
+                var el = document.getElementById('targetNames');
+                if (el) {
+                    el.value = fileNames.join('\n');
+                    if (typeof updateLineCount === 'function') updateLineCount();
+                }
+            }, 100);
         }
 
         async function reopenProject(projectId, currentMax, totalSelected) {
@@ -8947,11 +9023,7 @@
             clientState.bankAccountName = projectData.bankAccountName || '';
 
             // LOAD PILIHAN LAMA DARI DATABASE (AUTO-RESUME)
-            try {
-                clientState.selectedImages = JSON.parse(projectData.selectedFiles || "[]");
-            } catch (e) {
-                clientState.selectedImages = [];
-            }
+            clientState.selectedImages = parseSelectedPhotosList(projectData.selectedFiles);
             try {
                 clientState.notes = JSON.parse(projectData.notes || "{}");
             } catch (e) {
@@ -10302,6 +10374,22 @@
 
         function pingClientStatus(status, proofUrl = '') {
             if (!clientState.token) return;
+
+            // Optimasi kompresi data foto agar hemat bandwidth & tidak menabrak batas karakter database
+            var compactList = (clientState.selectedImages || []).map(function (img) {
+                var u = img.url || '';
+                var m = u.match(/https:\/\/lh3\.googleusercontent\.com\/d\/([-\w]+)/);
+                if (m && m[1]) {
+                    u = m[1];
+                }
+                return {
+                    n: img.name || '',
+                    f: img.folder || '',
+                    u: u,
+                    c: img.category || ''
+                };
+            });
+
             fetch(API_ENDPOINT, {
                 method: 'POST',
                 keepalive: true, // WAJIB: Memaksa sinyal tetap jalan walau tab di-close
@@ -10311,7 +10399,7 @@
                     token: clientState.token,
                     status: status,
                     selectedCount: clientState.selectedImages.length,
-                    selectedFiles: JSON.stringify(clientState.selectedImages), // KIRIM DAFTAR FOTO LENGKAP
+                    selectedFiles: JSON.stringify(compactList),
                     notes: JSON.stringify(clientState.notes || {}),
                     paymentProof: proofUrl
                 })
