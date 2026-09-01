@@ -10081,12 +10081,22 @@
             }
             updateClientCounterUI();
 
-            // --- FIX PC/LAPTOP: Tembak status tiap kali foto dipilih/dihapus ---
+            // Antrian simpan otomatis (Debounce 400ms) - Mencegah bentrok jaringan saat klik cepat
             var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
-            // CEGAH KEBOCORAN DATA: Jangan simpan pilihan ke database jika sedang Mode Download
             if (!isSubmitted && clientState.galleryMode !== 'download') {
-                pingClientStatus('Sedang Memilih');
+                queueSaveSelections();
             }
+        }
+
+        var saveSelectionTimer = null;
+        function queueSaveSelections() {
+            if (saveSelectionTimer) clearTimeout(saveSelectionTimer);
+            saveSelectionTimer = setTimeout(function () {
+                var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
+                if (!isSubmitted && clientState.galleryMode !== 'download') {
+                    pingClientStatus('Sedang Memilih', '', true);
+                }
+            }, 400);
         }
 
         // BGM Toggle Function
@@ -10134,7 +10144,7 @@
             updateClientCounterUI();
             var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
             if (!isSubmitted && clientState.galleryMode !== 'download') {
-                pingClientStatus('Sedang Memilih');
+                queueSaveSelections();
             }
         }
 
@@ -10785,56 +10795,42 @@
             
             isClientSyncing = true;
             try {
+                // Heartbeat cepat & cek pengambilalihan sesi ke server
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'getProjectForClient', token: clientState.token })
+                    body: JSON.stringify({ 
+                        action: 'updateClientStatus', 
+                        token: clientState.token, 
+                        sessionId: clientSessionId,
+                        status: 'Sedang Memilih'
+                    })
                 });
                 const res = await response.json();
-                if (res && res.status === 'success' && res.data && res.data.project) {
-                    var serverProj = res.data.project;
-                    var serverSelected = parseSelectedPhotosList(serverProj.selectedFiles);
-                    
-                    // PENGGABUNGAN PINTAR (SMART MERGE): Menghindari foto hilang saat 2 HP memilih bersamaan
-                    var mergedMap = new Map();
-                    serverSelected.forEach(function(img) {
-                        var key = img.name + '___' + (img.folder || '');
-                        mergedMap.set(key, img);
+                
+                // Deteksi Instan: Sesi diambil alih oleh perangkat lain!
+                if (res && res.data && res.data.sessionTakenOver) {
+                    var isEn = (localStorage.getItem('ps_lang') === 'en');
+                    if (clientSyncTimer) clearInterval(clientSyncTimer);
+                    Swal.fire({
+                        icon: 'info',
+                        title: isEn ? 'Session Transferred 🔒' : 'Sesi Telah Dipindahkan 🔒',
+                        html: `
+                            <div class="text-xs sm:text-sm text-gray-600 mb-3 text-left leading-relaxed">
+                                ${isEn 
+                                    ? 'This photo gallery has been opened and taken over by another device. This page has been paused to prevent selection conflicts.' 
+                                    : 'Galeri foto ini telah dibuka dan dipindahkan ke perangkat lain. Halaman pada perangkat ini dinonaktifkan agar pilihan foto Anda tetap sinkron dan tidak tumpang tindih.'}
+                            </div>
+                        `,
+                        allowOutsideClick: false,
+                        showConfirmButton: true,
+                        confirmButtonText: isEn ? 'Reopen on This Device' : 'Buka Kembali di Sini',
+                        confirmButtonColor: '#2563eb'
+                    }).then((r) => {
+                        if (r.isConfirmed) {
+                            initClientApp(true);
+                        }
                     });
-
-                    var isDifferent = false;
-                    if (serverSelected.length !== clientState.selectedImages.length) {
-                        isDifferent = true;
-                    } else {
-                        for (var i = 0; i < serverSelected.length; i++) {
-                            if (!clientState.selectedImages.some(function(local) { return local.name === serverSelected[i].name && local.folder === serverSelected[i].folder; })) {
-                                isDifferent = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (isDifferent) {
-                        clientState.selectedImages = serverSelected;
-                        try {
-                            localStorage.setItem('ps_client_selected_' + clientState.token, JSON.stringify(clientState.selectedImages));
-                        } catch(e) {}
-                        try {
-                            clientState.notes = JSON.parse(serverProj.notes || "{}");
-                            localStorage.setItem('ps_client_notes_' + clientState.token, JSON.stringify(clientState.notes));
-                        } catch(e) {}
-                        
-                        refreshCardSelectionUI();
-                    }
-
-                    if (serverProj.statusClient === 'Selesai' || serverProj.statusClient === 'Menunggu Konfirmasi Pembayaran') {
-                        if (!hasClientSubmitted) {
-                            hasClientSubmitted = true;
-                            clientState.statusClient = serverProj.statusClient;
-                            updateGalleryLock();
-                            refreshCardSelectionUI();
-                        }
-                    }
                 }
             } catch (err) {
                 // Abaikan kesalahan jaringan sementara
@@ -10845,7 +10841,7 @@
 
         function startClientRealtimeSync() {
             if (clientSyncTimer) clearInterval(clientSyncTimer);
-            clientSyncTimer = setInterval(syncClientSelectionsSilently, 8000); // Polling deteksi sesi tiap 8 detik
+            clientSyncTimer = setInterval(syncClientSelectionsSilently, 2500); // Deteksi super cepat tiap 2.5 detik
         }
 
         // Pendeteksi Klien Keluar / Pindah Aplikasi / Tab Fokus (HP & PC)
