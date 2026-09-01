@@ -44,10 +44,23 @@ export default async function handler(req, res) {
     const gasResponse = await fetch(GAS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(securePayload)
+      body: JSON.stringify(securePayload),
+      redirect: 'follow'
     });
 
-    const data = await gasResponse.json();
+    const textResponse = await gasResponse.text();
+    let data;
+    try {
+      data = JSON.parse(textResponse);
+    } catch (parseErr) {
+      console.error("Non-JSON GAS response:", textResponse);
+      return res.status(502).json({
+        status: 'error',
+        message: 'Server sedang memperbarui sinkronisasi. Harap refresh halaman kembali.',
+        error: 'Non-JSON Response'
+      });
+    }
+
     return res.status(gasResponse.ok ? 200 : gasResponse.status || 500).json(data);
   } catch (error) {
     console.error("Bridge proxy error:", error);
