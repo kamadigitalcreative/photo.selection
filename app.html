@@ -4121,9 +4121,9 @@
             </div>
             <div id="action-selection-mode" class="controls flex gap-2 sm:gap-3">
                 <button id="btn-client-reset" onclick="resetSelection()"
-                    class="px-3 py-2 sm:px-4 sm:py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium flex items-center justify-center shadow-sm"
-                    title="Reset">
-                    <i class="fa-solid fa-rotate-left"></i> <span class="hidden sm:inline sm:ml-2">Reset</span>
+                    class="px-2.5 py-2 sm:px-4 sm:py-2.5 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl hover:bg-rose-100 active:scale-95 transition-all text-xs sm:text-sm font-bold flex items-center justify-center shadow-sm gap-1 sm:gap-1.5"
+                    title="Reset Pilihan">
+                    <i class="fa-regular fa-trash-can text-sm sm:text-base"></i> <span class="text-xs sm:text-sm">Reset</span>
                 </button>
                 <button id="btn-client-preview" onclick="showPreviewSelected()"
                     class="px-3 py-2 sm:px-4 sm:py-2.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors text-sm font-semibold flex items-center justify-center shadow-sm"
@@ -10359,11 +10359,23 @@
                 return;
             }
             if (clientState.selectedImages.length === 0) return;
-            Swal.fire({ title: 'Reset Pilihan?', text: 'Semua foto yang telah Anda pilih dari seluruh folder akan dihapus.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Reset' }).then(function (result) {
+            var isEn = localStorage.getItem('ps_lang') === 'en';
+            Swal.fire({ 
+                title: isEn ? 'Reset Selections?' : 'Reset Semua Pilihan?', 
+                text: isEn ? 'All photos you have selected across all folders will be cleared.' : 'Semua foto yang telah Anda pilih dari seluruh folder akan dihapus.', 
+                icon: 'warning', 
+                showCancelButton: true, 
+                confirmButtonColor: '#ef4444', 
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: isEn ? 'Yes, Reset' : 'Ya, Reset',
+                cancelButtonText: isEn ? 'Cancel' : 'Batal'
+            }).then(function (result) {
                 if (result.isConfirmed) {
                     clientState.selectedImages = [];
+                    if (clientState.token) {
+                        try { localStorage.removeItem('ps_client_selected_' + clientState.token); } catch(e) {}
+                    }
                     var cards = document.querySelectorAll('.photo-card.selected');
-                    var isEn = localStorage.getItem('ps_lang') === 'en';
                     for (var i = 0; i < cards.length; i++) {
                         if (cards[i] && cards[i].classList) {
                             cards[i].classList.remove('selected');
@@ -10372,6 +10384,7 @@
                         }
                     }
                     updateClientCounterUI();
+                    queueSaveSelections();
                 }
             });
         }
