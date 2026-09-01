@@ -9253,8 +9253,8 @@
                 const res = await response.json();
                 endLoading();
 
-                if (res.status === 'success') {
-                    clientState.currentContent = { folders: res.data.folders, images: res.data.images };
+                if (res.status === 'success' && res.data) {
+                    clientState.currentContent = { folders: res.data.folders || [], images: res.data.images || [] };
                     renderClientGallery();
                     var isSubmitted = (typeof hasClientSubmitted !== 'undefined' && hasClientSubmitted) || 
                                       (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran'));
@@ -9262,7 +9262,12 @@
                         pingClientStatus('Sedang Memilih');
                     }
                 } else {
-                    Swal.fire('Error', res.message, 'error');
+                    var errorMsg = res.message || res.error || (res.data ? res.data.message : '') || 'Gagal memuat isi folder Google Drive.';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Memuat Galeri',
+                        text: errorMsg
+                    });
                     var emptyState = document.getElementById('gallery-empty');
                     if (emptyState) emptyState.classList.remove('hidden');
                 }
@@ -9271,7 +9276,11 @@
                 endLoading();
                 var emptyState = document.getElementById('gallery-empty');
                 if (emptyState) emptyState.classList.remove('hidden');
-                Swal.fire('Error', err.message || 'Gagal menghubungi server.', 'error');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Koneksi Terputus',
+                    text: err.message || 'Gagal menghubungi server cloud.'
+                });
             }
         }
 
