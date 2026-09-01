@@ -9028,12 +9028,12 @@
                     if (res.data.success && res.data.project) {
                         processClientProjectData(res.data.project);
                     } else {
-                        var errorMsg = res.message || (res.data ? res.data.message : '') || 'Link galeri tidak dapat diakses.';
-                        Swal.fire({ icon: 'error', title: 'Akses Ditolak', text: errorMsg, allowOutsideClick: false });
+                        var errorMsg = (res.data ? res.data.message : '') || res.message || 'Link galeri tidak dapat diakses.';
+                        Swal.fire({ icon: 'error', title: 'Gagal Memuat Galeri', text: errorMsg, allowOutsideClick: false });
                     }
                 } else {
                     var errorMsg = (res && (res.message || (res.data ? res.data.message : ''))) || 'Link galeri tidak dapat diakses.';
-                    Swal.fire({ icon: 'error', title: 'Akses Ditolak', text: errorMsg, allowOutsideClick: false });
+                    Swal.fire({ icon: 'error', title: 'Gagal Memuat Galeri', text: errorMsg, allowOutsideClick: false });
                 }
             } catch (err) {
                 endLoading();
