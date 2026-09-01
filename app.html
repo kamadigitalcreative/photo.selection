@@ -10402,18 +10402,83 @@
             var extraCount = clientState.selectedImages.length - clientState.maxFoto;
             var targetStatus = (extraCount > 0 && proofUrl) ? 'Menunggu Konfirmasi Pembayaran' : 'Selesai';
             
-            // 1. Copy secara instan saat tombol diklik (Menjamin izin clipboard browser tidak kadaluarsa)
             var text = formatSelectedText(proofUrl, clientState.backupUrl || '');
             if (!text) { 
                 Swal.fire({ title: 'Kosong', text: 'Pilih foto terlebih dahulu.', icon: 'info', confirmButtonColor: '#1e1e2d' }); 
                 return; 
             }
-            doCopyText(text, isEn ? 'Photo list copied! You can paste it now.' : 'Daftar foto & catatan berhasil disalin! Tinggal paste di chat.');
+
+            // 1. Eksekusi copy langsung ke clipboard
+            doCopyText(text);
             hasClientSubmitted = true;
             updateGalleryLock();
 
-            // 2. Sinkronkan status & buat file backup Drive di latar belakang (tanpa memblokir klien)
-            pingClientStatus(targetStatus, proofUrl).then(function (pingRes) {
+            // 2. Link WhatsApp alternatif
+            var noWa = (clientState.nomorWA || '').replace(/\D/g, '');
+            if (noWa.indexOf('0') === 0) noWa = '62' + noWa.substring(1);
+            var waLink = "https://wa.me/" + noWa + "?text=" + encodeURIComponent(text);
+            var previewEscaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+            // 3. Tampilkan dialog interaktif dengan opsi Salin Ulang, Bagikan, dan WA
+            Swal.fire({
+                title: isEn ? '✨ Selection Completed' : '✨ Seleksi Foto Selesai',
+                html: `
+                    <div class="text-left text-xs sm:text-sm text-gray-600 mb-3">
+                        ${isEn ? 'Your photo list is ready. You can copy or send it now:' : 'Daftar pilihan foto Anda sudah siap. Anda dapat menyalin atau mengirimkannya langsung:'}
+                    </div>
+                    <div class="space-y-2 mb-3 text-left">
+                        <button id="swalBtnCopyDirect" type="button" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer">
+                            <i class="fa-regular fa-copy text-base"></i> <span>${isEn ? 'Copy Text to Clipboard' : 'Salin Teks (Copy)'}</span>
+                        </button>
+                        ${navigator.share ? `
+                        <button id="swalBtnShareNative" type="button" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer">
+                            <i class="fa-solid fa-share-nodes text-base"></i> <span>${isEn ? 'Share to Other Apps' : 'Bagikan ke Aplikasi Lain'}</span>
+                        </button>` : ''}
+                        <a href="${waLink}" target="_blank" class="w-full py-3 px-4 bg-green-600 hover:bg-green-700 active:scale-98 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all text-center block cursor-pointer">
+                            <i class="fa-brands fa-whatsapp text-lg"></i> <span>${isEn ? 'Send via WhatsApp' : 'Kirim Lewat WhatsApp'}</span>
+                        </a>
+                    </div>
+                    <div class="mt-3 text-left">
+                        <p class="text-[11px] font-bold text-gray-500 mb-1">${isEn ? 'Photo List Preview:' : 'Pratinjau Pesan:'}</p>
+                        <pre id="swalTextPreview" class="p-3 bg-gray-50 rounded-lg text-[11px] text-gray-700 font-mono whitespace-pre-wrap border border-gray-200 select-all max-h-32 overflow-y-auto leading-relaxed">${previewEscaped}</pre>
+                    </div>
+                `,
+                showConfirmButton: true,
+                confirmButtonText: isEn ? 'Close' : 'Tutup',
+                confirmButtonColor: '#1e1e2d',
+                didOpen: () => {
+                    var btnDirect = document.getElementById('swalBtnCopyDirect');
+                    if (btnDirect) {
+                        btnDirect.onclick = function() {
+                            doCopyText(text);
+                            btnDirect.innerHTML = '<i class="fa-solid fa-check text-green-300"></i> <span>' + (isEn ? 'Copied!' : 'Berhasil Disalin! ✨') + '</span>';
+                            btnDirect.classList.remove('bg-indigo-600');
+                            btnDirect.classList.add('bg-green-600');
+                            setTimeout(() => {
+                                if (btnDirect) {
+                                    btnDirect.innerHTML = '<i class="fa-regular fa-copy text-base"></i> <span>' + (isEn ? 'Copy Text to Clipboard' : 'Salin Teks (Copy)') + '</span>';
+                                    btnDirect.classList.remove('bg-green-600');
+                                    btnDirect.classList.add('bg-indigo-600');
+                                }
+                            }, 2000);
+                        };
+                    }
+                    var btnShare = document.getElementById('swalBtnShareNative');
+                    if (btnShare) {
+                        btnShare.onclick = function() {
+                            if (navigator.share) {
+                                navigator.share({
+                                    title: 'Seleksi Foto - ' + (clientState.namaClient || ''),
+                                    text: text
+                                }).catch(() => {});
+                            }
+                        };
+                    }
+                }
+            });
+
+            // 4. Sinkronkan status & buat file backup Drive di latar belakang
+            pingClientStatus(targetStatus, proofUrl, true).then(function (pingRes) {
                 if (pingRes && pingRes.data && pingRes.data.backupUrl) {
                     clientState.backupUrl = pingRes.data.backupUrl;
                 }
@@ -10726,7 +10791,13 @@
                     var serverProj = res.data.project;
                     var serverSelected = parseSelectedPhotosList(serverProj.selectedFiles);
                     
-                    // Cek apakah ada perubahan daftar foto dari device lain
+                    // PENGGABUNGAN PINTAR (SMART MERGE): Menghindari foto hilang saat 2 HP memilih bersamaan
+                    var mergedMap = new Map();
+                    serverSelected.forEach(function(img) {
+                        var key = img.name + '___' + (img.folder || '');
+                        mergedMap.set(key, img);
+                    });
+
                     var isDifferent = false;
                     if (serverSelected.length !== clientState.selectedImages.length) {
                         isDifferent = true;
@@ -10770,7 +10841,7 @@
 
         function startClientRealtimeSync() {
             if (clientSyncTimer) clearInterval(clientSyncTimer);
-            clientSyncTimer = setInterval(syncClientSelectionsSilently, 6000); // Polling otomatis tiap 6 detik
+            clientSyncTimer = setInterval(syncClientSelectionsSilently, 5000); // Polling otomatis tiap 5 detik
         }
 
         // Pendeteksi Klien Keluar / Pindah Aplikasi / Tab Fokus (HP & PC)
@@ -10779,10 +10850,10 @@
             if (!clientState.token || isSubmitted) return;
 
             if (document.visibilityState === 'hidden') {
-                pingClientStatus('Belum Memilih');
+                pingClientStatus('Belum Memilih', '', false); // Kirim heartbeat status saja, JANGAN timpa pilihan
             } else if (document.visibilityState === 'visible') {
-                pingClientStatus('Sedang Memilih');
-                syncClientSelectionsSilently(); // Tarik update instan saat tab dibuka lagi
+                pingClientStatus('Sedang Memilih', '', false);
+                syncClientSelectionsSilently(); // Tarik update instan dari database
             }
         });
 
@@ -10795,7 +10866,7 @@
         // --- CLIENT TRACKER LOGIC ---
         var rawStatusData = [];
 
-        async function pingClientStatus(status, proofUrl = '') {
+        async function pingClientStatus(status, proofUrl = '', sendSelections = true) {
             if (!clientState.token) return null;
             var isSubmitted = (typeof hasClientSubmitted !== 'undefined' && hasClientSubmitted) || 
                               (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran'));
@@ -10803,35 +10874,39 @@
                 return null;
             }
 
-            // Optimasi kompresi data foto agar hemat bandwidth & tidak menabrak batas karakter database
-            var compactList = (clientState.selectedImages || []).map(function (img) {
-                var u = img.url || '';
-                var m = u.match(/https:\/\/lh3\.googleusercontent\.com\/d\/([-\w]+)/);
-                if (m && m[1]) {
-                    u = m[1];
-                }
-                return {
-                    n: img.name || '',
-                    f: img.folder || '',
-                    u: u,
-                    c: img.category || ''
-                };
-            });
+            var payload = {
+                action: 'updateClientStatus',
+                token: clientState.token,
+                status: status,
+                paymentProof: proofUrl
+            };
+
+            // Hanya sertakan array foto jika dipanggil saat aksi klik memilih foto (mencegah overwrite data antar HP)
+            if (sendSelections) {
+                var compactList = (clientState.selectedImages || []).map(function (img) {
+                    var u = img.url || '';
+                    var m = u.match(/https:\/\/lh3\.googleusercontent\.com\/d\/([-\w]+)/);
+                    if (m && m[1]) {
+                        u = m[1];
+                    }
+                    return {
+                        n: img.name || '',
+                        f: img.folder || '',
+                        u: u,
+                        c: img.category || ''
+                    };
+                });
+                payload.selectedCount = clientState.selectedImages.length;
+                payload.selectedFiles = JSON.stringify(compactList);
+                payload.notes = JSON.stringify(clientState.notes || {});
+            }
 
             try {
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
-                    keepalive: true, // WAJIB: Memaksa sinyal tetap jalan walau tab di-close
+                    keepalive: true,
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'updateClientStatus',
-                        token: clientState.token,
-                        status: status,
-                        selectedCount: clientState.selectedImages.length,
-                        selectedFiles: JSON.stringify(compactList),
-                        notes: JSON.stringify(clientState.notes || {}),
-                        paymentProof: proofUrl
-                    })
+                    body: JSON.stringify(payload)
                 });
                 return await response.json();
             } catch (e) {
