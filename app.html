@@ -10273,25 +10273,27 @@
                     subtitle.innerHTML = '<span class="text-green-600 font-bold"><i class="fa-solid fa-lock mr-1"></i> ' + (isEn ? 'Status: Completed (Locked)' : 'Status: Selesai (Terkunci)') + '</span>';
                 }
 
-                // Sembunyikan tombol Reset, Copy, dan WA secara mutlak
+                // HANYA sembunyikan tombol Reset agar data pilihan aman
                 if (btnReset) {
                     btnReset.style.display = 'none';
                     btnReset.disabled = true;
                     btnReset.setAttribute('disabled', 'true');
                 }
+                // Tombol Copy dan WA tetap ditampilkan & aktif agar klien bisa menyalin/mengirim ulang kapan saja
                 if (btnCopy) {
-                    btnCopy.style.display = 'none';
-                    btnCopy.disabled = true;
+                    btnCopy.style.display = '';
+                    btnCopy.classList.remove('hidden');
+                    btnCopy.disabled = false;
                 }
                 if (btnWA) {
-                    btnWA.style.display = 'none';
-                    btnWA.disabled = true;
+                    btnWA.style.display = '';
+                    btnWA.classList.remove('hidden');
+                    btnWA.disabled = false;
                 }
 
-                // Ubah tombol Preview menjadi tombol utama untuk melihat foto yang telah dipilih
                 if (btnPreview) {
-                    btnPreview.className = "px-4 py-2 sm:px-6 sm:py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm font-semibold flex items-center justify-center shadow-md shadow-blue-500/20 flex-1 sm:flex-none";
-                    btnPreview.innerHTML = '<i class="fa-regular fa-images mr-2 text-lg"></i> <span>' + (isEn ? 'Preview Selected (' + clientState.selectedImages.length + ')' : 'Lihat Pilihan (' + clientState.selectedImages.length + ')') + '</span>';
+                    btnPreview.className = "px-3 py-2 sm:px-4 sm:py-2.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors text-sm font-semibold flex items-center justify-center shadow-sm";
+                    btnPreview.innerHTML = '<i class="fa-regular fa-images"></i> <span class="hidden sm:inline sm:ml-2">' + (isEn ? 'Preview' : 'Preview') + '</span>';
                 }
 
                 var container = document.getElementById('gallery-container');
