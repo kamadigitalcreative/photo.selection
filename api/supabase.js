@@ -338,7 +338,8 @@ async function handleUploadPaymentProof(payload, res) {
     const catboxRes = await fetch('https://catbox.moe/user/api.php', {
       method: 'POST',
       headers: {
-        'Content-Type': `multipart/form-data; boundary=${boundary}`
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       },
       body: bodyBuffer
     });
@@ -351,7 +352,7 @@ async function handleUploadPaymentProof(payload, res) {
     console.error('Catbox upload error:', e);
   }
 
-  return success(res, { success: true, url: base64Data });
+  return success(res, { success: true, url: null });
 }
 
 async function handlePingUser(payload, res) {
