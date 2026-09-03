@@ -5,9 +5,6 @@
 
 const crypto = require('crypto');
 
-const APPS_SCRIPT_URL = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbyEmwVAIAqYStTXWVFtrgyo5YOJoX4mm4T-EhO5aSoC65JItCNGVsy0neitEXEmH8jW/exec';
-const INTERNAL_SECRET_TOKEN = 'KamaCreative_SecureToken_9988776655';
-
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jqptagcbkyxxqqmxqusf.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_TL_Et1x8IlEwxKASjF0K8Q_t72R3f_9';
 const KAMA_SALT = "KamaSecretSalt";
@@ -314,45 +311,7 @@ async function handleSavePaymentSettings(payload, res) {
 }
 
 async function handleUploadPaymentProof(payload, res) {
-  const base64Data = payload.base64Data || '';
-  if (!base64Data) return error(res, 'File bukti transfer tidak ditemukan');
-
-  try {
-    const buffer = Buffer.from(base64Data, 'base64');
-    const filename = payload.filename || 'bukti_transfer.jpg';
-
-    const boundary = '----WebKitFormBoundary' + crypto.randomBytes(16).toString('hex');
-    const parts = [
-      `--${boundary}\r\nContent-Disposition: form-data; name="reqtype"\r\n\r\nfileupload\r\n`,
-      `--${boundary}\r\nContent-Disposition: form-data; name="fileToUpload"; filename="${filename}"\r\nContent-Type: image/jpeg\r\n\r\n`
-    ];
-    const footer = `\r\n--${boundary}--\r\n`;
-
-    const bodyBuffer = Buffer.concat([
-      Buffer.from(parts[0], 'utf8'),
-      Buffer.from(parts[1], 'utf8'),
-      buffer,
-      Buffer.from(footer, 'utf8')
-    ]);
-
-    const catboxRes = await fetch('https://catbox.moe/user/api.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': `multipart/form-data; boundary=${boundary}`,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      },
-      body: bodyBuffer
-    });
-
-    const catboxUrl = (await catboxRes.text()).trim();
-    if (catboxUrl && catboxUrl.startsWith('http')) {
-      return success(res, { success: true, url: catboxUrl });
-    }
-  } catch (e) {
-    console.error('Catbox upload error:', e);
-  }
-
-  return success(res, { success: true, url: null });
+  return success(res, { success: true });
 }
 
 async function handlePingUser(payload, res) {
