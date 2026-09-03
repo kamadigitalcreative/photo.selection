@@ -451,10 +451,16 @@ async function handleCreateProject(payload, res) {
   const user = payload.currentUser || d.currentUser || {};
   const username = user.username || d.username || payload.username || 'admin';
 
-  const token = crypto.randomBytes(6).toString('hex');
-  const clientName = d.namaClient || d.nama || d['Nama Client'] || 'Untitled Client';
   const baseSlug = clientName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'client';
-  const shortSlug = `${baseSlug}-${crypto.randomBytes(3).toString('hex')}`;
+  let shortSlug = baseSlug;
+  try {
+    const existing = await supabaseQuery(`projects?or=(Slug.eq.${encodeURIComponent(baseSlug)},"Short Slug".eq.${encodeURIComponent(baseSlug)})&select=id`);
+    if (existing && existing.length > 0) {
+      shortSlug = `${baseSlug}-${crypto.randomBytes(2).toString('hex')}`;
+    }
+  } catch (e) {
+    shortSlug = baseSlug;
+  }
   const shortLink = `https://ps.kamacreative.my.id/app?c=${shortSlug}`;
 
   let deadline = d.deadline || '';
