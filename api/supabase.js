@@ -5,6 +5,9 @@
 
 const crypto = require('crypto');
 
+const APPS_SCRIPT_URL = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbyEmwVAIAqYStTXWVFtrgyo5YOJoX4mm4T-EhO5aSoC65JItCNGVsy0neitEXEmH8jW/exec';
+const INTERNAL_SECRET_TOKEN = 'KamaCreative_SecureToken_9988776655';
+
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jqptagcbkyxxqqmxqusf.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_TL_Et1x8IlEwxKASjF0K8Q_t72R3f_9';
 const KAMA_SALT = "KamaSecretSalt";
@@ -641,15 +644,51 @@ async function handleUpdateClientStatus(payload, res) {
     updateBody['Payment Proof'] = payload.paymentProof;
   }
 
+  let existingBackupUrl = '';
+  // Jika status Selesai atau Menunggu Konfirmasi, buat file backup .txt di folder Google Drive fotografer
+  if (payload.status === 'Selesai' || payload.status === 'Menunggu Konfirmasi Pembayaran') {
+    try {
+      const projects = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)},"Short Slug".eq.${encodeURIComponent(token)})&select=*`);
+      if (projects && projects.length > 0) {
+        const p = projects[0];
+        existingBackupUrl = p['Backup Drive'] || '';
+
+        if (APPS_SCRIPT_URL) {
+          const clientName = p['Nama Client'] || payload.clientName || '';
+          const driveLink = p['Drive Link'] || '';
+          const selectedFiles = updateBody['Daftar Pilihan'] || p['Daftar Pilihan'] || '[]';
+          const notes = updateBody.Notes || p.Notes || '{}';
+
+          const gasRes = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'createBackupDriveFile',
+              secret_token: INTERNAL_SECRET_TOKEN,
+              clientName: clientName,
+              selectedFiles: selectedFiles,
+              notes: notes,
+              driveLink: driveLink
+            })
+          });
+          const gasData = await gasRes.json();
+          if (gasData && gasData.data && gasData.data.backupUrl) {
+            updateBody['Backup Drive'] = gasData.data.backupUrl;
+            existingBackupUrl = gasData.data.backupUrl;
+          }
+        }
+      }
+    } catch (gasErr) {
+      console.error('GAS Backup Drive Error:', gasErr);
+    }
+  }
+
   await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)},"Short Slug".eq.${encodeURIComponent(token)})`, {
     method: 'PATCH',
     body: updateBody
   });
 
-  const updatedRows = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)},"Short Slug".eq.${encodeURIComponent(token)})&select="Backup Drive"`);
-  const backupUrl = (updatedRows && updatedRows[0] && updatedRows[0]['Backup Drive']) ? updatedRows[0]['Backup Drive'] : '';
-
-  return success(res, { success: true, backupUrl: backupUrl });
+  return success(res, { success: true, backupUrl: updateBody['Backup Drive'] || existingBackupUrl || '' });
 }
 
 async function handleReleaseClientSession(payload, res) {
