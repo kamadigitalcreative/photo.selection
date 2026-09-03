@@ -7231,11 +7231,11 @@
                 var wmBtnClass = isWmOn ? "bg-green-50 text-green-600 border-green-200 hover:bg-green-100" : "bg-white text-gray-400 border-gray-200 hover:bg-gray-50 hover:text-gray-600";
                 var wmIcon = isWmOn ? "fa-droplet" : "fa-droplet-slash";
 
-                var proofUrl = row['Payment Proof'] || '#';
                 var paymentActions = statusClient === 'Menunggu Konfirmasi Pembayaran' ?
-                    '<button onclick="window.open(\'' + proofUrl + '\', \'_blank\')" class="text-amber-600 bg-amber-50 hover:bg-amber-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Lihat Bukti Transfer"><i class="fa-solid fa-file-invoice"></i></button>' +
                     '<button onclick="confirmClientPayment(\'' + row.ID + '\')" class="text-green-600 bg-green-50 hover:bg-green-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Konfirmasi Lunas"><i class="fa-solid fa-check-double"></i></button>' +
-                    '<button onclick="rejectClientPayment(\'' + row.ID + '\')" class="text-red-600 bg-red-50 hover:bg-red-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Tolak Pembayaran"><i class="fa-solid fa-ban"></i></button>'
+                    '<button onclick="rejectClientPayment(\'' + row.ID + '\')" class="text-red-600 bg-red-50 hover:bg-red-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Tolak Pembayaran"><i class="fa-solid fa-ban"></i></button>' +
+                    '<button onclick="previewClientSelection(\'' + row.ID + '\')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Preview Pilihan Client"><i class="fa-solid fa-eye"></i></button>' +
+                    '<button onclick="sortirLokalForProject(\'' + row.ID + '\')" class="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Sortir Lokal"><i class="fa-solid fa-folder-tree"></i></button>'
                     : '<button onclick="previewClientSelection(\'' + row.ID + '\')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Preview Pilihan Client"><i class="fa-solid fa-eye"></i></button>' +
                     '<button onclick="sortirLokalForProject(\'' + row.ID + '\')" class="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 w-8 h-8 flex items-center justify-center rounded-lg transition-colors" title="Sortir Lokal"><i class="fa-solid fa-folder-tree"></i></button>';
 
@@ -7263,7 +7263,6 @@
 
                 var btnClassGridBase = "flex-1 h-10 flex items-center justify-center rounded-xl transition-colors ";
                 var paymentActionsGrid = statusClient === 'Menunggu Konfirmasi Pembayaran' ?
-                    '<button onclick="window.open(\'' + proofUrl + '\', \'_blank\')" class="' + btnClassGridBase + 'text-amber-600 bg-amber-50 hover:bg-amber-100" title="Lihat Bukti Transfer"><i class="fa-solid fa-file-invoice"></i></button>' +
                     '<button onclick="confirmClientPayment(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-green-600 bg-green-50 hover:bg-green-100" title="Konfirmasi Lunas"><i class="fa-solid fa-check-double"></i></button>' +
                     '<button onclick="rejectClientPayment(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-red-600 bg-red-50 hover:bg-red-100" title="Tolak Pembayaran"><i class="fa-solid fa-ban"></i></button>'
                     : '<button onclick="previewClientSelection(\'' + row.ID + '\')" class="' + btnClassGridBase + 'text-blue-600 bg-blue-50 hover:bg-blue-100" title="Preview Pilihan Client"><i class="fa-solid fa-eye"></i></button>' +
@@ -10745,12 +10744,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="text-left mb-2">
-                    <label class="block text-xs font-bold text-gray-700 mb-1"><i class="fa-solid fa-receipt mr-1 text-green-600"></i> ${isEn ? 'Upload Transfer Receipt (Optional):' : 'Upload Foto Bukti Transfer:'}</label>
-                    <input type="file" id="proof_upload" accept="image/*" class="w-full text-xs text-gray-500 file:mr-2.5 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 border border-gray-200 rounded-lg p-1 bg-white cursor-pointer">
-                </div>
-                <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-left text-[11px] text-amber-800 leading-relaxed">
-                    <i class="fa-solid fa-circle-info mr-1 text-amber-600"></i> ${isEn ? 'Upload your receipt above or send it directly via WhatsApp chat.' : 'Upload bukti transfer di atas atau kirimkan langsung via chat WhatsApp.'}
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-left text-xs text-amber-800 leading-relaxed mb-1">
+                    <i class="fa-solid fa-circle-info mr-1 text-amber-600"></i> ${isEn ? 'Please transfer the exact amount above, then click Continue to send via WhatsApp and attach your transfer screenshot in the chat.' : 'Silakan transfer sesuai nominal di atas, lalu klik tombol di bawah dan lampirkan screenshot bukti transfer Anda di chat WhatsApp.'}
                 </div>
             `;
 
@@ -10766,7 +10761,7 @@
                 ${bankInfoHtml}
             `;
 
-            const { value: uploadUrl, isConfirmed } = await Swal.fire({
+            const result = await Swal.fire({
                 title: '<i class="fa-solid fa-file-invoice-dollar text-green-500"></i> ' + titleStr,
                 html: htmlStr,
                 showCancelButton: true,
@@ -10774,43 +10769,11 @@
                 cancelButtonText: isEn ? 'Cancel' : 'Batal',
                 confirmButtonColor: '#10b981',
                 cancelButtonColor: '#6b7280',
-                allowOutsideClick: false,
-                showLoaderOnConfirm: true,
-                preConfirm: async () => {
-                    const fileInput = document.getElementById('proof_upload');
-                    if (fileInput && fileInput.files && fileInput.files.length > 0) {
-                        const file = fileInput.files[0];
-                        try {
-                            const fileDataUrl = await new Promise((resolve, reject) => {
-                                const reader = new FileReader();
-                                reader.onload = () => resolve(reader.result);
-                                reader.onerror = error => reject(error);
-                                reader.readAsDataURL(file);
-                            });
-                            const base64Data = fileDataUrl.split(',')[1];
-                            const response = await fetch(API_ENDPOINT, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    action: 'uploadPaymentProof',
-                                    base64Data: base64Data,
-                                    filename: file.name
-                                })
-                            });
-                            const result = await response.json();
-                            if (result.status === 'success' && result.data && result.data.url) {
-                                return result.data.url;
-                            }
-                        } catch (e) {
-                            console.error('Upload proof error:', e);
-                        }
-                    }
-                    return null;
-                }
+                allowOutsideClick: false
             });
 
-            if (isConfirmed) {
-                var proofFinal = uploadUrl || (isEn ? '(Attached receipt screenshot in this chat)' : '(Terlampir foto struk di chat ini)');
+            if (result.isConfirmed) {
+                var proofFinal = isEn ? '(Attached receipt screenshot in this chat)' : '(Terlampir foto struk di chat ini)';
                 if (actionType === 'wa') sendToWA_Proceed(proofFinal);
                 else copyOnly_Proceed(proofFinal);
             }
