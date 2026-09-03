@@ -9739,7 +9739,7 @@
 
             // Fix akurasi cek foto saat pindah folder
             var isSelected = clientState.selectedImages.some(function (sel) {
-                return sel.name === filename && sel.folder === clientState.currentFolderName;
+                return sel.name === filename && (sel.folder === clientState.currentFolderName || !sel.folder || !clientState.currentFolderName);
             });
 
             var isEn = localStorage.getItem('ps_lang') === 'en';
@@ -9950,11 +9950,11 @@
                     var isSelected = false;
                     if (clientState.galleryMode === 'download') {
                         isSelected = clientState.downloadImages.some(function (sel) {
-                            return sel.name === imgData.name && sel.folder === clientState.currentFolderName;
+                            return sel.name === imgData.name && (sel.folder === clientState.currentFolderName || !sel.folder || !clientState.currentFolderName);
                         });
                     } else {
                         isSelected = clientState.selectedImages.some(function (sel) {
-                            return sel.name === imgData.name && sel.folder === clientState.currentFolderName;
+                            return sel.name === imgData.name && (sel.folder === clientState.currentFolderName || !sel.folder || !clientState.currentFolderName);
                         });
                     }
                     if (isSelected) card.classList.add('selected');
@@ -10053,7 +10053,7 @@
             }
 
             var index = clientState.selectedImages.findIndex(function (sel) {
-                return sel.name === filename && sel.folder === clientState.currentFolderName;
+                return sel.name === filename && (sel.folder === clientState.currentFolderName || !sel.folder || !clientState.currentFolderName);
             });
 
             var btnPilih = cardElement ? cardElement.querySelector('.btn-pilih-foto') : null;
@@ -10367,7 +10367,7 @@
                 } else {
                     var targetArray = clientState.galleryMode === 'download' ? clientState.downloadImages : clientState.selectedImages;
                     var allCurrentSelected = clientState.currentContent.images.every(function (imgData) {
-                        return targetArray.some(function (sel) { return sel.name === imgData.name && sel.folder === clientState.currentFolderName; });
+                        return targetArray.some(function (sel) { return sel.name === imgData.name && (sel.folder === clientState.currentFolderName || !sel.folder || !clientState.currentFolderName); });
                     });
                     selectAllCheckbox.checked = allCurrentSelected;
                 }
