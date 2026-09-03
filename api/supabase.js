@@ -124,6 +124,8 @@ module.exports = async function handler(req, res) {
       case 'replyFeedback': return await handleReplyFeedback(payload, res);
       case 'getAllNotifications': return await handleGetAllNotifications(payload, res);
       case 'markFeedbackRead': return await handleMarkFeedbackRead(payload, res);
+      case 'getDriveContent': return await handleGetDriveContent(payload, res);
+      case 'getPhotos': return await handleGetDriveContent(payload, res);
       case 'getSystemUpdates': return await handleGetSystemUpdates(payload, res);
       case 'syncBackground': return await handleSyncBackground(payload, res);
       default: return error(res, `Unknown action: ${action}`, 404);
@@ -939,3 +941,66 @@ async function handleMayarWebhook(payload, res) {
 
   return success(res, { success: true, status: 'processed', result: hasilAktivasi });
 }
+
+async function handleGetDriveContent(payload, res) {
+  const folderUrlOrId = payload.folder_id || payload.folderId || payload.driveLink || payload.link;
+  if (!folderUrlOrId) return error(res, 'ID Folder tidak ditemukan.');
+
+  function extractFolderId(url) {
+    if (!url) return null;
+    if (!url.includes('http')) return url;
+    const match = url.match(/[-\w]{25,}/);
+    return match ? match[0] : null;
+  }
+
+  const folderId = extractFolderId(folderUrlOrId);
+  if (!folderId) return error(res, 'Format link/ID Google Drive tidak valid.');
+
+  try {
+    const url = `https://drive.google.com/embeddedfolderview?id=${folderId}#list`;
+    const fetchRes = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    });
+    const html = await fetchRes.text();
+
+    const images = [];
+    const folders = [];
+
+    const entryRegex = /<div class="flip-entry"[^>]*id="entry-([^"]+)"[^>]*>([\s\S]*?)<div class="flip-entry-title">([^<]+)<\/div>/g;
+    let m;
+    while ((m = entryRegex.exec(html)) !== null) {
+      const id = m[1];
+      const block = m[2];
+      const name = m[3].trim();
+      const isSubFolder = block.includes('/drive/folders/') || block.includes('folder');
+
+      if (isSubFolder) {
+        if (!name.startsWith('Selected Photos - ') && name !== 'MP3') {
+          folders.push({ id, name });
+        }
+      } else {
+        images.push({
+          id: id,
+          name: name,
+          url: `https://lh3.googleusercontent.com/d/${id}=w1000`
+        });
+      }
+    }
+
+    images.sort((a, b) => a.name.localeCompare(b.name));
+    folders.sort((a, b) => a.name.localeCompare(b.name));
+
+    return success(res, {
+      success: true,
+      images: images,
+      folders: folders,
+      data: { images, folders }
+    });
+  } catch (err) {
+    console.error('Drive fetch error:', err);
+    return error(res, 'Gagal memuat isi Google Drive: ' + err.message);
+  }
+}
+
