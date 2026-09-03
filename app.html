@@ -7130,32 +7130,45 @@
                 var progressColor = progressPct >= 100 ? 'bg-green-500' : 'bg-blue-500';
 
                 var statusClient = row['Status Client'] || 'Belum Memilih';
-                var statusColor = 'gray';
+                var statusColor = 'slate';
                 var pulseHtml = '';
-                var statusDisplay = statusClient;
+                var statusDisplay = 'Belum Memilih';
 
                 var isEnLocale = document.getElementById('langSelector') && document.getElementById('langSelector').value === 'en';
                 if (statusClient === 'Selesai') {
-                    statusColor = 'blue';
-                    pulseHtml = '<i class="fa-solid fa-check-circle mr-1"></i>';
+                    statusColor = 'green';
+                    pulseHtml = '<i class="fa-solid fa-circle-check mr-1.5 text-green-600"></i>';
                     statusDisplay = isEnLocale ? 'Completed' : 'Selesai';
                 } else if (statusClient === 'Sedang Memilih') {
                     statusColor = 'amber';
-                    pulseHtml = '<div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse mr-1"></div>';
+                    pulseHtml = '<div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse mr-1.5 shrink-0"></div>';
                     statusDisplay = isEnLocale ? 'Selecting' : 'Sedang Memilih';
                 } else if (statusClient === 'Menunggu Konfirmasi Pembayaran') {
                     statusColor = 'yellow';
-                    pulseHtml = '<i class="fa-solid fa-file-invoice-dollar mr-1"></i>';
+                    pulseHtml = '<i class="fa-solid fa-file-invoice-dollar mr-1.5 text-yellow-600"></i>';
                     statusDisplay = isEnLocale ? 'Pending Payment' : 'Menunggu Konfirmasi';
                     progressColor = 'bg-yellow-500';
                     progressPct = 100;
+                } else if (fotoTerpilih > 0) {
+                    statusColor = 'orange';
+                    pulseHtml = '<div class="w-2 h-2 rounded-full bg-orange-500 mr-1.5 shrink-0"></div>';
+                    statusDisplay = isEnLocale ? 'In Progress' : 'Dalam Proses';
                 } else {
-                    statusColor = 'green';
-                    pulseHtml = '<div class="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-1"></div>';
-                    statusDisplay = isEnLocale ? 'Active' : 'Aktif';
+                    statusColor = 'slate';
+                    pulseHtml = '<div class="w-2 h-2 rounded-full bg-slate-400 mr-1.5 shrink-0"></div>';
+                    statusDisplay = isEnLocale ? 'Not Started' : 'Belum Memilih';
                 }
 
-                var statusHtml = '<div class="bg-' + statusColor + '-50 text-' + statusColor + '-700 text-[11px] px-2.5 py-1 rounded-md font-bold flex items-center gap-1.5 w-fit mb-1">' + pulseHtml + statusDisplay + '</div>';
+                var badgeBgMap = {
+                    green: 'bg-green-50 text-green-700 border border-green-200',
+                    amber: 'bg-amber-50 text-amber-700 border border-amber-200',
+                    orange: 'bg-orange-50 text-orange-700 border border-orange-200',
+                    slate: 'bg-slate-100 text-slate-600 border border-slate-200',
+                    yellow: 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                };
+                var badgeStyle = badgeBgMap[statusColor] || 'bg-slate-100 text-slate-600 border border-slate-200';
+
+                var statusHtml = '<div class="' + badgeStyle + ' text-[11px] px-2.5 py-1 rounded-md font-bold flex items-center w-fit mb-1 shadow-xs">' + pulseHtml + statusDisplay + '</div>';
 
                 var lastUpdateRaw = row['Last Update'];
                 var lastSeenStr = '-';
@@ -11088,35 +11101,46 @@
 
             data.forEach(function (row) {
                 var status = row['Status Client'] || 'Belum Memilih';
-                if (status === 'Belum Memilih') countBelum++;
-                else if (status === 'Sedang Memilih') countSedang++;
-                else if (status === 'Selesai') countSelesai++;
+                var selected = parseInt(row['Foto Terpilih'] || 0);
 
-                var badgeClass = ''; var iconClass = '';
-                if (status === 'Belum Memilih') { badgeClass = 'bg-red-50 text-red-600 border-red-200'; iconClass = 'fa-regular fa-circle-xmark'; }
-                else if (status === 'Sedang Memilih') { badgeClass = 'bg-amber-50 text-amber-600 border-amber-200'; iconClass = 'fa-regular fa-clock'; }
-                else if (status === 'Selesai') { badgeClass = 'bg-green-50 text-green-600 border-green-200'; iconClass = 'fa-regular fa-circle-check'; }
-
-                var dateTxt = row['Last Update'] ? new Date(row['Last Update']).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
-
+                var badgeClass = ''; var iconClass = ''; var pulseIcon = '';
                 var isEn = localStorage.getItem('ps_lang') === 'en';
-                var statusText = status;
-                if (isEn) {
-                    if (status === 'Belum Memilih') statusText = 'Not Started';
-                    else if (status === 'Sedang Memilih') statusText = 'Selecting';
-                    else if (status === 'Selesai') statusText = 'Completed';
+                var statusText = '';
+
+                if (status === 'Selesai') {
+                    countSelesai++;
+                    badgeClass = 'bg-green-50 text-green-700 border-green-200';
+                    iconClass = 'fa-solid fa-circle-check text-green-600';
+                    statusText = isEn ? 'Completed' : 'Selesai';
+                } else if (status === 'Sedang Memilih') {
+                    countSedang++;
+                    badgeClass = 'bg-amber-50 text-amber-700 border-amber-200';
+                    pulseIcon = '<div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse mr-1.5 shrink-0"></div>';
+                    statusText = isEn ? 'Selecting' : 'Sedang Memilih';
+                } else if (status === 'Menunggu Konfirmasi Pembayaran') {
+                    badgeClass = 'bg-yellow-50 text-yellow-700 border-yellow-200';
+                    iconClass = 'fa-solid fa-file-invoice-dollar text-yellow-600';
+                    statusText = isEn ? 'Pending Payment' : 'Menunggu Konfirmasi';
+                } else if (selected > 0) {
+                    badgeClass = 'bg-orange-50 text-orange-700 border-orange-200';
+                    pulseIcon = '<div class="w-2 h-2 rounded-full bg-orange-500 mr-1.5 shrink-0"></div>';
+                    statusText = isEn ? 'In Progress' : 'Dalam Proses';
+                } else {
+                    countBelum++;
+                    badgeClass = 'bg-slate-100 text-slate-600 border-slate-200';
+                    pulseIcon = '<div class="w-2 h-2 rounded-full bg-slate-400 mr-1.5 shrink-0"></div>';
+                    statusText = isEn ? 'Not Started' : 'Belum Memilih';
                 }
 
-                var selected = parseInt(row['Foto Terpilih'] || 0);
+                var dateTxt = row['Last Update'] ? new Date(row['Last Update']).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
                 var max = parseInt(row['Max Foto'] || 1);
                 var percent = Math.min(Math.round((selected / max) * 100), 100);
 
-                // LOGIKA PINTAR: Jika statusnya Selesai, paksa progress bar jadi 100% penuh
                 if (status === 'Selesai') {
                     percent = 100;
                 }
 
-                var barColor = percent === 100 ? 'bg-green-500' : 'bg-primary-600';
+                var barColor = percent === 100 ? 'bg-green-500' : (status === 'Sedang Memilih' ? 'bg-amber-500' : (selected > 0 ? 'bg-orange-500' : 'bg-primary-600'));
 
                 var card = document.createElement('div');
                 card.className = "bg-white border border-slate-200 rounded-2xl mb-4 p-5 shadow-sm hover:shadow-md transition-all duration-300 group";
@@ -11130,8 +11154,8 @@
                                 <i class="fa-solid fa-clock-rotate-left mr-1"></i> UPDATE: ${dateTxt}
                             </p>
                         </div>
-                        <span class="px-3 py-1 rounded-full border text-[10px] font-extrabold uppercase tracking-tight ${badgeClass} flex items-center shadow-sm">
-                            <i class="${iconClass} mr-1.5"></i> ${statusText}
+                        <span class="px-3 py-1 rounded-full border text-[10px] font-extrabold uppercase tracking-tight ${badgeClass} flex items-center shadow-xs">
+                            ${pulseIcon}${iconClass ? `<i class="${iconClass} mr-1.5"></i>` : ''}${statusText}
                         </span>
                     </div>
 
