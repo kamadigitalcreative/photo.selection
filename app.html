@@ -10530,19 +10530,35 @@
             var isEn = localStorage.getItem('ps_lang') === 'en';
             var extraCount = clientState.selectedImages.length - clientState.maxFoto;
             var targetStatus = (extraCount > 0 && proofUrl) ? 'Menunggu Konfirmasi Pembayaran' : 'Selesai';
-            
-            var text = formatSelectedText(proofUrl, clientState.backupUrl || '');
-            if (!text) { 
+
+            if (!clientState.selectedImages || clientState.selectedImages.length === 0) { 
                 Swal.fire({ title: 'Kosong', text: 'Pilih foto terlebih dahulu.', icon: 'info', confirmButtonColor: '#1e1e2d' }); 
                 return; 
             }
 
-            // 1. Eksekusi copy langsung ke clipboard
-            doCopyText(text);
+            startLoading(isEn ? "Saving selections..." : "Menyimpan pilihan foto...");
             hasClientSubmitted = true;
+            clientState.statusClient = targetStatus;
+            if (clientSyncTimer) clearInterval(clientSyncTimer);
             updateGalleryLock();
 
-            // 2. Link WhatsApp alternatif
+            // 1. Simpan ke server & ambil link backup Drive
+            var backupUrl = clientState.backupUrl || '';
+            try {
+                var pingRes = await pingClientStatus(targetStatus, proofUrl, true);
+                if (pingRes && pingRes.data && pingRes.data.backupUrl) {
+                    backupUrl = pingRes.data.backupUrl;
+                    clientState.backupUrl = backupUrl;
+                }
+            } catch (e) {}
+            endLoading();
+
+            var text = formatSelectedText(proofUrl, backupUrl);
+
+            // 2. Eksekusi copy langsung ke clipboard
+            doCopyText(text);
+
+            // 3. Link WhatsApp alternatif
             var noWa = (clientState.nomorWA || '').replace(/\D/g, '');
             if (noWa.indexOf('0') === 0) noWa = '62' + noWa.substring(1);
             var waLink = "https://wa.me/" + noWa + "?text=" + encodeURIComponent(text);
@@ -10610,13 +10626,6 @@
                     }
                 }
             });
-
-            // 4. Sinkronkan status & buat file backup Drive di latar belakang
-            pingClientStatus(targetStatus, proofUrl, true).then(function (pingRes) {
-                if (pingRes && pingRes.data && pingRes.data.backupUrl) {
-                    clientState.backupUrl = pingRes.data.backupUrl;
-                }
-            }).catch(function () {});
         }
 
         function sendToWA() {
@@ -10629,9 +10638,14 @@
             var extraCount = clientState.selectedImages.length - clientState.maxFoto;
             var targetStatus = (extraCount > 0 && proofUrl) ? 'Menunggu Konfirmasi Pembayaran' : 'Selesai';
 
-            var backupUrl = '';
+            hasClientSubmitted = true;
+            clientState.statusClient = targetStatus;
+            if (clientSyncTimer) clearInterval(clientSyncTimer);
+            updateGalleryLock();
+
+            var backupUrl = clientState.backupUrl || '';
             try {
-                var pingRes = await pingClientStatus(targetStatus, proofUrl);
+                var pingRes = await pingClientStatus(targetStatus, proofUrl, true);
                 if (pingRes && pingRes.data && pingRes.data.backupUrl) {
                     backupUrl = pingRes.data.backupUrl;
                     clientState.backupUrl = backupUrl;
@@ -10644,8 +10658,6 @@
             var noWa = clientState.nomorWA.replace(/\D/g, '');
             if (noWa.indexOf('0') === 0) noWa = '62' + noWa.substring(1);
             window.open("https://wa.me/" + noWa + "?text=" + encodeURIComponent(text), '_blank');
-            hasClientSubmitted = true;
-            updateGalleryLock();
         }
 
         function updateGalleryLock() {
@@ -10909,9 +10921,13 @@
         }
 
         async function syncClientSelectionsSilently() {
-            if (!clientState.token || isClientSyncing) return;
+            if (isClientSyncing || !clientState.token) return;
             var isSubmitted = (typeof hasClientSubmitted !== 'undefined' && hasClientSubmitted) || 
                               (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran'));
+            if (isSubmitted) {
+                if (clientSyncTimer) clearInterval(clientSyncTimer);
+                return;
+            }
             
             isClientSyncing = true;
             try {
