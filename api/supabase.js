@@ -605,25 +605,35 @@ async function handleUpdateClientStatus(payload, res) {
   const token = (payload.token || '').trim();
   if (!token) return error(res, 'Token required');
 
-  const status = payload.status || 'Sedang Memilih';
-  const fotoTerpilih = String(payload.selectedCount || payload.fotoTerpilih || 0);
-  const daftarPilihan = typeof payload.selectedFiles === 'string' ? payload.selectedFiles : JSON.stringify(payload.selectedFiles || payload.daftarPilihan || []);
-  const notes = typeof payload.notes === 'string' ? payload.notes : JSON.stringify(payload.notes || {});
-  const paymentProof = payload.paymentProof || '';
+  const updateBody = {};
 
-  const updateBody = {
-    Status: status,
-    'Status Client': status,
-    'Foto Terpilih': fotoTerpilih,
-    'Daftar Pilihan': daftarPilihan,
-    Notes: notes
-  };
-  if (paymentProof) {
-    updateBody.PaymentProof = paymentProof;
-    updateBody['Payment Proof'] = paymentProof;
+  if (payload.status) {
+    updateBody.Status = payload.status;
+    updateBody['Status Client'] = payload.status;
   }
 
-  await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)})`, {
+  if (payload.selectedCount !== undefined) {
+    updateBody['Foto Terpilih'] = String(payload.selectedCount);
+  } else if (payload.fotoTerpilih !== undefined) {
+    updateBody['Foto Terpilih'] = String(payload.fotoTerpilih);
+  }
+
+  if (payload.selectedFiles !== undefined) {
+    updateBody['Daftar Pilihan'] = typeof payload.selectedFiles === 'string' ? payload.selectedFiles : JSON.stringify(payload.selectedFiles);
+  } else if (payload.daftarPilihan !== undefined) {
+    updateBody['Daftar Pilihan'] = typeof payload.daftarPilihan === 'string' ? payload.daftarPilihan : JSON.stringify(payload.daftarPilihan);
+  }
+
+  if (payload.notes !== undefined) {
+    updateBody.Notes = typeof payload.notes === 'string' ? payload.notes : JSON.stringify(payload.notes);
+  }
+
+  if (payload.paymentProof) {
+    updateBody.PaymentProof = payload.paymentProof;
+    updateBody['Payment Proof'] = payload.paymentProof;
+  }
+
+  await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)},"Short Slug".eq.${encodeURIComponent(token)})`, {
     method: 'PATCH',
     body: updateBody
   });
