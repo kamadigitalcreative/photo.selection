@@ -317,27 +317,38 @@ async function handleUploadPaymentProof(payload, res) {
   const base64Data = payload.base64Data || '';
   if (!base64Data) return error(res, 'File bukti transfer tidak ditemukan');
 
-  if (APPS_SCRIPT_URL) {
-    try {
-      const gasRes = await fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'uploadPaymentProof',
-          secret_token: INTERNAL_SECRET_TOKEN,
-          base64Data: base64Data,
-          filename: payload.filename || 'bukti.jpg',
-          projectFolderName: payload.projectFolderName || 'Payment Proofs',
-          clientName: payload.clientName || 'Klien'
-        })
-      });
-      const gasData = await gasRes.json();
-      if (gasData && gasData.data && gasData.data.url) {
-        return success(res, { success: true, url: gasData.data.url });
-      }
-    } catch (e) {
-      console.error('GAS upload proof error:', e);
+  try {
+    const buffer = Buffer.from(base64Data, 'base64');
+    const filename = payload.filename || 'bukti_transfer.jpg';
+
+    const boundary = '----WebKitFormBoundary' + crypto.randomBytes(16).toString('hex');
+    const parts = [
+      `--${boundary}\r\nContent-Disposition: form-data; name="reqtype"\r\n\r\nfileupload\r\n`,
+      `--${boundary}\r\nContent-Disposition: form-data; name="fileToUpload"; filename="${filename}"\r\nContent-Type: image/jpeg\r\n\r\n`
+    ];
+    const footer = `\r\n--${boundary}--\r\n`;
+
+    const bodyBuffer = Buffer.concat([
+      Buffer.from(parts[0], 'utf8'),
+      Buffer.from(parts[1], 'utf8'),
+      buffer,
+      Buffer.from(footer, 'utf8')
+    ]);
+
+    const catboxRes = await fetch('https://catbox.moe/user/api.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': `multipart/form-data; boundary=${boundary}`
+      },
+      body: bodyBuffer
+    });
+
+    const catboxUrl = (await catboxRes.text()).trim();
+    if (catboxUrl && catboxUrl.startsWith('http')) {
+      return success(res, { success: true, url: catboxUrl });
     }
+  } catch (e) {
+    console.error('Catbox upload error:', e);
   }
 
   return success(res, { success: true, url: base64Data });
