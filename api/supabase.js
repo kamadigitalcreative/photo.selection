@@ -1,6 +1,6 @@
 /**
  * API Handler Backend Berbasis Supabase (PostgreSQL)
- * 100% Kompatibel dengan Struktur Kolom Asli Google Sheets
+ * 100% Kompatibel dengan Struktur Kolom Asli Google Sheets & Frontend app.html
  */
 
 const crypto = require('crypto');
@@ -167,9 +167,10 @@ async function handleLogin(payload, res) {
   } catch (e) { }
 
   const rawPaket = u.Paket || '';
-  const isPro = Boolean(String(u.Akses_Watermark).toUpperCase() === 'TRUE' || rawPaket.toUpperCase().includes('PRO'));
+  const isPro = Boolean(String(u.Akses_Watermark).toUpperCase() === 'TRUE' || rawPaket.toUpperCase().includes('PRO') || rawPaket.toUpperCase().includes('LIFETIME'));
 
   const userData = {
+    success: true,
     username: uName,
     nama: u.Nama || uName,
     role: role,
@@ -192,7 +193,7 @@ async function handleLogin(payload, res) {
 }
 
 async function handleRegister(payload, res) {
-  const d = payload.data || payload || {};
+  const d = payload.formData || payload.data || payload || {};
   const nama = (d.nama || '').trim();
   const email = (d.email || '').trim().toLowerCase();
   const nohp = (d.nohp || '').trim();
@@ -300,7 +301,7 @@ async function handlePingUser(payload, res) {
       body: { LastActive: new Date().toISOString() }
     }).catch(() => { });
   }
-  return success(res, { ok: true });
+  return success(res, { success: true, ok: true });
 }
 
 async function handleGetProjects(payload, res) {
@@ -363,16 +364,16 @@ async function handleGetProjects(payload, res) {
     };
   });
 
-  return success(res, formatted);
+  return success(res, { success: true, data: formatted });
 }
 
 async function handleCreateProject(payload, res) {
-  const d = payload.data || payload || {};
+  const d = payload.formData || payload.data || payload || {};
   const user = payload.currentUser || d.currentUser || {};
   const username = user.username || d.username || payload.username || 'admin';
 
   const token = crypto.randomBytes(6).toString('hex');
-  const clientName = d.namaClient || d.nama || 'Untitled Client';
+  const clientName = d.namaClient || d.nama || d['Nama Client'] || 'Untitled Client';
   const baseSlug = clientName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'client';
   const shortSlug = `${baseSlug}-${crypto.randomBytes(3).toString('hex')}`;
   const shortLink = `https://ps.kamacreative.my.id/app?c=${shortSlug}`;
@@ -390,10 +391,10 @@ async function handleCreateProject(payload, res) {
     Slug: shortSlug,
     'Short Slug': shortSlug,
     'Nama Client': clientName,
-    'Nomor WA': d.nomorWA || d.wa || '',
-    'Password Client': d.passwordClient || d.pass || '',
-    'Max Foto': String(d.maxFoto || d.max || 50),
-    'Drive Link': d.driveLink || d.link || '',
+    'Nomor WA': d.nomorWA || d.wa || d['Nomor WA'] || '',
+    'Password Client': d.passwordClient || d.pass || d['Password Client'] || '',
+    'Max Foto': String(d.maxFoto || d.max || d['Max Foto'] || 50),
+    'Drive Link': d.driveLink || d.link || d['Drive Link'] || '',
     Owner: username,
     'Short Link': shortLink,
     Kategori: typeof d.categories === 'string' ? d.categories : JSON.stringify(d.categories || []),
@@ -588,9 +589,9 @@ async function handleReopenProject(payload, res) {
 }
 
 async function handleToggleProjectWatermark(payload, res) {
-  const token = (payload.token || '').trim();
+  const token = (payload.token || payload.id || '').trim();
   const useWatermark = Boolean(payload.useWatermark);
-  await supabaseQuery(`projects?Token=eq.${encodeURIComponent(token)}`, {
+  await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},id.eq.${encodeURIComponent(token)})`, {
     method: 'PATCH',
     body: { UseWatermark: String(useWatermark).toUpperCase() }
   });
@@ -624,14 +625,18 @@ async function handleGetDashboardStats(payload, res) {
   }).map(u => ({ username: u.Username, expiredAt: u.ExpiredAt }));
 
   return success(res, {
-    totalViews,
-    uniqueVisitors,
-    totalProjects,
-    totalUsers,
-    activeUsers,
-    inactiveUsers,
-    pendingUsers,
-    expiringSoon
+    success: true,
+    data: {
+      totalViews,
+      uniqueVisitors,
+      totalProjects,
+      totalUsers,
+      activeUsers,
+      inactiveUsers,
+      pendingUsers,
+      expiringSoonCount: expiringSoon.length,
+      expiringUsers: expiringSoon
+    }
   });
 }
 
@@ -645,7 +650,7 @@ async function handleLogVisit(payload, res) {
     body: { Type: type, Page: page, VisitorID: visitorId, Timestamp: new Date().toISOString() }
   }).catch(() => { });
 
-  return success(res, { logged: true });
+  return success(res, { success: true, logged: true });
 }
 
 async function handleGetUsers(payload, res) {
@@ -669,7 +674,7 @@ async function handleGetUsers(payload, res) {
     last_active: u.LastActive || u.created_at
   }));
 
-  return success(res, users);
+  return success(res, { success: true, data: users });
 }
 
 async function handleApproveUser(payload, res) {
@@ -781,7 +786,7 @@ async function handleGetFeedbacks(payload, res) {
     endpoint = `feedbacks?Username=eq.${encodeURIComponent(user.username)}&select=*&order=created_at.desc`;
   }
   const rows = await supabaseQuery(endpoint);
-  return success(res, rows || []);
+  return success(res, { success: true, data: rows || [] });
 }
 
 async function handleReplyFeedback(payload, res) {
@@ -803,7 +808,7 @@ async function handleGetAllNotifications(payload, res) {
   const feedbacks = (await supabaseQuery(fbEndpoint)) || [];
   const systemUpdates = (await supabaseQuery('system_updates?Status=eq.Active&select=*&order=created_at.desc')) || [];
 
-  return success(res, { feedbacks, systemUpdates });
+  return success(res, { success: true, feedbacks, systemUpdates });
 }
 
 async function handleMarkFeedbackRead(payload, res) {
@@ -814,12 +819,12 @@ async function handleMarkFeedbackRead(payload, res) {
   } else if (user.username) {
     await supabaseQuery(`feedbacks?Username=eq.${encodeURIComponent(user.username)}&StatusUser=eq.Unread`, { method: 'PATCH', body: { StatusUser: 'Read' } }).catch(() => { });
   }
-  return success(res, { ok: true });
+  return success(res, { success: true, ok: true });
 }
 
 async function handleGetSystemUpdates(payload, res) {
   const rows = await supabaseQuery('system_updates?Status=eq.Active&select=*&order=created_at.desc');
-  return success(res, rows || []);
+  return success(res, { success: true, data: rows || [] });
 }
 
 async function handleSyncBackground(payload, res) {
@@ -830,7 +835,7 @@ async function handleSyncBackground(payload, res) {
   const users = await supabaseQuery(`users?Username=eq.${encodeURIComponent(username)}&select=*`);
   const projects = await supabaseQuery(`projects?Owner=eq.${encodeURIComponent(username)}&select=*&order=created_at.desc`);
 
-  return success(res, { user: users ? users[0] : null, projects: projects || [] });
+  return success(res, { success: true, user: users ? users[0] : null, projects: projects || [] });
 }
 
 async function handleMayarWebhook(payload, res) {
@@ -896,5 +901,5 @@ async function handleMayarWebhook(payload, res) {
     }
   }).catch(() => { });
 
-  return success(res, { status: 'processed', result: hasilAktivasi });
+  return success(res, { success: true, status: 'processed', result: hasilAktivasi });
 }
