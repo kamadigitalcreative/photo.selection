@@ -6146,6 +6146,10 @@
                     currentTab = pathParts.length > 0 ? pathParts[pathParts.length - 1] : '';
                 }
 
+                if (typeof startAutoRefresh === 'function') {
+                    startAutoRefresh();
+                }
+
                 if (currentUser.role === 'Admin') {
                     if (adminNavTabs && adminNavTabs.classList) { adminNavTabs.classList.add('hidden', 'sm:flex'); }
                     if (adminNavTabsMobile && adminNavTabsMobile.classList) adminNavTabsMobile.classList.remove('hidden');
@@ -6519,6 +6523,13 @@
             } else if (tabId === 'projects') {
                 if (sectionProj && sectionProj.classList) { sectionProj.classList.remove('hidden'); sectionProj.classList.add('flex'); }
                 loadDataProjects();
+
+                // Nyalakan sinkronisasi realtime tiap 3 detik di tab Projects
+                autoRefreshInterval = setInterval(function () {
+                    if (document.getElementById('section-projects') && document.getElementById('section-projects').classList.contains('flex')) {
+                        loadDataProjects(true);
+                    }
+                }, 3000);
             } else if (tabId === 'users') {
                 if (sectionUsers && sectionUsers.classList) { sectionUsers.classList.remove('hidden'); sectionUsers.classList.add('flex'); }
                 loadDataUsers();
@@ -7006,15 +7017,15 @@
             }
         }
 
-        async function loadDataProjects() {
+        async function loadDataProjects(silent = false) {
             // --- SECURITY PATCH: Laci memori dikunci spesifik menggunakan Username ---
             var cacheKey = 'ps_cache_projects_' + (currentUser ? currentUser.username : 'guest');
             var cachedProjects = localStorage.getItem(cacheKey);
 
-            // 1. Tampilkan memori instan (Hanya memori milik akun yang sedang login)
+            // 1. Tampilkan memori instan
             if (cachedProjects) {
-                renderProjectsTable(JSON.parse(cachedProjects));
-            } else {
+                if (!silent) renderProjectsTable(JSON.parse(cachedProjects));
+            } else if (!silent) {
                 startLoading("Memuat Project...");
             }
 
@@ -7031,21 +7042,20 @@
                 });
                 const res = await response.json();
 
-                if (!cachedProjects) {
+                if (!cachedProjects && !silent) {
                     endLoading();
                 }
 
                 if (res.status === 'success' && res.data && res.data.success) {
                     baseAppUrl = window.location.origin + window.location.pathname;
 
-                    // 3. Update tabel & laci memori pribadi jika ada data baru
-                    if (JSON.stringify(res.data.data) !== cachedProjects) {
-                        if (!window.pendingProjectUpdate || (Date.now() - window.pendingProjectUpdate > 6000)) {
-                            localStorage.setItem(cacheKey, JSON.stringify(res.data.data));
-                            renderProjectsTable(res.data.data);
-                        }
+                    // 3. Update tabel & laci memori jika data berubah
+                    var newStr = JSON.stringify(res.data.data);
+                    if (newStr !== cachedProjects || !window.lastProjectsData) {
+                        localStorage.setItem(cacheKey, newStr);
+                        renderProjectsTable(res.data.data);
                     }
-                } else {
+                } else if (!silent) {
                     var errMsg = res.message || res.data?.message;
                     if (errMsg === 'Sesi berakhir, harap login ulang.') {
                         Swal.fire('Sesi Berakhir', 'Sesi Anda telah kedaluwarsa. Silakan login kembali.', 'warning').then(() => handleLogout());
@@ -7054,7 +7064,7 @@
                     }
                 }
             } catch (err) {
-                if (!cachedProjects) { endLoading(); Swal.fire('Error', err.message, 'error'); }
+                if (!cachedProjects && !silent) { endLoading(); Swal.fire('Error', err.message, 'error'); }
             }
         }
 
