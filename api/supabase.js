@@ -423,6 +423,7 @@ async function handleCreateProject(payload, res) {
   const username = user.username || d.username || payload.username || 'admin';
 
   const token = crypto.randomBytes(6).toString('hex');
+  const projectId = crypto.randomUUID();
   const clientName = d.namaClient || d.nama || d['Nama Client'] || 'Untitled Client';
   const baseSlug = clientName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'client';
   let shortSlug = baseSlug;
@@ -445,6 +446,8 @@ async function handleCreateProject(payload, res) {
   }
 
   const newProject = {
+    id: projectId,
+    ID: projectId,
     Token: token,
     Slug: shortSlug,
     'Short Slug': shortSlug,
