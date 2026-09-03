@@ -10472,11 +10472,10 @@
             });
         }
 
-        function formatSelectedText(proofUrl = null, backupUrl = '') {
+        function formatSelectedText(proofUrl = null) {
             var isEn = (localStorage.getItem('ps_lang') === 'en');
             var extraCount = clientState.selectedImages.length - clientState.maxFoto;
             var text = "";
-            var driveUrl = backupUrl || clientState.backupUrl || clientState.driveLink || '';
 
             if (isEn) {
                 text += "*PHOTO SELECTION COMPLETED*\n\n";
@@ -10493,9 +10492,6 @@
                 } else {
                     text += "• Total Selected: *" + clientState.selectedImages.length + " / " + clientState.maxFoto + " Photos*\n";
                 }
-                if (driveUrl) {
-                    text += "• Google Drive Link: " + driveUrl + "\n";
-                }
                 text += "\nPlease verify in Photo Selector Dashboard. Thank you!";
             } else {
                 text += "*SELEKSI FOTO SELESAI*\n\n";
@@ -10511,9 +10507,6 @@
                     if (proofUrl) text += "• Bukti Transfer: " + proofUrl + "\n";
                 } else {
                     text += "• Total Terpilih: *" + clientState.selectedImages.length + " / " + clientState.maxFoto + " Foto*\n";
-                }
-                if (driveUrl) {
-                    text += "• Link Google Drive: " + driveUrl + "\n";
                 }
                 text += "\nMohon dicek pada Dashboard Photo Selector. Terima kasih!";
             }
