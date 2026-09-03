@@ -11152,7 +11152,7 @@
             if (!container) return;
             container.innerHTML = '';
 
-            var countBelum = 0, countSedang = 0, countSelesai = 0;
+            var countBelum = 0, countSedang = 0, countProses = 0, countSelesai = 0;
             if (!data || data.length === 0) {
                 container.innerHTML = `
                     <div class="col-span-full flex flex-col items-center justify-center p-12 text-center bg-white rounded-3xl border border-gray-100 shadow-sm min-h-[350px]">
@@ -11163,7 +11163,7 @@
                         <p class="text-sm text-gray-500 max-w-md mx-auto">Anda belum memiliki klien yang terdaftar. Klien akan muncul di sini setelah Anda membagikan link project kepada mereka.</p>
                     </div>
                 `;
-                updateStatusCounters(0, 0, 0); return;
+                updateStatusCounters(0, 0, 0, 0); return;
             }
 
             data.forEach(function (row) {
@@ -11189,6 +11189,7 @@
                     iconClass = 'fa-solid fa-file-invoice-dollar text-yellow-600';
                     statusText = isEn ? 'Pending Payment' : 'Menunggu Konfirmasi';
                 } else if (selected > 0) {
+                    countProses++;
                     badgeClass = 'bg-orange-50 text-orange-700 border-orange-200';
                     pulseIcon = '<div class="w-2 h-2 rounded-full bg-orange-500 mr-1.5 shrink-0"></div>';
                     statusText = isEn ? 'In Progress' : 'Dalam Proses';
@@ -11253,7 +11254,7 @@
                 container.appendChild(card);
             });
 
-            updateStatusCounters(countBelum, countSedang, countSelesai);
+            updateStatusCounters(countBelum, countSedang, countProses, countSelesai);
 
             // --- INJECT: Tindakan & Aktivitas Panel Logic ---
             populateActivityAndActions(data);
