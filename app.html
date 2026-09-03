@@ -1404,48 +1404,34 @@
 
                     <div id="section-projects" class="hidden flex-1 flex-col">
 
-                        <!-- 4 Metric Cards -->
+                        <!-- 4 Metric Cards di Menu Daftar Project -->
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
                             <div
                                 class="bg-white/80 p-2.5 sm:p-4 rounded-xl border border-gray-100 shadow-sm flex flex-row items-center gap-2 sm:gap-3">
                                 <div
-                                    class="w-8 h-8 sm:w-10 sm:h-10 bg-slate-100 text-slate-600 rounded-lg sm:rounded-xl flex items-center justify-center text-xs sm:text-base shrink-0">
-                                    <i class="fa-regular fa-circle"></i>
+                                    class="w-8 h-8 sm:w-10 sm:h-10 bg-blue-50 text-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center text-xs sm:text-base shrink-0">
+                                    <i class="fa-solid fa-folder-open"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p
                                         class="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider leading-none truncate">
-                                        Belum Memilih</p>
+                                        Total Project</p>
                                     <h4 class="text-sm sm:text-xl font-bold text-gray-800 leading-none mt-0.5 sm:mt-1"
-                                        id="stat-active-projects">0</h4>
+                                        id="stat-total-projects">0</h4>
                                 </div>
                             </div>
                             <div
                                 class="bg-white/80 p-2.5 sm:p-4 rounded-xl border border-gray-100 shadow-sm flex flex-row items-center gap-2 sm:gap-3">
                                 <div
                                     class="w-8 h-8 sm:w-10 sm:h-10 bg-amber-50 text-amber-600 rounded-lg sm:rounded-xl flex items-center justify-center text-xs sm:text-base shrink-0">
-                                    <i class="fa-solid fa-spinner fa-spin"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <p
-                                        class="text-[8px] sm:text-[10px] font-bold text-amber-500 uppercase tracking-wider leading-none truncate">
-                                        Sedang Memilih</p>
-                                    <h4 class="text-sm sm:text-xl font-bold text-gray-800 leading-none mt-0.5 sm:mt-1"
-                                        id="stat-review-projects">0</h4>
-                                </div>
-                            </div>
-                            <div
-                                class="bg-white/80 p-2.5 sm:p-4 rounded-xl border border-gray-100 shadow-sm flex flex-row items-center gap-2 sm:gap-3">
-                                <div
-                                    class="w-8 h-8 sm:w-10 sm:h-10 bg-orange-50 text-orange-600 rounded-lg sm:rounded-xl flex items-center justify-center text-xs sm:text-base shrink-0">
                                     <i class="fa-solid fa-hourglass-half"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p
-                                        class="text-[8px] sm:text-[10px] font-bold text-orange-500 uppercase tracking-wider leading-none truncate">
-                                        Dalam Proses</p>
+                                        class="text-[8px] sm:text-[10px] font-bold text-amber-500 uppercase tracking-wider leading-none truncate">
+                                        Menunggu Klien</p>
                                     <h4 class="text-sm sm:text-xl font-bold text-gray-800 leading-none mt-0.5 sm:mt-1"
-                                        id="stat-dalam-proses">0</h4>
+                                        id="stat-waiting-projects">0</h4>
                                 </div>
                             </div>
                             <div
@@ -1457,9 +1443,23 @@
                                 <div class="flex-1 min-w-0">
                                     <p
                                         class="text-[8px] sm:text-[10px] font-bold text-green-600 uppercase tracking-wider leading-none truncate">
-                                        Selesai</p>
+                                        Sudah Submit</p>
                                     <h4 class="text-sm sm:text-xl font-bold text-gray-800 leading-none mt-0.5 sm:mt-1"
                                         id="stat-submitted-projects">0</h4>
+                                </div>
+                            </div>
+                            <div
+                                class="bg-white/80 p-2.5 sm:p-4 rounded-xl border border-gray-100 shadow-sm flex flex-row items-center gap-2 sm:gap-3">
+                                <div
+                                    class="w-8 h-8 sm:w-10 sm:h-10 bg-rose-50 text-rose-600 rounded-lg sm:rounded-xl flex items-center justify-center text-xs sm:text-base shrink-0">
+                                    <i class="fa-solid fa-calendar-xmark"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p
+                                        class="text-[8px] sm:text-[10px] font-bold text-rose-500 uppercase tracking-wider leading-none truncate">
+                                        Lewat Deadline</p>
+                                    <h4 class="text-sm sm:text-xl font-bold text-gray-800 leading-none mt-0.5 sm:mt-1"
+                                        id="stat-expired-projects">0</h4>
                                 </div>
                             </div>
                         </div>
@@ -7090,22 +7090,34 @@
             var isGrid = currentProjectView === 'grid';
             tbody.className = isGrid ? 'grid grid-cols-1 xl:grid-cols-2 gap-4' : 'flex flex-col gap-3';
 
-            var statBelum = 0, statSedang = 0, statProses = 0, statSelesai = 0, statTotal = data ? data.length : 0;
+            var statTotal = data ? data.length : 0;
+            var statWaiting = 0, statSubmitted = 0, statExpired = 0;
+            var now = new Date().getTime();
+
             if (data) {
                 data.forEach(function (row) {
                     var s = row['Status Client'] || 'Belum Memilih';
-                    var selected = parseInt(row['Foto Terpilih']) || 0;
-                    if (s === 'Selesai') statSelesai++;
-                    else if (s === 'Sedang Memilih') statSedang++;
-                    else if (selected > 0) statProses++;
-                    else statBelum++;
+                    var deadlineStr = row['Deadline'];
+                    var isExp = false;
+                    if (deadlineStr && deadlineStr !== 'Selamanya') {
+                        var dDate = new Date(deadlineStr).getTime();
+                        if (!isNaN(dDate) && dDate < now && s !== 'Selesai') {
+                            isExp = true;
+                            statExpired++;
+                        }
+                    }
+
+                    if (s === 'Selesai') {
+                        statSubmitted++;
+                    } else {
+                        statWaiting++;
+                    }
                 });
             }
-            if (document.getElementById('stat-active-projects')) document.getElementById('stat-active-projects').innerText = statBelum;
-            if (document.getElementById('stat-review-projects')) document.getElementById('stat-review-projects').innerText = statSedang;
-            if (document.getElementById('stat-dalam-proses')) document.getElementById('stat-dalam-proses').innerText = statProses;
-            if (document.getElementById('stat-submitted-projects')) document.getElementById('stat-submitted-projects').innerText = statSelesai;
-            if (document.getElementById('stat-total-links')) document.getElementById('stat-total-links').innerText = statTotal;
+            if (document.getElementById('stat-total-projects')) document.getElementById('stat-total-projects').innerText = statTotal;
+            if (document.getElementById('stat-waiting-projects')) document.getElementById('stat-waiting-projects').innerText = statWaiting;
+            if (document.getElementById('stat-submitted-projects')) document.getElementById('stat-submitted-projects').innerText = statSubmitted;
+            if (document.getElementById('stat-expired-projects')) document.getElementById('stat-expired-projects').innerText = statExpired;
 
             if (!data || data.length === 0) {
                 tbody.innerHTML = `
@@ -10466,42 +10478,74 @@
             var text = "";
             var driveUrl = backupUrl || clientState.backupUrl || '';
 
+            var originUrl = window.location.origin + window.location.pathname;
+            var clientGalleryUrl = clientState.shortLink || (originUrl + '?c=' + (clientState.shortSlug || clientState.slug || clientState.token));
+
+            // Rangkum daftar foto terpilih
+            var selectedListNames = [];
+            if (clientState.selectedImages && clientState.selectedImages.length > 0) {
+                selectedListNames = clientState.selectedImages.map(function(item) {
+                    var n = (typeof item === 'string') ? item : (item.name || item.n || item.fileName || '');
+                    var f = (typeof item === 'object' && item.folder) ? ` [${item.folder}]` : '';
+                    var note = '';
+                    if (clientState.notes) {
+                        var k = (typeof item === 'object' && item.folder) ? (n + '_' + item.folder) : n;
+                        if (clientState.notes[k]) note = ' (Catatan: ' + clientState.notes[k] + ')';
+                    }
+                    return n ? ('- ' + n + f + note) : '';
+                }).filter(Boolean);
+            }
+
             if (isEn) {
-                text += "✨ *PHOTO SELECTION COMPLETED*\n\n";
+                text += "*PHOTO SELECTION COMPLETED*\n\n";
                 if (extraCount > 0 && proofUrl) {
                     text += "Hello Photographer, we from *" + clientState.namaClient + "* have finished selecting photos & completed extra payment.\n\n";
                 } else {
                     text += "Hello Photographer, we from *" + clientState.namaClient + "* have finished selecting photos.\n\n";
                 }
-                text += "📋 *Summary:*\n";
+                text += "*Summary:*\n";
                 if (extraCount > 0) {
-                    text += "• Selected: " + clientState.selectedImages.length + " Photos (Extra: +" + extraCount + " Photos)\n";
-                    text += "• Extra Total: Rp" + (extraCount * clientState.extraPrice).toLocaleString('id-ID') + "\n";
-                    text += "• Payment Proof: " + proofUrl + "\n";
+                    text += "• Total Selected: *" + clientState.selectedImages.length + " Photos* (Quota: " + clientState.maxFoto + " + Extra: " + extraCount + " Photos)\n";
+                    text += "• Extra Total: *Rp " + (extraCount * clientState.extraPrice).toLocaleString('id-ID') + "*\n";
+                    if (proofUrl) text += "• Payment Proof: " + proofUrl + "\n";
                 } else {
-                    text += "• Selected: " + clientState.selectedImages.length + " / " + clientState.maxFoto + " Photos\n";
+                    text += "• Total Selected: *" + clientState.selectedImages.length + " / " + clientState.maxFoto + " Photos*\n";
+                }
+                text += "• Selection Gallery: " + clientGalleryUrl + "\n";
+                if (clientState.driveLink) {
+                    text += "• Google Drive Master: " + clientState.driveLink + "\n";
                 }
                 if (driveUrl) {
-                    text += "• Photo List & Notes (Drive):\n" + driveUrl + "\n";
+                    text += "• Backup File (Drive): " + driveUrl + "\n";
                 }
-                text += "\nPlease verify in Photo Selector Dashboard. Thank you! 🙏";
+                if (selectedListNames.length > 0 && selectedListNames.length <= 100) {
+                    text += "\n*Selected Photo List:*\n" + selectedListNames.join('\n') + "\n";
+                }
+                text += "\nPlease verify in Photo Selector Dashboard. Thank you!";
             } else {
-                text += "✨ *SELEKSI FOTO SELESAI*\n\n";
+                text += "*SELEKSI FOTO SELESAI*\n\n";
                 if (extraCount > 0 && proofUrl) {
                     text += "Halo Fotografer, kami dari *" + clientState.namaClient + "* telah selesai memilih foto & menyelesaikan pembayaran ekstra.\n\n";
                 } else {
                     text += "Halo Fotografer, kami dari *" + clientState.namaClient + "* telah selesai memilih foto.\n\n";
                 }
-                text += "📋 *Ringkasan:*\n";
+                text += "*Ringkasan:*\n";
                 if (extraCount > 0) {
-                    text += "• Terpilih: " + clientState.selectedImages.length + " Foto (Ekstra: +" + extraCount + " Foto)\n";
-                    text += "• Total Bayar: Rp" + (extraCount * clientState.extraPrice).toLocaleString('id-ID') + "\n";
-                    text += "• Bukti Transfer: " + proofUrl + "\n";
+                    text += "• Total Terpilih: *" + clientState.selectedImages.length + " Foto* (Kuota: " + clientState.maxFoto + " + Ekstra: " + extraCount + " Foto)\n";
+                    text += "• Total Tagihan Ekstra: *Rp " + (extraCount * clientState.extraPrice).toLocaleString('id-ID') + "*\n";
+                    if (proofUrl) text += "• Bukti Transfer: " + proofUrl + "\n";
                 } else {
-                    text += "• Terpilih: " + clientState.selectedImages.length + " / " + clientState.maxFoto + " Foto\n";
+                    text += "• Total Terpilih: *" + clientState.selectedImages.length + " / " + clientState.maxFoto + " Foto*\n";
+                }
+                text += "• Link Galeri Pilihan: " + clientGalleryUrl + "\n";
+                if (clientState.driveLink) {
+                    text += "• Link Google Drive Master: " + clientState.driveLink + "\n";
                 }
                 if (driveUrl) {
-                    text += "• File Daftar & Catatan (Drive):\n" + driveUrl + "\n";
+                    text += "• File Cadangan (Drive): " + driveUrl + "\n";
+                }
+                if (selectedListNames.length > 0 && selectedListNames.length <= 100) {
+                    text += "\n*Daftar Foto Terpilih:*\n" + selectedListNames.join('\n') + "\n";
                 }
                 text += "\nMohon dicek pada Dashboard Photo Selector. Terima kasih! 🙏";
             }
