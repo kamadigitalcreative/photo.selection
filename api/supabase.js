@@ -568,6 +568,8 @@ async function handleGetProjectForClient(payload, res) {
     'Daftar Pilihan': dp,
     notes: nt,
     paymentProof: p.PaymentProof || p['Payment Proof'],
+    backupDrive: p['Backup Drive'] || p.BackupDrive || '',
+    backupUrl: p['Backup Drive'] || p.BackupDrive || '',
     brandName: ownerBrand.brandName,
     brandLogo: ownerBrand.brandLogo,
     watermarkUrl: ownerBrand.watermarkUrl,
@@ -644,7 +646,10 @@ async function handleUpdateClientStatus(payload, res) {
     body: updateBody
   });
 
-  return success(res, { success: true });
+  const updatedRows = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)},"Short Slug".eq.${encodeURIComponent(token)})&select="Backup Drive"`);
+  const backupUrl = (updatedRows && updatedRows[0] && updatedRows[0]['Backup Drive']) ? updatedRows[0]['Backup Drive'] : '';
+
+  return success(res, { success: true, backupUrl: backupUrl });
 }
 
 async function handleReleaseClientSession(payload, res) {
