@@ -11050,14 +11050,12 @@
                 if (!cachedStatus && !isSilent) endLoading();
 
                 if (res.status === 'success') {
-                    if (JSON.stringify(res.data.data) !== cachedStatus) {
-                        rawStatusData = res.data.data;
-                        localStorage.setItem(cacheKey, JSON.stringify(rawStatusData));
-                        if (typeof filterClientStatus === 'function' && document.getElementById('search-client-status') && document.getElementById('search-client-status').value) {
-                            filterClientStatus();
-                        } else {
-                            renderClientProgress(rawStatusData);
-                        }
+                    rawStatusData = res.data.data;
+                    localStorage.setItem(cacheKey, JSON.stringify(rawStatusData));
+                    if (typeof filterClientStatus === 'function' && document.getElementById('search-client-status') && document.getElementById('search-client-status').value) {
+                        filterClientStatus();
+                    } else {
+                        renderClientProgress(rawStatusData);
                     }
                 } else {
                     var errMsg = res.message || res.data?.message;
