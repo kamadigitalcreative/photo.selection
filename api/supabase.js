@@ -316,6 +316,30 @@ async function handleSavePaymentSettings(payload, res) {
 async function handleUploadPaymentProof(payload, res) {
   const base64Data = payload.base64Data || '';
   if (!base64Data) return error(res, 'File bukti transfer tidak ditemukan');
+
+  if (APPS_SCRIPT_URL) {
+    try {
+      const gasRes = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'uploadPaymentProof',
+          secret_token: INTERNAL_SECRET_TOKEN,
+          base64Data: base64Data,
+          filename: payload.filename || 'bukti.jpg',
+          projectFolderName: payload.projectFolderName || 'Payment Proofs',
+          clientName: payload.clientName || 'Klien'
+        })
+      });
+      const gasData = await gasRes.json();
+      if (gasData && gasData.data && gasData.data.url) {
+        return success(res, { success: true, url: gasData.data.url });
+      }
+    } catch (e) {
+      console.error('GAS upload proof error:', e);
+    }
+  }
+
   return success(res, { success: true, url: base64Data });
 }
 
