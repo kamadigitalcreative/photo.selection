@@ -1,6 +1,6 @@
 /**
  * API Handler Backend Berbasis Supabase (PostgreSQL)
- * Kompatibel 100% dengan Nama Kolom Asli Google Spreadsheet
+ * 100% Kompatibel dengan Struktur Kolom Asli Google Sheets
  */
 
 const crypto = require('crypto');
@@ -141,19 +141,19 @@ async function handleLogin(payload, res) {
   const password = (payload.password || '').trim();
   if (!username || !password) return error(res, 'Username dan Password wajib diisi.');
 
-  const users = await supabaseQuery(`users?or=(Username.ilike.${encodeURIComponent(username)},username.ilike.${encodeURIComponent(username)})&select=*`);
+  const users = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(username)}&select=*`);
   if (!users || users.length === 0) return error(res, 'Username atau password salah.');
 
   const u = users[0];
-  const storedPass = u.Password || u.password_hash || u.password || '';
+  const storedPass = u.Password || '';
   const inputHash = hashPassword(password);
 
   const isMatch = (storedPass === inputHash) || (storedPass === password);
   if (!isMatch) return error(res, 'Username atau password salah.');
 
-  const status = u.Status || u.status || 'Active';
-  const role = u.Role || u.role || 'Photographer';
-  const uName = u.Username || u.username;
+  const status = u.Status || 'Active';
+  const role = u.Role || 'Photographer';
+  const uName = u.Username;
 
   if (status === 'Unverified') return error(res, 'Akun Anda belum diverifikasi. Silakan cek email Anda.');
   if (status === 'Pending') return error(res, 'Akun Anda sedang menunggu persetujuan (ACC) dari Admin.');
@@ -162,28 +162,28 @@ async function handleLogin(payload, res) {
   try {
     await supabaseQuery('sessions', {
       method: 'POST',
-      body: { session_id: sessionId, username: uName, role: role }
+      body: { SessionID: sessionId, Username: uName, Role: role, CreatedAt: new Date().toISOString() }
     });
   } catch (e) { }
 
-  const rawPaket = u.Paket || u.paket || '';
-  const isPro = Boolean(String(u.Akses_Watermark || u.akses_watermark).toUpperCase() === 'TRUE' || rawPaket.toUpperCase().includes('PRO'));
+  const rawPaket = u.Paket || '';
+  const isPro = Boolean(String(u.Akses_Watermark).toUpperCase() === 'TRUE' || rawPaket.toUpperCase().includes('PRO'));
 
   const userData = {
     username: uName,
-    nama: u.Nama || u.nama || uName,
+    nama: u.Nama || uName,
     role: role,
     status: status,
-    brandName: u.BrandName || u.brand_name || 'Photo Selection',
-    brandLogo: u.BrandLogo || u.brand_logo || '',
-    watermarkUrl: u.WatermarkUrl || u.watermark_url || '',
-    bankName: u.BankName || u.bank_name || '',
-    bankAccount: u.BankAccount || u.bank_account || '',
-    bankAccountName: u.BankAccountName || u.bank_account_name || '',
-    email: u.Email || u.email || '',
-    nohp: u['No HP'] || u.no_hp || '',
+    brandName: u.BrandName || 'Photo Selection',
+    brandLogo: u.BrandLogo || '',
+    watermarkUrl: u.WatermarkUrl || '',
+    bankName: u.BankName || '',
+    bankAccount: u.BankAccount || '',
+    bankAccountName: u.BankAccountName || '',
+    email: u.Email || '',
+    nohp: u['No HP'] || '',
     paket: rawPaket || '1 Bulan',
-    expiredAt: u.ExpiredAt || u.expired_at || 'Lifetime',
+    expiredAt: u.ExpiredAt || 'Lifetime',
     isPremiumAddon: isPro,
     sessionId: sessionId
   };
@@ -192,7 +192,7 @@ async function handleLogin(payload, res) {
 }
 
 async function handleRegister(payload, res) {
-  const d = payload.data || {};
+  const d = payload.data || payload || {};
   const nama = (d.nama || '').trim();
   const email = (d.email || '').trim().toLowerCase();
   const nohp = (d.nohp || '').trim();
@@ -202,7 +202,7 @@ async function handleRegister(payload, res) {
 
   if (!nama || !email || !username || !password) return error(res, 'Lengkapi semua isian pendaftaran.');
 
-  const existing = await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(username)},username.eq.${encodeURIComponent(username)})&select=id`);
+  const existing = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(username)}&select=id`);
   if (existing && existing.length > 0) return error(res, 'Username sudah digunakan.');
 
   const passHash = hashPassword(password);
@@ -246,13 +246,13 @@ async function handleRegister(payload, res) {
 
 async function handleGetGlobalBranding(payload, res) {
   try {
-    const adminUsers = await supabaseQuery('users?or=(Role.eq.Admin,role.eq.Admin)&select=*&limit=1');
+    const adminUsers = await supabaseQuery('users?Role=eq.Admin&select=*&limit=1');
     if (adminUsers && adminUsers.length > 0) {
       const u = adminUsers[0];
       return success(res, {
         success: true,
-        brandName: u.BrandName || u.brand_name || 'Photo Selection',
-        brandLogo: u.BrandLogo || u.brand_logo || ''
+        brandName: u.BrandName || 'Photo Selection',
+        brandLogo: u.BrandLogo || ''
       });
     }
   } catch (e) { }
@@ -270,7 +270,7 @@ async function handleSaveBrandSettings(payload, res) {
   const updateBody = { BrandName: brandName, BrandLogo: brandLogo };
   if (watermarkUrl) updateBody.WatermarkUrl = watermarkUrl;
 
-  await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(username)},username.eq.${encodeURIComponent(username)})`, {
+  await supabaseQuery(`users?Username=eq.${encodeURIComponent(username)}`, {
     method: 'PATCH',
     body: updateBody
   });
@@ -284,7 +284,7 @@ async function handleSavePaymentSettings(payload, res) {
   const bankAccount = (payload.bankAccount || '').trim();
   const bankAccountName = (payload.bankAccountName || '').trim();
 
-  await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(username)},username.eq.${encodeURIComponent(username)})`, {
+  await supabaseQuery(`users?Username=eq.${encodeURIComponent(username)}`, {
     method: 'PATCH',
     body: { BankName: bankName, BankAccount: bankAccount, BankAccountName: bankAccountName }
   });
@@ -295,7 +295,7 @@ async function handleSavePaymentSettings(payload, res) {
 async function handlePingUser(payload, res) {
   const user = payload.currentUser || {};
   if (user.username) {
-    await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(user.username)},username.eq.${encodeURIComponent(user.username)})`, {
+    await supabaseQuery(`users?Username=eq.${encodeURIComponent(user.username)}`, {
       method: 'PATCH',
       body: { LastActive: new Date().toISOString() }
     }).catch(() => { });
@@ -310,55 +310,55 @@ async function handleGetProjects(payload, res) {
 
   let endpoint = 'projects?select=*&order=created_at.desc';
   if (role !== 'Admin') {
-    endpoint = `projects?or=(Owner.eq.${encodeURIComponent(username)},owner.eq.${encodeURIComponent(username)})&select=*&order=created_at.desc`;
+    endpoint = `projects?Owner=eq.${encodeURIComponent(username)}&select=*&order=created_at.desc`;
   }
 
   const rows = await supabaseQuery(endpoint);
 
   const formatted = (rows || []).map(p => {
-    let dp = p['Daftar Pilihan'] || p.daftar_pilihan || [];
+    let dp = p['Daftar Pilihan'] || [];
     if (typeof dp === 'string') {
       try { dp = JSON.parse(dp); } catch (e) { dp = dp.split(',').map(s => s.trim()).filter(Boolean); }
     }
-    let nt = p.Notes || p.notes || {};
+    let nt = p.Notes || {};
     if (typeof nt === 'string') {
       try { nt = JSON.parse(nt); } catch (e) { }
     }
-    let kat = p.Kategori || p.kategori || [];
+    let kat = p.Kategori || [];
     if (typeof kat === 'string') {
       try { kat = JSON.parse(kat); } catch (e) { }
     }
 
-    const token = p.Token || p.token;
-    const shortSlug = p.Slug || p['Short Slug'] || p.short_slug || token;
+    const token = p.Token || p.ID;
+    const shortSlug = p['Short Slug'] || p.Slug || token;
 
     return {
       ID: p.id || p.ID,
       Token: token,
       ShortSlug: shortSlug,
-      NamaClient: p['Nama Client'] || p.nama_client || 'Client',
-      NomorWA: p['Nomor WA'] || p.nomor_wa || '',
-      PasswordClient: p['Password Client'] || p.password_client || '',
-      MaxFoto: Number(p['Max Foto'] || p.max_foto) || 50,
-      DriveLink: p['Drive Link'] || p.drive_link || '',
-      Owner: p.Owner || p.owner || 'admin',
-      ShortLink: p['Short Link'] || p.short_link || `https://ps.kamacreative.my.id/app?c=${shortSlug}`,
+      NamaClient: p['Nama Client'] || 'Client',
+      NomorWA: p['Nomor WA'] || '',
+      PasswordClient: p['Password Client'] || '',
+      MaxFoto: Number(p['Max Foto']) || 50,
+      DriveLink: p['Drive Link'] || '',
+      Owner: p.Owner || 'admin',
+      ShortLink: p['Short Link'] || `https://ps.kamacreative.my.id/app?c=${shortSlug}`,
       Kategori: kat,
-      UseWatermark: String(p.UseWatermark || p.use_watermark).toUpperCase() === 'TRUE',
-      UseWatermarkTiled: String(p.UseWatermarkTiled || p.use_watermark_tiled).toUpperCase() === 'TRUE',
-      ClientLayout: p.ClientLayout || p.client_layout || 'masonry',
-      ExtraPrice: Number(p.ExtraPrice || p.extra_price) || 0,
-      MusicUrl: p.MusicUrl || p.music_url || '',
-      AksesPilih: String(p.AksesPilih || p.akses_pilih).toUpperCase() !== 'FALSE',
-      AksesDownload: String(p.AksesDownload || p.akses_download).toUpperCase() !== 'FALSE',
-      DurasiPilih: p.DurasiPilih || p.durasi_pilih || 'Selamanya',
-      DurasiDownload: p.DurasiDownload || p.durasi_download || 'Selamanya',
-      Deadline: p.Deadline || p.deadline || '',
-      StatusClient: p.Status || p.status_client || 'Belum Memilih',
-      FotoTerpilih: Number(p['Foto Terpilih'] || p.foto_terpilih) || 0,
+      UseWatermark: String(p.UseWatermark).toUpperCase() === 'TRUE',
+      UseWatermarkTiled: String(p.UseWatermarkTiled).toUpperCase() === 'TRUE',
+      ClientLayout: p.ClientLayout || 'masonry',
+      ExtraPrice: Number(p.ExtraPrice) || 0,
+      MusicUrl: p.MusicUrl || p.MusicURL || '',
+      AksesPilih: String(p.AksesPilih || p.Akses_Pilih).toUpperCase() !== 'FALSE',
+      AksesDownload: String(p.AksesDownload || p.Akses_Download).toUpperCase() !== 'FALSE',
+      DurasiPilih: p.DurasiPilih || p.Durasi_Pilih || 'Selamanya',
+      DurasiDownload: p.DurasiDownload || p.Durasi_Download || 'Selamanya',
+      Deadline: p.Deadline || '',
+      StatusClient: p.Status || p['Status Client'] || 'Belum Memilih',
+      FotoTerpilih: Number(p['Foto Terpilih']) || 0,
       DaftarPilihan: dp,
       Notes: nt,
-      PaymentProof: p.PaymentProof || p.payment_proof || '',
+      PaymentProof: p.PaymentProof || p['Payment Proof'] || '',
       TanggalDibuat: p['Dibuat Pada'] || p.created_at || new Date().toISOString()
     };
   });
@@ -434,11 +434,11 @@ async function handleGetProjectForClient(payload, res) {
   const tokenOrSlug = (payload.token || '').trim();
   if (!tokenOrSlug) return error(res, 'Token or slug is required');
 
-  let projects = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(tokenOrSlug)},Slug.eq.${encodeURIComponent(tokenOrSlug)},token.eq.${encodeURIComponent(tokenOrSlug)},short_slug.eq.${encodeURIComponent(tokenOrSlug)})&select=*`);
+  let projects = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(tokenOrSlug)},Slug.eq.${encodeURIComponent(tokenOrSlug)})&select=*`);
   if (!projects || projects.length === 0) return error(res, 'Project tidak ditemukan.', 404);
 
   const p = projects[0];
-  const ownerName = p.Owner || p.owner;
+  const ownerName = p.Owner;
 
   let ownerBrand = {
     brandName: 'Photo Selection',
@@ -451,64 +451,64 @@ async function handleGetProjectForClient(payload, res) {
   };
 
   try {
-    const owners = await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(ownerName)},username.eq.${encodeURIComponent(ownerName)})&select=*`);
+    const owners = await supabaseQuery(`users?Username=eq.${encodeURIComponent(ownerName)}&select=*`);
     if (owners && owners.length > 0) {
       const o = owners[0];
       ownerBrand = {
-        brandName: o.BrandName || o.brand_name || 'Photo Selection',
-        brandLogo: o.BrandLogo || o.brand_logo || '',
-        watermarkUrl: o.WatermarkUrl || o.watermark_url || '',
-        bankName: o.BankName || o.bank_name || '',
-        bankAccount: o.BankAccount || o.bank_account || '',
-        bankAccountName: o.BankAccountName || o.bank_account_name || '',
-        isPremiumAddon: Boolean(String(o.Akses_Watermark || o.akses_watermark).toUpperCase() === 'TRUE')
+        brandName: o.BrandName || 'Photo Selection',
+        brandLogo: o.BrandLogo || '',
+        watermarkUrl: o.WatermarkUrl || '',
+        bankName: o.BankName || '',
+        bankAccount: o.BankAccount || '',
+        bankAccountName: o.BankAccountName || '',
+        isPremiumAddon: Boolean(String(o.Akses_Watermark).toUpperCase() === 'TRUE')
       };
     }
   } catch (e) { }
 
-  let dp = p['Daftar Pilihan'] || p.daftar_pilihan || [];
+  let dp = p['Daftar Pilihan'] || [];
   if (typeof dp === 'string') {
     try { dp = JSON.parse(dp); } catch (e) { dp = dp.split(',').map(s => s.trim()).filter(Boolean); }
   }
 
-  let nt = p.Notes || p.notes || {};
+  let nt = p.Notes || {};
   if (typeof nt === 'string') {
     try { nt = JSON.parse(nt); } catch (e) { }
   }
 
-  let kat = p.Kategori || p.kategori || [];
+  let kat = p.Kategori || [];
   if (typeof kat === 'string') {
     try { kat = JSON.parse(kat); } catch (e) { }
   }
 
-  const pass = p['Password Client'] || p.password_client || '';
+  const pass = p['Password Client'] || '';
 
   return success(res, {
     success: true,
-    token: p.Token || p.token,
-    slug: p.Slug || p.short_slug || p.Token || p.token,
-    namaClient: p['Nama Client'] || p.nama_client,
-    nomorWA: p['Nomor WA'] || p.nomor_wa,
+    token: p.Token,
+    slug: p['Short Slug'] || p.Slug || p.Token,
+    namaClient: p['Nama Client'],
+    nomorWA: p['Nomor WA'],
     hasPassword: Boolean(pass && pass.trim() !== ''),
-    maxFoto: Number(p['Max Foto'] || p.max_foto) || 50,
-    driveLink: p['Drive Link'] || p.drive_link,
+    maxFoto: Number(p['Max Foto']) || 50,
+    driveLink: p['Drive Link'],
     owner: ownerName,
     kategori: kat,
-    useWatermark: String(p.UseWatermark || p.use_watermark).toUpperCase() === 'TRUE',
-    useWatermarkTiled: String(p.UseWatermarkTiled || p.use_watermark_tiled).toUpperCase() === 'TRUE',
-    clientLayout: p.ClientLayout || p.client_layout || 'masonry',
-    extraPrice: Number(p.ExtraPrice || p.extra_price) || 0,
-    musicUrl: p.MusicUrl || p.music_url || '',
-    aksesPilih: String(p.AksesPilih || p.akses_pilih).toUpperCase() !== 'FALSE',
-    aksesDownload: String(p.AksesDownload || p.akses_download).toUpperCase() !== 'FALSE',
-    durasiPilih: p.DurasiPilih || p.durasi_pilih,
-    durasiDownload: p.DurasiDownload || p.durasi_download,
-    deadline: p.Deadline || p.deadline,
-    statusClient: p.Status || p.status_client || 'Belum Memilih',
-    fotoTerpilih: Number(p['Foto Terpilih'] || p.foto_terpilih) || 0,
+    useWatermark: String(p.UseWatermark).toUpperCase() === 'TRUE',
+    useWatermarkTiled: String(p.UseWatermarkTiled).toUpperCase() === 'TRUE',
+    clientLayout: p.ClientLayout || 'masonry',
+    extraPrice: Number(p.ExtraPrice) || 0,
+    musicUrl: p.MusicUrl || p.MusicURL || '',
+    aksesPilih: String(p.AksesPilih || p.Akses_Pilih).toUpperCase() !== 'FALSE',
+    aksesDownload: String(p.AksesDownload || p.Akses_Download).toUpperCase() !== 'FALSE',
+    durasiPilih: p.DurasiPilih || p.Durasi_Pilih,
+    durasiDownload: p.DurasiDownload || p.Durasi_Download,
+    deadline: p.Deadline,
+    statusClient: p.Status || p['Status Client'] || 'Belum Memilih',
+    fotoTerpilih: Number(p['Foto Terpilih']) || 0,
     daftarPilihan: dp,
     notes: nt,
-    paymentProof: p.PaymentProof || p.payment_proof,
+    paymentProof: p.PaymentProof || p['Payment Proof'],
     brandName: ownerBrand.brandName,
     brandLogo: ownerBrand.brandLogo,
     watermarkUrl: ownerBrand.watermarkUrl,
@@ -523,11 +523,11 @@ async function handleVerifyClientPassword(payload, res) {
   const token = (payload.token || '').trim();
   const password = (payload.password || '').trim();
 
-  let projects = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)},token.eq.${encodeURIComponent(token)},short_slug.eq.${encodeURIComponent(token)})&select=*`);
+  let projects = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)})&select=*`);
   if (!projects || projects.length === 0) return error(res, 'Project tidak ditemukan');
 
   const p = projects[0];
-  const storedPass = p['Password Client'] || p.password_client || '';
+  const storedPass = p['Password Client'] || '';
   const isValid = (!storedPass || storedPass === password);
   return success(res, { success: isValid });
 }
@@ -535,9 +535,9 @@ async function handleVerifyClientPassword(payload, res) {
 async function handleUpdateClientPassword(payload, res) {
   const token = (payload.token || '').trim();
   const password = (payload.password || '').trim();
-  await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},token.eq.${encodeURIComponent(token)})`, {
+  await supabaseQuery(`projects?Token=eq.${encodeURIComponent(token)}`, {
     method: 'PATCH',
-    body: { 'Password Client': password, password_client: password }
+    body: { 'Password Client': password }
   });
   return success(res, { success: true });
 }
@@ -554,13 +554,17 @@ async function handleUpdateClientStatus(payload, res) {
 
   const updateBody = {
     Status: status,
+    'Status Client': status,
     'Foto Terpilih': fotoTerpilih,
     'Daftar Pilihan': daftarPilihan,
     Notes: notes
   };
-  if (paymentProof) updateBody.PaymentProof = paymentProof;
+  if (paymentProof) {
+    updateBody.PaymentProof = paymentProof;
+    updateBody['Payment Proof'] = paymentProof;
+  }
 
-  await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},token.eq.${encodeURIComponent(token)})`, {
+  await supabaseQuery(`projects?Token=eq.${encodeURIComponent(token)}`, {
     method: 'PATCH',
     body: updateBody
   });
@@ -570,15 +574,15 @@ async function handleUpdateClientStatus(payload, res) {
 
 async function handleDeleteProject(payload, res) {
   const token = (payload.token || '').trim();
-  await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},token.eq.${encodeURIComponent(token)})`, { method: 'DELETE' });
+  await supabaseQuery(`projects?Token=eq.${encodeURIComponent(token)}`, { method: 'DELETE' });
   return success(res, { success: true });
 }
 
 async function handleReopenProject(payload, res) {
   const token = (payload.token || '').trim();
-  await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},token.eq.${encodeURIComponent(token)})`, {
+  await supabaseQuery(`projects?Token=eq.${encodeURIComponent(token)}`, {
     method: 'PATCH',
-    body: { Status: 'Sedang Memilih' }
+    body: { Status: 'Sedang Memilih', 'Status Client': 'Sedang Memilih' }
   });
   return success(res, { success: true });
 }
@@ -586,7 +590,7 @@ async function handleReopenProject(payload, res) {
 async function handleToggleProjectWatermark(payload, res) {
   const token = (payload.token || '').trim();
   const useWatermark = Boolean(payload.useWatermark);
-  await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},token.eq.${encodeURIComponent(token)})`, {
+  await supabaseQuery(`projects?Token=eq.${encodeURIComponent(token)}`, {
     method: 'PATCH',
     body: { UseWatermark: String(useWatermark).toUpperCase() }
   });
@@ -596,28 +600,28 @@ async function handleToggleProjectWatermark(payload, res) {
 async function handleGetDashboardStats(payload, res) {
   const allUsers = await supabaseQuery('users?select=*');
   const allProjects = await supabaseQuery('projects?select=id');
-  const analyticsRows = await supabaseQuery('analytics?select=id,visitor_id');
+  const analyticsRows = await supabaseQuery('analytics?select=id,VisitorID');
 
   const totalUsers = allUsers ? allUsers.length : 0;
-  const activeUsers = allUsers ? allUsers.filter(u => (u.Status || u.status) === 'Active').length : 0;
-  const pendingUsers = allUsers ? allUsers.filter(u => (u.Status || u.status) === 'Pending').length : 0;
-  const inactiveUsers = allUsers ? allUsers.filter(u => (u.Status || u.status) === 'Inactive').length : 0;
+  const activeUsers = allUsers ? allUsers.filter(u => u.Status === 'Active').length : 0;
+  const pendingUsers = allUsers ? allUsers.filter(u => u.Status === 'Pending').length : 0;
+  const inactiveUsers = allUsers ? allUsers.filter(u => u.Status === 'Inactive').length : 0;
   const totalProjects = allProjects ? allProjects.length : 0;
 
   const totalViews = analyticsRows ? analyticsRows.length : 0;
-  const uniqueVisitors = analyticsRows ? new Set(analyticsRows.map(r => r.visitor_id)).size : 0;
+  const uniqueVisitors = analyticsRows ? new Set(analyticsRows.map(r => r.VisitorID)).size : 0;
 
   const now = new Date();
   const thirtyDaysLater = new Date();
   thirtyDaysLater.setDate(now.getDate() + 30);
 
   const expiringSoon = (allUsers || []).filter(u => {
-    const exp = u.ExpiredAt || u.expired_at;
-    const role = u.Role || u.role;
+    const exp = u.ExpiredAt;
+    const role = u.Role;
     if (role === 'Admin' || exp === 'Lifetime' || !exp) return false;
     const expDate = new Date(exp);
     return expDate >= now && expDate <= thirtyDaysLater;
-  }).map(u => ({ username: u.Username || u.username, expiredAt: u.ExpiredAt || u.expired_at }));
+  }).map(u => ({ username: u.Username, expiredAt: u.ExpiredAt }));
 
   return success(res, {
     totalViews,
@@ -638,7 +642,7 @@ async function handleLogVisit(payload, res) {
 
   await supabaseQuery('analytics', {
     method: 'POST',
-    body: { type, page, visitor_id: visitorId, timestamp: new Date().toISOString() }
+    body: { Type: type, Page: page, VisitorID: visitorId, Timestamp: new Date().toISOString() }
   }).catch(() => { });
 
   return success(res, { logged: true });
@@ -650,19 +654,19 @@ async function handleGetUsers(payload, res) {
 
   const rows = await supabaseQuery('users?select=*&order=created_at.desc');
   const users = (rows || []).map(u => ({
-    username: u.Username || u.username,
-    nama: u.Nama || u.nama,
-    role: u.Role || u.role,
-    status: u.Status || u.status,
-    brand_name: u.BrandName || u.brand_name,
-    brand_logo: u.BrandLogo || u.brand_logo,
-    email: u.Email || u.email,
-    no_hp: u['No HP'] || u.no_hp,
-    paket: u.Paket || u.paket,
-    expired_at: u.ExpiredAt || u.expired_at,
-    project_created: Number(u.ProjectCreated || u.project_created) || 0,
-    akses_watermark: String(u.Akses_Watermark || u.akses_watermark).toUpperCase() === 'TRUE',
-    last_active: u.LastActive || u.last_active || u.created_at
+    username: u.Username,
+    nama: u.Nama,
+    role: u.Role,
+    status: u.Status,
+    brand_name: u.BrandName,
+    brand_logo: u.BrandLogo,
+    email: u.Email,
+    no_hp: u['No HP'],
+    paket: u.Paket,
+    expired_at: u.ExpiredAt,
+    project_created: Number(u.ProjectCreated) || 0,
+    akses_watermark: String(u.Akses_Watermark).toUpperCase() === 'TRUE',
+    last_active: u.LastActive || u.created_at
   }));
 
   return success(res, users);
@@ -673,7 +677,7 @@ async function handleApproveUser(payload, res) {
   const expiredAt = payload.expiredAt || 'Lifetime';
   const role = payload.role || 'Photographer';
 
-  await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(username)},username.eq.${encodeURIComponent(username)})`, {
+  await supabaseQuery(`users?Username=eq.${encodeURIComponent(username)}`, {
     method: 'PATCH',
     body: { Status: 'Active', ExpiredAt: expiredAt, Role: role }
   });
@@ -686,7 +690,7 @@ async function handleUpdateExpiry(payload, res) {
   const expiredAt = payload.expiredAt;
   const paket = payload.paket || '1 Bulan';
 
-  await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(username)},username.eq.${encodeURIComponent(username)})`, {
+  await supabaseQuery(`users?Username=eq.${encodeURIComponent(username)}`, {
     method: 'PATCH',
     body: { ExpiredAt: expiredAt, Paket: paket, Status: 'Active' }
   });
@@ -696,21 +700,21 @@ async function handleUpdateExpiry(payload, res) {
 
 async function handleDeleteUser(payload, res) {
   const username = (payload.username || '').trim();
-  await supabaseQuery(`projects?or=(Owner.eq.${encodeURIComponent(username)},owner.eq.${encodeURIComponent(username)})`, { method: 'DELETE' });
-  await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(username)},username.eq.${encodeURIComponent(username)})`, { method: 'DELETE' });
+  await supabaseQuery(`projects?Owner=eq.${encodeURIComponent(username)}`, { method: 'DELETE' });
+  await supabaseQuery(`users?Username=eq.${encodeURIComponent(username)}`, { method: 'DELETE' });
   return success(res, { success: true });
 }
 
 async function handleRequestOTP(payload, res) {
   const email = (payload.email || '').trim().toLowerCase();
-  const users = await supabaseQuery(`users?or=(Email.eq.${encodeURIComponent(email)},email.eq.${encodeURIComponent(email)})&select=*`);
+  const users = await supabaseQuery(`users?Email=eq.${encodeURIComponent(email)}&select=*`);
   if (!users || users.length === 0) return error(res, 'Email tidak terdaftar.');
 
-  const uName = users[0].Username || users[0].username;
+  const uName = users[0].Username;
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   await supabaseQuery('reset_tokens', {
     method: 'POST',
-    body: { username: uName, otp: otp, created_at: new Date().toISOString() }
+    body: { Username: uName, OTP: otp, CreatedAt: new Date().toISOString() }
   });
 
   return success(res, { success: true, otp: otp });
@@ -721,15 +725,15 @@ async function handleResetPasswordWithOTP(payload, res) {
   const otp = (payload.otp || '').trim();
   const newPassword = (payload.newPassword || '').trim();
 
-  const users = await supabaseQuery(`users?or=(Email.eq.${encodeURIComponent(email)},email.eq.${encodeURIComponent(email)})&select=*`);
+  const users = await supabaseQuery(`users?Email=eq.${encodeURIComponent(email)}&select=*`);
   if (!users || users.length === 0) return error(res, 'User tidak ditemukan.');
 
-  const uName = users[0].Username || users[0].username;
-  const tokens = await supabaseQuery(`reset_tokens?username=eq.${encodeURIComponent(uName)}&otp=eq.${encodeURIComponent(otp)}&limit=1`);
+  const uName = users[0].Username;
+  const tokens = await supabaseQuery(`reset_tokens?Username=eq.${encodeURIComponent(uName)}&OTP=eq.${encodeURIComponent(otp)}&limit=1`);
   if (!tokens || tokens.length === 0) return error(res, 'Kode OTP salah.');
 
   const newHash = hashPassword(newPassword);
-  await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(uName)},username.eq.${encodeURIComponent(uName)})`, {
+  await supabaseQuery(`users?Username=eq.${encodeURIComponent(uName)}`, {
     method: 'PATCH',
     body: { Password: newHash }
   });
@@ -739,7 +743,7 @@ async function handleResetPasswordWithOTP(payload, res) {
 
 async function handleConfirmEmail(payload, res) {
   const token = (payload.token || '').trim();
-  await supabaseQuery(`users?or=(ConfirmToken.eq.${encodeURIComponent(token)},confirm_token.eq.${encodeURIComponent(token)})`, {
+  await supabaseQuery(`users?ConfirmToken=eq.${encodeURIComponent(token)}`, {
     method: 'PATCH',
     body: { Status: 'Active', ConfirmToken: '' }
   });
@@ -756,14 +760,14 @@ async function handleSubmitFeedback(payload, res) {
   await supabaseQuery('feedbacks', {
     method: 'POST',
     body: {
-      id: fbId,
-      username: user.username || 'Anonymous',
-      role: user.role || 'Photographer',
-      pesan: pesan,
-      lampiran_url: lampiranUrl,
-      tanggal: new Date().toISOString(),
-      status_admin: 'Unread',
-      status_user: 'Read'
+      ID: fbId,
+      Username: user.username || 'Anonymous',
+      Role: user.role || 'Photographer',
+      Pesan: pesan,
+      LampiranURL: lampiranUrl,
+      Tanggal: new Date().toISOString(),
+      StatusAdmin: 'Unread',
+      StatusUser: 'Read'
     }
   });
 
@@ -772,9 +776,9 @@ async function handleSubmitFeedback(payload, res) {
 
 async function handleGetFeedbacks(payload, res) {
   const user = payload.currentUser || {};
-  let endpoint = 'feedbacks?select=*&order=tanggal.desc';
+  let endpoint = 'feedbacks?select=*&order=created_at.desc';
   if (user.role !== 'Admin') {
-    endpoint = `feedbacks?username=eq.${encodeURIComponent(user.username)}&select=*&order=tanggal.desc`;
+    endpoint = `feedbacks?Username=eq.${encodeURIComponent(user.username)}&select=*&order=created_at.desc`;
   }
   const rows = await supabaseQuery(endpoint);
   return success(res, rows || []);
@@ -783,21 +787,21 @@ async function handleGetFeedbacks(payload, res) {
 async function handleReplyFeedback(payload, res) {
   const id = payload.id;
   const balasan = payload.balasan || '';
-  await supabaseQuery(`feedbacks?id=eq.${encodeURIComponent(id)}`, {
+  await supabaseQuery(`feedbacks?ID=eq.${encodeURIComponent(id)}`, {
     method: 'PATCH',
-    body: { balasan: balasan, tgl_balas: new Date().toISOString(), status_user: 'Unread' }
+    body: { Balasan: balasan, TglBalas: new Date().toISOString(), StatusUser: 'Unread' }
   });
   return success(res, { success: true });
 }
 
 async function handleGetAllNotifications(payload, res) {
   const user = payload.currentUser || {};
-  let fbEndpoint = 'feedbacks?select=*&order=tanggal.desc';
+  let fbEndpoint = 'feedbacks?select=*&order=created_at.desc';
   if (user.role !== 'Admin') {
-    fbEndpoint = `feedbacks?username=eq.${encodeURIComponent(user.username)}&select=*&order=tanggal.desc`;
+    fbEndpoint = `feedbacks?Username=eq.${encodeURIComponent(user.username)}&select=*&order=created_at.desc`;
   }
   const feedbacks = (await supabaseQuery(fbEndpoint)) || [];
-  const systemUpdates = (await supabaseQuery('system_updates?status=eq.Active&select=*&order=tanggal.desc')) || [];
+  const systemUpdates = (await supabaseQuery('system_updates?Status=eq.Active&select=*&order=created_at.desc')) || [];
 
   return success(res, { feedbacks, systemUpdates });
 }
@@ -806,15 +810,15 @@ async function handleMarkFeedbackRead(payload, res) {
   const user = payload.currentUser || {};
   const type = payload.type || 'user';
   if (type === 'admin') {
-    await supabaseQuery('feedbacks?status_admin=eq.Unread', { method: 'PATCH', body: { status_admin: 'Read' } }).catch(() => { });
+    await supabaseQuery('feedbacks?StatusAdmin=eq.Unread', { method: 'PATCH', body: { StatusAdmin: 'Read' } }).catch(() => { });
   } else if (user.username) {
-    await supabaseQuery(`feedbacks?username=eq.${encodeURIComponent(user.username)}&status_user=eq.Unread`, { method: 'PATCH', body: { status_user: 'Read' } }).catch(() => { });
+    await supabaseQuery(`feedbacks?Username=eq.${encodeURIComponent(user.username)}&StatusUser=eq.Unread`, { method: 'PATCH', body: { StatusUser: 'Read' } }).catch(() => { });
   }
   return success(res, { ok: true });
 }
 
 async function handleGetSystemUpdates(payload, res) {
-  const rows = await supabaseQuery('system_updates?status=eq.Active&select=*&order=tanggal.desc');
+  const rows = await supabaseQuery('system_updates?Status=eq.Active&select=*&order=created_at.desc');
   return success(res, rows || []);
 }
 
@@ -823,8 +827,8 @@ async function handleSyncBackground(payload, res) {
   const username = user.username;
   if (!username) return error(res, 'User required');
 
-  const users = await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(username)},username.eq.${encodeURIComponent(username)})&select=*`);
-  const projects = await supabaseQuery(`projects?or=(Owner.eq.${encodeURIComponent(username)},owner.eq.${encodeURIComponent(username)})&select=*&order=created_at.desc`);
+  const users = await supabaseQuery(`users?Username=eq.${encodeURIComponent(username)}&select=*`);
+  const projects = await supabaseQuery(`projects?Owner=eq.${encodeURIComponent(username)}&select=*&order=created_at.desc`);
 
   return success(res, { user: users ? users[0] : null, projects: projects || [] });
 }
@@ -840,12 +844,12 @@ async function handleMayarWebhook(payload, res) {
 
   let targetUser = null;
   if (email) {
-    const byEmail = await supabaseQuery(`users?or=(Email.eq.${encodeURIComponent(email)},email.eq.${encodeURIComponent(email)})&select=*`);
+    const byEmail = await supabaseQuery(`users?Email=eq.${encodeURIComponent(email)}&select=*`);
     if (byEmail && byEmail.length > 0) targetUser = byEmail[0];
   }
   if (!targetUser && mobile) {
     const cleanPhone = mobile.replace(/[^0-9]/g, '');
-    const byPhone = await supabaseQuery(`users?or=(No HP.like.*${encodeURIComponent(cleanPhone)}*,no_hp.like.*${encodeURIComponent(cleanPhone)}*)&select=*`);
+    const byPhone = await supabaseQuery(`users?No HP=like.*${encodeURIComponent(cleanPhone)}*&select=*`);
     if (byPhone && byPhone.length > 0) targetUser = byPhone[0];
   }
 
@@ -861,17 +865,17 @@ async function handleMayarWebhook(payload, res) {
     expDate.setDate(expDate.getDate() + addDays);
     const expiredAt = (paketName === 'Lifetime') ? 'Lifetime' : expDate.toISOString().split('T')[0];
 
-    const uName = targetUser.Username || targetUser.username;
+    const uName = targetUser.Username;
     const isProAddon = product.includes('ADD-ON') || product.includes('PRO');
 
     if (isProAddon) {
-      await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(uName)},username.eq.${encodeURIComponent(uName)})`, {
+      await supabaseQuery(`users?Username=eq.${encodeURIComponent(uName)}`, {
         method: 'PATCH',
         body: { Akses_Watermark: 'TRUE' }
       });
       hasilAktivasi = `Aktivasi PRO Add-on untuk ${uName}`;
     } else {
-      await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(uName)},username.eq.${encodeURIComponent(uName)})`, {
+      await supabaseQuery(`users?Username=eq.${encodeURIComponent(uName)}`, {
         method: 'PATCH',
         body: { Status: 'Active', Paket: paketName, ExpiredAt: expiredAt }
       });
@@ -882,13 +886,13 @@ async function handleMayarWebhook(payload, res) {
   await supabaseQuery('mayar_logs', {
     method: 'POST',
     body: {
-      event,
-      customer_email: email,
-      customer_name: name,
-      status_product: product,
-      hasil_aktivasi: hasilAktivasi,
-      raw_payload: payload,
-      timestamp: new Date().toISOString()
+      Event: event,
+      'Customer Email': email,
+      'Customer Name': name,
+      'Status/Product': product,
+      'Hasil Aktivasi': hasilAktivasi,
+      'Raw JSON Payload': JSON.stringify(payload),
+      Timestamp: new Date().toISOString()
     }
   }).catch(() => { });
 
