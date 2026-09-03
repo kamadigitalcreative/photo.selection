@@ -1037,12 +1037,144 @@ async function handleGetSystemUpdates(payload, res) {
 async function handleSyncBackground(payload, res) {
   const user = payload.currentUser || {};
   const username = user.username;
+  const role = user.role || 'Photographer';
   if (!username) return error(res, 'User required');
 
-  const users = await supabaseQuery(`users?Username=eq.${encodeURIComponent(username)}&select=*`);
-  const projects = await supabaseQuery(`projects?Owner=eq.${encodeURIComponent(username)}&select=*&order=created_at.desc`);
+  let endpoint = 'projects?select=*&order=created_at.desc';
+  if (role !== 'Admin') {
+    endpoint = `projects?Owner=eq.${encodeURIComponent(username)}&select=*&order=created_at.desc`;
+  }
 
-  return success(res, { success: true, user: users ? users[0] : null, projects: projects || [] });
+  let users = null;
+  let projectsRows = null;
+  let feedbacks = null;
+  let systemUpdates = null;
+
+  try {
+    const results = await Promise.all([
+      supabaseQuery(`users?Username=eq.${encodeURIComponent(username)}&select=*`),
+      supabaseQuery(endpoint),
+      supabaseQuery(`feedbacks?${role === 'Admin' ? '' : `Username=eq.${encodeURIComponent(username)}&`}Status${role === 'Admin' ? 'Admin' : 'User'}=eq.Unread&select=id`),
+      supabaseQuery('system_updates?Status=eq.Active&select=id&order=created_at.desc&limit=1')
+    ]);
+    users = results[0];
+    projectsRows = results[1];
+    feedbacks = results[2];
+    systemUpdates = results[3];
+  } catch (e) {
+    projectsRows = await supabaseQuery(endpoint).catch(() => []);
+  }
+
+  const formatted = (projectsRows || []).map(p => {
+    let dp = p['Daftar Pilihan'] || [];
+    if (typeof dp === 'string') {
+      try { dp = JSON.parse(dp); } catch (e) { dp = dp.split(',').map(s => s.trim()).filter(Boolean); }
+    }
+    let nt = p.Notes || {};
+    if (typeof nt === 'string') {
+      try { nt = JSON.parse(nt); } catch (e) { }
+    }
+    let kat = p.Kategori || [];
+    if (typeof kat === 'string') {
+      try { kat = JSON.parse(kat); } catch (e) { }
+    }
+
+    const token = p.Token || p.ID;
+    const shortSlug = p['Short Slug'] || p.Slug || token;
+    const clientName = p['Nama Client'] || p.NamaClient || 'Client';
+    const nomorWA = p['Nomor WA'] || p.NomorWA || '';
+    const passClient = p['Password Client'] || p.PasswordClient || '';
+    const maxFoto = Number(p['Max Foto']) || Number(p.MaxFoto) || 50;
+    const driveLink = p['Drive Link'] || p.DriveLink || '';
+    const dibuatPada = p['Dibuat Pada'] || p.created_at || new Date().toISOString();
+    const statusClient = p['Status Client'] || p.Status || 'Belum Memilih';
+    const fotoTerpilih = Number(p['Foto Terpilih']) || 0;
+    const shortLink = p['Short Link'] || `https://ps.kamacreative.my.id/app?c=${shortSlug}`;
+    const paymentProof = p['Payment Proof'] || p.PaymentProof || '';
+
+    return {
+      ID: p.id || p.ID || token,
+      Token: token,
+      'Short Slug': shortSlug,
+      ShortSlug: shortSlug,
+      Slug: shortSlug,
+      'Nama Client': clientName,
+      NamaClient: clientName,
+      'Nomor WA': nomorWA,
+      NomorWA: nomorWA,
+      'Password Client': passClient,
+      PasswordClient: passClient,
+      'Max Foto': maxFoto,
+      MaxFoto: maxFoto,
+      'Drive Link': driveLink,
+      DriveLink: driveLink,
+      Owner: p.Owner || 'admin',
+      'Short Link': shortLink,
+      ShortLink: shortLink,
+      Kategori: kat,
+      UseWatermark: String(p.UseWatermark).toUpperCase() === 'TRUE',
+      UseWatermarkTiled: String(p.UseWatermarkTiled).toUpperCase() === 'TRUE',
+      ClientLayout: p.ClientLayout || 'masonry',
+      ExtraPrice: Number(p.ExtraPrice) || 0,
+      MusicUrl: p.MusicUrl || p.MusicURL || '',
+      MusicURL: p.MusicUrl || p.MusicURL || '',
+      AksesPilih: String(p.AksesPilih || p.Akses_Pilih).toUpperCase() !== 'FALSE',
+      AksesDownload: String(p.AksesDownload || p.Akses_Download).toUpperCase() !== 'FALSE',
+      'Akses_Pilih': String(p.AksesPilih || p.Akses_Pilih).toUpperCase() !== 'FALSE',
+      'Akses_Download': String(p.AksesDownload || p.Akses_Download).toUpperCase() !== 'FALSE',
+      DurasiPilih: p.DurasiPilih || p.Durasi_Pilih || 'Selamanya',
+      DurasiDownload: p.DurasiDownload || p.Durasi_Download || 'Selamanya',
+      'Durasi_Pilih': p.DurasiPilih || p.Durasi_Pilih || 'Selamanya',
+      'Durasi_Download': p.DurasiDownload || p.Durasi_Download || 'Selamanya',
+      Deadline: p.Deadline || '',
+      Status: statusClient,
+      'Status Client': statusClient,
+      StatusClient: statusClient,
+      'Foto Terpilih': fotoTerpilih,
+      FotoTerpilih: fotoTerpilih,
+      'Daftar Pilihan': dp,
+      DaftarPilihan: dp,
+      Notes: nt,
+      'Payment Proof': paymentProof,
+      PaymentProof: paymentProof,
+      'Dibuat Pada': dibuatPada,
+      TanggalDibuat: dibuatPada
+    };
+  });
+
+  const u = (users && users.length > 0) ? users[0] : null;
+  const rawPaket = u ? (u.Paket || '') : '';
+  const isPro = u ? Boolean(String(u.Akses_Watermark).toUpperCase() === 'TRUE' || rawPaket.toUpperCase().includes('PRO') || rawPaket.toUpperCase().includes('LIFETIME')) : false;
+
+  const userData = u ? {
+    success: true,
+    username: u.Username,
+    nama: u.Nama || u.Username,
+    role: u.Role || 'Photographer',
+    status: u.Status || 'Active',
+    brandName: u.BrandName || 'Photo Selection',
+    brandLogo: u.BrandLogo || '',
+    watermarkUrl: u.WatermarkUrl || '',
+    bankName: u.BankName || '',
+    bankAccount: u.BankAccount || '',
+    bankAccountName: u.BankAccountName || '',
+    email: u.Email || '',
+    nohp: u['No HP'] || '',
+    paket: rawPaket || '1 Bulan',
+    expiredAt: u.ExpiredAt || 'Lifetime',
+    isPremiumAddon: isPro
+  } : null;
+
+  return success(res, {
+    success: true,
+    userData: userData,
+    projects: { success: true, data: formatted },
+    notifStats: {
+      success: true,
+      count: feedbacks ? feedbacks.length : 0,
+      latestSystemUpdateId: (systemUpdates && systemUpdates.length > 0) ? systemUpdates[0].id : null
+    }
+  });
 }
 
 async function handleMayarWebhook(payload, res) {
