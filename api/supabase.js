@@ -1,18 +1,14 @@
 /**
  * API Handler Backend Berbasis Supabase (PostgreSQL)
- * Menggantikan Google Apps Script dengan Kecepatan Tinggi (< 50ms), 
- * Zero Downtime, dan Bebas dari Batasan Google.
+ * Kompatibel 100% dengan Nama Kolom Asli Google Spreadsheet
  */
 
 const crypto = require('crypto');
 
-// Konfigurasi Supabase
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jqptagcbkyxxqqmxqusf.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_TL_Et1x8IlEwxKASjF0K8Q_t72R3f_9';
-
 const KAMA_SALT = "KamaSecretSalt";
 
-// Helper Query ke Supabase REST API
 async function supabaseQuery(endpoint, options = {}) {
   const url = `${SUPABASE_URL}/rest/v1/${endpoint}`;
   const headers = {
@@ -35,11 +31,7 @@ async function supabaseQuery(endpoint, options = {}) {
   const response = await fetch(url, config);
   const text = await response.text();
   let data = null;
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch (e) {
-    data = text;
-  }
+  try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
 
   if (!response.ok) {
     const errMsg = (data && data.message) ? data.message : (data && data.error ? data.error : text);
@@ -49,13 +41,11 @@ async function supabaseQuery(endpoint, options = {}) {
   return data;
 }
 
-// Helper Hash Password SHA-256 (Sama persis dengan sistem lama untuk kecocokan akun)
 function hashPassword(password) {
   if (!password) return '';
   return crypto.createHash('sha256').update(password + KAMA_SALT).digest('hex');
 }
 
-// Helper Response JSON
 function sendJSON(res, statusCode, payload) {
   res.setHeader('Content-Type', 'application/json');
   return res.status(statusCode).json(payload);
@@ -70,7 +60,6 @@ function error(res, message = 'Error occurred', statusCode = 400, data = null) {
 }
 
 module.exports = async function handler(req, res) {
-  // CORS Configuration
   const allowedOrigins = [
     'https://ps.kamacreative.my.id',
     'https://photo-selector.vercel.app',
@@ -89,9 +78,7 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
     let payload = req.body;
@@ -100,168 +87,103 @@ module.exports = async function handler(req, res) {
     }
     payload = payload || {};
 
-    // 1. Deteksi Webhook Mayar.id
     if (payload.event && payload.data && (payload.event.includes('payment') || payload.event.includes('invoice') || payload.event.includes('transaction'))) {
       return await handleMayarWebhook(payload, res);
     }
 
     const action = payload.action;
-    if (!action) {
-      return error(res, 'Action is required', 400);
-    }
+    if (!action) return error(res, 'Action is required', 400);
 
-    // Router Aksi
     switch (action) {
-      // --- AUTH & USER MANAGEMENT ---
-      case 'login':
-        return await handleLogin(payload, res);
-      case 'register':
-        return await handleRegister(payload, res);
-      case 'getGlobalBranding':
-        return await handleGetGlobalBranding(payload, res);
-      case 'saveBrandSettings':
-        return await handleSaveBrandSettings(payload, res);
-      case 'savePaymentSettings':
-        return await handleSavePaymentSettings(payload, res);
-      case 'pingUser':
-        return await handlePingUser(payload, res);
-      case 'getUsers':
-        return await handleGetUsers(payload, res);
-      case 'approveUser':
-        return await handleApproveUser(payload, res);
-      case 'updateExpiry':
-        return await handleUpdateExpiry(payload, res);
-      case 'deleteUser':
-        return await handleDeleteUser(payload, res);
-      case 'requestOTP':
-        return await handleRequestOTP(payload, res);
-      case 'resetPasswordWithOTP':
-        return await handleResetPasswordWithOTP(payload, res);
-      case 'confirmEmail':
-        return await handleConfirmEmail(payload, res);
-
-      // --- PROJECT & CLIENT GALLERY ---
-      case 'getProjects':
-        return await handleGetProjects(payload, res);
-      case 'createProject':
-        return await handleCreateProject(payload, res);
-      case 'getProjectForClient':
-        return await handleGetProjectForClient(payload, res);
-      case 'verifyClientPassword':
-        return await handleVerifyClientPassword(payload, res);
-      case 'updateClientPassword':
-        return await handleUpdateClientPassword(payload, res);
-      case 'updateClientStatus':
-        return await handleUpdateClientStatus(payload, res);
-      case 'deleteProject':
-        return await handleDeleteProject(payload, res);
-      case 'reopenProject':
-        return await handleReopenProject(payload, res);
-      case 'toggleProjectWatermark':
-        return await handleToggleProjectWatermark(payload, res);
-
-      // --- DASHBOARD & ANALYTICS ---
-      case 'getDashboardStats':
-        return await handleGetDashboardStats(payload, res);
-      case 'logVisit':
-        return await handleLogVisit(payload, res);
-
-      // --- FEEDBACK & NOTIFICATIONS ---
-      case 'submitFeedback':
-        return await handleSubmitFeedback(payload, res);
-      case 'getFeedbacks':
-        return await handleGetFeedbacks(payload, res);
-      case 'replyFeedback':
-        return await handleReplyFeedback(payload, res);
-      case 'getAllNotifications':
-        return await handleGetAllNotifications(payload, res);
-      case 'markFeedbackRead':
-        return await handleMarkFeedbackRead(payload, res);
-      case 'getSystemUpdates':
-        return await handleGetSystemUpdates(payload, res);
-      case 'syncBackground':
-        return await handleSyncBackground(payload, res);
-
-      // Fallback
-      default:
-        return error(res, `Unknown action: ${action}`, 404);
+      case 'login': return await handleLogin(payload, res);
+      case 'register': return await handleRegister(payload, res);
+      case 'getGlobalBranding': return await handleGetGlobalBranding(payload, res);
+      case 'saveBrandSettings': return await handleSaveBrandSettings(payload, res);
+      case 'savePaymentSettings': return await handleSavePaymentSettings(payload, res);
+      case 'pingUser': return await handlePingUser(payload, res);
+      case 'getUsers': return await handleGetUsers(payload, res);
+      case 'approveUser': return await handleApproveUser(payload, res);
+      case 'updateExpiry': return await handleUpdateExpiry(payload, res);
+      case 'deleteUser': return await handleDeleteUser(payload, res);
+      case 'requestOTP': return await handleRequestOTP(payload, res);
+      case 'resetPasswordWithOTP': return await handleResetPasswordWithOTP(payload, res);
+      case 'confirmEmail': return await handleConfirmEmail(payload, res);
+      case 'getProjects': return await handleGetProjects(payload, res);
+      case 'createProject': return await handleCreateProject(payload, res);
+      case 'getProjectForClient': return await handleGetProjectForClient(payload, res);
+      case 'verifyClientPassword': return await handleVerifyClientPassword(payload, res);
+      case 'updateClientPassword': return await handleUpdateClientPassword(payload, res);
+      case 'updateClientStatus': return await handleUpdateClientStatus(payload, res);
+      case 'deleteProject': return await handleDeleteProject(payload, res);
+      case 'reopenProject': return await handleReopenProject(payload, res);
+      case 'toggleProjectWatermark': return await handleToggleProjectWatermark(payload, res);
+      case 'getDashboardStats': return await handleGetDashboardStats(payload, res);
+      case 'logVisit': return await handleLogVisit(payload, res);
+      case 'submitFeedback': return await handleSubmitFeedback(payload, res);
+      case 'getFeedbacks': return await handleGetFeedbacks(payload, res);
+      case 'replyFeedback': return await handleReplyFeedback(payload, res);
+      case 'getAllNotifications': return await handleGetAllNotifications(payload, res);
+      case 'markFeedbackRead': return await handleMarkFeedbackRead(payload, res);
+      case 'getSystemUpdates': return await handleGetSystemUpdates(payload, res);
+      case 'syncBackground': return await handleSyncBackground(payload, res);
+      default: return error(res, `Unknown action: ${action}`, 404);
     }
-
   } catch (err) {
     console.error('Supabase API Handler Error:', err);
     return error(res, err.message || 'Internal Server Error', 500);
   }
 };
 
-// ==========================================
-// CONTROLLERS IMPLEMENTATION
-// ==========================================
+// --- CONTROLLERS ---
 
-// 1. LOGIN
 async function handleLogin(payload, res) {
   const username = (payload.username || '').trim();
   const password = (payload.password || '').trim();
+  if (!username || !password) return error(res, 'Username dan Password wajib diisi.');
 
-  if (!username || !password) {
-    return error(res, 'Username dan Password wajib diisi.');
-  }
+  const users = await supabaseQuery(`users?or=(Username.ilike.${encodeURIComponent(username)},username.ilike.${encodeURIComponent(username)})&select=*`);
+  if (!users || users.length === 0) return error(res, 'Username atau password salah.');
 
-  const users = await supabaseQuery(`users?username=ilike.${encodeURIComponent(username)}&select=*`);
-  if (!users || users.length === 0) {
-    return error(res, 'Username atau password salah.');
-  }
+  const u = users[0];
+  const storedPass = u.Password || u.password_hash || u.password || '';
+  const inputHash = hashPassword(password);
 
-  const user = users[0];
-  const hashedInput = hashPassword(password);
+  const isMatch = (storedPass === inputHash) || (storedPass === password);
+  if (!isMatch) return error(res, 'Username atau password salah.');
 
-  // Verifikasi hash (atau plain-text fallback jika ada user migrasi lama)
-  const isMatch = (user.password_hash === hashedInput) || (user.password_hash === password);
-  if (!isMatch) {
-    return error(res, 'Username atau password salah.');
-  }
+  const status = u.Status || u.status || 'Active';
+  const role = u.Role || u.role || 'Photographer';
+  const uName = u.Username || u.username;
 
-  if (user.status === 'Unverified') {
-    return error(res, 'Akun Anda belum diverifikasi. Silakan cek email Anda.');
-  }
+  if (status === 'Unverified') return error(res, 'Akun Anda belum diverifikasi. Silakan cek email Anda.');
+  if (status === 'Pending') return error(res, 'Akun Anda sedang menunggu persetujuan (ACC) dari Admin.');
 
-  if (user.status === 'Pending') {
-    return error(res, 'Akun Anda sedang menunggu persetujuan (ACC) dari Admin.');
-  }
-
-  // Generate Session
   const sessionId = crypto.randomUUID();
   try {
     await supabaseQuery('sessions', {
       method: 'POST',
-      body: { session_id: sessionId, username: user.username, role: user.role }
+      body: { session_id: sessionId, username: uName, role: role }
     });
   } catch (e) { }
 
-  // Update Last Active
-  await supabaseQuery(`users?username=eq.${encodeURIComponent(user.username)}`, {
-    method: 'PATCH',
-    body: { last_active: new Date().toISOString() }
-  }).catch(() => { });
-
-  const rawPaket = user.paket || '';
-  const isDemo = (!rawPaket || rawPaket.toUpperCase().includes('DEMO') || user.role === 'Demo');
-  const isPro = Boolean(user.akses_watermark || rawPaket.toUpperCase().includes('PRO'));
+  const rawPaket = u.Paket || u.paket || '';
+  const isPro = Boolean(String(u.Akses_Watermark || u.akses_watermark).toUpperCase() === 'TRUE' || rawPaket.toUpperCase().includes('PRO'));
 
   const userData = {
-    username: user.username,
-    nama: user.nama,
-    role: user.role,
-    status: user.status,
-    brandName: user.brand_name || 'Photo Selection',
-    brandLogo: user.brand_logo || '',
-    watermarkUrl: user.watermark_url || '',
-    bankName: user.bank_name || '',
-    bankAccount: user.bank_account || '',
-    bankAccountName: user.bank_account_name || '',
-    email: user.email || '',
-    nohp: user.no_hp || '',
-    paket: user.paket || '1 Bulan',
-    expiredAt: user.expired_at || 'Lifetime',
+    username: uName,
+    nama: u.Nama || u.nama || uName,
+    role: role,
+    status: status,
+    brandName: u.BrandName || u.brand_name || 'Photo Selection',
+    brandLogo: u.BrandLogo || u.brand_logo || '',
+    watermarkUrl: u.WatermarkUrl || u.watermark_url || '',
+    bankName: u.BankName || u.bank_name || '',
+    bankAccount: u.BankAccount || u.bank_account || '',
+    bankAccountName: u.BankAccountName || u.bank_account_name || '',
+    email: u.Email || u.email || '',
+    nohp: u['No HP'] || u.no_hp || '',
+    paket: rawPaket || '1 Bulan',
+    expiredAt: u.ExpiredAt || u.expired_at || 'Lifetime',
     isPremiumAddon: isPro,
     sessionId: sessionId
   };
@@ -269,7 +191,6 @@ async function handleLogin(payload, res) {
   return success(res, userData, 'Login Berhasil');
 }
 
-// 2. REGISTER
 async function handleRegister(payload, res) {
   const d = payload.data || {};
   const nama = (d.nama || '').trim();
@@ -279,15 +200,10 @@ async function handleRegister(payload, res) {
   const password = (d.password || '').trim();
   const paket = d.paket || '1 Bulan';
 
-  if (!nama || !email || !username || !password) {
-    return error(res, 'Lengkapi semua isian pendaftaran.');
-  }
+  if (!nama || !email || !username || !password) return error(res, 'Lengkapi semua isian pendaftaran.');
 
-  // Cek apakah username sudah ada
-  const existing = await supabaseQuery(`users?username=eq.${encodeURIComponent(username)}&select=id`);
-  if (existing && existing.length > 0) {
-    return error(res, 'Username sudah digunakan. Silakan pilih username lain.');
-  }
+  const existing = await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(username)},username.eq.${encodeURIComponent(username)})&select=id`);
+  if (existing && existing.length > 0) return error(res, 'Username sudah digunakan.');
 
   const passHash = hashPassword(password);
   const confirmToken = crypto.randomUUID();
@@ -304,23 +220,21 @@ async function handleRegister(payload, res) {
   }
 
   const newUser = {
-    username: username,
-    password_hash: passHash,
-    nama: nama,
-    role: isDemo ? 'Demo' : 'Photographer',
-    status: initialStatus,
-    email: email,
-    no_hp: nohp,
-    paket: paket,
-    expired_at: expiredAt,
-    confirm_token: confirmToken,
-    project_created: 0,
-    created_at: new Date().toISOString()
+    Username: username,
+    Password: passHash,
+    Nama: nama,
+    Role: isDemo ? 'Demo' : 'Photographer',
+    Status: initialStatus,
+    Email: email,
+    'No HP': nohp,
+    Paket: paket,
+    ExpiredAt: expiredAt,
+    ConfirmToken: confirmToken,
+    ProjectCreated: '0'
   };
 
   await supabaseQuery('users', { method: 'POST', body: newUser });
 
-  // Tentukan link pembayaran Mayar jika bukan paket demo
   let paymentUrl = '';
   if (paket === '1 Bulan') paymentUrl = 'https://kamacreative.myr.id/pl/paket-1-bulan-photo-selection';
   else if (paket === '6 Bulan') paymentUrl = 'https://kamacreative.myr.id/pl/paket-6-bulan-photo-selection';
@@ -330,22 +244,21 @@ async function handleRegister(payload, res) {
   return success(res, { success: true, paymentUrl: paymentUrl }, 'Pendaftaran berhasil');
 }
 
-// 3. GET GLOBAL BRANDING
 async function handleGetGlobalBranding(payload, res) {
   try {
-    const adminUsers = await supabaseQuery('users?role=eq.Admin&select=brand_name,brand_logo&limit=1');
+    const adminUsers = await supabaseQuery('users?or=(Role.eq.Admin,role.eq.Admin)&select=*&limit=1');
     if (adminUsers && adminUsers.length > 0) {
+      const u = adminUsers[0];
       return success(res, {
         success: true,
-        brandName: adminUsers[0].brand_name || 'Photo Selection',
-        brandLogo: adminUsers[0].brand_logo || ''
+        brandName: u.BrandName || u.brand_name || 'Photo Selection',
+        brandLogo: u.BrandLogo || u.brand_logo || ''
       });
     }
   } catch (e) { }
   return success(res, { success: true, brandName: 'Photo Selection', brandLogo: '' });
 }
 
-// 4. SAVE BRAND SETTINGS
 async function handleSaveBrandSettings(payload, res) {
   const username = (payload.username || '').trim();
   const brandName = (payload.brandName || '').trim();
@@ -354,47 +267,42 @@ async function handleSaveBrandSettings(payload, res) {
 
   if (!username) return error(res, 'Username required');
 
-  const updateBody = { brand_name: brandName, brand_logo: brandLogo, updated_at: new Date().toISOString() };
-  if (watermarkUrl) updateBody.watermark_url = watermarkUrl;
+  const updateBody = { BrandName: brandName, BrandLogo: brandLogo };
+  if (watermarkUrl) updateBody.WatermarkUrl = watermarkUrl;
 
-  await supabaseQuery(`users?username=eq.${encodeURIComponent(username)}`, {
+  await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(username)},username.eq.${encodeURIComponent(username)})`, {
     method: 'PATCH',
     body: updateBody
   });
 
-  return success(res, { success: true, brandName: brandName, brandLogo: brandLogo }, 'Pengaturan brand disimpan');
+  return success(res, { success: true, brandName, brandLogo });
 }
 
-// 5. SAVE PAYMENT SETTINGS
 async function handleSavePaymentSettings(payload, res) {
   const username = (payload.username || '').trim();
   const bankName = (payload.bankName || '').trim();
   const bankAccount = (payload.bankAccount || '').trim();
   const bankAccountName = (payload.bankAccountName || '').trim();
 
-  if (!username) return error(res, 'Username required');
-
-  await supabaseQuery(`users?username=eq.${encodeURIComponent(username)}`, {
+  await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(username)},username.eq.${encodeURIComponent(username)})`, {
     method: 'PATCH',
-    body: { bank_name: bankName, bank_account: bankAccount, bank_account_name: bankAccountName, updated_at: new Date().toISOString() }
+    body: { BankName: bankName, BankAccount: bankAccount, BankAccountName: bankAccountName }
   });
 
-  return success(res, { success: true, bankName, bankAccount, bankAccountName }, 'Data pembayaran disimpan');
+  return success(res, { success: true, bankName, bankAccount, bankAccountName });
 }
 
-// 6. PING USER
 async function handlePingUser(payload, res) {
   const user = payload.currentUser || {};
   if (user.username) {
-    await supabaseQuery(`users?username=eq.${encodeURIComponent(user.username)}`, {
+    await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(user.username)},username.eq.${encodeURIComponent(user.username)})`, {
       method: 'PATCH',
-      body: { last_active: new Date().toISOString() }
+      body: { LastActive: new Date().toISOString() }
     }).catch(() => { });
   }
   return success(res, { ok: true });
 }
 
-// 7. GET PROJECTS
 async function handleGetProjects(payload, res) {
   const user = payload.currentUser || {};
   const username = user.username || payload.username || '';
@@ -402,73 +310,75 @@ async function handleGetProjects(payload, res) {
 
   let endpoint = 'projects?select=*&order=created_at.desc';
   if (role !== 'Admin') {
-    endpoint = `projects?owner=eq.${encodeURIComponent(username)}&select=*&order=created_at.desc`;
+    endpoint = `projects?or=(Owner.eq.${encodeURIComponent(username)},owner.eq.${encodeURIComponent(username)})&select=*&order=created_at.desc`;
   }
 
   const rows = await supabaseQuery(endpoint);
-  
-  // Format ke objek respons standar aplikasi
+
   const formatted = (rows || []).map(p => {
-    let daftarPilihan = p.daftar_pilihan || [];
-    if (typeof daftarPilihan === 'string') {
-      try { daftarPilihan = JSON.parse(daftarPilihan); } catch (e) { }
+    let dp = p['Daftar Pilihan'] || p.daftar_pilihan || [];
+    if (typeof dp === 'string') {
+      try { dp = JSON.parse(dp); } catch (e) { dp = dp.split(',').map(s => s.trim()).filter(Boolean); }
     }
-    let notes = p.notes || {};
-    if (typeof notes === 'string') {
-      try { notes = JSON.parse(notes); } catch (e) { }
+    let nt = p.Notes || p.notes || {};
+    if (typeof nt === 'string') {
+      try { nt = JSON.parse(nt); } catch (e) { }
+    }
+    let kat = p.Kategori || p.kategori || [];
+    if (typeof kat === 'string') {
+      try { kat = JSON.parse(kat); } catch (e) { }
     }
 
+    const token = p.Token || p.token;
+    const shortSlug = p.Slug || p['Short Slug'] || p.short_slug || token;
+
     return {
-      ID: p.id,
-      Token: p.token,
-      ShortSlug: p.short_slug,
-      NamaClient: p.nama_client,
-      NomorWA: p.nomor_wa,
-      PasswordClient: p.password_client,
-      MaxFoto: p.max_foto,
-      DriveLink: p.drive_link,
-      Owner: p.owner,
-      ShortLink: p.short_link,
-      Kategori: p.kategori || [],
-      UseWatermark: p.use_watermark,
-      UseWatermarkTiled: p.use_watermark_tiled,
-      ClientLayout: p.client_layout,
-      ExtraPrice: p.extra_price,
-      MusicUrl: p.music_url,
-      AksesPilih: p.akses_pilih,
-      AksesDownload: p.akses_download,
-      DurasiPilih: p.durasi_pilih,
-      DurasiDownload: p.durasi_download,
-      Deadline: p.deadline,
-      StatusClient: p.status_client,
-      FotoTerpilih: p.foto_terpilih,
-      DaftarPilihan: daftarPilihan,
-      Notes: notes,
-      PaymentProof: p.payment_proof,
-      BackupDrive: p.backup_drive,
-      LastUpdate: p.last_update,
-      TanggalDibuat: p.created_at
+      ID: p.id || p.ID,
+      Token: token,
+      ShortSlug: shortSlug,
+      NamaClient: p['Nama Client'] || p.nama_client || 'Client',
+      NomorWA: p['Nomor WA'] || p.nomor_wa || '',
+      PasswordClient: p['Password Client'] || p.password_client || '',
+      MaxFoto: Number(p['Max Foto'] || p.max_foto) || 50,
+      DriveLink: p['Drive Link'] || p.drive_link || '',
+      Owner: p.Owner || p.owner || 'admin',
+      ShortLink: p['Short Link'] || p.short_link || `https://ps.kamacreative.my.id/app?c=${shortSlug}`,
+      Kategori: kat,
+      UseWatermark: String(p.UseWatermark || p.use_watermark).toUpperCase() === 'TRUE',
+      UseWatermarkTiled: String(p.UseWatermarkTiled || p.use_watermark_tiled).toUpperCase() === 'TRUE',
+      ClientLayout: p.ClientLayout || p.client_layout || 'masonry',
+      ExtraPrice: Number(p.ExtraPrice || p.extra_price) || 0,
+      MusicUrl: p.MusicUrl || p.music_url || '',
+      AksesPilih: String(p.AksesPilih || p.akses_pilih).toUpperCase() !== 'FALSE',
+      AksesDownload: String(p.AksesDownload || p.akses_download).toUpperCase() !== 'FALSE',
+      DurasiPilih: p.DurasiPilih || p.durasi_pilih || 'Selamanya',
+      DurasiDownload: p.DurasiDownload || p.durasi_download || 'Selamanya',
+      Deadline: p.Deadline || p.deadline || '',
+      StatusClient: p.Status || p.status_client || 'Belum Memilih',
+      FotoTerpilih: Number(p['Foto Terpilih'] || p.foto_terpilih) || 0,
+      DaftarPilihan: dp,
+      Notes: nt,
+      PaymentProof: p.PaymentProof || p.payment_proof || '',
+      TanggalDibuat: p['Dibuat Pada'] || p.created_at || new Date().toISOString()
     };
   });
 
   return success(res, formatted);
 }
 
-// 8. CREATE PROJECT
 async function handleCreateProject(payload, res) {
-  const d = payload.data || {};
-  const user = payload.currentUser || {};
-  const username = user.username || d.username;
-
-  if (!username) return error(res, 'User authentication required');
+  const d = payload.data || payload || {};
+  const user = payload.currentUser || d.currentUser || {};
+  const username = user.username || d.username || payload.username || 'admin';
 
   const token = crypto.randomBytes(6).toString('hex');
-  const baseSlug = (d.nama || 'client').toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  const clientName = d.namaClient || d.nama || 'Untitled Client';
+  const baseSlug = clientName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'client';
   const shortSlug = `${baseSlug}-${crypto.randomBytes(3).toString('hex')}`;
   const shortLink = `https://ps.kamacreative.my.id/app?c=${shortSlug}`;
 
-  let deadline = '';
-  if (d.durasiPilih && d.durasiPilih !== 'Selamanya') {
+  let deadline = d.deadline || '';
+  if (!deadline && d.durasiPilih && d.durasiPilih !== 'Selamanya') {
     const days = parseInt(d.durasiPilih) || 7;
     const dlDate = new Date();
     dlDate.setDate(dlDate.getDate() + days);
@@ -476,74 +386,60 @@ async function handleCreateProject(payload, res) {
   }
 
   const newProject = {
-    token: token,
-    short_slug: shortSlug,
-    nama_client: d.nama || 'Untitled Client',
-    nomor_wa: d.wa || '',
-    password_client: d.pass || '',
-    max_foto: parseInt(d.max) || 50,
-    drive_link: d.link || '',
-    owner: username,
-    short_link: shortLink,
-    kategori: d.categories || [],
-    use_watermark: Boolean(d.useWatermark),
-    use_watermark_tiled: Boolean(d.useWatermarkTiled),
-    client_layout: d.layout || 'masonry',
-    extra_price: parseInt(d.extra) || 0,
-    music_url: d.music || '',
-    akses_pilih: d.aksesPilih !== false,
-    akses_download: d.aksesDownload !== false,
-    durasi_pilih: d.durasiPilih || 'Selamanya',
-    durasi_download: d.durasiDownload || 'Selamanya',
-    deadline: deadline,
-    status_client: 'Belum Memilih',
-    foto_terpilih: 0,
-    daftar_pilihan: [],
-    notes: {},
-    created_at: new Date().toISOString()
+    Token: token,
+    Slug: shortSlug,
+    'Short Slug': shortSlug,
+    'Nama Client': clientName,
+    'Nomor WA': d.nomorWA || d.wa || '',
+    'Password Client': d.passwordClient || d.pass || '',
+    'Max Foto': String(d.maxFoto || d.max || 50),
+    'Drive Link': d.driveLink || d.link || '',
+    Owner: username,
+    'Short Link': shortLink,
+    Kategori: typeof d.categories === 'string' ? d.categories : JSON.stringify(d.categories || []),
+    UseWatermark: String(Boolean(d.useWatermark)).toUpperCase(),
+    UseWatermarkTiled: String(Boolean(d.useWatermarkTiled)).toUpperCase(),
+    ClientLayout: d.clientLayout || d.layout || 'masonry',
+    ExtraPrice: String(d.extraPrice || d.extra || 0),
+    MusicUrl: d.musicUrl || d.music || '',
+    MusicURL: d.musicUrl || d.music || '',
+    AksesPilih: String(d.aksesPilih !== false).toUpperCase(),
+    AksesDownload: String(d.aksesDownload !== false).toUpperCase(),
+    'Akses_Pilih': String(d.aksesPilih !== false).toUpperCase(),
+    'Akses_Download': String(d.aksesDownload !== false).toUpperCase(),
+    DurasiPilih: d.durasiPilih || 'Selamanya',
+    DurasiDownload: d.durasiDownload || 'Selamanya',
+    'Durasi_Pilih': d.durasiPilih || 'Selamanya',
+    'Durasi_Download': d.durasiDownload || 'Selamanya',
+    Deadline: deadline,
+    Status: 'Belum Memilih',
+    'Status Client': 'Belum Memilih',
+    'Foto Terpilih': '0',
+    'Daftar Pilihan': '[]',
+    Notes: '{}',
+    'Dibuat Pada': new Date().toISOString()
   };
 
-  const created = await supabaseQuery('projects', { method: 'POST', body: newProject });
-
-  // Increment project count on user
-  try {
-    const uRows = await supabaseQuery(`users?username=eq.${encodeURIComponent(username)}&select=project_created`);
-    if (uRows && uRows.length > 0) {
-      const currentCount = uRows[0].project_created || 0;
-      await supabaseQuery(`users?username=eq.${encodeURIComponent(username)}`, {
-        method: 'PATCH',
-        body: { project_created: currentCount + 1 }
-      });
-    }
-  } catch (e) { }
+  await supabaseQuery('projects', { method: 'POST', body: newProject });
 
   return success(res, {
     success: true,
     token: token,
     shortSlug: shortSlug,
-    url: shortLink,
-    project: created ? created[0] : newProject
+    url: shortLink
   }, 'Project berhasil dibuat');
 }
 
-// 9. GET PROJECT FOR CLIENT
 async function handleGetProjectForClient(payload, res) {
   const tokenOrSlug = (payload.token || '').trim();
   if (!tokenOrSlug) return error(res, 'Token or slug is required');
 
-  // Cari berdasarkan token atau short_slug
-  let projects = await supabaseQuery(`projects?token=eq.${encodeURIComponent(tokenOrSlug)}&select=*`);
-  if (!projects || projects.length === 0) {
-    projects = await supabaseQuery(`projects?short_slug=eq.${encodeURIComponent(tokenOrSlug)}&select=*`);
-  }
+  let projects = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(tokenOrSlug)},Slug.eq.${encodeURIComponent(tokenOrSlug)},token.eq.${encodeURIComponent(tokenOrSlug)},short_slug.eq.${encodeURIComponent(tokenOrSlug)})&select=*`);
+  if (!projects || projects.length === 0) return error(res, 'Project tidak ditemukan.', 404);
 
-  if (!projects || projects.length === 0) {
-    return error(res, 'Project tidak ditemukan atau link sudah kedaluwarsa.', 404);
-  }
+  const p = projects[0];
+  const ownerName = p.Owner || p.owner;
 
-  const project = projects[0];
-
-  // Ambil info branding pemilik project (fotografer)
   let ownerBrand = {
     brandName: 'Photo Selection',
     brandLogo: '',
@@ -555,57 +451,64 @@ async function handleGetProjectForClient(payload, res) {
   };
 
   try {
-    const owners = await supabaseQuery(`users?username=eq.${encodeURIComponent(project.owner)}&select=*`);
+    const owners = await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(ownerName)},username.eq.${encodeURIComponent(ownerName)})&select=*`);
     if (owners && owners.length > 0) {
       const o = owners[0];
       ownerBrand = {
-        brandName: o.brand_name || 'Photo Selection',
-        brandLogo: o.brand_logo || '',
-        watermarkUrl: o.watermark_url || '',
-        bankName: o.bank_name || '',
-        bankAccount: o.bank_account || '',
-        bankAccountName: o.bank_account_name || '',
-        isPremiumAddon: Boolean(o.akses_watermark || (o.paket && o.paket.includes('PRO')))
+        brandName: o.BrandName || o.brand_name || 'Photo Selection',
+        brandLogo: o.BrandLogo || o.brand_logo || '',
+        watermarkUrl: o.WatermarkUrl || o.watermark_url || '',
+        bankName: o.BankName || o.bank_name || '',
+        bankAccount: o.BankAccount || o.bank_account || '',
+        bankAccountName: o.BankAccountName || o.bank_account_name || '',
+        isPremiumAddon: Boolean(String(o.Akses_Watermark || o.akses_watermark).toUpperCase() === 'TRUE')
       };
     }
   } catch (e) { }
 
-  let daftarPilihan = project.daftar_pilihan || [];
-  if (typeof daftarPilihan === 'string') {
-    try { daftarPilihan = JSON.parse(daftarPilihan); } catch (e) { }
+  let dp = p['Daftar Pilihan'] || p.daftar_pilihan || [];
+  if (typeof dp === 'string') {
+    try { dp = JSON.parse(dp); } catch (e) { dp = dp.split(',').map(s => s.trim()).filter(Boolean); }
   }
 
-  let notes = project.notes || {};
-  if (typeof notes === 'string') {
-    try { notes = JSON.parse(notes); } catch (e) { }
+  let nt = p.Notes || p.notes || {};
+  if (typeof nt === 'string') {
+    try { nt = JSON.parse(nt); } catch (e) { }
   }
+
+  let kat = p.Kategori || p.kategori || [];
+  if (typeof kat === 'string') {
+    try { kat = JSON.parse(kat); } catch (e) { }
+  }
+
+  const pass = p['Password Client'] || p.password_client || '';
 
   return success(res, {
     success: true,
-    token: project.token,
-    slug: project.short_slug,
-    namaClient: project.nama_client,
-    nomorWA: project.nomor_wa,
-    hasPassword: Boolean(project.password_client && project.password_client.trim() !== ''),
-    maxFoto: project.max_foto,
-    driveLink: project.drive_link,
-    owner: project.owner,
-    kategori: project.kategori || [],
-    useWatermark: project.use_watermark,
-    useWatermarkTiled: project.use_watermark_tiled,
-    clientLayout: project.client_layout || 'masonry',
-    extraPrice: project.extra_price || 0,
-    musicUrl: project.music_url || '',
-    aksesPilih: project.akses_pilih,
-    aksesDownload: project.akses_download,
-    durasiPilih: project.durasi_pilih,
-    durasiDownload: project.durasi_download,
-    deadline: project.deadline,
-    statusClient: project.status_client,
-    fotoTerpilih: project.foto_terpilih,
-    daftarPilihan: daftarPilihan,
-    notes: notes,
-    paymentProof: project.payment_proof,
+    token: p.Token || p.token,
+    slug: p.Slug || p.short_slug || p.Token || p.token,
+    namaClient: p['Nama Client'] || p.nama_client,
+    nomorWA: p['Nomor WA'] || p.nomor_wa,
+    hasPassword: Boolean(pass && pass.trim() !== ''),
+    maxFoto: Number(p['Max Foto'] || p.max_foto) || 50,
+    driveLink: p['Drive Link'] || p.drive_link,
+    owner: ownerName,
+    kategori: kat,
+    useWatermark: String(p.UseWatermark || p.use_watermark).toUpperCase() === 'TRUE',
+    useWatermarkTiled: String(p.UseWatermarkTiled || p.use_watermark_tiled).toUpperCase() === 'TRUE',
+    clientLayout: p.ClientLayout || p.client_layout || 'masonry',
+    extraPrice: Number(p.ExtraPrice || p.extra_price) || 0,
+    musicUrl: p.MusicUrl || p.music_url || '',
+    aksesPilih: String(p.AksesPilih || p.akses_pilih).toUpperCase() !== 'FALSE',
+    aksesDownload: String(p.AksesDownload || p.akses_download).toUpperCase() !== 'FALSE',
+    durasiPilih: p.DurasiPilih || p.durasi_pilih,
+    durasiDownload: p.DurasiDownload || p.durasi_download,
+    deadline: p.Deadline || p.deadline,
+    statusClient: p.Status || p.status_client || 'Belum Memilih',
+    fotoTerpilih: Number(p['Foto Terpilih'] || p.foto_terpilih) || 0,
+    daftarPilihan: dp,
+    notes: nt,
+    paymentProof: p.PaymentProof || p.payment_proof,
     brandName: ownerBrand.brandName,
     brandLogo: ownerBrand.brandLogo,
     watermarkUrl: ownerBrand.watermarkUrl,
@@ -616,123 +519,105 @@ async function handleGetProjectForClient(payload, res) {
   });
 }
 
-// 10. VERIFY CLIENT PASSWORD
 async function handleVerifyClientPassword(payload, res) {
   const token = (payload.token || '').trim();
   const password = (payload.password || '').trim();
 
-  let projects = await supabaseQuery(`projects?token=eq.${encodeURIComponent(token)}&select=password_client`);
-  if (!projects || projects.length === 0) {
-    projects = await supabaseQuery(`projects?short_slug=eq.${encodeURIComponent(token)}&select=password_client`);
-  }
-
+  let projects = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)},token.eq.${encodeURIComponent(token)},short_slug.eq.${encodeURIComponent(token)})&select=*`);
   if (!projects || projects.length === 0) return error(res, 'Project tidak ditemukan');
 
   const p = projects[0];
-  const isValid = (!p.password_client || p.password_client === password);
-  return success(res, { success: isValid }, isValid ? 'Password benar' : 'Password salah');
+  const storedPass = p['Password Client'] || p.password_client || '';
+  const isValid = (!storedPass || storedPass === password);
+  return success(res, { success: isValid });
 }
 
-// 11. UPDATE CLIENT PASSWORD
 async function handleUpdateClientPassword(payload, res) {
   const token = (payload.token || '').trim();
   const password = (payload.password || '').trim();
-  await supabaseQuery(`projects?token=eq.${encodeURIComponent(token)}`, {
+  await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},token.eq.${encodeURIComponent(token)})`, {
     method: 'PATCH',
-    body: { password_client: password, last_update: new Date().toISOString() }
+    body: { 'Password Client': password, password_client: password }
   });
-  return success(res, { success: true }, 'Password galeri diperbarui');
+  return success(res, { success: true });
 }
 
-// 12. UPDATE CLIENT STATUS & SELECTIONS
 async function handleUpdateClientStatus(payload, res) {
   const token = (payload.token || '').trim();
   if (!token) return error(res, 'Token required');
 
   const status = payload.status || 'Sedang Memilih';
-  const fotoTerpilih = parseInt(payload.fotoTerpilih) || 0;
-  let daftarPilihan = payload.daftarPilihan || [];
-  let notes = payload.notes || {};
+  const fotoTerpilih = String(payload.fotoTerpilih || 0);
+  const daftarPilihan = JSON.stringify(payload.daftarPilihan || []);
+  const notes = JSON.stringify(payload.notes || {});
   const paymentProof = payload.paymentProof || '';
 
   const updateBody = {
-    status_client: status,
-    foto_terpilih: fotoTerpilih,
-    daftar_pilihan: daftarPilihan,
-    notes: notes,
-    last_update: new Date().toISOString()
+    Status: status,
+    'Foto Terpilih': fotoTerpilih,
+    'Daftar Pilihan': daftarPilihan,
+    Notes: notes
   };
+  if (paymentProof) updateBody.PaymentProof = paymentProof;
 
-  if (paymentProof) updateBody.payment_proof = paymentProof;
-
-  await supabaseQuery(`projects?token=eq.${encodeURIComponent(token)}`, {
+  await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},token.eq.${encodeURIComponent(token)})`, {
     method: 'PATCH',
     body: updateBody
   });
 
-  return success(res, { success: true }, 'Status pilihan berhasil disimpan');
+  return success(res, { success: true });
 }
 
-// 13. DELETE PROJECT
 async function handleDeleteProject(payload, res) {
   const token = (payload.token || '').trim();
-  const user = payload.currentUser || {};
-
-  let query = `projects?token=eq.${encodeURIComponent(token)}`;
-  if (user.role !== 'Admin') {
-    query += `&owner=eq.${encodeURIComponent(user.username)}`;
-  }
-
-  await supabaseQuery(query, { method: 'DELETE' });
-  return success(res, { success: true }, 'Project berhasil dihapus');
+  await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},token.eq.${encodeURIComponent(token)})`, { method: 'DELETE' });
+  return success(res, { success: true });
 }
 
-// 14. REOPEN PROJECT
 async function handleReopenProject(payload, res) {
   const token = (payload.token || '').trim();
-  await supabaseQuery(`projects?token=eq.${encodeURIComponent(token)}`, {
+  await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},token.eq.${encodeURIComponent(token)})`, {
     method: 'PATCH',
-    body: { status_client: 'Sedang Memilih', last_update: new Date().toISOString() }
+    body: { Status: 'Sedang Memilih' }
   });
-  return success(res, { success: true }, 'Project berhasil dibuka kembali');
+  return success(res, { success: true });
 }
 
-// 15. TOGGLE PROJECT WATERMARK
 async function handleToggleProjectWatermark(payload, res) {
   const token = (payload.token || '').trim();
   const useWatermark = Boolean(payload.useWatermark);
-  await supabaseQuery(`projects?token=eq.${encodeURIComponent(token)}`, {
+  await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},token.eq.${encodeURIComponent(token)})`, {
     method: 'PATCH',
-    body: { use_watermark: useWatermark, last_update: new Date().toISOString() }
+    body: { UseWatermark: String(useWatermark).toUpperCase() }
   });
-  return success(res, { success: true, useWatermark }, 'Status watermark diperbarui');
+  return success(res, { success: true, useWatermark });
 }
 
-// 16. DASHBOARD STATS
 async function handleGetDashboardStats(payload, res) {
-  const allUsers = await supabaseQuery('users?select=id,status,expired_at,username,role');
+  const allUsers = await supabaseQuery('users?select=*');
   const allProjects = await supabaseQuery('projects?select=id');
   const analyticsRows = await supabaseQuery('analytics?select=id,visitor_id');
 
   const totalUsers = allUsers ? allUsers.length : 0;
-  const activeUsers = allUsers ? allUsers.filter(u => u.status === 'Active').length : 0;
-  const pendingUsers = allUsers ? allUsers.filter(u => u.status === 'Pending').length : 0;
-  const inactiveUsers = allUsers ? allUsers.filter(u => u.status === 'Inactive' || u.status === 'Expired').length : 0;
+  const activeUsers = allUsers ? allUsers.filter(u => (u.Status || u.status) === 'Active').length : 0;
+  const pendingUsers = allUsers ? allUsers.filter(u => (u.Status || u.status) === 'Pending').length : 0;
+  const inactiveUsers = allUsers ? allUsers.filter(u => (u.Status || u.status) === 'Inactive').length : 0;
   const totalProjects = allProjects ? allProjects.length : 0;
 
   const totalViews = analyticsRows ? analyticsRows.length : 0;
   const uniqueVisitors = analyticsRows ? new Set(analyticsRows.map(r => r.visitor_id)).size : 0;
 
-  // Hitung user yang akan expired dalam <= 30 hari
   const now = new Date();
   const thirtyDaysLater = new Date();
   thirtyDaysLater.setDate(now.getDate() + 30);
 
   const expiringSoon = (allUsers || []).filter(u => {
-    if (u.role === 'Admin' || u.expired_at === 'Lifetime' || !u.expired_at) return false;
-    const exp = new Date(u.expired_at);
-    return exp >= now && exp <= thirtyDaysLater;
-  }).map(u => ({ username: u.username, expiredAt: u.expired_at }));
+    const exp = u.ExpiredAt || u.expired_at;
+    const role = u.Role || u.role;
+    if (role === 'Admin' || exp === 'Lifetime' || !exp) return false;
+    const expDate = new Date(exp);
+    return expDate >= now && expDate <= thirtyDaysLater;
+  }).map(u => ({ username: u.Username || u.username, expiredAt: u.ExpiredAt || u.expired_at }));
 
   return success(res, {
     totalViews,
@@ -746,7 +631,6 @@ async function handleGetDashboardStats(payload, res) {
   });
 }
 
-// 17. LOG VISIT
 async function handleLogVisit(payload, res) {
   const type = payload.type || 'VIEW';
   const page = payload.page || 'LANDING_PAGE';
@@ -760,112 +644,112 @@ async function handleLogVisit(payload, res) {
   return success(res, { logged: true });
 }
 
-// 18. GET USERS (ADMIN ONLY)
 async function handleGetUsers(payload, res) {
   const user = payload.currentUser || {};
-  if (user.role !== 'Admin') return error(res, 'Unauthorized access', 403);
+  if (user.role !== 'Admin') return error(res, 'Unauthorized', 403);
 
-  const users = await supabaseQuery('users?select=id,username,nama,role,status,brand_name,brand_logo,email,no_hp,paket,expired_at,project_created,akses_watermark,last_active,created_at&order=created_at.desc');
-  return success(res, users || []);
+  const rows = await supabaseQuery('users?select=*&order=created_at.desc');
+  const users = (rows || []).map(u => ({
+    username: u.Username || u.username,
+    nama: u.Nama || u.nama,
+    role: u.Role || u.role,
+    status: u.Status || u.status,
+    brand_name: u.BrandName || u.brand_name,
+    brand_logo: u.BrandLogo || u.brand_logo,
+    email: u.Email || u.email,
+    no_hp: u['No HP'] || u.no_hp,
+    paket: u.Paket || u.paket,
+    expired_at: u.ExpiredAt || u.expired_at,
+    project_created: Number(u.ProjectCreated || u.project_created) || 0,
+    akses_watermark: String(u.Akses_Watermark || u.akses_watermark).toUpperCase() === 'TRUE',
+    last_active: u.LastActive || u.last_active || u.created_at
+  }));
+
+  return success(res, users);
 }
 
-// 19. APPROVE USER
 async function handleApproveUser(payload, res) {
   const username = (payload.username || '').trim();
   const expiredAt = payload.expiredAt || 'Lifetime';
   const role = payload.role || 'Photographer';
 
-  await supabaseQuery(`users?username=eq.${encodeURIComponent(username)}`, {
+  await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(username)},username.eq.${encodeURIComponent(username)})`, {
     method: 'PATCH',
-    body: { status: 'Active', expired_at: expiredAt, role: role, updated_at: new Date().toISOString() }
+    body: { Status: 'Active', ExpiredAt: expiredAt, Role: role }
   });
 
-  return success(res, { success: true }, 'User disetujui');
+  return success(res, { success: true });
 }
 
-// 20. UPDATE EXPIRY
 async function handleUpdateExpiry(payload, res) {
   const username = (payload.username || '').trim();
   const expiredAt = payload.expiredAt;
   const paket = payload.paket || '1 Bulan';
 
-  await supabaseQuery(`users?username=eq.${encodeURIComponent(username)}`, {
+  await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(username)},username.eq.${encodeURIComponent(username)})`, {
     method: 'PATCH',
-    body: { expired_at: expiredAt, paket: paket, status: 'Active', updated_at: new Date().toISOString() }
+    body: { ExpiredAt: expiredAt, Paket: paket, Status: 'Active' }
   });
 
-  return success(res, { success: true }, 'Masa aktif diperbarui');
+  return success(res, { success: true });
 }
 
-// 21. DELETE USER
 async function handleDeleteUser(payload, res) {
   const username = (payload.username || '').trim();
-  await supabaseQuery(`projects?owner=eq.${encodeURIComponent(username)}`, { method: 'DELETE' });
-  await supabaseQuery(`users?username=eq.${encodeURIComponent(username)}`, { method: 'DELETE' });
-  return success(res, { success: true }, 'User dan project berhasil dihapus');
+  await supabaseQuery(`projects?or=(Owner.eq.${encodeURIComponent(username)},owner.eq.${encodeURIComponent(username)})`, { method: 'DELETE' });
+  await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(username)},username.eq.${encodeURIComponent(username)})`, { method: 'DELETE' });
+  return success(res, { success: true });
 }
 
-// 22. REQUEST OTP
 async function handleRequestOTP(payload, res) {
   const email = (payload.email || '').trim().toLowerCase();
-  const users = await supabaseQuery(`users?email=eq.${encodeURIComponent(email)}&select=username,email`);
+  const users = await supabaseQuery(`users?or=(Email.eq.${encodeURIComponent(email)},email.eq.${encodeURIComponent(email)})&select=*`);
   if (!users || users.length === 0) return error(res, 'Email tidak terdaftar.');
 
+  const uName = users[0].Username || users[0].username;
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   await supabaseQuery('reset_tokens', {
     method: 'POST',
-    body: { username: users[0].username, otp: otp, created_at: new Date().toISOString() }
+    body: { username: uName, otp: otp, created_at: new Date().toISOString() }
   });
 
-  // Kirim email via provider email jika ada
-  return success(res, { success: true, otp: otp }, 'Kode OTP berhasil dibuat');
+  return success(res, { success: true, otp: otp });
 }
 
-// 23. RESET PASSWORD WITH OTP
 async function handleResetPasswordWithOTP(payload, res) {
   const email = (payload.email || '').trim().toLowerCase();
   const otp = (payload.otp || '').trim();
   const newPassword = (payload.newPassword || '').trim();
 
-  const users = await supabaseQuery(`users?email=eq.${encodeURIComponent(email)}&select=username`);
+  const users = await supabaseQuery(`users?or=(Email.eq.${encodeURIComponent(email)},email.eq.${encodeURIComponent(email)})&select=*`);
   if (!users || users.length === 0) return error(res, 'User tidak ditemukan.');
 
-  const username = users[0].username;
-  const tokens = await supabaseQuery(`reset_tokens?username=eq.${encodeURIComponent(username)}&otp=eq.${encodeURIComponent(otp)}&order=created_at.desc&limit=1`);
-  if (!tokens || tokens.length === 0) return error(res, 'Kode OTP salah atau tidak berlaku.');
+  const uName = users[0].Username || users[0].username;
+  const tokens = await supabaseQuery(`reset_tokens?username=eq.${encodeURIComponent(uName)}&otp=eq.${encodeURIComponent(otp)}&limit=1`);
+  if (!tokens || tokens.length === 0) return error(res, 'Kode OTP salah.');
 
   const newHash = hashPassword(newPassword);
-  await supabaseQuery(`users?username=eq.${encodeURIComponent(username)}`, {
+  await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(uName)},username.eq.${encodeURIComponent(uName)})`, {
     method: 'PATCH',
-    body: { password_hash: newHash, updated_at: new Date().toISOString() }
+    body: { Password: newHash }
   });
 
-  // Hapus token yang sudah dipakai
-  await supabaseQuery(`reset_tokens?username=eq.${encodeURIComponent(username)}`, { method: 'DELETE' }).catch(() => { });
-
-  return success(res, { success: true }, 'Password berhasil direset. Silakan login.');
+  return success(res, { success: true });
 }
 
-// 24. CONFIRM EMAIL
 async function handleConfirmEmail(payload, res) {
   const token = (payload.token || '').trim();
-  const users = await supabaseQuery(`users?confirm_token=eq.${encodeURIComponent(token)}&select=username`);
-  if (!users || users.length === 0) return error(res, 'Token verifikasi tidak valid atau sudah kedaluwarsa.');
-
-  await supabaseQuery(`users?confirm_token=eq.${encodeURIComponent(token)}`, {
+  await supabaseQuery(`users?or=(ConfirmToken.eq.${encodeURIComponent(token)},confirm_token.eq.${encodeURIComponent(token)})`, {
     method: 'PATCH',
-    body: { status: 'Active', confirm_token: '', updated_at: new Date().toISOString() }
+    body: { Status: 'Active', ConfirmToken: '' }
   });
-
-  return success(res, { success: true }, 'Email berhasil diverifikasi! Akun Anda kini aktif.');
+  return success(res, { success: true });
 }
 
-// 25. SUBMIT FEEDBACK
 async function handleSubmitFeedback(payload, res) {
   const user = payload.currentUser || {};
   const pesan = (payload.pesan || '').trim();
   const lampiranUrl = payload.lampiranUrl || '';
-
   if (!pesan) return error(res, 'Pesan feedback tidak boleh kosong.');
 
   const fbId = 'fb_' + Date.now();
@@ -883,10 +767,9 @@ async function handleSubmitFeedback(payload, res) {
     }
   });
 
-  return success(res, { success: true }, 'Feedback berhasil dikirim.');
+  return success(res, { success: true });
 }
 
-// 26. GET FEEDBACKS
 async function handleGetFeedbacks(payload, res) {
   const user = payload.currentUser || {};
   let endpoint = 'feedbacks?select=*&order=tanggal.desc';
@@ -897,93 +780,55 @@ async function handleGetFeedbacks(payload, res) {
   return success(res, rows || []);
 }
 
-// 27. REPLY FEEDBACK
 async function handleReplyFeedback(payload, res) {
   const id = payload.id;
   const balasan = payload.balasan || '';
-
   await supabaseQuery(`feedbacks?id=eq.${encodeURIComponent(id)}`, {
     method: 'PATCH',
     body: { balasan: balasan, tgl_balas: new Date().toISOString(), status_user: 'Unread' }
   });
-
-  return success(res, { success: true }, 'Balasan berhasil dikirim.');
+  return success(res, { success: true });
 }
 
-// 28. GET ALL NOTIFICATIONS
 async function handleGetAllNotifications(payload, res) {
   const user = payload.currentUser || {};
   let fbEndpoint = 'feedbacks?select=*&order=tanggal.desc';
   if (user.role !== 'Admin') {
     fbEndpoint = `feedbacks?username=eq.${encodeURIComponent(user.username)}&select=*&order=tanggal.desc`;
   }
-
   const feedbacks = (await supabaseQuery(fbEndpoint)) || [];
   const systemUpdates = (await supabaseQuery('system_updates?status=eq.Active&select=*&order=tanggal.desc')) || [];
 
-  const formattedFeedbacks = feedbacks.map(f => ({
-    ID: f.id,
-    Username: f.username,
-    Pesan: f.pesan,
-    Balasan: f.balasan,
-    Tanggal: f.tanggal,
-    StatusAdmin: f.status_admin,
-    StatusUser: f.status_user
-  }));
-
-  const formattedUpdates = systemUpdates.map(s => ({
-    ID: s.id,
-    Tanggal: s.tanggal,
-    Judul: s.judul,
-    Pesan: s.pesan,
-    Versi: s.versi
-  }));
-
-  return success(res, { feedbacks: formattedFeedbacks, systemUpdates: formattedUpdates });
+  return success(res, { feedbacks, systemUpdates });
 }
 
-// 29. MARK FEEDBACK READ
 async function handleMarkFeedbackRead(payload, res) {
   const user = payload.currentUser || {};
   const type = payload.type || 'user';
-
-  if (type === 'admin' && user.role === 'Admin') {
-    await supabaseQuery('feedbacks?status_admin=eq.Unread', {
-      method: 'PATCH',
-      body: { status_admin: 'Read' }
-    }).catch(() => { });
+  if (type === 'admin') {
+    await supabaseQuery('feedbacks?status_admin=eq.Unread', { method: 'PATCH', body: { status_admin: 'Read' } }).catch(() => { });
   } else if (user.username) {
-    await supabaseQuery(`feedbacks?username=eq.${encodeURIComponent(user.username)}&status_user=eq.Unread`, {
-      method: 'PATCH',
-      body: { status_user: 'Read' }
-    }).catch(() => { });
+    await supabaseQuery(`feedbacks?username=eq.${encodeURIComponent(user.username)}&status_user=eq.Unread`, { method: 'PATCH', body: { status_user: 'Read' } }).catch(() => { });
   }
-
   return success(res, { ok: true });
 }
 
-// 30. GET SYSTEM UPDATES
 async function handleGetSystemUpdates(payload, res) {
   const rows = await supabaseQuery('system_updates?status=eq.Active&select=*&order=tanggal.desc');
   return success(res, rows || []);
 }
 
-// 31. SYNC BACKGROUND
 async function handleSyncBackground(payload, res) {
   const user = payload.currentUser || {};
   const username = user.username;
   if (!username) return error(res, 'User required');
 
-  const users = await supabaseQuery(`users?username=eq.${encodeURIComponent(username)}&select=*`);
-  const projects = await supabaseQuery(`projects?owner=eq.${encodeURIComponent(username)}&select=*&order=created_at.desc`);
+  const users = await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(username)},username.eq.${encodeURIComponent(username)})&select=*`);
+  const projects = await supabaseQuery(`projects?or=(Owner.eq.${encodeURIComponent(username)},owner.eq.${encodeURIComponent(username)})&select=*&order=created_at.desc`);
 
-  return success(res, {
-    user: users && users.length > 0 ? users[0] : null,
-    projects: projects || []
-  });
+  return success(res, { user: users ? users[0] : null, projects: projects || [] });
 }
 
-// 32. MAYAR WEBHOOK AUTO-ACTIVATION
 async function handleMayarWebhook(payload, res) {
   const event = payload.event;
   const d = payload.data || {};
@@ -994,68 +839,50 @@ async function handleMayarWebhook(payload, res) {
   const product = (d.productName || d.description || '').toUpperCase();
 
   let targetUser = null;
-
-  // 1. Cari user di Supabase berdasarkan email
   if (email) {
-    const byEmail = await supabaseQuery(`users?email=eq.${encodeURIComponent(email)}&select=*`);
+    const byEmail = await supabaseQuery(`users?or=(Email.eq.${encodeURIComponent(email)},email.eq.${encodeURIComponent(email)})&select=*`);
     if (byEmail && byEmail.length > 0) targetUser = byEmail[0];
   }
-
-  // 2. Cari berdasarkan No HP jika belum ketemu
   if (!targetUser && mobile) {
     const cleanPhone = mobile.replace(/[^0-9]/g, '');
-    const byPhone = await supabaseQuery(`users?no_hp=like.*${encodeURIComponent(cleanPhone)}*&select=*`);
+    const byPhone = await supabaseQuery(`users?or=(No HP.like.*${encodeURIComponent(cleanPhone)}*,no_hp.like.*${encodeURIComponent(cleanPhone)}*)&select=*`);
     if (byPhone && byPhone.length > 0) targetUser = byPhone[0];
   }
 
   let hasilAktivasi = 'User tidak ditemukan';
-
   if (targetUser) {
     let addDays = 30;
     let paketName = '1 Bulan';
-
-    if (product.includes('6 BULAN') || product.includes('6-BULAN')) {
-      addDays = 180;
-      paketName = '6 Bulan';
-    } else if (product.includes('1 TAHUN') || product.includes('1-TAHUN') || product.includes('12 BULAN')) {
-      addDays = 365;
-      paketName = '1 Tahun';
-    } else if (product.includes('LIFETIME') || product.includes('SELAMANYA')) {
-      addDays = 36500;
-      paketName = 'Lifetime';
-    }
+    if (product.includes('6 BULAN')) { addDays = 180; paketName = '6 Bulan'; }
+    else if (product.includes('1 TAHUN')) { addDays = 365; paketName = '1 Tahun'; }
+    else if (product.includes('LIFETIME')) { addDays = 36500; paketName = 'Lifetime'; }
 
     const expDate = new Date();
     expDate.setDate(expDate.getDate() + addDays);
     const expiredAt = (paketName === 'Lifetime') ? 'Lifetime' : expDate.toISOString().split('T')[0];
 
-    const isProAddon = product.includes('ADD-ON') || product.includes('ADDON') || product.includes('PRO');
-
-    const updateData = {
-      status: 'Active',
-      updated_at: new Date().toISOString()
-    };
+    const uName = targetUser.Username || targetUser.username;
+    const isProAddon = product.includes('ADD-ON') || product.includes('PRO');
 
     if (isProAddon) {
-      updateData.akses_watermark = true;
-      hasilAktivasi = `Berhasil aktivasi Add-On PRO untuk @${targetUser.username}`;
+      await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(uName)},username.eq.${encodeURIComponent(uName)})`, {
+        method: 'PATCH',
+        body: { Akses_Watermark: 'TRUE' }
+      });
+      hasilAktivasi = `Aktivasi PRO Add-on untuk ${uName}`;
     } else {
-      updateData.paket = paketName;
-      updateData.expired_at = expiredAt;
-      hasilAktivasi = `Berhasil perpanjang ${paketName} (Exp: ${expiredAt}) untuk @${targetUser.username}`;
+      await supabaseQuery(`users?or=(Username.eq.${encodeURIComponent(uName)},username.eq.${encodeURIComponent(uName)})`, {
+        method: 'PATCH',
+        body: { Status: 'Active', Paket: paketName, ExpiredAt: expiredAt }
+      });
+      hasilAktivasi = `Aktivasi ${paketName} untuk ${uName}`;
     }
-
-    await supabaseQuery(`users?username=eq.${encodeURIComponent(targetUser.username)}`, {
-      method: 'PATCH',
-      body: updateData
-    });
   }
 
-  // Catat Log ke tabel mayar_logs
   await supabaseQuery('mayar_logs', {
     method: 'POST',
     body: {
-      event: event,
+      event,
       customer_email: email,
       customer_name: name,
       status_product: product,
