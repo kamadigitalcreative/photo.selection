@@ -333,34 +333,64 @@ async function handleGetProjects(payload, res) {
     const token = p.Token || p.ID;
     const shortSlug = p['Short Slug'] || p.Slug || token;
 
+    const clientName = p['Nama Client'] || p.NamaClient || 'Client';
+    const nomorWA = p['Nomor WA'] || p.NomorWA || '';
+    const passClient = p['Password Client'] || p.PasswordClient || '';
+    const maxFoto = Number(p['Max Foto']) || Number(p.MaxFoto) || 50;
+    const driveLink = p['Drive Link'] || p.DriveLink || '';
+    const dibuatPada = p['Dibuat Pada'] || p.created_at || new Date().toISOString();
+    const statusClient = p['Status Client'] || p.Status || 'Belum Memilih';
+    const fotoTerpilih = Number(p['Foto Terpilih']) || 0;
+    const shortLink = p['Short Link'] || `https://ps.kamacreative.my.id/app?c=${shortSlug}`;
+    const paymentProof = p['Payment Proof'] || p.PaymentProof || '';
+
     return {
       ID: p.id || p.ID,
       Token: token,
+      'Short Slug': shortSlug,
       ShortSlug: shortSlug,
-      NamaClient: p['Nama Client'] || 'Client',
-      NomorWA: p['Nomor WA'] || '',
-      PasswordClient: p['Password Client'] || '',
-      MaxFoto: Number(p['Max Foto']) || 50,
-      DriveLink: p['Drive Link'] || '',
+      Slug: shortSlug,
+      'Nama Client': clientName,
+      NamaClient: clientName,
+      'Nomor WA': nomorWA,
+      NomorWA: nomorWA,
+      'Password Client': passClient,
+      PasswordClient: passClient,
+      'Max Foto': maxFoto,
+      MaxFoto: maxFoto,
+      'Drive Link': driveLink,
+      DriveLink: driveLink,
       Owner: p.Owner || 'admin',
-      ShortLink: p['Short Link'] || `https://ps.kamacreative.my.id/app?c=${shortSlug}`,
+      'Short Link': shortLink,
+      ShortLink: shortLink,
       Kategori: kat,
       UseWatermark: String(p.UseWatermark).toUpperCase() === 'TRUE',
       UseWatermarkTiled: String(p.UseWatermarkTiled).toUpperCase() === 'TRUE',
       ClientLayout: p.ClientLayout || 'masonry',
       ExtraPrice: Number(p.ExtraPrice) || 0,
       MusicUrl: p.MusicUrl || p.MusicURL || '',
+      MusicURL: p.MusicUrl || p.MusicURL || '',
       AksesPilih: String(p.AksesPilih || p.Akses_Pilih).toUpperCase() !== 'FALSE',
       AksesDownload: String(p.AksesDownload || p.Akses_Download).toUpperCase() !== 'FALSE',
+      'Akses_Pilih': String(p.AksesPilih || p.Akses_Pilih).toUpperCase() !== 'FALSE',
+      'Akses_Download': String(p.AksesDownload || p.Akses_Download).toUpperCase() !== 'FALSE',
       DurasiPilih: p.DurasiPilih || p.Durasi_Pilih || 'Selamanya',
       DurasiDownload: p.DurasiDownload || p.Durasi_Download || 'Selamanya',
+      'Durasi_Pilih': p.DurasiPilih || p.Durasi_Pilih || 'Selamanya',
+      'Durasi_Download': p.DurasiDownload || p.Durasi_Download || 'Selamanya',
       Deadline: p.Deadline || '',
-      StatusClient: p.Status || p['Status Client'] || 'Belum Memilih',
-      FotoTerpilih: Number(p['Foto Terpilih']) || 0,
+      Status: statusClient,
+      'Status Client': statusClient,
+      StatusClient: statusClient,
+      'Foto Terpilih': fotoTerpilih,
+      FotoTerpilih: fotoTerpilih,
+      'Daftar Pilihan': dp,
       DaftarPilihan: dp,
       Notes: nt,
-      PaymentProof: p.PaymentProof || p['Payment Proof'] || '',
-      TanggalDibuat: p['Dibuat Pada'] || p.created_at || new Date().toISOString()
+      'Payment Proof': paymentProof,
+      PaymentProof: paymentProof,
+      'Dibuat Pada': dibuatPada,
+      TanggalDibuat: dibuatPada
     };
   });
 
