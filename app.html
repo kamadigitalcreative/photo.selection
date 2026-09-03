@@ -11549,18 +11549,22 @@
                 Swal.fire('Error', err.message, 'error');
             }
         }
-        // --- DETEKSI KLIEN TUTUP TAB (TIDAK TABRAKAN DENGAN YANG DI ATAS) ---
-        window.addEventListener('beforeunload', function () {
+        // --- DETEKSI KLIEN TUTUP TAB / KELUAR APLIKASI (PC & HP) ---
+        function handleClientLeave() {
             var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
             if (clientState.token && !isSubmitted && !clientState.isPreviewMode) {
-                fetch(API_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'updateClientStatus', token: clientState.token, status: 'Belum Memilih' }),
-                    keepalive: true
-                }).catch(function (e) { });
+                try {
+                    fetch(API_ENDPOINT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'updateClientStatus', token: clientState.token, status: 'Belum Memilih' }),
+                        keepalive: true
+                    });
+                } catch (e) { }
             }
-        });
+        }
+        window.addEventListener('beforeunload', handleClientLeave);
+        window.addEventListener('pagehide', handleClientLeave);
         // --- LOGIKA FEEDBACK & LAPORAN ---
         async function handleKirimFeedback(e) {
             e.preventDefault();
