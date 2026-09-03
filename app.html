@@ -10478,24 +10478,6 @@
             var text = "";
             var driveUrl = backupUrl || clientState.backupUrl || '';
 
-            var originUrl = window.location.origin + window.location.pathname;
-            var clientGalleryUrl = clientState.shortLink || (originUrl + '?c=' + (clientState.shortSlug || clientState.slug || clientState.token));
-
-            // Rangkum daftar foto terpilih
-            var selectedListNames = [];
-            if (clientState.selectedImages && clientState.selectedImages.length > 0) {
-                selectedListNames = clientState.selectedImages.map(function(item) {
-                    var n = (typeof item === 'string') ? item : (item.name || item.n || item.fileName || '');
-                    var f = (typeof item === 'object' && item.folder) ? ` [${item.folder}]` : '';
-                    var note = '';
-                    if (clientState.notes) {
-                        var k = (typeof item === 'object' && item.folder) ? (n + '_' + item.folder) : n;
-                        if (clientState.notes[k]) note = ' (Catatan: ' + clientState.notes[k] + ')';
-                    }
-                    return n ? ('- ' + n + f + note) : '';
-                }).filter(Boolean);
-            }
-
             if (isEn) {
                 text += "*PHOTO SELECTION COMPLETED*\n\n";
                 if (extraCount > 0 && proofUrl) {
@@ -10511,15 +10493,8 @@
                 } else {
                     text += "• Total Selected: *" + clientState.selectedImages.length + " / " + clientState.maxFoto + " Photos*\n";
                 }
-                text += "• Selection Gallery: " + clientGalleryUrl + "\n";
-                if (clientState.driveLink) {
-                    text += "• Google Drive Master: " + clientState.driveLink + "\n";
-                }
                 if (driveUrl) {
-                    text += "• Backup File (Drive): " + driveUrl + "\n";
-                }
-                if (selectedListNames.length > 0 && selectedListNames.length <= 100) {
-                    text += "\n*Selected Photo List:*\n" + selectedListNames.join('\n') + "\n";
+                    text += "• Photo List File (Drive): " + driveUrl + "\n";
                 }
                 text += "\nPlease verify in Photo Selector Dashboard. Thank you!";
             } else {
@@ -10537,17 +10512,10 @@
                 } else {
                     text += "• Total Terpilih: *" + clientState.selectedImages.length + " / " + clientState.maxFoto + " Foto*\n";
                 }
-                text += "• Link Galeri Pilihan: " + clientGalleryUrl + "\n";
-                if (clientState.driveLink) {
-                    text += "• Link Google Drive Master: " + clientState.driveLink + "\n";
-                }
                 if (driveUrl) {
-                    text += "• File Cadangan (Drive): " + driveUrl + "\n";
+                    text += "• File Daftar Pilihan (Drive): " + driveUrl + "\n";
                 }
-                if (selectedListNames.length > 0 && selectedListNames.length <= 100) {
-                    text += "\n*Daftar Foto Terpilih:*\n" + selectedListNames.join('\n') + "\n";
-                }
-                text += "\nMohon dicek pada Dashboard Photo Selector. Terima kasih! 🙏";
+                text += "\nMohon dicek pada Dashboard Photo Selector. Terima kasih!";
             }
             return text;
         }
