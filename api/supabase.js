@@ -465,7 +465,7 @@ async function handleGetProjectForClient(payload, res) {
   const tokenOrSlug = (payload.token || '').trim();
   if (!tokenOrSlug) return error(res, 'Token or slug is required');
 
-  let projects = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(tokenOrSlug)},Slug.eq.${encodeURIComponent(tokenOrSlug)})&select=*`);
+  let projects = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(tokenOrSlug)},Slug.eq.${encodeURIComponent(tokenOrSlug)},"Short Slug".eq.${encodeURIComponent(tokenOrSlug)})&select=*`);
   if (!projects || projects.length === 0) return error(res, 'Project tidak ditemukan.', 404);
 
   const p = projects[0];
@@ -514,11 +514,11 @@ async function handleGetProjectForClient(payload, res) {
 
   const pass = p['Password Client'] || '';
 
-  return success(res, {
-    success: true,
+  const projectData = {
     token: p.Token,
     slug: p['Short Slug'] || p.Slug || p.Token,
     namaClient: p['Nama Client'],
+    name: p['Nama Client'],
     nomorWA: p['Nomor WA'],
     hasPassword: Boolean(pass && pass.trim() !== ''),
     maxFoto: Number(p['Max Foto']) || 50,
@@ -547,6 +547,12 @@ async function handleGetProjectForClient(payload, res) {
     bankAccount: ownerBrand.bankAccount,
     bankAccountName: ownerBrand.bankAccountName,
     isPremiumAddon: ownerBrand.isPremiumAddon
+  };
+
+  return success(res, {
+    success: true,
+    project: projectData,
+    ...projectData
   });
 }
 
