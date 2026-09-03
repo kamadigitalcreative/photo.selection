@@ -10529,17 +10529,13 @@
                 return; 
             }
 
-            startLoading(isEn ? "Saving selections..." : "Menyimpan pilihan foto...");
             hasClientSubmitted = true;
             clientState.statusClient = targetStatus;
             if (clientSyncTimer) clearInterval(clientSyncTimer);
             updateGalleryLock();
 
-            // 1. Simpan ke server
-            try {
-                await pingClientStatus(targetStatus, proofUrl || '', true);
-            } catch (e) {}
-            endLoading();
+            // 1. Simpan status ke server secara instan di background
+            pingClientStatus(targetStatus, proofUrl || '', true).catch(() => {});
 
             var text = formatSelectedText(proofUrl);
 
@@ -10621,8 +10617,6 @@
         }
 
         async function sendToWA_Proceed(proofUrl) {
-            var isEn = localStorage.getItem('ps_lang') === 'en';
-            startLoading(isEn ? "Preparing WhatsApp..." : "Menyiapkan pesan WhatsApp...");
             var extraCount = clientState.selectedImages.length - clientState.maxFoto;
             var targetStatus = (extraCount > 0) ? 'Menunggu Konfirmasi Pembayaran' : 'Selesai';
 
@@ -10631,11 +10625,9 @@
             if (clientSyncTimer) clearInterval(clientSyncTimer);
             updateGalleryLock();
 
-            try {
-                await pingClientStatus(targetStatus, proofUrl || '', true);
-            } catch (e) {}
+            // Simpan status ke server secara instan di background
+            pingClientStatus(targetStatus, proofUrl || '', true).catch(() => {});
 
-            endLoading();
             var text = formatSelectedText(proofUrl);
             if (!text) { Swal.fire({ title: 'Kosong', text: 'Pilih foto terlebih dahulu.', icon: 'info', confirmButtonColor: '#1e1e2d' }); return; }
             var noWa = clientState.nomorWA.replace(/\D/g, '');
