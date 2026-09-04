@@ -909,6 +909,34 @@ async function handleGetDashboardStats(payload, res) {
     return expDate >= now && expDate <= thirtyDaysLater;
   }).map(u => ({ username: u.Username, expiredAt: u.ExpiredAt }));
 
+  // Hitung Data Riil Trafik 7 Hari Terakhir dari Database
+  const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+  const trafficSeries = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() - i);
+    const dayKey = targetDate.toISOString().split('T')[0];
+    const dayLabel = (i === 0) ? 'Hari Ini' : (i === 1 ? 'Kemarin' : `${dayNames[targetDate.getDay()]} (${targetDate.getDate()}/${targetDate.getMonth() + 1})`);
+
+    const count = (analyticsRows || []).filter(r => {
+      const ts = r.Timestamp || r.timestamp || r.created_at;
+      if (!ts) return false;
+      if (typeof ts === 'string' && ts.startsWith(dayKey)) return true;
+      const d = new Date(ts);
+      if (!isNaN(d.getTime())) {
+        return d.getFullYear() === targetDate.getFullYear() &&
+               d.getMonth() === targetDate.getMonth() &&
+               d.getDate() === targetDate.getDate();
+      }
+      return false;
+    }).length;
+
+    trafficSeries.push({ label: dayLabel, count: count, date: dayKey });
+  }
+
+  const safeActiveUsers = Math.max(0, activeUsers - expiringSoon.length);
+
   return success(res, {
     success: true,
     data: {
@@ -923,6 +951,20 @@ async function handleGetDashboardStats(payload, res) {
       pendingUsers,
       expiringSoonCount: expiringSoon.length,
       expiringUsers: expiringSoon,
+      trafficSeries: trafficSeries,
+      statusBreakdown: {
+        safeActive: safeActiveUsers,
+        expiringSoon: expiringSoon.length,
+        pending: pendingUsers,
+        inactive: inactiveUsers
+      },
+      packageBreakdown: {
+        demo: allUsers.filter(u => (u.Paket || '').toUpperCase().includes('DEMO')).length,
+        bulan1: allUsers.filter(u => u.Paket === '1 Bulan').length,
+        bulan6: allUsers.filter(u => u.Paket === '6 Bulan').length,
+        tahun1: allUsers.filter(u => u.Paket === '1 Tahun').length,
+        lifetime: allUsers.filter(u => u.Paket === 'Lifetime').length
+      },
       trafficSources: {
         metaViews,
         googleViews,
