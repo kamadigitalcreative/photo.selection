@@ -87,7 +87,7 @@ module.exports = async function handler(req, res) {
     }
     payload = payload || {};
 
-    if (payload.event && payload.data && (payload.event.includes('payment') || payload.event.includes('invoice') || payload.event.includes('transaction'))) {
+    if ((payload.action === 'mayarWebhook') || (payload.event && payload.data && (payload.event.includes('payment') || payload.event.includes('invoice') || payload.event.includes('transaction')))) {
       return await handleMayarWebhook(payload, res);
     }
 
@@ -95,6 +95,7 @@ module.exports = async function handler(req, res) {
     if (!action) return error(res, 'Action is required', 400);
 
     switch (action) {
+      case 'mayarWebhook': return await handleMayarWebhook(payload, res);
       case 'login': return await handleLogin(payload, res);
       case 'register': return await handleRegister(payload, res);
       case 'getGlobalBranding': return await handleGetGlobalBranding(payload, res);
@@ -107,7 +108,7 @@ module.exports = async function handler(req, res) {
       case 'approveUser': return await handleApproveUser(payload, res);
       case 'updateExpiry': return await handleUpdateExpiry(payload, res);
       case 'sendExpiryReminder': return await handleSendExpiryReminder(payload, res);
-      case 'deleteUser': return await handleDeleteUser(payload, res);
+      case 'deleteUser': return handleDeleteUser(payload, res);
       case 'requestOTP': return await handleRequestOTP(payload, res);
       case 'resetPasswordWithOTP': return await handleResetPasswordWithOTP(payload, res);
       case 'confirmEmail': return await handleConfirmEmail(payload, res);
@@ -316,8 +317,9 @@ async function handleUploadPaymentProof(payload, res) {
 
 async function handlePingUser(payload, res) {
   const user = payload.currentUser || {};
-  if (user.username) {
-    await supabaseQuery(`users?Username=eq.${encodeURIComponent(user.username)}`, {
+  const username = (user.username || payload.username || '').trim();
+  if (username) {
+    await supabaseQuery(`users?Username=ilike.${encodeURIComponent(username)}`, {
       method: 'PATCH',
       body: { LastActive: new Date().toISOString() }
     }).catch(() => { });
@@ -428,7 +430,7 @@ async function handleCreateProject(payload, res) {
   const baseSlug = clientName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'client';
   let shortSlug = baseSlug;
   try {
-    const existing = await supabaseQuery(`projects?or=(Slug.eq.${encodeURIComponent(baseSlug)},"Short Slug".eq.${encodeURIComponent(baseSlug)})&select=id`);
+    const existing = await supabaseQuery(`projects?or=(Slug.eq.${encodeURIComponent(baseSlug)},%22Short%20Slug%22.eq.${encodeURIComponent(baseSlug)})&select=id`);
     if (existing && existing.length > 0) {
       shortSlug = `${baseSlug}-${crypto.randomBytes(2).toString('hex')}`;
     }
@@ -496,7 +498,7 @@ async function handleGetProjectForClient(payload, res) {
   const tokenOrSlug = (payload.token || '').trim();
   if (!tokenOrSlug) return error(res, 'Token or slug is required');
 
-  let projects = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(tokenOrSlug)},Slug.eq.${encodeURIComponent(tokenOrSlug)},"Short Slug".eq.${encodeURIComponent(tokenOrSlug)})&select=*`);
+  let projects = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(tokenOrSlug)},Slug.eq.${encodeURIComponent(tokenOrSlug)},%22Short%20Slug%22.eq.${encodeURIComponent(tokenOrSlug)})&select=*`);
   if (!projects || projects.length === 0) return error(res, 'Project tidak ditemukan.', 404);
 
   const p = projects[0];
@@ -599,7 +601,7 @@ async function handleVerifyClientPassword(payload, res) {
   const token = (payload.token || '').trim();
   const password = (payload.passwordInput || payload.password || '').trim();
 
-  let projects = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)},"Short Slug".eq.${encodeURIComponent(token)})&select=*`);
+  let projects = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)},%22Short%20Slug%22.eq.${encodeURIComponent(token)})&select=*`);
   if (!projects || projects.length === 0) return error(res, 'Project tidak ditemukan');
 
   const p = projects[0];
@@ -650,7 +652,7 @@ async function handleUpdateClientStatus(payload, res) {
     updateBody['Payment Proof'] = payload.paymentProof;
   }
 
-  await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)},"Short Slug".eq.${encodeURIComponent(token)})`, {
+  await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)},%22Short%20Slug%22.eq.${encodeURIComponent(token)})`, {
     method: 'PATCH',
     body: updateBody
   });
@@ -784,34 +786,53 @@ async function handleGetUsers(payload, res) {
   if (user.role !== 'Admin') return error(res, 'Unauthorized', 403);
 
   const rows = await supabaseQuery('users?select=*&order=created_at.desc');
-  const users = (rows || []).map(u => ({
-    username: u.Username,
-    Username: u.Username,
-    nama: u.Nama,
-    Nama: u.Nama,
-    role: u.Role,
-    Role: u.Role,
-    status: u.Status,
-    Status: u.Status,
-    brand_name: u.BrandName,
-    BrandName: u.BrandName,
-    brand_logo: u.BrandLogo,
-    BrandLogo: u.BrandLogo,
-    email: u.Email,
-    Email: u.Email,
-    no_hp: u['No HP'],
-    'No HP': u['No HP'],
-    paket: u.Paket,
-    Paket: u.Paket,
-    expired_at: u.ExpiredAt,
-    ExpiredAt: u.ExpiredAt,
-    project_created: Number(u.ProjectCreated) || 0,
-    ProjectCreated: Number(u.ProjectCreated) || 0,
-    akses_watermark: String(u.Akses_Watermark).toUpperCase() === 'TRUE',
-    Akses_Watermark: String(u.Akses_Watermark).toUpperCase() === 'TRUE',
-    last_active: u.LastActive || u.created_at,
-    LastActive: u.LastActive || u.created_at
-  }));
+  const now = new Date();
+
+  const users = (rows || []).map(u => {
+    let isOnline = false;
+    let lastActiveRaw = u.LastActive || u.created_at || '';
+    if (lastActiveRaw) {
+      const lastActiveDate = new Date(lastActiveRaw);
+      if (!isNaN(lastActiveDate.getTime())) {
+        const diffSeconds = (now.getTime() - lastActiveDate.getTime()) / 1000;
+        // Ping dikirim tiap 30 detik. Toleransi online 75 detik.
+        if (diffSeconds >= 0 && diffSeconds <= 75) {
+          isOnline = true;
+        }
+      }
+    }
+
+    return {
+      username: u.Username,
+      Username: u.Username,
+      nama: u.Nama,
+      Nama: u.Nama,
+      role: u.Role,
+      Role: u.Role,
+      status: u.Status,
+      Status: u.Status,
+      brand_name: u.BrandName,
+      BrandName: u.BrandName,
+      brand_logo: u.BrandLogo,
+      BrandLogo: u.BrandLogo,
+      email: u.Email,
+      Email: u.Email,
+      no_hp: u['No HP'],
+      'No HP': u['No HP'],
+      paket: u.Paket,
+      Paket: u.Paket,
+      expired_at: u.ExpiredAt,
+      ExpiredAt: u.ExpiredAt,
+      project_created: Number(u.ProjectCreated) || 0,
+      ProjectCreated: Number(u.ProjectCreated) || 0,
+      akses_watermark: String(u.Akses_Watermark).toUpperCase() === 'TRUE',
+      Akses_Watermark: String(u.Akses_Watermark).toUpperCase() === 'TRUE',
+      last_active: lastActiveRaw,
+      LastActive: lastActiveRaw,
+      isOnline: isOnline,
+      IsOnline: isOnline
+    };
+  });
 
   return success(res, { success: true, data: users });
 }
@@ -821,7 +842,7 @@ async function handleApproveUser(payload, res) {
   const expiredAt = payload.expiredAt || payload.expiryValue || 'Lifetime';
   const role = payload.role || 'Photographer';
 
-  await supabaseQuery(`users?Username=eq.${encodeURIComponent(username)}`, {
+  await supabaseQuery(`users?Username=ilike.${encodeURIComponent(username)}`, {
     method: 'PATCH',
     body: { Status: 'Active', ExpiredAt: expiredAt, Role: role }
   });
@@ -834,7 +855,7 @@ async function handleUpdateExpiry(payload, res) {
   const expiredAt = payload.expiredAt || payload.expiryValue;
   const paket = payload.paket || '1 Bulan';
 
-  await supabaseQuery(`users?Username=eq.${encodeURIComponent(username)}`, {
+  await supabaseQuery(`users?Username=ilike.${encodeURIComponent(username)}`, {
     method: 'PATCH',
     body: { ExpiredAt: expiredAt, Paket: paket, Status: 'Active' }
   });
@@ -849,16 +870,16 @@ async function handleSendExpiryReminder(payload, res) {
 
 async function handleDeleteUser(payload, res) {
   const username = (payload.username || '').trim();
-  await supabaseQuery(`projects?Owner=eq.${encodeURIComponent(username)}`, { method: 'DELETE' });
-  await supabaseQuery(`users?Username=eq.${encodeURIComponent(username)}`, { method: 'DELETE' });
+  await supabaseQuery(`projects?Owner=ilike.${encodeURIComponent(username)}`, { method: 'DELETE' });
+  await supabaseQuery(`users?Username=ilike.${encodeURIComponent(username)}`, { method: 'DELETE' });
   return success(res, { success: true, message: 'User berhasil dihapus' });
 }
 
 async function handleRequestOTP(payload, res) {
   const email = (payload.email || payload.username || '').trim().toLowerCase();
-  let users = await supabaseQuery(`users?Email=eq.${encodeURIComponent(email)}&select=*`);
+  let users = await supabaseQuery(`users?Email=ilike.${encodeURIComponent(email)}&select=*`);
   if (!users || users.length === 0) {
-    users = await supabaseQuery(`users?Username=eq.${encodeURIComponent(email)}&select=*`);
+    users = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(email)}&select=*`);
   }
   if (!users || users.length === 0) return error(res, 'Email/Username tidak terdaftar.');
 
@@ -877,18 +898,18 @@ async function handleResetPasswordWithOTP(payload, res) {
   const otp = (payload.otp || '').trim();
   const newPassword = (payload.newPassword || '').trim();
 
-  let users = await supabaseQuery(`users?Email=eq.${encodeURIComponent(email)}&select=*`);
+  let users = await supabaseQuery(`users?Email=ilike.${encodeURIComponent(email)}&select=*`);
   if (!users || users.length === 0) {
-    users = await supabaseQuery(`users?Username=eq.${encodeURIComponent(email)}&select=*`);
+    users = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(email)}&select=*`);
   }
   if (!users || users.length === 0) return error(res, 'User tidak ditemukan.');
 
   const uName = users[0].Username;
-  const tokens = await supabaseQuery(`reset_tokens?Username=eq.${encodeURIComponent(uName)}&OTP=eq.${encodeURIComponent(otp)}&limit=1`);
+  const tokens = await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}&OTP=eq.${encodeURIComponent(otp)}&limit=1`);
   if (!tokens || tokens.length === 0) return error(res, 'Kode OTP salah.');
 
   const newHash = hashPassword(newPassword);
-  await supabaseQuery(`users?Username=eq.${encodeURIComponent(uName)}`, {
+  await supabaseQuery(`users?Username=ilike.${encodeURIComponent(uName)}`, {
     method: 'PATCH',
     body: { Password: newHash }
   });
@@ -1204,7 +1225,7 @@ async function handleMayarWebhook(payload, res) {
   }
   if (!targetUser && mobile) {
     const cleanPhone = mobile.replace(/[^0-9]/g, '');
-    const byPhone = await supabaseQuery(`users?No HP=like.*${encodeURIComponent(cleanPhone)}*&select=*`);
+    const byPhone = await supabaseQuery(`users?No%20HP=like.*${encodeURIComponent(cleanPhone)}*&select=*`);
     if (byPhone && byPhone.length > 0) targetUser = byPhone[0];
   }
 
