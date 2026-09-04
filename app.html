@@ -1372,6 +1372,49 @@
                             </div>
                         </div>
 
+                        <!-- WIDGET META ADS & ATTRIBUTION ANALYTICS -->
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 border-b border-gray-100 pb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shrink-0">
+                                        <i class="fa-brands fa-meta text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-800 text-base flex items-center gap-2">
+                                            Meta Ads & Sumber Trafik
+                                            <span class="bg-emerald-50 text-emerald-700 text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-emerald-200 flex items-center gap-1">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Pixel & CAPI Active
+                                            </span>
+                                        </h3>
+                                        <p class="text-xs text-gray-500">Performa pengunjung & konversi dari kampanye iklan Facebook / Instagram Ads.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 hover:bg-white hover:border-blue-200 transition-all">
+                                    <p class="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1.5"><i class="fa-brands fa-facebook text-blue-600"></i> Meta Ads (FB/IG)</p>
+                                    <h4 class="text-2xl font-black text-slate-800 mt-1" id="stat-traffic-meta">0</h4>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">Tayangan dari iklan</p>
+                                </div>
+                                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 hover:bg-white hover:border-indigo-200 transition-all">
+                                    <p class="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1.5"><i class="fa-solid fa-user-plus text-indigo-600"></i> Fotografer Baru (Meta)</p>
+                                    <h4 class="text-2xl font-black text-indigo-600 mt-1" id="stat-leads-meta">0</h4>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">Mendaftar via iklan</p>
+                                </div>
+                                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 hover:bg-white hover:border-amber-200 transition-all">
+                                    <p class="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1.5"><i class="fa-solid fa-compass text-amber-600"></i> Direct / Langsung</p>
+                                    <h4 class="text-2xl font-black text-slate-800 mt-1" id="stat-traffic-direct">0</h4>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">Kunjungan link langsung</p>
+                                </div>
+                                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 hover:bg-white hover:border-red-200 transition-all">
+                                    <p class="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1.5"><i class="fa-brands fa-google text-red-500"></i> Organik / Lainnya</p>
+                                    <h4 class="text-2xl font-black text-slate-800 mt-1" id="stat-traffic-google">0</h4>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">Pencarian / referral lain</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- WIDGET FOTOGRAFER EXPIRING SEGERA -->
                         <div id="expiring-widget-container" class="bg-white p-6 rounded-2xl shadow-sm border border-amber-200/80 mb-8 hidden">
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 pb-3 border-b border-amber-100">
@@ -12183,6 +12226,13 @@
                         if (document.getElementById('stat-views')) document.getElementById('stat-views').innerText = viewsCount;
                         if (document.getElementById('stat-visitors')) document.getElementById('stat-visitors').innerText = visitorsCount;
 
+                        // Data Sumber Trafik & Meta Ads
+                        var ts = d.trafficSources || {};
+                        if (document.getElementById('stat-traffic-meta')) document.getElementById('stat-traffic-meta').innerText = ts.metaViews || 0;
+                        if (document.getElementById('stat-leads-meta')) document.getElementById('stat-leads-meta').innerText = ts.metaUsers || 0;
+                        if (document.getElementById('stat-traffic-direct')) document.getElementById('stat-traffic-direct').innerText = ts.directViews || 0;
+                        if (document.getElementById('stat-traffic-google')) document.getElementById('stat-traffic-google').innerText = (ts.googleViews || 0) + (ts.otherViews || 0);
+
                         // Render Grafik
                         renderCharts(d);
                     }
@@ -12260,6 +12310,49 @@
             }
         }
 
+        // --- META ADS / PIXEL & UTM ENGINE ---
+        (function initUTMTracking() {
+            try {
+                var urlParams = new URLSearchParams(window.location.search);
+                var utmSource = urlParams.get('utm_source');
+                var utmMedium = urlParams.get('utm_medium');
+                var utmCampaign = urlParams.get('utm_campaign');
+                var utmContent = urlParams.get('utm_content');
+                var fbclid = urlParams.get('fbclid');
+
+                if (utmSource || fbclid) {
+                    var utmData = {
+                        utm_source: utmSource || (fbclid ? 'meta' : ''),
+                        utm_medium: utmMedium || '',
+                        utm_campaign: utmCampaign || '',
+                        utm_content: utmContent || '',
+                        fbclid: fbclid || '',
+                        captured_at: new Date().toISOString()
+                    };
+                    localStorage.setItem('ps_utm_data', JSON.stringify(utmData));
+                }
+            } catch (e) { }
+        })();
+
+        function getStoredUTM() {
+            try {
+                var raw = localStorage.getItem('ps_utm_data');
+                return raw ? JSON.parse(raw) : {};
+            } catch (e) { return {}; }
+        }
+
+        function trackMetaEvent(eventName, params, eventId) {
+            try {
+                if (typeof window.fbq === 'function') {
+                    if (eventId) {
+                        window.fbq('track', eventName, params || {}, { eventID: eventId });
+                    } else {
+                        window.fbq('track', eventName, params || {});
+                    }
+                }
+            } catch (e) { }
+        }
+
         // Rekam Kunjungan
         function trackVisit(pageName) {
             var visitorId = localStorage.getItem('ps_visitor_id');
@@ -12267,6 +12360,7 @@
                 visitorId = 'v-' + Math.random().toString(36).substr(2, 9);
                 localStorage.setItem('ps_visitor_id', visitorId);
             }
+            var utm = getStoredUTM();
             fetch(typeof API_ENDPOINT !== 'undefined' ? API_ENDPOINT : '/api/bridge', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -12274,9 +12368,14 @@
                     action: 'logVisit',
                     type: 'VIEW',
                     page: pageName,
-                    visitorId: visitorId
+                    visitorId: visitorId,
+                    utmSource: utm.utm_source || '',
+                    utmCampaign: utm.utm_campaign || '',
+                    fbclid: utm.fbclid || ''
                 })
             }).catch(function (e) { });
+
+            trackMetaEvent('PageView');
         }
 
         // Jalankan otomatis saat halaman dimuat
