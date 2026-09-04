@@ -361,6 +361,7 @@ async function handleGetProjects(payload, res) {
     const maxFoto = Number(p['Max Foto']) || Number(p.MaxFoto) || 50;
     const driveLink = p['Drive Link'] || p.DriveLink || '';
     const dibuatPada = p['Dibuat Pada'] || p.created_at || new Date().toISOString();
+    const lastUpdate = p['Last Update'] || p.LastUpdate || p.last_update || p.updated_at || dibuatPada;
     const statusClient = p['Status Client'] || p.Status || 'Belum Memilih';
     const fotoTerpilih = Number(p['Foto Terpilih']) || 0;
     const shortLink = p['Short Link'] || `https://ps.kamacreative.my.id/app?c=${shortSlug}`;
@@ -412,7 +413,11 @@ async function handleGetProjects(payload, res) {
       'Payment Proof': paymentProof,
       PaymentProof: paymentProof,
       'Dibuat Pada': dibuatPada,
-      TanggalDibuat: dibuatPada
+      TanggalDibuat: dibuatPada,
+      'Last Update': lastUpdate,
+      LastUpdate: lastUpdate,
+      last_update: lastUpdate,
+      updated_at: lastUpdate
     };
   });
 
@@ -652,6 +657,12 @@ async function handleUpdateClientStatus(payload, res) {
     updateBody['Payment Proof'] = payload.paymentProof;
   }
 
+  const nowIso = new Date().toISOString();
+  updateBody['Last Update'] = nowIso;
+  updateBody.LastUpdate = nowIso;
+  updateBody.last_update = nowIso;
+  updateBody.updated_at = nowIso;
+
   await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)},%22Short%20Slug%22.eq.${encodeURIComponent(token)})`, {
     method: 'PATCH',
     body: updateBody
@@ -727,20 +738,80 @@ async function handleProcessPayment(payload, res) {
 }
 
 async function handleGetDashboardStats(payload, res) {
-  const allUsers = await supabaseQuery('users?select=*');
-  const allProjects = await supabaseQuery('projects?select=id');
-  const analyticsRows = await supabaseQuery('analytics?select=id,VisitorID');
+  const filterRange = payload.filterRange || 'all';
+  const startDate = payload.startDate;
+  const endDate = payload.endDate;
+
+  let allUsers = [];
+  let allProjects = [];
+  let analyticsRows = [];
+
+  try {
+    const results = await Promise.all([
+      supabaseQuery('users?select=*'),
+      supabaseQuery('projects?select=*'),
+      supabaseQuery('analytics?select=*&order=created_at.desc')
+    ]);
+    allUsers = results[0] || [];
+    allProjects = results[1] || [];
+    analyticsRows = results[2] || [];
+  } catch (e) {
+    allUsers = await supabaseQuery('users?select=*').catch(() => []);
+    allProjects = await supabaseQuery('projects?select=id,created_at').catch(() => []);
+    analyticsRows = await supabaseQuery('analytics?select=*').catch(() => []);
+  }
+
+  const now = new Date();
+  let filterStartDate = null;
+  let filterEndDate = null;
+
+  if (filterRange === 'today') {
+    filterStartDate = new Date();
+    filterStartDate.setHours(0, 0, 0, 0);
+  } else if (filterRange === 'week') {
+    filterStartDate = new Date();
+    filterStartDate.setDate(now.getDate() - 7);
+    filterStartDate.setHours(0, 0, 0, 0);
+  } else if (filterRange === 'month') {
+    filterStartDate = new Date();
+    filterStartDate.setDate(now.getDate() - 30);
+    filterStartDate.setHours(0, 0, 0, 0);
+  } else if (filterRange === 'custom' && startDate && endDate) {
+    filterStartDate = new Date(startDate);
+    filterStartDate.setHours(0, 0, 0, 0);
+    filterEndDate = new Date(endDate);
+    filterEndDate.setHours(23, 59, 59, 999);
+  }
+
+  const isWithinFilter = (dateStr) => {
+    if (!filterStartDate && !filterEndDate) return true;
+    if (!dateStr) return true;
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return true;
+    if (filterStartDate && d < filterStartDate) return false;
+    if (filterEndDate && d > filterEndDate) return false;
+    return true;
+  };
+
+  const filteredAnalytics = (analyticsRows || []).filter(r => {
+    const ts = r.Timestamp || r.timestamp || r.created_at;
+    return isWithinFilter(ts);
+  });
+
+  const filteredProjects = (allProjects || []).filter(p => {
+    const ts = p['Dibuat Pada'] || p.created_at || p.TanggalDibuat;
+    return isWithinFilter(ts);
+  });
 
   const totalUsers = allUsers ? allUsers.length : 0;
   const activeUsers = allUsers ? allUsers.filter(u => u.Status === 'Active').length : 0;
   const pendingUsers = allUsers ? allUsers.filter(u => u.Status === 'Pending').length : 0;
   const inactiveUsers = allUsers ? allUsers.filter(u => u.Status === 'Inactive').length : 0;
-  const totalProjects = allProjects ? allProjects.length : 0;
+  const totalProjects = filterRange === 'all' ? (allProjects ? allProjects.length : 0) : filteredProjects.length;
 
-  const totalViews = analyticsRows ? analyticsRows.length : 0;
-  const uniqueVisitors = analyticsRows ? new Set(analyticsRows.map(r => r.VisitorID)).size : 0;
+  const totalViews = filteredAnalytics.length;
+  const uniqueVisitors = new Set(filteredAnalytics.map(r => r.VisitorID || r.visitor_id || r.VisitorId || r.id || 'anon')).size;
 
-  const now = new Date();
   const thirtyDaysLater = new Date();
   thirtyDaysLater.setDate(now.getDate() + 30);
 
@@ -757,6 +828,8 @@ async function handleGetDashboardStats(payload, res) {
     data: {
       totalViews,
       uniqueVisitors,
+      views: totalViews,
+      visitors: uniqueVisitors,
       totalProjects,
       totalUsers,
       activeUsers,
@@ -772,10 +845,16 @@ async function handleLogVisit(payload, res) {
   const type = payload.type || 'VIEW';
   const page = payload.page || 'LANDING_PAGE';
   const visitorId = payload.visitorId || 'anon';
+  const nowIso = new Date().toISOString();
 
   await supabaseQuery('analytics', {
     method: 'POST',
-    body: { Type: type, Page: page, VisitorID: visitorId, Timestamp: new Date().toISOString() }
+    body: {
+      Type: type,
+      Page: page,
+      VisitorID: visitorId,
+      Timestamp: nowIso
+    }
   }).catch(() => { });
 
   return success(res, { success: true, logged: true });
@@ -1119,6 +1198,7 @@ async function handleSyncBackground(payload, res) {
     const maxFoto = Number(p['Max Foto']) || Number(p.MaxFoto) || 50;
     const driveLink = p['Drive Link'] || p.DriveLink || '';
     const dibuatPada = p['Dibuat Pada'] || p.created_at || new Date().toISOString();
+    const lastUpdate = p['Last Update'] || p.LastUpdate || p.last_update || p.updated_at || dibuatPada;
     const statusClient = p['Status Client'] || p.Status || 'Belum Memilih';
     const fotoTerpilih = Number(p['Foto Terpilih']) || 0;
     const shortLink = p['Short Link'] || `https://ps.kamacreative.my.id/app?c=${shortSlug}`;
@@ -1170,7 +1250,11 @@ async function handleSyncBackground(payload, res) {
       'Payment Proof': paymentProof,
       PaymentProof: paymentProof,
       'Dibuat Pada': dibuatPada,
-      TanggalDibuat: dibuatPada
+      TanggalDibuat: dibuatPada,
+      'Last Update': lastUpdate,
+      LastUpdate: lastUpdate,
+      last_update: lastUpdate,
+      updated_at: lastUpdate
     };
   });
 
