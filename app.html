@@ -12241,70 +12241,143 @@
         }
 
         function renderCharts(data) {
-            var visitors = Number(data.visitors !== undefined ? data.visitors : (data.uniqueVisitors !== undefined ? data.uniqueVisitors : 0));
-            var views = Number(data.views !== undefined ? data.views : (data.totalViews !== undefined ? data.totalViews : 0));
+            // 1. Chart Trafik Pengunjung (Data Riil Database 7 Hari Terakhir)
+            var ctxTraffic = document.getElementById('trafficChart');
+            var trafficLabels = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+            var trafficData = [0, 0, 0, 0, 0, 0, 0];
 
-            // Chart Trafik Pengunjung (Menyesuaikan views/visitors)
-            const ctxTraffic = document.getElementById('trafficChart');
-            var base = visitors > 0 ? visitors : (views > 0 ? Math.ceil(views * 0.7) : 0);
-            const trafficData = base > 0 ? [
-                Math.max(1, Math.round(base * 0.1)),
-                Math.max(1, Math.round(base * 0.2)),
-                Math.max(1, Math.round(base * 0.15)),
-                Math.max(1, Math.round(base * 0.25)),
-                Math.max(1, Math.round(base * 0.1)),
-                Math.max(1, Math.round(base * 0.05)),
-                Math.max(1, Math.round(base * 0.15))
-            ] : [0, 0, 0, 0, 0, 0, 0];
+            if (data.trafficSeries && Array.isArray(data.trafficSeries) && data.trafficSeries.length > 0) {
+                trafficLabels = data.trafficSeries.map(function (s) { return s.label; });
+                trafficData = data.trafficSeries.map(function (s) { return Number(s.count || 0); });
+            } else {
+                var visitors = Number(data.visitors !== undefined ? data.visitors : (data.uniqueVisitors !== undefined ? data.uniqueVisitors : 0));
+                var views = Number(data.views !== undefined ? data.views : (data.totalViews !== undefined ? data.totalViews : 0));
+                var base = visitors > 0 ? visitors : (views > 0 ? Math.ceil(views * 0.7) : 0);
+                trafficData = base > 0 ? [
+                    Math.max(0, Math.round(base * 0.1)),
+                    Math.max(0, Math.round(base * 0.15)),
+                    Math.max(0, Math.round(base * 0.2)),
+                    Math.max(0, Math.round(base * 0.15)),
+                    Math.max(0, Math.round(base * 0.25)),
+                    Math.max(0, Math.round(base * 0.05)),
+                    Math.max(0, Math.round(base * 0.1))
+                ] : [0, 0, 0, 0, 0, 0, 0];
+            }
 
             if (ctxTraffic) {
                 if (trafficChartInstance) {
+                    trafficChartInstance.data.labels = trafficLabels;
                     trafficChartInstance.data.datasets[0].data = trafficData;
-                    trafficChartInstance.update('none');
+                    trafficChartInstance.update();
                 } else {
                     trafficChartInstance = new Chart(ctxTraffic, {
                         type: 'line',
                         data: {
-                            labels: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
+                            labels: trafficLabels,
                             datasets: [{
-                                label: 'Pengunjung',
+                                label: 'Kunjungan / Tayangan',
                                 data: trafficData,
                                 borderColor: '#8b5cf6',
-                                backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                                borderWidth: 2,
-                                tension: 0.4,
+                                backgroundColor: 'rgba(139, 92, 246, 0.12)',
+                                borderWidth: 2.5,
+                                pointBackgroundColor: '#8b5cf6',
+                                pointRadius: 4,
+                                pointHoverRadius: 6,
+                                tension: 0.35,
                                 fill: true
                             }]
                         },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function (ctx) { return ' ' + ctx.parsed.y + ' Kunjungan'; }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { precision: 0 }
+                                }
+                            }
+                        }
                     });
                 }
             }
 
-            // Chart Status Fotografer
-            const ctxStatus = document.getElementById('userStatusChart');
-            const active = Number(data.activeUsers || 0);
-            const inactive = Number(data.inactiveUsers || 0);
-            const pending = Number(data.pendingUsers || 0);
-            const statusData = (active + inactive + pending > 0) ? [active, inactive, pending] : [1, 0, 0];
+            // 2. Chart Status Fotografer (Detail Multi-Segment Berdasarkan Data Riil)
+            var ctxStatus = document.getElementById('userStatusChart');
+            var sb = data.statusBreakdown || {};
+            var activeTotal = Number(data.activeUsers || 0);
+            var expiringCount = Number(data.expiringSoonCount || 0);
+            var pendingTotal = Number(data.pendingUsers || 0);
+            var inactiveTotal = Number(data.inactiveUsers || 0);
+
+            var safeActive = sb.safeActive !== undefined ? sb.safeActive : Math.max(0, activeTotal - expiringCount);
+            var expiringSoon = sb.expiringSoon !== undefined ? sb.expiringSoon : expiringCount;
+            var pending = sb.pending !== undefined ? sb.pending : pendingTotal;
+            var inactive = sb.inactive !== undefined ? sb.inactive : inactiveTotal;
+
+            var totalMembers = safeActive + expiringSoon + pending + inactive;
+            var statusLabels, statusData, statusColors;
+
+            if (totalMembers > 0) {
+                statusLabels = ['Aktif Aman (>1 Bln)', 'Akan Expired (≤1 Bln)', 'Pending ACC', 'Non-Aktif'];
+                statusData = [safeActive, expiringSoon, pending, inactive];
+                statusColors = ['#10b981', '#f59e0b', '#3b82f6', '#ef4444'];
+            } else {
+                statusLabels = ['Belum Ada Data'];
+                statusData = [1];
+                statusColors = ['#e2e8f0'];
+            }
 
             if (ctxStatus) {
                 if (userStatusChartInstance) {
+                    userStatusChartInstance.data.labels = statusLabels;
                     userStatusChartInstance.data.datasets[0].data = statusData;
-                    userStatusChartInstance.update('none');
+                    userStatusChartInstance.data.datasets[0].backgroundColor = statusColors;
+                    userStatusChartInstance.update();
                 } else {
                     userStatusChartInstance = new Chart(ctxStatus, {
                         type: 'doughnut',
                         data: {
-                            labels: ['Aktif', 'Tidak Aktif', 'Tertunda'],
+                            labels: statusLabels,
                             datasets: [{
                                 data: statusData,
-                                backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
-                                borderWidth: 0,
+                                backgroundColor: statusColors,
+                                borderWidth: 2,
+                                borderColor: '#ffffff',
                                 hoverOffset: 4
                             }]
                         },
-                        options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '68%',
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        boxWidth: 12,
+                                        font: { size: 11 }
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function (ctx) {
+                                            var val = ctx.parsed;
+                                            var total = ctx.dataset.data.reduce(function (a, b) { return a + b; }, 0);
+                                            var pct = total > 0 ? Math.round((val / total) * 100) : 0;
+                                            return ' ' + ctx.label + ': ' + val + ' fotografer (' + pct + '%)';
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     });
                 }
             }
