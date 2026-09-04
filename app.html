@@ -6815,19 +6815,69 @@
                     reminderBtn = '<button onclick="sendExpiryReminderPrompt(\'' + escapeHTML(row.Username) + '\', \'' + escapeHTML(row.Email || '') + '\')" class="px-2.5 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 text-xs font-semibold rounded hover:bg-amber-100 shadow-sm mr-2 transition-colors" title="Kirim Email Pengingat Expired"><i class="fa-regular fa-paper-plane mr-1"></i>Pengingat</button>';
                 }
 
+                // Helper format waktu relatif & tanggal cantik
+                function formatRelativeLastActive(dateStr, isEnLang) {
+                    if (!dateStr) return isEnLang ? 'Never' : 'Belum pernah';
+                    try {
+                        var d = new Date(dateStr);
+                        if (isNaN(d.getTime())) return dateStr;
+                        var now = new Date();
+                        var diffSec = Math.floor((now.getTime() - d.getTime()) / 1000);
+                        if (diffSec < 0) diffSec = 0;
+
+                        if (diffSec < 60) {
+                            return isEnLang ? 'Just now' : 'Baru saja';
+                        }
+                        var diffMin = Math.floor(diffSec / 60);
+                        if (diffMin < 60) {
+                            return diffMin + (isEnLang ? 'm ago' : ' mnt lalu');
+                        }
+                        var diffHours = Math.floor(diffMin / 60);
+                        if (diffHours < 24) {
+                            return diffHours + (isEnLang ? 'h ago' : ' jam lalu');
+                        }
+                        var diffDays = Math.floor(diffHours / 24);
+                        if (diffDays === 1) {
+                            var hh = String(d.getHours()).padStart(2, '0');
+                            var mm = String(d.getMinutes()).padStart(2, '0');
+                            return (isEnLang ? 'Yesterday, ' : 'Kemarin, ') + hh + ':' + mm;
+                        }
+                        if (diffDays < 7) {
+                            return diffDays + (isEnLang ? 'd ago' : ' hari lalu');
+                        }
+                        var day = String(d.getDate()).padStart(2, '0');
+                        var month = String(d.getMonth() + 1).padStart(2, '0');
+                        var year = d.getFullYear();
+                        var hours = String(d.getHours()).padStart(2, '0');
+                        var mins = String(d.getMinutes()).padStart(2, '0');
+                        return day + '/' + month + '/' + year + ' ' + hours + ':' + mins;
+                    } catch (e) {
+                        return dateStr;
+                    }
+                }
+
                 var tr = document.createElement('tr');
                 tr.className = "hover:bg-kama-50/50 transition-colors group";
 
-                var lastSeenStr = isEn ? 'Never' : 'Belum pernah';
-                var lastSeen = row.LastActive ? row.LastActive : lastSeenStr;
+                var lastSeenFormatted = formatRelativeLastActive(row.LastActive || row.last_active, isEn);
                 var textLast = isEn ? 'Last: ' : 'Terakhir: ';
                 var onlineBadge = row.isOnline
                     ? '<div class="flex flex-col items-center justify-center">' +
-                    '<span class="bg-green-100 text-green-700 text-[10px] px-2 py-1 rounded-full font-bold border border-green-200"><i class="fa-solid fa-circle text-[8px] mr-1 animate-pulse"></i>Online</span>' +
+                    '<span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 text-[10px] px-2.5 py-1 rounded-full font-bold border border-emerald-200 shadow-sm">' +
+                    '<span class="relative flex h-2 w-2">' +
+                    '<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>' +
+                    '<span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>' +
+                    '</span>' +
+                    'Online' +
+                    '</span>' +
+                    '<span class="text-[9px] text-emerald-600 mt-1 font-semibold whitespace-nowrap"><i class="fa-solid fa-bolt text-[8px] mr-0.5"></i>' + (isEn ? 'Active now' : 'Sedang Aktif') + '</span>' +
                     '</div>'
                     : '<div class="flex flex-col items-center justify-center">' +
-                    '<span class="bg-gray-100 text-gray-500 text-[10px] px-2 py-1 rounded-full font-bold border border-gray-200"><i class="fa-solid fa-circle text-[8px] mr-1"></i>Offline</span>' +
-                    '<span class="text-[9px] text-gray-400 mt-1 font-medium whitespace-nowrap">' + textLast + lastSeen + '</span>' +
+                    '<span class="inline-flex items-center gap-1.5 bg-gray-100 text-gray-500 text-[10px] px-2.5 py-1 rounded-full font-bold border border-gray-200">' +
+                    '<span class="inline-flex rounded-full h-1.5 w-1.5 bg-gray-400"></span>' +
+                    'Offline' +
+                    '</span>' +
+                    '<span class="text-[9px] text-gray-400 mt-1 font-medium whitespace-nowrap" title="' + escapeHTML(row.LastActive || '') + '"><i class="fa-regular fa-clock text-[8px] mr-0.5"></i>' + textLast + lastSeenFormatted + '</span>' +
                     '</div>';
 
                 tr.innerHTML =
