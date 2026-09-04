@@ -6769,6 +6769,47 @@
             renderUsersTable(filtered);
         }
 
+        // Helper format waktu relatif & tanggal cantik untuk aktivitas fotografer
+        function formatRelativeLastActive(dateStr, isEnLang) {
+            if (!dateStr) return isEnLang ? 'Never' : 'Belum pernah';
+            try {
+                var d = new Date(dateStr);
+                if (isNaN(d.getTime())) return dateStr;
+                var now = new Date();
+                var diffSec = Math.floor((now.getTime() - d.getTime()) / 1000);
+                if (diffSec < 0) diffSec = 0;
+
+                if (diffSec < 60) {
+                    return isEnLang ? 'Just now' : 'Baru saja';
+                }
+                var diffMin = Math.floor(diffSec / 60);
+                if (diffMin < 60) {
+                    return diffMin + (isEnLang ? 'm ago' : ' mnt lalu');
+                }
+                var diffHours = Math.floor(diffMin / 60);
+                if (diffHours < 24) {
+                    return diffHours + (isEnLang ? 'h ago' : ' jam lalu');
+                }
+                var diffDays = Math.floor(diffHours / 24);
+                if (diffDays === 1) {
+                    var hh = String(d.getHours()).padStart(2, '0');
+                    var mm = String(d.getMinutes()).padStart(2, '0');
+                    return (isEnLang ? 'Yesterday, ' : 'Kemarin, ') + hh + ':' + mm;
+                }
+                if (diffDays < 7) {
+                    return diffDays + (isEnLang ? 'd ago' : ' hari lalu');
+                }
+                var day = String(d.getDate()).padStart(2, '0');
+                var month = String(d.getMonth() + 1).padStart(2, '0');
+                var year = d.getFullYear();
+                var hours = String(d.getHours()).padStart(2, '0');
+                var mins = String(d.getMinutes()).padStart(2, '0');
+                return day + '/' + month + '/' + year + ' ' + hours + ':' + mins;
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
         function renderUsersTable(data) {
             var tbody = document.getElementById('userTableBody');
             if (!tbody) return;
@@ -6777,6 +6818,8 @@
             if (!data || data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-gray-400 italic">Belum ada fotografer terdaftar yang sesuai kriteria.</td></tr>'; return;
             }
+
+            var isEn = localStorage.getItem('ps_lang') === 'en';
 
             data.forEach(function (row) {
                 var expBadge = '-';
@@ -6793,7 +6836,7 @@
                     var iconClass = isExpired ? 'fa-solid fa-circle-exclamation' : 'fa-regular fa-clock';
                     expBadge = '<span class="text-xs ' + colorClass + '"><i class="' + iconClass + ' mr-1"></i>' + row.ExpiredAt.substring(0, 10) + '</span>';
                 }
-                var isEn = localStorage.getItem('ps_lang') === 'en';
+
                 var statusBadge = '';
                 if (row.Status === 'Active') {
                     if (isExpired) {
@@ -6813,47 +6856,6 @@
                 var reminderBtn = '';
                 if (row.Role !== 'Admin' && row.ExpiredAt && row.ExpiredAt !== 'Lifetime') {
                     reminderBtn = '<button onclick="sendExpiryReminderPrompt(\'' + escapeHTML(row.Username) + '\', \'' + escapeHTML(row.Email || '') + '\')" class="px-2.5 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 text-xs font-semibold rounded hover:bg-amber-100 shadow-sm mr-2 transition-colors" title="Kirim Email Pengingat Expired"><i class="fa-regular fa-paper-plane mr-1"></i>Pengingat</button>';
-                }
-
-                // Helper format waktu relatif & tanggal cantik
-                function formatRelativeLastActive(dateStr, isEnLang) {
-                    if (!dateStr) return isEnLang ? 'Never' : 'Belum pernah';
-                    try {
-                        var d = new Date(dateStr);
-                        if (isNaN(d.getTime())) return dateStr;
-                        var now = new Date();
-                        var diffSec = Math.floor((now.getTime() - d.getTime()) / 1000);
-                        if (diffSec < 0) diffSec = 0;
-
-                        if (diffSec < 60) {
-                            return isEnLang ? 'Just now' : 'Baru saja';
-                        }
-                        var diffMin = Math.floor(diffSec / 60);
-                        if (diffMin < 60) {
-                            return diffMin + (isEnLang ? 'm ago' : ' mnt lalu');
-                        }
-                        var diffHours = Math.floor(diffMin / 60);
-                        if (diffHours < 24) {
-                            return diffHours + (isEnLang ? 'h ago' : ' jam lalu');
-                        }
-                        var diffDays = Math.floor(diffHours / 24);
-                        if (diffDays === 1) {
-                            var hh = String(d.getHours()).padStart(2, '0');
-                            var mm = String(d.getMinutes()).padStart(2, '0');
-                            return (isEnLang ? 'Yesterday, ' : 'Kemarin, ') + hh + ':' + mm;
-                        }
-                        if (diffDays < 7) {
-                            return diffDays + (isEnLang ? 'd ago' : ' hari lalu');
-                        }
-                        var day = String(d.getDate()).padStart(2, '0');
-                        var month = String(d.getMonth() + 1).padStart(2, '0');
-                        var year = d.getFullYear();
-                        var hours = String(d.getHours()).padStart(2, '0');
-                        var mins = String(d.getMinutes()).padStart(2, '0');
-                        return day + '/' + month + '/' + year + ' ' + hours + ':' + mins;
-                    } catch (e) {
-                        return dateStr;
-                    }
                 }
 
                 var tr = document.createElement('tr');
