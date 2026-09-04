@@ -46,6 +46,49 @@ function hashPassword(password) {
   return crypto.createHash('sha256').update(password + KAMA_SALT).digest('hex');
 }
 
+function sha256(str) {
+  if (!str) return '';
+  return crypto.createHash('sha256').update(String(str).trim().toLowerCase()).digest('hex');
+}
+
+async function sendMetaCAPIEvent(eventName, eventData = {}) {
+  const pixelId = process.env.META_PIXEL_ID || '';
+  const token = process.env.META_CAPI_TOKEN || process.env.META_ACCESS_TOKEN || '';
+  if (!pixelId || !token) return;
+
+  try {
+    const userData = {};
+    if (eventData.clientIp) userData.client_ip_address = eventData.clientIp;
+    if (eventData.userAgent) userData.client_user_agent = eventData.userAgent;
+    if (eventData.email) userData.em = [sha256(eventData.email)];
+    if (eventData.phone) userData.ph = [sha256(String(eventData.phone).replace(/[^0-9]/g, ''))];
+    if (eventData.fbp) userData.fbp = eventData.fbp;
+    if (eventData.fbc) userData.fbc = eventData.fbc;
+
+    const payload = {
+      data: [
+        {
+          event_name: eventName,
+          event_time: Math.floor(Date.now() / 1000),
+          event_id: eventData.eventId || undefined,
+          event_source_url: eventData.sourceUrl || 'https://ps.kamacreative.my.id',
+          action_source: 'website',
+          user_data: userData,
+          custom_data: eventData.customData || undefined
+        }
+      ]
+    };
+
+    await fetch(`https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${token}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+  } catch (err) {
+    console.error('Meta CAPI Error:', err);
+  }
+}
+
 function sendJSON(res, statusCode, payload) {
   res.setHeader('Content-Type', 'application/json');
   return res.status(statusCode).json(payload);
@@ -243,10 +286,28 @@ async function handleRegister(payload, res) {
     Paket: paket,
     ExpiredAt: expiredAt,
     ConfirmToken: confirmToken,
-    ProjectCreated: '0'
+    ProjectCreated: '0',
+    UtmSource: d.utmSource || d.utm_source || '',
+    UtmCampaign: d.utmCampaign || d.utm_campaign || '',
+    Fbclid: d.fbclid || ''
   };
 
   await supabaseQuery('users', { method: 'POST', body: newUser });
+
+  const eventId = d.eventId || ('reg_' + username + '_' + Date.now());
+  sendMetaCAPIEvent('CompleteRegistration', {
+    eventId: eventId,
+    email: email,
+    phone: nohp,
+    fbp: d.fbp || '',
+    fbc: d.fbc || '',
+    customData: {
+      content_name: 'Pendaftaran Fotografer',
+      status: initialStatus,
+      value: isDemo ? 0 : 50000,
+      currency: 'IDR'
+    }
+  }).catch(() => {});
 
   let paymentUrl = '';
   if (paket === '1 Bulan') paymentUrl = 'https://kamacreative.myr.id/pl/paket-1-bulan-photo-selection';
@@ -254,7 +315,7 @@ async function handleRegister(payload, res) {
   else if (paket === '1 Tahun') paymentUrl = 'https://kamacreative.myr.id/pl/paket-1-tahunn-photo-selection';
   else if (paket === 'Lifetime') paymentUrl = 'https://kamacreative.myr.id/pl/paket-lifetime-photo-selection';
 
-  return success(res, { success: true, paymentUrl: paymentUrl }, 'Pendaftaran berhasil');
+  return success(res, { success: true, paymentUrl: paymentUrl, eventId: eventId }, 'Pendaftaran berhasil');
 }
 
 async function handleGetGlobalBranding(payload, res) {
@@ -812,6 +873,31 @@ async function handleGetDashboardStats(payload, res) {
   const totalViews = filteredAnalytics.length;
   const uniqueVisitors = new Set(filteredAnalytics.map(r => r.VisitorID || r.visitor_id || r.VisitorId || r.id || 'anon')).size;
 
+  let metaViews = 0;
+  let googleViews = 0;
+  let directViews = 0;
+  let otherViews = 0;
+
+  filteredAnalytics.forEach(r => {
+    const src = (r.UtmSource || r.utm_source || '').toLowerCase();
+    const fbclid = r.Fbclid || r.fbclid || '';
+    if (src.includes('facebook') || src.includes('instagram') || src.includes('meta') || src.includes('fb') || fbclid) {
+      metaViews++;
+    } else if (src.includes('google') || src.includes('gads')) {
+      googleViews++;
+    } else if (!src && !fbclid) {
+      directViews++;
+    } else {
+      otherViews++;
+    }
+  });
+
+  const metaUsers = (allUsers || []).filter(u => {
+    const src = (u.UtmSource || u.utm_source || '').toLowerCase();
+    const fbclid = u.Fbclid || u.fbclid || '';
+    return src.includes('facebook') || src.includes('instagram') || src.includes('meta') || src.includes('fb') || fbclid;
+  }).length;
+
   const thirtyDaysLater = new Date();
   thirtyDaysLater.setDate(now.getDate() + 30);
 
@@ -836,7 +922,14 @@ async function handleGetDashboardStats(payload, res) {
       inactiveUsers,
       pendingUsers,
       expiringSoonCount: expiringSoon.length,
-      expiringUsers: expiringSoon
+      expiringUsers: expiringSoon,
+      trafficSources: {
+        metaViews,
+        googleViews,
+        directViews,
+        otherViews,
+        metaUsers
+      }
     }
   });
 }
@@ -845,6 +938,9 @@ async function handleLogVisit(payload, res) {
   const type = payload.type || 'VIEW';
   const page = payload.page || 'LANDING_PAGE';
   const visitorId = payload.visitorId || 'anon';
+  const utmSource = payload.utmSource || payload.utm_source || '';
+  const utmCampaign = payload.utmCampaign || payload.utm_campaign || '';
+  const fbclid = payload.fbclid || '';
   const nowIso = new Date().toISOString();
 
   await supabaseQuery('analytics', {
@@ -853,7 +949,10 @@ async function handleLogVisit(payload, res) {
       Type: type,
       Page: page,
       VisitorID: visitorId,
-      Timestamp: nowIso
+      Timestamp: nowIso,
+      UtmSource: utmSource,
+      UtmCampaign: utmCampaign,
+      Fbclid: fbclid
     }
   }).catch(() => { });
 
@@ -1341,6 +1440,20 @@ async function handleMayarWebhook(payload, res) {
       });
       hasilAktivasi = `Aktivasi ${paketName} untuk ${uName}`;
     }
+
+    // Trigger Meta CAPI Purchase
+    const purEventId = d.id || ('pur_' + uName + '_' + Date.now());
+    const purAmount = Number(d.amount || d.netAmount || 100000);
+    sendMetaCAPIEvent('Purchase', {
+      eventId: purEventId,
+      email: email || targetUser.Email,
+      phone: mobile || targetUser['No HP'],
+      customData: {
+        content_name: product || paketName,
+        value: purAmount,
+        currency: 'IDR'
+      }
+    }).catch(() => {});
   }
 
   await supabaseQuery('mayar_logs', {
