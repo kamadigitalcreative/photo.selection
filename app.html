@@ -7177,6 +7177,34 @@
             }
         }
 
+        function getComputedClientStatus(row) {
+            var rawStatus = row['Status Client'] || row.Status || 'Belum Memilih';
+            var selected = parseInt(row['Foto Terpilih'] || 0);
+
+            if (rawStatus === 'Selesai') return 'Selesai';
+            if (rawStatus === 'Menunggu Konfirmasi Pembayaran') return 'Menunggu Konfirmasi Pembayaran';
+
+            // Cek apakah klien saat ini sedang aktif membuka link (heartbeat dalam 90 detik terakhir)
+            var rawUpdate = row['Last Update'] || row.LastUpdate || row.updated_at || row['Dibuat Pada'] || row.created_at;
+            var isOnlineNow = false;
+            if (rawUpdate) {
+                var dUp = new Date(rawUpdate).getTime();
+                if (!isNaN(dUp) && (Date.now() - dUp) < 90000) { // Toleransi online 90 detik
+                    isOnlineNow = true;
+                }
+            }
+
+            if (isOnlineNow) {
+                return 'Sedang Memilih'; // Client sedang membuka link detik ini
+            }
+
+            if (selected > 0 || rawStatus === 'Dalam Proses' || rawStatus === 'Sedang Memilih') {
+                return 'Dalam Proses'; // Sudah memilih foto (> 0), data tersimpan di DB, tapi sudah tutup link/offline
+            }
+
+            return 'Belum Memilih'; // Belum memilih (0 foto) dan offline
+        }
+
         function renderProjectsTable(data) {
             window.lastProjectsData = data;
             var tbody = document.getElementById('projectTableBody');
@@ -7191,7 +7219,7 @@
 
             if (data) {
                 data.forEach(function (row) {
-                    var s = row['Status Client'] || 'Belum Memilih';
+                    var s = getComputedClientStatus(row);
                     var deadlineStr = row['Deadline'];
                     var isExp = false;
                     if (deadlineStr && deadlineStr !== 'Selamanya') {
@@ -7272,7 +7300,7 @@
                 var progressPct = maxFoto > 0 ? Math.min(100, Math.round((fotoTerpilih / maxFoto) * 100)) : 0;
                 var progressColor = progressPct >= 100 ? 'bg-green-500' : 'bg-blue-500';
 
-                var statusClient = row['Status Client'] || 'Belum Memilih';
+                var statusClient = getComputedClientStatus(row);
                 var statusColor = 'slate';
                 var pulseHtml = '';
                 var statusDisplay = 'Belum Memilih';
@@ -7292,7 +7320,7 @@
                     statusDisplay = isEnLocale ? 'Pending Payment' : 'Menunggu Konfirmasi';
                     progressColor = 'bg-yellow-500';
                     progressPct = 100;
-                } else if (fotoTerpilih > 0) {
+                } else if (statusClient === 'Dalam Proses') {
                     statusColor = 'orange';
                     pulseHtml = '<div class="w-2 h-2 rounded-full bg-orange-500 mr-1.5 shrink-0"></div>';
                     statusDisplay = isEnLocale ? 'In Progress' : 'Dalam Proses';
@@ -11043,7 +11071,8 @@
             if (!clientState.token || isSubmitted) return;
 
             if (document.visibilityState === 'hidden') {
-                pingClientStatus('Belum Memilih', '', false);
+                var offStatus = (clientState.selectedImages && clientState.selectedImages.length > 0) ? 'Dalam Proses' : 'Belum Memilih';
+                pingClientStatus(offStatus, '', false);
                 // Lepaskan sesi saat tab ditutup/di-minimize agar device lain bisa langsung membuka
                 try {
                     fetch(API_ENDPOINT, {
@@ -11224,7 +11253,7 @@
             }
 
             data.forEach(function (row) {
-                var status = row['Status Client'] || 'Belum Memilih';
+                var status = getComputedClientStatus(row);
                 var selected = parseInt(row['Foto Terpilih'] || 0);
 
                 var badgeClass = ''; var iconClass = ''; var pulseIcon = '';
@@ -11245,7 +11274,7 @@
                     badgeClass = 'bg-yellow-50 text-yellow-700 border-yellow-200';
                     iconClass = 'fa-solid fa-file-invoice-dollar text-yellow-600';
                     statusText = isEn ? 'Pending Payment' : 'Menunggu Konfirmasi';
-                } else if (selected > 0) {
+                } else if (status === 'Dalam Proses') {
                     countProses++;
                     badgeClass = 'bg-orange-50 text-orange-700 border-orange-200';
                     pulseIcon = '<div class="w-2 h-2 rounded-full bg-orange-500 mr-1.5 shrink-0"></div>';
@@ -11278,7 +11307,7 @@
                     percent = 100;
                 }
 
-                var barColor = percent === 100 ? 'bg-green-500' : (status === 'Sedang Memilih' ? 'bg-amber-500' : (selected > 0 ? 'bg-orange-500' : 'bg-primary-600'));
+                var barColor = percent === 100 ? 'bg-green-500' : (status === 'Sedang Memilih' ? 'bg-amber-500' : (status === 'Dalam Proses' ? 'bg-orange-500' : 'bg-primary-600'));
 
                 var card = document.createElement('div');
                 card.className = "bg-white border border-slate-200 rounded-2xl mb-4 p-5 shadow-sm hover:shadow-md transition-all duration-300 group";
@@ -13542,7 +13571,7 @@
 
                 var matchTab = true;
                 if (tabFilter === 'Menunggu Klien') {
-                    matchTab = (cardStatus === 'Belum Memilih' || cardStatus === 'Sedang Memilih');
+                    matchTab = (cardStatus === 'Belum Memilih' || cardStatus === 'Sedang Memilih' || cardStatus === 'Dalam Proses');
                 } else if (tabFilter === 'Selesai') {
                     matchTab = (cardStatus === 'Selesai');
                 }
