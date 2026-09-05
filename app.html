@@ -9469,8 +9469,10 @@
                 showClientModeSelection();
             }
 
-            if (projectData.statusClient === 'Selesai' || projectData.statusClient === 'Menunggu Konfirmasi Pembayaran') {
+            var localSubmitted = (projectData.token) ? localStorage.getItem('ps_client_submitted_' + projectData.token) : null;
+            if (projectData.statusClient === 'Selesai' || projectData.statusClient === 'Menunggu Konfirmasi Pembayaran' || localSubmitted === 'Selesai' || localSubmitted === 'Menunggu Konfirmasi Pembayaran') {
                 hasClientSubmitted = true;
+                clientState.statusClient = projectData.statusClient || localSubmitted;
                 setTimeout(updateGalleryLock, 500); // Ensure grid is locked after render
             } else {
                 hasClientSubmitted = false;
@@ -10666,44 +10668,46 @@
 
         function formatSelectedText(proofUrl = null) {
             var isEn = (localStorage.getItem('ps_lang') === 'en');
-            var extraCount = clientState.selectedImages.length - clientState.maxFoto;
+            var totalDipilih = clientState.selectedImages ? clientState.selectedImages.length : 0;
+            var kuota = clientState.maxFoto || 0;
+            var extraCount = Math.max(0, totalDipilih - kuota);
             var text = "";
             var safeProof = (proofUrl && typeof proofUrl === 'string' && proofUrl.startsWith('http')) 
                 ? proofUrl 
                 : (isEn ? '(Attached receipt screenshot in this chat)' : '(Terlampir foto struk di chat ini)');
 
             if (isEn) {
-                text += "*PHOTO SELECTION COMPLETED*\n\n";
+                text += "*✨ PHOTO SELECTION COMPLETED*\n\n";
                 if (extraCount > 0) {
-                    text += "Hello Photographer, we from *" + clientState.namaClient + "* have finished selecting photos & completed extra payment.\n\n";
+                    text += "Hello Photographer, we from *" + (clientState.namaClient || 'Client') + "* have finished selecting photos & completed extra payment.\n\n";
                 } else {
-                    text += "Hello Photographer, we from *" + clientState.namaClient + "* have finished selecting photos.\n\n";
+                    text += "Hello Photographer, we from *" + (clientState.namaClient || 'Client') + "* have finished selecting photos.\n\n";
                 }
-                text += "*Summary:*\n";
+                text += "*📋 Summary:*\n";
+                text += "• Total Selected: *" + totalDipilih + " Photos*\n";
+                text += "• Project Quota: *" + kuota + " Photos*\n";
                 if (extraCount > 0) {
-                    text += "• Total Selected: *" + clientState.selectedImages.length + " Photos* (Quota: " + clientState.maxFoto + " + Extra: " + extraCount + " Photos)\n";
+                    text += "• Extra Photos: *+" + extraCount + " Photos*\n";
                     text += "• Extra Total: *Rp " + (extraCount * clientState.extraPrice).toLocaleString('id-ID') + "*\n";
                     text += "• Payment Proof: " + safeProof + "\n";
-                } else {
-                    text += "• Total Selected: *" + clientState.selectedImages.length + " / " + clientState.maxFoto + " Photos*\n";
                 }
-                text += "\nPlease verify in Photo Selector Dashboard. Thank you!";
+                text += "\nPlease verify and process our photos in the Photo Selector Dashboard. Thank you! 🙏";
             } else {
-                text += "*SELEKSI FOTO SELESAI*\n\n";
+                text += "*✨ SELEKSI FOTO SELESAI*\n\n";
                 if (extraCount > 0) {
-                    text += "Halo Fotografer, kami dari *" + clientState.namaClient + "* telah selesai memilih foto & menyelesaikan pembayaran ekstra.\n\n";
+                    text += "Halo Fotografer, kami dari *" + (clientState.namaClient || 'Klien') + "* telah selesai memilih foto & menyelesaikan pembayaran ekstra.\n\n";
                 } else {
-                    text += "Halo Fotografer, kami dari *" + clientState.namaClient + "* telah selesai memilih foto.\n\n";
+                    text += "Halo Fotografer, kami dari *" + (clientState.namaClient || 'Klien') + "* telah selesai memilih foto.\n\n";
                 }
-                text += "*Ringkasan:*\n";
+                text += "*📋 Ringkasan:*\n";
+                text += "• Total Foto Terpilih: *" + totalDipilih + " Foto*\n";
+                text += "• Batas Kuota Project: *" + kuota + " Foto*\n";
                 if (extraCount > 0) {
-                    text += "• Total Terpilih: *" + clientState.selectedImages.length + " Foto* (Kuota: " + clientState.maxFoto + " + Ekstra: " + extraCount + " Foto)\n";
+                    text += "• Foto Ekstra: *+" + extraCount + " Foto*\n";
                     text += "• Total Tagihan Ekstra: *Rp " + (extraCount * clientState.extraPrice).toLocaleString('id-ID') + "*\n";
                     text += "• Bukti Transfer: " + safeProof + "\n";
-                } else {
-                    text += "• Total Terpilih: *" + clientState.selectedImages.length + " / " + clientState.maxFoto + " Foto*\n";
                 }
-                text += "\nMohon dicek pada Dashboard Photo Selector. Terima kasih!";
+                text += "\nMohon dicek dan diproses pada Dashboard Photo Selector. Terima kasih! 🙏";
             }
             return text;
         }
@@ -10726,6 +10730,7 @@
 
             hasClientSubmitted = true;
             clientState.statusClient = targetStatus;
+            try { localStorage.setItem('ps_client_submitted_' + clientState.token, targetStatus); } catch(e) {}
             if (clientSyncTimer) clearInterval(clientSyncTimer);
             updateGalleryLock();
 
@@ -10817,6 +10822,7 @@
 
             hasClientSubmitted = true;
             clientState.statusClient = targetStatus;
+            try { localStorage.setItem('ps_client_submitted_' + clientState.token, targetStatus); } catch(e) {}
             if (clientSyncTimer) clearInterval(clientSyncTimer);
             updateGalleryLock();
 
@@ -11067,7 +11073,10 @@
 
         // Pendeteksi Klien Keluar / Pindah Aplikasi / Tab Fokus (HP & PC)
         document.addEventListener('visibilitychange', function () {
-            var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
+            var localSub = clientState.token ? localStorage.getItem('ps_client_submitted_' + clientState.token) : null;
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined' && hasClientSubmitted) || 
+                              (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran')) ||
+                              (localSub === 'Selesai' || localSub === 'Menunggu Konfirmasi Pembayaran');
             if (!clientState.token || isSubmitted) return;
 
             if (document.visibilityState === 'hidden') {
