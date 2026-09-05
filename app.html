@@ -9390,8 +9390,23 @@
             clientState.statusClient = projectData.statusClient || 'Belum Memilih';
             clientState.backupUrl = projectData.backupDrive || '';
 
-            // LOAD PILIHAN DARI DATABASE (SUMBER DATA UTAMA MULTI-DEVICE)
-            clientState.selectedImages = parseSelectedPhotosList(projectData.selectedFiles);
+            // LOAD PILIHAN DARI DATABASE (SUMBER DATA UTAMA MULTI-DEVICE DENGAN SMART MERGE ANTI DATA-LOSS)
+            var serverSelections = parseSelectedPhotosList(projectData.selectedFiles);
+            var localSelections = [];
+            try {
+                var cachedSel = localStorage.getItem('ps_client_selected_' + clientState.token);
+                if (cachedSel) localSelections = JSON.parse(cachedSel) || [];
+            } catch(e) {}
+
+            if (Array.isArray(localSelections) && localSelections.length > serverSelections.length) {
+                clientState.selectedImages = localSelections;
+                setTimeout(function() {
+                    pingClientStatus(clientState.statusClient || 'Sedang Memilih', '', true);
+                }, 800);
+            } else {
+                clientState.selectedImages = serverSelections;
+            }
+
             try {
                 clientState.notes = JSON.parse(projectData.notes || "{}");
             } catch (e) {
