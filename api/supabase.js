@@ -693,8 +693,28 @@ async function handleUpdateClientStatus(payload, res) {
   const updateBody = {};
 
   if (payload.status) {
-    updateBody.Status = payload.status;
-    updateBody['Status Client'] = payload.status;
+    // Cek apakah project saat ini sudah Selesai / Menunggu Konfirmasi Pembayaran
+    try {
+      const existing = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)},%22Short%20Slug%22.eq.${encodeURIComponent(token)})&select=Status,"Status Client"`);
+      if (existing && existing.length > 0) {
+        const curStatus = existing[0].Status || existing[0]['Status Client'];
+        const isAlreadyDone = (curStatus === 'Selesai' || curStatus === 'Menunggu Konfirmasi Pembayaran');
+        const isIncomingDraft = (payload.status === 'Sedang Memilih' || payload.status === 'Dalam Proses' || payload.status === 'Belum Memilih');
+        
+        if (isAlreadyDone && isIncomingDraft) {
+          // Tetap pertahankan status Selesai, jangan ditimpa status draft/heartbeat
+        } else {
+          updateBody.Status = payload.status;
+          updateBody['Status Client'] = payload.status;
+        }
+      } else {
+        updateBody.Status = payload.status;
+        updateBody['Status Client'] = payload.status;
+      }
+    } catch(e) {
+      updateBody.Status = payload.status;
+      updateBody['Status Client'] = payload.status;
+    }
   }
 
   if (payload.selectedCount !== undefined) {
