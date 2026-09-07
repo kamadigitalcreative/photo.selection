@@ -5036,6 +5036,35 @@
             });
         }
 
+        function parseSafeDate(dateInput) {
+            if (!dateInput) return null;
+            if (dateInput instanceof Date) return isNaN(dateInput.getTime()) ? null : dateInput;
+            if (typeof dateInput === 'number') {
+                const d = new Date(dateInput);
+                return isNaN(d.getTime()) ? null : d;
+            }
+            const str = String(dateInput).trim();
+            if (!str || str === '-' || str === 'null' || str === 'undefined') return null;
+
+            // Cek format DD/MM/YYYY atau DD-MM-YYYY (contoh: 17/08/2026 23:12:24 atau 02/09/2026)
+            const ddmmyyyyMatch = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+            if (ddmmyyyyMatch) {
+                const day = parseInt(ddmmyyyyMatch[1], 10);
+                const month = parseInt(ddmmyyyyMatch[2], 10) - 1; // 0-indexed
+                const year = parseInt(ddmmyyyyMatch[3], 10);
+                const hours = ddmmyyyyMatch[4] ? parseInt(ddmmyyyyMatch[4], 10) : 0;
+                const minutes = ddmmyyyyMatch[5] ? parseInt(ddmmyyyyMatch[5], 10) : 0;
+                const seconds = ddmmyyyyMatch[6] ? parseInt(ddmmyyyyMatch[6], 10) : 0;
+                const d = new Date(year, month, day, hours, minutes, seconds);
+                if (!isNaN(d.getTime())) return d;
+            }
+
+            // Standard ISO atau string date
+            const d = new Date(str);
+            if (!isNaN(d.getTime())) return d;
+            return null;
+        }
+
         var appBranding = { name: 'Kama Creative', logo: '' };
         var currentUser = null;
 
@@ -7188,8 +7217,8 @@
             var rawUpdate = row['Last Update'] || row.LastUpdate || row.updated_at || row['Dibuat Pada'] || row.created_at;
             var isOnlineNow = false;
             if (rawUpdate) {
-                var dUp = new Date(rawUpdate).getTime();
-                if (!isNaN(dUp) && (Date.now() - dUp) < 90000) { // Toleransi online 90 detik
+                var dUp = parseSafeDate(rawUpdate);
+                if (dUp && (Date.now() - dUp.getTime()) < 90000) { // Toleransi online 90 detik
                     isOnlineNow = true;
                 }
             }
@@ -7223,8 +7252,8 @@
                     var deadlineStr = row['Deadline'];
                     var isExp = false;
                     if (deadlineStr && deadlineStr !== 'Selamanya') {
-                        var dDate = new Date(deadlineStr).getTime();
-                        if (!isNaN(dDate) && dDate < now && s !== 'Selesai') {
+                        var dDateObj = parseSafeDate(deadlineStr);
+                        if (dDateObj && dDateObj.getTime() < now && s !== 'Selesai') {
                             isExp = true;
                             statExpired++;
                         }
@@ -7274,20 +7303,16 @@
                 var dateStr = '-';
                 var rawDibuat = row['Dibuat Pada'] || row.created_at || row.TanggalDibuat;
                 if (rawDibuat) {
-                    try {
-                        var dDibuat = new Date(rawDibuat);
-                        if (!isNaN(dDibuat.getTime())) {
-                            var dayD = String(dDibuat.getDate()).padStart(2, '0');
-                            var monD = String(dDibuat.getMonth() + 1).padStart(2, '0');
-                            var yrD = dDibuat.getFullYear();
-                            var hrD = String(dDibuat.getHours()).padStart(2, '0');
-                            var minD = String(dDibuat.getMinutes()).padStart(2, '0');
-                            var secD = String(dDibuat.getSeconds()).padStart(2, '0');
-                            dateStr = dayD + "/" + monD + "/" + yrD + " " + hrD + ":" + minD + ":" + secD;
-                        } else {
-                            dateStr = String(rawDibuat);
-                        }
-                    } catch (e) {
+                    var dDibuat = parseSafeDate(rawDibuat);
+                    if (dDibuat) {
+                        var dayD = String(dDibuat.getDate()).padStart(2, '0');
+                        var monD = String(dDibuat.getMonth() + 1).padStart(2, '0');
+                        var yrD = dDibuat.getFullYear();
+                        var hrD = String(dDibuat.getHours()).padStart(2, '0');
+                        var minD = String(dDibuat.getMinutes()).padStart(2, '0');
+                        var secD = String(dDibuat.getSeconds()).padStart(2, '0');
+                        dateStr = dayD + "/" + monD + "/" + yrD + " " + hrD + ":" + minD + ":" + secD;
+                    } else {
                         dateStr = String(rawDibuat);
                     }
                 }
@@ -7341,21 +7366,19 @@
 
                 var statusHtml = '<div class="' + badgeStyle + ' text-[11px] px-2.5 py-1 rounded-md font-bold flex items-center w-fit mb-1 shadow-xs">' + pulseHtml + statusDisplay + '</div>';
 
-                var lastUpdateRaw = row['Last Update'];
+                var lastUpdateRaw = row['Last Update'] || row.LastUpdate || row.updated_at;
                 var lastSeenStr = '-';
                 if (lastUpdateRaw && lastUpdateRaw !== '') {
-                    try {
-                        var d = new Date(lastUpdateRaw);
-                        if (!isNaN(d.getTime())) {
-                            var mth = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
-                            var dDate = d.getDate();
-                            var dMth = mth[d.getMonth()];
-                            var dYr = d.getFullYear();
-                            var dHr = String(d.getHours()).padStart(2, '0');
-                            var dMin = String(d.getMinutes()).padStart(2, '0');
-                            lastSeenStr = dDate + " " + dMth + " " + dYr + ", " + dHr + ":" + dMin;
-                        }
-                    } catch (e) { }
+                    var d = parseSafeDate(lastUpdateRaw);
+                    if (d) {
+                        var mth = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+                        var dDate = d.getDate();
+                        var dMth = mth[d.getMonth()];
+                        var dYr = d.getFullYear();
+                        var dHr = String(d.getHours()).padStart(2, '0');
+                        var dMin = String(d.getMinutes()).padStart(2, '0');
+                        lastSeenStr = dDate + " " + dMth + " " + dYr + ", " + dHr + ":" + dMin;
+                    }
                 }
 
                 var card = document.createElement('div');
