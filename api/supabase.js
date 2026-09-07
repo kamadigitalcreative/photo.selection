@@ -46,6 +46,34 @@ function hashPassword(password) {
   return crypto.createHash('sha256').update(password + KAMA_SALT).digest('hex');
 }
 
+function parseSafeDate(dateInput) {
+  if (!dateInput) return null;
+  if (dateInput instanceof Date) return isNaN(dateInput.getTime()) ? null : dateInput;
+  if (typeof dateInput === 'number') {
+    const d = new Date(dateInput);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  const str = String(dateInput).trim();
+  if (!str || str === '-' || str === 'null' || str === 'undefined') return null;
+
+  // Cek format DD/MM/YYYY atau DD-MM-YYYY (contoh: 17/08/2026 23:12:24 atau 02/09/2026)
+  const ddmmyyyyMatch = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+  if (ddmmyyyyMatch) {
+    const day = parseInt(ddmmyyyyMatch[1], 10);
+    const month = parseInt(ddmmyyyyMatch[2], 10) - 1; // 0-indexed
+    const year = parseInt(ddmmyyyyMatch[3], 10);
+    const hours = ddmmyyyyMatch[4] ? parseInt(ddmmyyyyMatch[4], 10) : 0;
+    const minutes = ddmmyyyyMatch[5] ? parseInt(ddmmyyyyMatch[5], 10) : 0;
+    const seconds = ddmmyyyyMatch[6] ? parseInt(ddmmyyyyMatch[6], 10) : 0;
+    const d = new Date(year, month, day, hours, minutes, seconds);
+    if (!isNaN(d.getTime())) return d;
+  }
+
+  const d = new Date(str);
+  if (!isNaN(d.getTime())) return d;
+  return null;
+}
+
 function sha256(str) {
   if (!str) return '';
   return crypto.createHash('sha256').update(String(str).trim().toLowerCase()).digest('hex');
@@ -83,7 +111,7 @@ async function sendMetaCAPIEvent(eventName, eventData = {}) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
-    }).catch(() => {});
+    }).catch(() => { });
   } catch (err) {
     console.error('Meta CAPI Error:', err);
   }
@@ -151,7 +179,7 @@ module.exports = async function handler(req, res) {
       case 'approveUser': return await handleApproveUser(payload, res);
       case 'updateExpiry': return await handleUpdateExpiry(payload, res);
       case 'sendExpiryReminder': return await handleSendExpiryReminder(payload, res);
-      case 'deleteUser': return handleDeleteUser(payload, res);
+      case 'deleteUser': return await handleDeleteUser(payload, res);
       case 'requestOTP': return await handleRequestOTP(payload, res);
       case 'resetPasswordWithOTP': return await handleResetPasswordWithOTP(payload, res);
       case 'confirmEmail': return await handleConfirmEmail(payload, res);
@@ -307,7 +335,7 @@ async function handleRegister(payload, res) {
       value: isDemo ? 0 : 50000,
       currency: 'IDR'
     }
-  }).catch(() => {});
+  }).catch(() => { });
 
   let paymentUrl = '';
   if (paket === '1 Bulan') paymentUrl = 'https://kamacreative.myr.id/pl/paket-1-bulan-photo-selection';
@@ -700,7 +728,7 @@ async function handleUpdateClientStatus(payload, res) {
         const curStatus = existing[0].Status || existing[0]['Status Client'];
         const isAlreadyDone = (curStatus === 'Selesai' || curStatus === 'Menunggu Konfirmasi Pembayaran');
         const isIncomingDraft = (payload.status === 'Sedang Memilih' || payload.status === 'Dalam Proses' || payload.status === 'Belum Memilih');
-        
+
         if (isAlreadyDone && isIncomingDraft) {
           // Tetap pertahankan status Selesai, jangan ditimpa status draft/heartbeat
         } else {
@@ -711,7 +739,7 @@ async function handleUpdateClientStatus(payload, res) {
         updateBody.Status = payload.status;
         updateBody['Status Client'] = payload.status;
       }
-    } catch(e) {
+    } catch (e) {
       updateBody.Status = payload.status;
       updateBody['Status Client'] = payload.status;
     }
@@ -867,8 +895,8 @@ async function handleGetDashboardStats(payload, res) {
   const isWithinFilter = (dateStr) => {
     if (!filterStartDate && !filterEndDate) return true;
     if (!dateStr) return true;
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return true;
+    const d = parseSafeDate(dateStr);
+    if (!d || isNaN(d.getTime())) return true;
     if (filterStartDate && d < filterStartDate) return false;
     if (filterEndDate && d > filterEndDate) return false;
     return true;
@@ -925,7 +953,8 @@ async function handleGetDashboardStats(payload, res) {
     const exp = u.ExpiredAt;
     const role = u.Role;
     if (role === 'Admin' || exp === 'Lifetime' || !exp) return false;
-    const expDate = new Date(exp);
+    const expDate = parseSafeDate(exp);
+    if (!expDate) return false;
     return expDate >= now && expDate <= thirtyDaysLater;
   }).map(u => ({ username: u.Username, expiredAt: u.ExpiredAt }));
 
@@ -943,11 +972,11 @@ async function handleGetDashboardStats(payload, res) {
       const ts = r.Timestamp || r.timestamp || r.created_at;
       if (!ts) return false;
       if (typeof ts === 'string' && ts.startsWith(dayKey)) return true;
-      const d = new Date(ts);
-      if (!isNaN(d.getTime())) {
+      const d = parseSafeDate(ts);
+      if (d && !isNaN(d.getTime())) {
         return d.getFullYear() === targetDate.getFullYear() &&
-               d.getMonth() === targetDate.getMonth() &&
-               d.getDate() === targetDate.getDate();
+          d.getMonth() === targetDate.getMonth() &&
+          d.getDate() === targetDate.getDate();
       }
       return false;
     }).length;
@@ -1515,7 +1544,7 @@ async function handleMayarWebhook(payload, res) {
         value: purAmount,
         currency: 'IDR'
       }
-    }).catch(() => {});
+    }).catch(() => { });
   }
 
   await supabaseQuery('mayar_logs', {
