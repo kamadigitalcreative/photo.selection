@@ -11336,14 +11336,17 @@
                 var rawUpdate = row['Last Update'] || row.LastUpdate || row.updated_at || row['Dibuat Pada'] || row.created_at || row.TanggalDibuat;
                 var dateTxt = '-';
                 if (rawUpdate) {
-                    try {
-                        var dUp = new Date(rawUpdate);
-                        if (!isNaN(dUp.getTime())) {
-                            dateTxt = dUp.toLocaleString(isEn ? 'en-US' : 'id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-                        } else {
-                            dateTxt = String(rawUpdate);
-                        }
-                    } catch (e) {
+                    var dUp = parseSafeDate(rawUpdate);
+                    if (dUp) {
+                        var day = String(dUp.getDate()).padStart(2, '0');
+                        var mth = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+                        var mthEn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                        var mon = isEn ? mthEn[dUp.getMonth()] : mth[dUp.getMonth()];
+                        var yr = dUp.getFullYear();
+                        var hr = String(dUp.getHours()).padStart(2, '0');
+                        var min = String(dUp.getMinutes()).padStart(2, '0');
+                        dateTxt = day + " " + mon + " " + yr + ", " + hr + ":" + min;
+                    } else {
                         dateTxt = String(rawUpdate);
                     }
                 }
@@ -11443,9 +11446,13 @@
 
             // Urutkan data berdasarkan Last Update untuk Aktivitas Terbaru (terbaru ke terlama)
             var sortedData = [...data].sort((a, b) => {
-                var dA = new Date(a['Last Update'] || 0);
-                var dB = new Date(b['Last Update'] || 0);
-                return dB - dA;
+                var rawA = a['Last Update'] || a.LastUpdate || a.updated_at || a['Dibuat Pada'] || 0;
+                var rawB = b['Last Update'] || b.LastUpdate || b.updated_at || b['Dibuat Pada'] || 0;
+                var dA = parseSafeDate(rawA);
+                var dB = parseSafeDate(rawB);
+                var tA = dA ? dA.getTime() : 0;
+                var tB = dB ? dB.getTime() : 0;
+                return tB - tA;
             });
 
             // 1. Cek Tindakan Prioritas (Selesai -> Segera Proses, atau Lama Pending -> Follow Up)
@@ -11454,8 +11461,8 @@
 
             sortedData.forEach(function (row) {
                 var status = row['Status Client'] || 'Belum Memilih';
-                var lastUpdate = new Date(row['Last Update']);
-                var diffDays = (now - lastUpdate) / (1000 * 60 * 60 * 24);
+                var lastUpdate = parseSafeDate(row['Last Update'] || row.LastUpdate || row.updated_at || row['Dibuat Pada']);
+                var diffDays = lastUpdate ? ((now - lastUpdate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
                 // Jika sudah selesai
                 if (status === 'Selesai') {
@@ -11525,9 +11532,21 @@
             var recentCount = 0;
             sortedData.forEach(function (row) {
                 var status = row['Status Client'] || 'Belum Memilih';
-                if (!row['Last Update']) return; // Abaikan yang tidak ada tanggal update
+                var rawAct = row['Last Update'] || row.LastUpdate || row.updated_at || row['Dibuat Pada'];
+                if (!rawAct) return;
 
-                var dateTxt = new Date(row['Last Update']).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                var dAct = parseSafeDate(rawAct);
+                var dateTxt = '-';
+                if (dAct) {
+                    var day = String(dAct.getDate()).padStart(2, '0');
+                    var mth = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+                    var mon = mth[dAct.getMonth()];
+                    var hr = String(dAct.getHours()).padStart(2, '0');
+                    var min = String(dAct.getMinutes()).padStart(2, '0');
+                    dateTxt = day + " " + mon + ", " + hr + ":" + min;
+                } else {
+                    dateTxt = String(rawAct);
+                }
 
                 var actColor = 'bg-gray-200';
                 var actIcon = 'fa-solid fa-circle';
