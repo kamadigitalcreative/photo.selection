@@ -314,10 +314,7 @@ async function handleRegister(payload, res) {
     Paket: paket,
     ExpiredAt: expiredAt,
     ConfirmToken: confirmToken,
-    ProjectCreated: '0',
-    UtmSource: d.utmSource || d.utm_source || '',
-    UtmCampaign: d.utmCampaign || d.utm_campaign || '',
-    Fbclid: d.fbclid || ''
+    ProjectCreated: '0'
   };
 
   await supabaseQuery('users', { method: 'POST', body: newUser });
@@ -768,9 +765,6 @@ async function handleUpdateClientStatus(payload, res) {
 
   const nowIso = new Date().toISOString();
   updateBody['Last Update'] = nowIso;
-  updateBody.LastUpdate = nowIso;
-  updateBody.last_update = nowIso;
-  updateBody.updated_at = nowIso;
 
   await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)},%22Short%20Slug%22.eq.${encodeURIComponent(token)})`, {
     method: 'PATCH',
@@ -1029,9 +1023,6 @@ async function handleLogVisit(payload, res) {
   const type = payload.type || 'VIEW';
   const page = payload.page || 'LANDING_PAGE';
   const visitorId = payload.visitorId || 'anon';
-  const utmSource = payload.utmSource || payload.utm_source || '';
-  const utmCampaign = payload.utmCampaign || payload.utm_campaign || '';
-  const fbclid = payload.fbclid || '';
   const nowIso = new Date().toISOString();
 
   await supabaseQuery('analytics', {
@@ -1040,10 +1031,7 @@ async function handleLogVisit(payload, res) {
       Type: type,
       Page: page,
       VisitorID: visitorId,
-      Timestamp: nowIso,
-      UtmSource: utmSource,
-      UtmCampaign: utmCampaign,
-      Fbclid: fbclid
+      Timestamp: nowIso
     }
   }).catch(() => { });
 
