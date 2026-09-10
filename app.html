@@ -9399,6 +9399,7 @@
         }
 
         function processClientProjectData(projectData) {
+            if (projectData.token) clientState.token = projectData.token;
             clientState.namaClient = projectData.namaClient;
             clientState.nomorWA = projectData.nomorWA;
             clientState.maxFoto = projectData.maxFoto;
