@@ -194,6 +194,8 @@ module.exports = async function handler(req, res) {
       case 'deleteProject': return await handleDeleteProject(payload, res);
       case 'reopenProject': return await handleReopenProject(payload, res);
       case 'toggleProjectWatermark': return await handleToggleProjectWatermark(payload, res);
+      case 'toggleProjectDownload': return await handleToggleProjectDownload(payload, res);
+      case 'updateProjectMaxFoto': return await handleUpdateProjectMaxFoto(payload, res);
       case 'processPayment': return await handleProcessPayment(payload, res);
       case 'getDashboardStats': return await handleGetDashboardStats(payload, res);
       case 'logVisit': return await handleLogVisit(payload, res);
@@ -719,12 +721,14 @@ async function handleUpdateClientStatus(payload, res) {
   let currentStatus = payload.status || 'Belum Memilih';
   let currentMax = 50;
 
+  let isDownloadActive = true;
   try {
-    const existing = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)},%22Short%20Slug%22.eq.${encodeURIComponent(token)})&select=Status,"Status Client","Max Foto"`);
+    const existing = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)},%22Short%20Slug%22.eq.${encodeURIComponent(token)})&select=Status,"Status Client","Max Foto",AksesDownload,Akses_Download`);
     if (existing && existing.length > 0) {
       const curStatus = existing[0].Status || existing[0]['Status Client'] || 'Belum Memilih';
       currentStatus = curStatus;
       currentMax = Number(existing[0]['Max Foto']) || Number(existing[0].MaxFoto) || 50;
+      isDownloadActive = String(existing[0].AksesDownload || existing[0].Akses_Download).toUpperCase() !== 'FALSE';
       const isAlreadyDone = (curStatus === 'Selesai' || curStatus === 'Menunggu Konfirmasi Pembayaran');
       const isIncomingDraft = (payload.status === 'Sedang Memilih' || payload.status === 'Dalam Proses' || payload.status === 'Belum Memilih');
 
@@ -777,7 +781,7 @@ async function handleUpdateClientStatus(payload, res) {
     body: updateBody
   });
 
-  return success(res, { success: true, status: currentStatus, maxFoto: currentMax });
+  return success(res, { success: true, status: currentStatus, maxFoto: currentMax, isDownloadActive: isDownloadActive });
 }
 
 async function handleReleaseClientSession(payload, res) {
@@ -832,6 +836,44 @@ async function handleToggleProjectWatermark(payload, res) {
   });
 
   return success(res, { success: true, newValue: newVal, message: 'Watermark berhasil diubah' });
+}
+
+async function handleToggleProjectDownload(payload, res) {
+  const idOrToken = (payload.id || payload.token || '').trim();
+  const existing = await supabaseQuery(`projects?or=(id.eq.${encodeURIComponent(idOrToken)},Token.eq.${encodeURIComponent(idOrToken)})&select=*`);
+  if (!existing || existing.length === 0) return error(res, 'Project tidak ditemukan');
+
+  const p = existing[0];
+  const currentVal = String(p.AksesDownload || p.Akses_Download).toUpperCase() !== 'FALSE';
+  const newVal = !currentVal;
+
+  await supabaseQuery(`projects?or=(id.eq.${encodeURIComponent(idOrToken)},Token.eq.${encodeURIComponent(idOrToken)})`, {
+    method: 'PATCH',
+    body: {
+      AksesDownload: String(newVal).toUpperCase(),
+      'Akses_Download': String(newVal).toUpperCase()
+    }
+  });
+
+  return success(res, { success: true, newValue: newVal, message: 'Akses download berhasil diubah' });
+}
+
+async function handleUpdateProjectMaxFoto(payload, res) {
+  const idOrToken = (payload.id || payload.token || '').trim();
+  const newMax = parseInt(payload.newMax);
+  if (isNaN(newMax) || newMax < 0) return error(res, 'Batas maksimal foto tidak valid');
+
+  const existing = await supabaseQuery(`projects?or=(id.eq.${encodeURIComponent(idOrToken)},Token.eq.${encodeURIComponent(idOrToken)})&select=*`);
+  if (!existing || existing.length === 0) return error(res, 'Project tidak ditemukan');
+
+  await supabaseQuery(`projects?or=(id.eq.${encodeURIComponent(idOrToken)},Token.eq.${encodeURIComponent(idOrToken)})`, {
+    method: 'PATCH',
+    body: {
+      'Max Foto': String(newMax)
+    }
+  });
+
+  return success(res, { success: true, newMax: newMax, message: 'Batas maksimal foto berhasil diperbarui' });
 }
 
 async function handleProcessPayment(payload, res) {
