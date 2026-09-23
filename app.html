@@ -9508,13 +9508,19 @@
                 showClientModeSelection();
             }
 
-            var localSubmitted = (projectData.token) ? localStorage.getItem('ps_client_submitted_' + projectData.token) : null;
-            if (projectData.statusClient === 'Selesai' || projectData.statusClient === 'Menunggu Konfirmasi Pembayaran' || localSubmitted === 'Selesai' || localSubmitted === 'Menunggu Konfirmasi Pembayaran') {
+            var serverStatus = projectData.statusClient || projectData.Status || 'Belum Memilih';
+            var isServerLocked = (serverStatus === 'Selesai' || serverStatus === 'Menunggu Konfirmasi Pembayaran');
+
+            if (isServerLocked) {
                 hasClientSubmitted = true;
-                clientState.statusClient = projectData.statusClient || localSubmitted;
-                setTimeout(updateGalleryLock, 500); // Ensure grid is locked after render
+                clientState.statusClient = serverStatus;
+                try { localStorage.setItem('ps_client_submitted_' + projectData.token, serverStatus); } catch(e) {}
+                setTimeout(updateGalleryLock, 300);
             } else {
                 hasClientSubmitted = false;
+                clientState.statusClient = serverStatus;
+                try { localStorage.removeItem('ps_client_submitted_' + projectData.token); } catch(e) {}
+                setTimeout(updateGalleryLock, 300);
             }
         }
 
@@ -10891,13 +10897,13 @@
                     subtitle.innerHTML = '<span class="text-green-600 font-bold"><i class="fa-solid fa-lock mr-1"></i> ' + (isEn ? 'Status: Completed (Locked)' : 'Status: Selesai (Terkunci)') + '</span>';
                 }
 
-                // HANYA sembunyikan tombol Reset agar data pilihan aman
+                // Sembunyikan tombol Reset agar data pilihan aman saat terkunci
                 if (btnReset) {
                     btnReset.style.display = 'none';
                     btnReset.disabled = true;
                     btnReset.setAttribute('disabled', 'true');
                 }
-                // Tombol Copy dan WA tetap ditampilkan & aktif agar klien bisa menyalin/mengirim ulang kapan saja
+                // Tombol Copy dan WA tetap aktif
                 if (btnCopy) {
                     btnCopy.style.display = '';
                     btnCopy.classList.remove('hidden');
@@ -10922,7 +10928,7 @@
                         var isSel = card && card.classList.contains('selected');
                         if (isSel) {
                             btn.className = "btn-pilih-foto absolute bottom-3 right-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center shadow-md bg-green-500 text-white cursor-default select-none";
-                            btn.innerHTML = '<i class="fa-solid fa-check mr-1.5"></i> ' + (isEn ? 'Selected' : 'Terpilih');
+                            btn.innerHTML = '<i class="fa-solid fa-check mr-1.5"></i> ' + (isEn ? 'Selected (Locked)' : 'Terpilih (Terkunci)');
                         } else {
                             btn.className = "btn-pilih-foto absolute bottom-3 right-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center shadow-md bg-gray-100/90 text-gray-400 border border-gray-200 cursor-not-allowed select-none opacity-60";
                             btn.innerHTML = '<i class="fa-solid fa-lock mr-1.5"></i> ' + (isEn ? 'Locked' : 'Terkunci');
@@ -10930,6 +10936,13 @@
                     });
                 }
             } else {
+                hasClientSubmitted = false;
+                if (subtitle && clientState.galleryMode !== 'download') {
+                    subtitle.innerHTML = isEn 
+                        ? 'Select up to <span id="gallery-max" class="font-semibold text-kama-800">' + (clientState.maxFoto || 0) + '</span> photos' 
+                        : 'Pilih maksimal <span id="gallery-max" class="font-semibold text-kama-800">' + (clientState.maxFoto || 0) + '</span> foto';
+                }
+
                 if (btnReset) {
                     btnReset.style.display = '';
                     btnReset.classList.remove('hidden');
@@ -10949,6 +10962,21 @@
                 if (btnPreview) {
                     btnPreview.className = "px-3 py-2 sm:px-4 sm:py-2.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors text-sm font-semibold flex items-center justify-center shadow-sm";
                     btnPreview.innerHTML = '<i class="fa-regular fa-images"></i> <span class="hidden sm:inline sm:ml-2">' + (isEn ? 'Preview' : 'Preview') + '</span>';
+                }
+
+                var container = document.getElementById('gallery-container');
+                if (container) {
+                    var btnPilihList = container.querySelectorAll('.btn-pilih-foto');
+                    btnPilihList.forEach(function (btn) {
+                        var card = btn.closest('.photo-card');
+                        var isSel = card && card.classList.contains('selected');
+                        btn.className = "w-full bg-white/20 hover:bg-white/40 backdrop-blur-md border border-white/40 text-white rounded-lg py-1.5 sm:py-2 text-[10px] sm:text-sm font-semibold transition-colors flex items-center justify-center shadow-sm btn-pilih-foto";
+                        if (isSel) {
+                            btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> ' + (isEn ? 'Deselect' : 'Batal');
+                        } else {
+                            btn.innerHTML = '<i class="fa-regular fa-square-check mr-2"></i> ' + (isEn ? 'Select' : 'Pilih');
+                        }
+                    });
                 }
             }
         }
@@ -11052,51 +11080,91 @@
 
         async function syncClientSelectionsSilently() {
             if (isClientSyncing || !clientState.token) return;
-            var isSubmitted = (typeof hasClientSubmitted !== 'undefined' && hasClientSubmitted) || 
-                              (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran'));
-            if (isSubmitted) {
-                if (clientSyncTimer) clearInterval(clientSyncTimer);
-                return;
-            }
             
             isClientSyncing = true;
             try {
-                // Heartbeat cepat & cek pengambilalihan sesi ke server
+                // Heartbeat cepat & cek status terkini + pengambilalihan sesi ke server
+                const payloadHeartbeat = { 
+                    action: 'updateClientStatus', 
+                    token: clientState.token, 
+                    sessionId: clientSessionId
+                };
+                if (!hasClientSubmitted) {
+                    payloadHeartbeat.status = 'Sedang Memilih';
+                }
+
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        action: 'updateClientStatus', 
-                        token: clientState.token, 
-                        sessionId: clientSessionId,
-                        status: 'Sedang Memilih'
-                    })
+                    body: JSON.stringify(payloadHeartbeat)
                 });
                 const res = await response.json();
                 
-                // Deteksi Instan: Sesi diambil alih oleh perangkat lain!
-                if (res && res.data && res.data.sessionTakenOver) {
-                    var isEn = (localStorage.getItem('ps_lang') === 'en');
-                    if (clientSyncTimer) clearInterval(clientSyncTimer);
-                    Swal.fire({
-                        icon: 'info',
-                        title: isEn ? 'Session Transferred 🔒' : 'Sesi Telah Dipindahkan 🔒',
-                        html: `
-                            <div class="text-xs sm:text-sm text-gray-600 mb-3 text-left leading-relaxed">
-                                ${isEn 
-                                    ? 'This photo gallery has been opened and taken over by another device. This page has been paused to prevent selection conflicts.' 
-                                    : 'Galeri foto ini telah dibuka dan dipindahkan ke perangkat lain. Halaman pada perangkat ini dinonaktifkan agar pilihan foto Anda tetap sinkron dan tidak tumpang tindih.'}
-                            </div>
-                        `,
-                        allowOutsideClick: false,
-                        showConfirmButton: true,
-                        confirmButtonText: isEn ? 'Reopen on This Device' : 'Buka Kembali di Sini',
-                        confirmButtonColor: '#2563eb'
-                    }).then((r) => {
-                        if (r.isConfirmed) {
-                            initClientApp(true);
+                if (res && res.data) {
+                    // 1. Deteksi apakah fotografer membuka/membatalkan status kunci (Reopen Project)
+                    if (res.data.status) {
+                        var sStatus = res.data.status;
+                        var isServerLocked = (sStatus === 'Selesai' || sStatus === 'Menunggu Konfirmasi Pembayaran');
+                        
+                        if (!isServerLocked && hasClientSubmitted) {
+                            // Status di Server sudah DIBUKA KEMBALI oleh Fotografer!
+                            hasClientSubmitted = false;
+                            clientState.statusClient = sStatus;
+                            if (res.data.maxFoto) {
+                                clientState.maxFoto = parseInt(res.data.maxFoto) || clientState.maxFoto;
+                                var gMax = document.getElementById('gallery-max'); if (gMax) gMax.innerText = clientState.maxFoto;
+                                var cMax = document.getElementById('counter-max'); if (cMax) cMax.innerText = clientState.maxFoto;
+                            }
+                            try { localStorage.removeItem('ps_client_submitted_' + clientState.token); } catch(e) {}
+                            updateGalleryLock();
+                            refreshCardSelectionUI();
+                            updateClientCounterUI();
+                            
+                            var isEn = (localStorage.getItem('ps_lang') === 'en');
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 4000,
+                                icon: 'success',
+                                title: isEn ? 'Access Reopened' : 'Akses Dibuka Kembali',
+                                text: isEn ? 'The photographer has reopened this gallery for you!' : 'Akses galeri telah dibuka kembali oleh fotografer!'
+                            });
+                        } else if (isServerLocked && !hasClientSubmitted) {
+                            // Status di Server DIKUNCI oleh Fotografer
+                            hasClientSubmitted = true;
+                            clientState.statusClient = sStatus;
+                            try { localStorage.setItem('ps_client_submitted_' + clientState.token, sStatus); } catch(e) {}
+                            updateGalleryLock();
+                            refreshCardSelectionUI();
+                            updateClientCounterUI();
                         }
-                    });
+                    }
+
+                    // 2. Deteksi Instan: Sesi diambil alih oleh perangkat lain
+                    if (res.data.sessionTakenOver) {
+                        var isEn = (localStorage.getItem('ps_lang') === 'en');
+                        if (clientSyncTimer) clearInterval(clientSyncTimer);
+                        Swal.fire({
+                            icon: 'info',
+                            title: isEn ? 'Session Transferred 🔒' : 'Sesi Telah Dipindahkan 🔒',
+                            html: `
+                                <div class="text-xs sm:text-sm text-gray-600 mb-3 text-left leading-relaxed">
+                                    ${isEn 
+                                        ? 'This photo gallery has been opened and taken over by another device. This page has been paused to prevent selection conflicts.' 
+                                        : 'Galeri foto ini telah dibuka dan dipindahkan ke perangkat lain. Halaman pada perangkat ini dinonaktifkan agar pilihan foto Anda tetap sinkron dan tidak tumpang tindih.'}
+                                </div>
+                            `,
+                            allowOutsideClick: false,
+                            showConfirmButton: true,
+                            confirmButtonText: isEn ? 'Reopen on This Device' : 'Buka Kembali di Sini',
+                            confirmButtonColor: '#2563eb'
+                        }).then((r) => {
+                            if (r.isConfirmed) {
+                                initClientApp(true);
+                            }
+                        });
+                    }
                 }
             } catch (err) {
                 // Abaikan kesalahan jaringan sementara
@@ -11107,20 +11175,18 @@
 
         function startClientRealtimeSync() {
             if (clientSyncTimer) clearInterval(clientSyncTimer);
-            clientSyncTimer = setInterval(syncClientSelectionsSilently, 20000); // Heartbeat stabil tiap 20 detik (ringan & cepat)
+            clientSyncTimer = setInterval(syncClientSelectionsSilently, 10000); // Heartbeat stabil tiap 10 detik
         }
 
         // Pendeteksi Klien Keluar / Pindah Aplikasi / Tab Fokus (HP & PC)
         document.addEventListener('visibilitychange', function () {
-            var localSub = clientState.token ? localStorage.getItem('ps_client_submitted_' + clientState.token) : null;
-            var isSubmitted = (typeof hasClientSubmitted !== 'undefined' && hasClientSubmitted) || 
-                              (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran')) ||
-                              (localSub === 'Selesai' || localSub === 'Menunggu Konfirmasi Pembayaran');
-            if (!clientState.token || isSubmitted) return;
+            if (!clientState.token) return;
 
             if (document.visibilityState === 'hidden') {
-                var offStatus = (clientState.selectedImages && clientState.selectedImages.length > 0) ? 'Dalam Proses' : 'Belum Memilih';
-                pingClientStatus(offStatus, '', false);
+                if (!hasClientSubmitted) {
+                    var offStatus = (clientState.selectedImages && clientState.selectedImages.length > 0) ? 'Dalam Proses' : 'Belum Memilih';
+                    pingClientStatus(offStatus, '', false);
+                }
                 // Lepaskan sesi saat tab ditutup/di-minimize agar device lain bisa langsung membuka
                 try {
                     fetch(API_ENDPOINT, {
@@ -11131,7 +11197,9 @@
                     });
                 } catch(e) {}
             } else if (document.visibilityState === 'visible') {
-                pingClientStatus('Sedang Memilih', '', false);
+                if (!hasClientSubmitted) {
+                    pingClientStatus('Sedang Memilih', '', false);
+                }
                 syncClientSelectionsSilently();
             }
         });
@@ -12174,16 +12242,24 @@
                             systemDataCache = res.data.allNotifs.systemUpdates || [];
                         }
 
-                        // --- 1. UPDATE DATA PROJECTS ---
+                        // --- 1. UPDATE DATA PROJECTS (REALTIME TAB PROJECTS & STATUS) ---
                         if (resProjects && resProjects.success) {
                             var cacheKey = 'ps_cache_projects_' + (currentUser ? currentUser.username : 'guest');
                             var cachedProjectsStr = localStorage.getItem(cacheKey);
-                            if (!window.pendingProjectUpdate || (Date.now() - window.pendingProjectUpdate > 6000)) {
-                                if (JSON.stringify(resProjects.data) !== cachedProjectsStr) {
-                                    localStorage.setItem(cacheKey, JSON.stringify(resProjects.data));
+                            var isProjectsTabActive = document.getElementById('section-projects') && document.getElementById('section-projects').classList.contains('flex');
+                            var isDataChanged = (JSON.stringify(resProjects.data) !== cachedProjectsStr);
+
+                            if (isDataChanged) {
+                                localStorage.setItem(cacheKey, JSON.stringify(resProjects.data));
+                            }
+
+                            // Update tabel Project realtime seketika tanpa perlu refresh manual
+                            if (isDataChanged || isProjectsTabActive) {
+                                if (!window.pendingProjectUpdate || (Date.now() - window.pendingProjectUpdate > 3000)) {
                                     renderProjectsTable(resProjects.data);
                                 }
                             }
+
                             rawStatusData = resProjects.data;
                             if (typeof filterClientStatus === 'function' && document.getElementById('search-client-status') && document.getElementById('search-client-status').value) {
                                 filterClientStatus();
