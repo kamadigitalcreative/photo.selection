@@ -7786,25 +7786,41 @@
             var wmIcon = isWmOn ? 'fa-droplet-slash' : 'fa-droplet';
             var wmColor = isWmOn ? 'text-green-600 bg-green-50 hover:bg-green-100' : 'text-gray-700 bg-gray-50 hover:bg-gray-100 hover:text-green-600';
 
+            var isDlOn = project['AksesDownload'] !== false && String(project['AksesDownload']).toUpperCase() !== 'FALSE' && project['Akses_Download'] !== false && String(project['Akses_Download']).toUpperCase() !== 'FALSE';
+            var dlText = isDlOn ? (isEn ? 'Disable Download' : 'Matikan Download') : (isEn ? 'Enable Download' : 'Aktifkan Download');
+            var dlIcon = isDlOn ? 'fa-cloud-arrow-down' : 'fa-ban';
+            var dlColor = isDlOn ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' : 'text-gray-700 bg-gray-50 hover:bg-gray-100 hover:text-blue-600';
+
+            var currentMax = parseInt(project['Max Foto']) || parseInt(project['MaxFoto']) || 50;
+            var maxText = (isEn ? 'Max Photos: ' : 'Batas: ') + currentMax + ' Foto';
+
             var safeJSName = (project['Nama Client'] || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             var deadline = project['Deadline'] || '';
 
             var htmlContent = `
-                <div class="grid grid-cols-2 gap-3 mt-4">
-                    <button onclick="Swal.close(); setTimeout(() => editPasswordPrompt('${projectId}', '${safeJSName}'), 300)" class="flex flex-col items-center justify-center p-4 bg-gray-50 border border-gray-100 rounded-xl hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600 transition-colors text-gray-700">
-                        <i class="fa-solid fa-key text-2xl mb-2 text-gray-400"></i>
+                <div class="grid grid-cols-2 gap-3 mt-4 text-left">
+                    <button onclick="Swal.close(); setTimeout(() => editPasswordPrompt('${projectId}', '${safeJSName}'), 300)" class="flex flex-col items-center justify-center p-3.5 bg-gray-50 border border-gray-100 rounded-xl hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600 transition-colors text-gray-700 shadow-sm">
+                        <i class="fa-solid fa-key text-2xl mb-1.5 text-gray-400"></i>
                         <span class="text-xs font-bold">${isEn ? 'Edit Password' : 'Edit Password'}</span>
                     </button>
-                    <button onclick="Swal.close(); setTimeout(() => toggleWatermarkStatus('${projectId}'), 300)" class="flex flex-col items-center justify-center p-4 border border-gray-100 rounded-xl transition-colors ${wmColor}">
-                        <i class="fa-solid ${wmIcon} text-2xl mb-2"></i>
+                    <button onclick="Swal.close(); setTimeout(() => toggleWatermarkStatus('${projectId}'), 300)" class="flex flex-col items-center justify-center p-3.5 border border-gray-100 rounded-xl transition-colors ${wmColor} shadow-sm">
+                        <i class="fa-solid ${wmIcon} text-2xl mb-1.5"></i>
                         <span class="text-xs font-bold">${wmText}</span>
                     </button>
-                    <button onclick="Swal.close(); setTimeout(() => editDeadlinePrompt('${projectId}', '${safeJSName}', '${deadline}'), 300)" class="flex flex-col items-center justify-center p-4 bg-gray-50 border border-gray-100 rounded-xl hover:bg-purple-50 hover:border-purple-200 hover:text-purple-600 transition-colors text-gray-700">
-                        <i class="fa-solid fa-stopwatch text-2xl mb-2 text-gray-400"></i>
+                    <button onclick="Swal.close(); setTimeout(() => toggleDownloadStatus('${projectId}'), 300)" class="flex flex-col items-center justify-center p-3.5 border border-gray-100 rounded-xl transition-colors ${dlColor} shadow-sm">
+                        <i class="fa-solid ${dlIcon} text-2xl mb-1.5"></i>
+                        <span class="text-xs font-bold">${dlText}</span>
+                    </button>
+                    <button onclick="Swal.close(); setTimeout(() => editMaxFotoPrompt('${projectId}', '${safeJSName}', ${currentMax}), 300)" class="flex flex-col items-center justify-center p-3.5 bg-gray-50 border border-gray-100 rounded-xl hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 transition-colors text-gray-700 shadow-sm">
+                        <i class="fa-solid fa-sliders text-2xl mb-1.5 text-gray-400"></i>
+                        <span class="text-xs font-bold">${maxText}</span>
+                    </button>
+                    <button onclick="Swal.close(); setTimeout(() => editDeadlinePrompt('${projectId}', '${safeJSName}', '${deadline}'), 300)" class="flex flex-col items-center justify-center p-3.5 bg-gray-50 border border-gray-100 rounded-xl hover:bg-purple-50 hover:border-purple-200 hover:text-purple-600 transition-colors text-gray-700 shadow-sm">
+                        <i class="fa-solid fa-stopwatch text-2xl mb-1.5 text-gray-400"></i>
                         <span class="text-xs font-bold">${isEn ? 'Edit Deadline' : 'Batas Waktu'}</span>
                     </button>
-                    <button onclick="Swal.close(); setTimeout(() => deleteProject('${projectId}'), 300)" class="flex flex-col items-center justify-center p-4 bg-red-50 border border-red-100 rounded-xl hover:bg-red-100 hover:border-red-200 text-red-600 transition-colors">
-                        <i class="fa-solid fa-trash-can text-2xl mb-2 text-red-400"></i>
+                    <button onclick="Swal.close(); setTimeout(() => deleteProject('${projectId}'), 300)" class="flex flex-col items-center justify-center p-3.5 bg-red-50 border border-red-100 rounded-xl hover:bg-red-100 hover:border-red-200 text-red-600 transition-colors shadow-sm">
+                        <i class="fa-solid fa-trash-can text-2xl mb-1.5 text-red-400"></i>
                         <span class="text-xs font-bold">${isEn ? 'Delete Project' : 'Hapus Project'}</span>
                     </button>
                 </div>
@@ -8717,6 +8733,170 @@
                     } catch (err) {
                         endLoading();
                         Swal.fire('Error', 'Koneksi terputus', 'error');
+                    }
+                }
+            });
+        }
+
+        function toggleDownloadStatus(id) {
+            var isEn = localStorage.getItem('ps_lang') === 'en';
+            Swal.fire({
+                title: isEn ? 'Change Download Access?' : 'Ubah Akses Download?',
+                text: isEn ? 'Client will be allowed or restricted from downloading photos.' : 'Fitur download foto untuk klien pada project ini akan diaktifkan atau dinonaktifkan.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3b82f6',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: isEn ? 'Yes, Change' : 'Ya, Ubah',
+                cancelButtonText: isEn ? 'Cancel' : 'Batal'
+            }).then(async function (result) {
+                if (result.isConfirmed) {
+                    startLoading(isEn ? "Saving..." : "Menyimpan...");
+                    try {
+                        const response = await fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                action: 'toggleProjectDownload',
+                                id: id,
+                                currentUser: currentUser
+                            })
+                        });
+                        const res = await response.json();
+                        endLoading();
+                        if (res.status === 'success' && res.data && res.data.success) {
+                            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: isEn ? 'Download access updated' : 'Akses download berhasil diubah', showConfirmButton: false, timer: 2000 });
+
+                            // UPDATE CACHE & UI LOKAL INSTAN
+                            var cacheKey = 'ps_cache_projects_' + (currentUser ? currentUser.username : 'guest');
+                            var cachedProjectsStr = localStorage.getItem(cacheKey);
+                            if (cachedProjectsStr) {
+                                try {
+                                    var projs = JSON.parse(cachedProjectsStr);
+                                    for (var i = 0; i < projs.length; i++) {
+                                        if (projs[i].ID === id) {
+                                            projs[i]['AksesDownload'] = res.data.newValue;
+                                            projs[i]['Akses_Download'] = res.data.newValue;
+                                            break;
+                                        }
+                                    }
+                                    localStorage.setItem(cacheKey, JSON.stringify(projs));
+                                    window.pendingProjectUpdate = Date.now();
+                                    renderProjectsTable(projs);
+                                } catch (e) { }
+                            }
+                            if (window.lastProjectsData) {
+                                var p = window.lastProjectsData.find(function(x) { return x.ID === id; });
+                                if (p) {
+                                    p['AksesDownload'] = res.data.newValue;
+                                    p['Akses_Download'] = res.data.newValue;
+                                    renderProjectsTable(window.lastProjectsData);
+                                }
+                            }
+                            setTimeout(loadDataProjects, 3000);
+                        } else {
+                            Swal.fire('Gagal', res.message || res.data?.message || 'Gagal mengubah akses download', 'error');
+                        }
+                    } catch (err) {
+                        endLoading();
+                        Swal.fire('Error', isEn ? 'Connection failed' : 'Koneksi terputus', 'error');
+                    }
+                }
+            });
+        }
+
+        function editMaxFotoPrompt(id, clientName, currentMax) {
+            var isEn = localStorage.getItem('ps_lang') === 'en';
+            currentMax = parseInt(currentMax) || 0;
+
+            Swal.fire({
+                title: isEn ? 'Edit Max Photo Quota' : 'Ubah Batas Maksimal Foto',
+                html: `
+                    <div class="text-left text-xs sm:text-sm text-gray-600 mb-4 space-y-2">
+                        <p>Atur ulang batas kuota foto yang boleh dipilih oleh klien <b>${clientName}</b>.</p>
+                        <div class="p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-900 text-xs leading-relaxed">
+                            <i class="fa-solid fa-circle-info text-indigo-600 mr-1"></i>
+                            <b>Sinkronisasi Sistem Upsell:</b> Jika klien memilih foto melebihi batas baru ini dan Anda menetapkan harga extra foto, tagihan tambahan akan otomatis dihitung ulang secara akurat berdasarkan kuota baru ini.
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <input type="number" id="swal-new-max-foto" min="0" value="${currentMax}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-indigo-600 outline-none text-center font-black text-lg text-gray-800 tracking-wider" placeholder="Contoh: 15">
+                        <span class="absolute right-4 top-3.5 text-xs font-bold text-gray-400">Foto</span>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: isEn ? 'Save Quota' : 'Simpan Kuota Baru',
+                cancelButtonText: isEn ? 'Cancel' : 'Batal',
+                confirmButtonColor: '#4f46e5',
+                cancelButtonColor: '#6b7280',
+                preConfirm: () => {
+                    const val = document.getElementById('swal-new-max-foto').value;
+                    const num = parseInt(val);
+                    if (isNaN(num) || num < 0) {
+                        Swal.showValidationMessage(isEn ? 'Please enter a valid photo quota (0 or more)' : 'Harap masukkan angka batas foto yang valid (minimal 0)');
+                        return false;
+                    }
+                    return num;
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    var newMax = result.value;
+                    startLoading(isEn ? "Saving..." : "Menyimpan...");
+                    try {
+                        const response = await fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                action: 'updateProjectMaxFoto',
+                                id: id,
+                                newMax: newMax,
+                                currentUser: currentUser
+                            })
+                        });
+                        const res = await response.json();
+                        endLoading();
+                        if (res.status === 'success' && res.data && res.data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: isEn ? 'Quota Updated' : 'Batas Foto Diperbarui',
+                                html: (isEn ? 'Max photo quota for ' : 'Batas maksimal foto untuk ') + `<b>${clientName}</b> ` + (isEn ? 'has been changed to ' : 'telah diubah menjadi ') + `<b>${newMax} foto</b>.<br><span class="text-xs text-gray-500">Sistem Upsell dan batas pilihan foto klien telah disinkronkan.</span>`,
+                                timer: 2500,
+                                showConfirmButton: false
+                            });
+
+                            // UPDATE CACHE & UI LOKAL
+                            var cacheKey = 'ps_cache_projects_' + (currentUser ? currentUser.username : 'guest');
+                            var cachedProjectsStr = localStorage.getItem(cacheKey);
+                            if (cachedProjectsStr) {
+                                try {
+                                    var projs = JSON.parse(cachedProjectsStr);
+                                    for (var i = 0; i < projs.length; i++) {
+                                        if (projs[i].ID === id) {
+                                            projs[i]['Max Foto'] = newMax;
+                                            projs[i]['MaxFoto'] = newMax;
+                                            break;
+                                        }
+                                    }
+                                    localStorage.setItem(cacheKey, JSON.stringify(projs));
+                                    window.pendingProjectUpdate = Date.now();
+                                    renderProjectsTable(projs);
+                                } catch (e) { }
+                            }
+                            if (window.lastProjectsData) {
+                                var p = window.lastProjectsData.find(function(x) { return x.ID === id; });
+                                if (p) {
+                                    p['Max Foto'] = newMax;
+                                    p['MaxFoto'] = newMax;
+                                    renderProjectsTable(window.lastProjectsData);
+                                }
+                            }
+                            setTimeout(loadDataProjects, 3000);
+                        } else {
+                            Swal.fire('Error', (res.data ? res.data.message : null) || res.message || 'Gagal mengubah batas foto.', 'error');
+                        }
+                    } catch (err) {
+                        endLoading();
+                        Swal.fire('Error', err.message || (isEn ? 'Connection failed' : 'Koneksi terputus'), 'error');
                     }
                 }
             });
@@ -11281,6 +11461,26 @@
                             initClientApp(true);
                         }
                     });
+                }
+
+                // Sinkronisasi realtime Max Foto & Akses Download di sisi Client
+                if (res && res.data) {
+                    if (res.data.maxFoto !== undefined && Number(res.data.maxFoto) !== clientState.maxFoto) {
+                        clientState.maxFoto = Number(res.data.maxFoto);
+                        var gMax = document.getElementById('gallery-max');
+                        if (gMax) gMax.innerText = clientState.maxFoto;
+                        var cMax = document.getElementById('counter-max');
+                        if (cMax) cMax.innerText = clientState.maxFoto;
+                        updateClientCounterUI();
+                    }
+                    if (res.data.isDownloadActive !== undefined && res.data.isDownloadActive !== clientState.isDownloadActive) {
+                        clientState.isDownloadActive = res.data.isDownloadActive;
+                        var btnDownload = document.querySelector('#client-mode-view button[onclick="selectClientMode(\'download\')"]');
+                        if (btnDownload) {
+                            if (!clientState.isDownloadActive) btnDownload.classList.add('hidden');
+                            else btnDownload.classList.remove('hidden');
+                        }
+                    }
                 }
 
                 return res;
