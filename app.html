@@ -7320,10 +7320,28 @@
                 var safeHTMLName = typeof escapeHTML === 'function' ? escapeHTML(rawName) : rawName.replace(/</g, "&lt;").replace(/>/g, "&gt;");
                 var safePass = row['Password Client'] ? escapeHTML(String(row['Password Client'])) : "(tanpa password)";
                 var safeJSName = rawName.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                var maxFoto = row['Max Foto'] || 0;
+                
+                var maxFotoRaw = row['Max Foto'] || 0;
+                var isUnlimited = parseInt(maxFotoRaw) >= 99999 || String(maxFotoRaw).toLowerCase() === 'unlimited';
+                var maxFoto = isUnlimited ? 999999 : (parseInt(maxFotoRaw) || 50);
                 var fotoTerpilih = parseInt(row['Foto Terpilih']) || 0;
-                var progressPct = maxFoto > 0 ? Math.min(100, Math.round((fotoTerpilih / maxFoto) * 100)) : 0;
-                var progressColor = progressPct >= 100 ? 'bg-green-500' : 'bg-blue-500';
+                var displayMax = isUnlimited ? '∞' : maxFoto;
+
+                var statusClient = getComputedClientStatus(row);
+                var progressPct = 0;
+                if (statusClient === 'Selesai' || statusClient === 'Menunggu Konfirmasi Pembayaran') {
+                    progressPct = 100;
+                } else if (isUnlimited) {
+                    if (fotoTerpilih > 0) {
+                        // Pada mode unlimited, tampilkan progres aktif dinamis berdasarkan foto yang sudah dipilih
+                        progressPct = Math.min(95, Math.max(15, Math.round(fotoTerpilih * 2)));
+                    } else {
+                        progressPct = 0;
+                    }
+                } else if (maxFoto > 0) {
+                    progressPct = Math.min(100, Math.round((fotoTerpilih / maxFoto) * 100));
+                }
+                var progressColor = (progressPct >= 100 || statusClient === 'Selesai') ? 'bg-green-500' : 'bg-blue-500';
 
                 var statusClient = getComputedClientStatus(row);
                 var statusColor = 'slate';
@@ -7470,7 +7488,7 @@
                         '<div class="px-6 py-5 bg-white border-t border-slate-100">' +
                         '<div class="flex items-end justify-between mb-3">' +
                         '<div class="text-[10px] text-slate-400 uppercase tracking-widest font-extrabold">' + (isEnLocale ? 'Progress' : 'Progres') + '</div>' +
-                        '<div class="text-[11px] text-slate-500 font-bold">' + (isEnLocale ? 'Selected ' : 'Terpilih ') + '<span class="' + (progressPct >= 100 ? 'text-green-500' : 'text-indigo-600') + ' text-base font-black">' + fotoTerpilih + '</span> <span class="text-slate-400 font-medium">/ ' + maxFoto + '</span></div>' +
+                        '<div class="text-[11px] text-slate-500 font-bold">' + (isEnLocale ? 'Selected ' : 'Terpilih ') + '<span class="' + (progressPct >= 100 ? 'text-green-500' : 'text-indigo-600') + ' text-base font-black">' + fotoTerpilih + '</span> <span class="text-slate-400 font-medium">/ ' + displayMax + '</span></div>' +
                         '</div>' +
                         '<div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden shadow-inner"><div class="' + progressColor.replace('blue', 'indigo') + ' h-full rounded-full transition-all duration-1000 relative shadow-[0_0_12px_rgba(79,70,229,0.4)]" style="width: ' + progressPct + '%"></div></div>' +
                         (lastSeenStr !== '-' ? '<div class="text-[10px] text-slate-400 mt-3 text-center"><i class="fa-regular fa-clock mr-1"></i>Terakhir Dilihat: <b>' + lastSeenStr + '</b></div>' : '') +
@@ -7479,6 +7497,10 @@
                         actionHtmlGrid +
                         '</div>';
                 } else {
+                    var percentBadgeText = isUnlimited && statusClient !== 'Selesai' && statusClient !== 'Menunggu Konfirmasi Pembayaran' 
+                        ? (fotoTerpilih > 0 ? (fotoTerpilih + ' Foto') : '0%') 
+                        : (progressPct + '%');
+
                     card.innerHTML =
                         // Left: Clean Avatar
                         iconAvatar +
@@ -7499,12 +7521,12 @@
                         '<div class="flex-shrink-0 w-full sm:w-[160px] flex flex-col justify-center gap-1 mt-2 sm:mt-0">' +
                         '<div class="flex items-center justify-between">' +
                         statusHtml +
-                        '<span class="text-[10px] font-bold text-gray-500">' + progressPct + '%</span>' +
+                        '<span class="text-[10px] font-bold text-gray-500">' + percentBadgeText + '</span>' +
                         '</div>' +
                         '<div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden mb-1"><div class="' + progressColor + ' h-full rounded-full transition-all duration-500" style="width: ' + progressPct + '%"></div></div>' +
                         '<div class="flex justify-between items-center">' +
                         (lastSeenStr !== '-' ? '<div class="text-[9px] text-gray-400" title="Terakhir dilihat"><i class="fa-regular fa-clock mr-0.5"></i>' + lastSeenStr + '</div>' : '<div></div>') +
-                        '<div class="text-[10px] text-gray-400 text-right">' + (isEnLocale ? 'Selected ' : 'Terpilih ') + '<b class="text-gray-700">' + fotoTerpilih + '</b> / ' + maxFoto + '</div>' +
+                        '<div class="text-[10px] text-gray-400 text-right">' + (isEnLocale ? 'Selected ' : 'Terpilih ') + '<b class="text-gray-700">' + fotoTerpilih + '</b> / ' + displayMax + '</div>' +
                         '</div>' +
                         '</div>' +
 
@@ -7792,7 +7814,8 @@
             var dlColor = isDlOn ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' : 'text-gray-700 bg-gray-50 hover:bg-gray-100 hover:text-blue-600';
 
             var currentMax = parseInt(project['Max Foto']) || parseInt(project['MaxFoto']) || 50;
-            var maxText = (isEn ? 'Max Photos: ' : 'Batas: ') + currentMax + ' Foto';
+            var isCurrentUnlimited = currentMax >= 99999;
+            var maxText = isCurrentUnlimited ? (isEn ? 'Quota: Unlimited' : 'Batas: Unlimited') : ((isEn ? 'Max Photos: ' : 'Batas: ') + currentMax + ' Foto');
 
             var safeJSName = (project['Nama Client'] || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             var deadline = project['Deadline'] || '';
@@ -8808,19 +8831,22 @@
         function editMaxFotoPrompt(id, clientName, currentMax) {
             var isEn = localStorage.getItem('ps_lang') === 'en';
             currentMax = parseInt(currentMax) || 0;
+            var isCurrentUnlimited = currentMax >= 99999 || currentMax === 0;
+            var displayInputValue = isCurrentUnlimited ? '' : currentMax;
 
             Swal.fire({
                 title: isEn ? 'Edit Max Photo Quota' : 'Ubah Batas Maksimal Foto',
                 html: `
                     <div class="text-left text-xs sm:text-sm text-gray-600 mb-4 space-y-2">
-                        <p>Atur ulang batas kuota foto yang boleh dipilih oleh klien <b>${clientName}</b>.</p>
+                        <p>Atur batas kuota foto untuk klien <b>${clientName}</b>.</p>
                         <div class="p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-900 text-xs leading-relaxed">
                             <i class="fa-solid fa-circle-info text-indigo-600 mr-1"></i>
-                            <b>Sinkronisasi Sistem Upsell:</b> Jika klien memilih foto melebihi batas baru ini dan Anda menetapkan harga extra foto, tagihan tambahan akan otomatis dihitung ulang secara akurat berdasarkan kuota baru ini.
+                            <b>Status Kuota Saat Ini:</b> ${isCurrentUnlimited ? '<span class="font-bold text-amber-600">Tanpa Batas (Unlimited)</span>' : '<b>' + currentMax + ' Foto</b>'}.<br>
+                            Ketik angka kuota baru (contoh: <b>15</b> atau <b>20</b>), atau ketik <b>0</b> jika ingin tanpa batas (Unlimited).
                         </div>
                     </div>
                     <div class="relative">
-                        <input type="number" id="swal-new-max-foto" min="0" value="${currentMax}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-indigo-600 outline-none text-center font-black text-lg text-gray-800 tracking-wider" placeholder="Contoh: 15">
+                        <input type="number" id="swal-new-max-foto" min="0" value="${displayInputValue}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-indigo-600 outline-none text-center font-black text-lg text-gray-800 tracking-wider" placeholder="Contoh: 15 (Ketik 0 jika Unlimited)">
                         <span class="absolute right-4 top-3.5 text-xs font-bold text-gray-400">Foto</span>
                     </div>
                 `,
@@ -8830,13 +8856,13 @@
                 confirmButtonColor: '#4f46e5',
                 cancelButtonColor: '#6b7280',
                 preConfirm: () => {
-                    const val = document.getElementById('swal-new-max-foto').value;
+                    const val = document.getElementById('swal-new-max-foto').value.trim();
                     const num = parseInt(val);
-                    if (isNaN(num) || num < 0) {
-                        Swal.showValidationMessage(isEn ? 'Please enter a valid photo quota (0 or more)' : 'Harap masukkan angka batas foto yang valid (minimal 0)');
+                    if (val === '' || isNaN(num) || num < 0) {
+                        Swal.showValidationMessage(isEn ? 'Please enter a valid photo quota (0 for unlimited)' : 'Harap masukkan angka batas foto yang valid (minimal 0 untuk unlimited)');
                         return false;
                     }
-                    return num;
+                    return (num === 0) ? 999999 : num;
                 }
             }).then(async (result) => {
                 if (result.isConfirmed) {
@@ -11118,9 +11144,16 @@
             } else {
                 hasClientSubmitted = false;
                 if (subtitle && clientState.galleryMode !== 'download') {
-                    subtitle.innerHTML = isEn 
-                        ? 'Select up to <span id="gallery-max" class="font-semibold text-kama-800">' + (clientState.maxFoto || 0) + '</span> photos' 
-                        : 'Pilih maksimal <span id="gallery-max" class="font-semibold text-kama-800">' + (clientState.maxFoto || 0) + '</span> foto';
+                    var isUnlimitedClient = clientState.maxFoto >= 99999;
+                    if (isUnlimitedClient) {
+                        subtitle.innerHTML = isEn 
+                            ? 'Select photos (<span class="font-semibold text-kama-800">Unlimited quota</span>)' 
+                            : 'Pilih foto bebas (<span class="font-semibold text-kama-800">Tanpa batas kuota</span>)';
+                    } else {
+                        subtitle.innerHTML = isEn 
+                            ? 'Select up to <span id="gallery-max" class="font-semibold text-kama-800">' + (clientState.maxFoto || 0) + '</span> photos' 
+                            : 'Pilih maksimal <span id="gallery-max" class="font-semibold text-kama-800">' + (clientState.maxFoto || 0) + '</span> foto';
+                    }
                 }
 
                 if (btnReset) {
@@ -11619,12 +11652,28 @@
                         dateTxt = String(rawUpdate);
                     }
                 }
-                var max = parseInt(row['Max Foto'] || 1);
-                var percent = Math.min(Math.round((selected / max) * 100), 100);
 
-                if (status === 'Selesai') {
+                var maxRaw = row['Max Foto'];
+                var isUnlimited = parseInt(maxRaw) >= 99999 || String(maxRaw).toLowerCase() === 'unlimited';
+                var maxDisplay = isUnlimited ? '∞ (Unlimited)' : (parseInt(maxRaw) || 1);
+                var percent = 0;
+
+                if (status === 'Selesai' || status === 'Menunggu Konfirmasi Pembayaran') {
                     percent = 100;
+                } else if (isUnlimited) {
+                    if (selected > 0) {
+                        percent = Math.min(95, Math.max(15, Math.round(selected * 2)));
+                    } else {
+                        percent = 0;
+                    }
+                } else {
+                    var maxNum = parseInt(maxRaw) || 1;
+                    percent = Math.min(Math.round((selected / maxNum) * 100), 100);
                 }
+
+                var percentText = (isUnlimited && status !== 'Selesai' && status !== 'Menunggu Konfirmasi Pembayaran')
+                    ? (selected > 0 ? (selected + ' Foto') : '0%')
+                    : (percent + '%');
 
                 var barColor = percent === 100 ? 'bg-green-500' : (status === 'Sedang Memilih' ? 'bg-amber-500' : (status === 'Dalam Proses' ? 'bg-orange-500' : 'bg-primary-600'));
 
@@ -11650,7 +11699,7 @@
                             <div class="flex gap-4">
                                 <div>
                                     <p class="text-[9px] font-bold text-slate-400 uppercase mb-0.5">${isEn ? 'Total Photos' : 'Total Foto'}</p>
-                                    <p class="text-sm font-black text-slate-700">${max}</p>
+                                    <p class="text-sm font-black text-slate-700">${maxDisplay}</p>
                                 </div>
                                 <div class="border-l border-slate-100 pl-4">
                                     <p class="text-[9px] font-bold text-slate-400 uppercase mb-0.5">${isEn ? 'Selected' : 'Dipilih'}</p>
@@ -11658,7 +11707,7 @@
                                 </div>
                             </div>
                             <div class="text-right">
-                                <span class="text-lg font-black text-slate-800">${percent}%</span>
+                                <span class="text-lg font-black text-slate-800">${percentText}</span>
                             </div>
                         </div>
 
