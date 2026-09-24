@@ -9334,9 +9334,9 @@
             if (resStatusBadge) { resStatusBadge.textContent = 'Sedang Mengemas'; resStatusBadge.className = 'px-3 py-1 bg-blue-100 text-blue-600 text-xs font-bold rounded-full border border-blue-200'; }
 
             // --- AUTOMATIC CHUNKING ENGINE (SAFE RAM ALLOCATION) ---
-            // Batas aman untuk mencegah crash "Array buffer allocation failed" di browser:
-            var MAX_PART_BYTES = 600 * 1024 * 1024; // Maksimum 600 MB per file ZIP
-            var MAX_PART_COUNT = 50;                // Maksimum 50 file per file ZIP
+            // Batas ultra-aman untuk mencegah crash "Array buffer allocation failed" di browser:
+            var MAX_PART_BYTES = 250 * 1024 * 1024; // Maksimum 250 MB per file ZIP
+            var MAX_PART_COUNT = 15;                // Maksimum 15 file per file ZIP
             var parts = [];
 
             if (matchedFiles.length <= MAX_PART_COUNT && totalFoundSize <= MAX_PART_BYTES) {
@@ -9414,7 +9414,11 @@
                 updateProgress(statusMsg, Math.round((pIndex / totalParts) * 100), "Part " + partNum + "/" + totalParts + " (" + partItems.length + " foto, " + formatBytes(partSize) + ")...");
 
                 try {
-                    var blob = await zip.generateAsync({ type: "blob", compression: "STORE" }, function (metadata) {
+                    var blob = await zip.generateAsync({
+                        type: "blob",
+                        compression: "STORE",
+                        streamFiles: true
+                    }, function (metadata) {
                         var partProgress = Math.round(((pIndex + metadata.percent / 100) / totalParts) * 100);
                         updateProgress(statusMsg, partProgress, "Part " + partNum + "/" + totalParts + " (" + metadata.percent.toFixed(0) + "%) - Total: " + partProgress + "%");
                     });
