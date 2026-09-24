@@ -9048,6 +9048,29 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
+        // --- HELPER NORMALIZATION UTILITIES ---
+        function cleanInvisibleChars(str) {
+            if (!str) return '';
+            return String(str).replace(/[\u200B-\u200D\uFEFF\u00A0\u200E\u200F\u2028\u2029\r]/g, '').trim();
+        }
+
+        function normalizeName(str) {
+            return cleanInvisibleChars(str).toLowerCase();
+        }
+
+        function normalizeBase(str) {
+            var s = normalizeName(str).replace(/\.[^/.]+$/, "");
+            return s.replace(/^_+/, ''); // Remove leading underscore (AdobeRGB camera prefix)
+        }
+
+        function normalizeFolder(str) {
+            return normalizeName(str)
+                .replace(/\\/g, '/')
+                .replace(/[\s_\-]+/g, '')
+                .replace(/^camera/i, 'cam')
+                .replace(/^kamera/i, 'cam');
+        }
+
         function parseTargetList() {
             var textarea = document.getElementById('targetNames');
             var rawTargets = textarea ? textarea.value : '';
@@ -9058,28 +9081,31 @@
             var targets = [];
 
             for (var j = 0; j < lines.length; j++) {
-                var line = lines[j].trim();
+                var rawLine = lines[j];
+                var line = cleanInvisibleChars(rawLine);
                 if (line === "") continue;
 
                 if (line.indexOf('📁') !== -1 || line.startsWith('*')) {
-                    currentFolder = line.replace('📁', '').replace(/\*/g, '').trim();
+                    currentFolder = cleanInvisibleChars(line.replace('📁', '').replace(/\*/g, ''));
                     continue;
                 }
 
-                if (line.toLowerCase().indexOf('halo, ini dari') !== -1 || line.toLowerCase().indexOf('berikut daftar foto') !== -1 || line.toLowerCase().indexOf('terima kasih') !== -1) {
+                var lowerLine = line.toLowerCase();
+                if (lowerLine.indexOf('halo, ini dari') !== -1 || lowerLine.indexOf('berikut daftar foto') !== -1 || lowerLine.indexOf('terima kasih') !== -1) {
                     continue;
                 }
 
                 var cleanTarget = line.replace(/^\[?\d+[\.\)\-:\s\]]+\s*/, '').trim();
                 cleanTarget = cleanTarget.replace(/\s*[\(\[].*?[\)\]]\s*$/, '').replace(/\s*[-–—]\s+.*$/, '').trim();
+                cleanTarget = cleanInvisibleChars(cleanTarget);
                 var extRemoved = cleanTarget.replace(/\.[^/.]+$/, "").toLowerCase();
 
                 if (cleanTarget && cleanTarget.length > 0) {
                     targets.push({
                         raw: line,
                         clean: cleanTarget,
-                        cleanLower: cleanTarget.toLowerCase(),
-                        baseLower: extRemoved.length > 0 ? extRemoved : cleanTarget.toLowerCase(),
+                        cleanLower: normalizeName(cleanTarget),
+                        baseLower: normalizeBase(cleanTarget),
                         folder: currentFolder
                     });
                 }
@@ -9087,33 +9113,56 @@
             return targets;
         }
 
-        function matchFileWithTarget(file, t) {
+        function matchFileWithTarget(file, t, checkFolder) {
             if (!file || !t) return false;
-            var fileNameLower = (file.name || '').toLowerCase();
-            var fileBaseName = fileNameLower.replace(/\.[^/.]+$/, "");
-            var relPath = (file.webkitRelativePath || '').toLowerCase();
+            var fileNameLower = normalizeName(file.name || '');
+            var fileBaseName = normalizeBase(file.name || '');
+            var targetClean = t.cleanLower;
+            var targetBase = t.baseLower;
 
-            var isNameMatch = (fileNameLower === t.cleanLower) ||
-                              (fileBaseName === t.baseLower) ||
-                              (fileNameLower === t.baseLower) ||
-                              (fileBaseName === t.cleanLower);
+            var isNameMatch = (fileNameLower === targetClean) ||
+                              (fileBaseName === targetBase) ||
+                              (fileNameLower === targetBase) ||
+                              (fileBaseName === targetClean);
 
-            if (!isNameMatch && t.baseLower && t.baseLower.length >= 3) {
-                if (fileNameLower.includes(t.baseLower) || fileBaseName.includes(t.baseLower) || t.cleanLower.includes(fileBaseName)) {
+            if (!isNameMatch && targetBase && targetBase.length >= 3) {
+                if (fileNameLower.includes(targetBase) || fileBaseName.includes(targetBase) || targetClean.includes(fileBaseName)) {
                     isNameMatch = true;
                 }
             }
 
             if (!isNameMatch) return false;
 
-            if (t.folder && relPath) {
-                var tFolderLower = t.folder.toLowerCase();
-                if (!relPath.includes(tFolderLower)) {
-                    return false;
+            if (checkFolder && t.folder) {
+                var relPath = normalizeFolder(file.webkitRelativePath || '');
+                if (relPath) {
+                    var tFolderNorm = normalizeFolder(t.folder);
+                    if (!relPath.includes(tFolderNorm)) {
+                        return false;
+                    }
                 }
             }
 
             return true;
+        }
+
+        function findMatchForTarget(uploadedFiles, t, usedIndices) {
+            if (!uploadedFiles || uploadedFiles.length === 0) return -1;
+
+            // Prioritas 1: Cocok nama file DAN cocok subfolder (jika target mencantumkan folder)
+            if (t.folder) {
+                var matchIdx = uploadedFiles.findIndex(function (file, idx) {
+                    if (usedIndices && usedIndices.has(idx)) return false;
+                    return matchFileWithTarget(file, t, true);
+                });
+                if (matchIdx !== -1) return matchIdx;
+            }
+
+            // Prioritas 2 (Fallback): Cocok nama file di manapun (apabila folder di laptop flat/berbeda nama)
+            return uploadedFiles.findIndex(function (file, idx) {
+                if (usedIndices && usedIndices.has(idx)) return false;
+                return matchFileWithTarget(file, t, false);
+            });
         }
 
         function updateLineCount() {
@@ -9121,7 +9170,7 @@
             var lineCount = document.getElementById('lineCount');
             if (textarea && lineCount) {
                 var text = textarea.value.trim();
-                var lines = text ? text.split(/[\n,]+/).filter(function (l) { return l.trim().length > 0; }).length : 0;
+                var lines = text ? text.split(/[\n,]+/).filter(function (l) { return cleanInvisibleChars(l).length > 0; }).length : 0;
                 lineCount.textContent = lines;
             }
             updateDetectionSummary();
@@ -9143,12 +9192,12 @@
 
             var foundCount = 0;
             var missingCount = 0;
+            var usedIndices = new Set();
 
             targets.forEach(function (t) {
-                var found = uploadedFilesSorter.some(function (file) {
-                    return matchFileWithTarget(file, t);
-                });
-                if (found) {
+                var matchIdx = findMatchForTarget(uploadedFilesSorter, t, usedIndices);
+                if (matchIdx !== -1) {
+                    usedIndices.add(matchIdx);
                     foundCount++;
                 } else {
                     missingCount++;
@@ -9224,10 +9273,7 @@
             var usedFileIndices = new Set();
 
             targets.forEach(function (t) {
-                var matchIdx = uploadedFilesSorter.findIndex(function (file, idx) {
-                    if (usedFileIndices.has(idx)) return false;
-                    return matchFileWithTarget(file, t);
-                });
+                var matchIdx = findMatchForTarget(uploadedFilesSorter, t, usedFileIndices);
 
                 if (matchIdx !== -1) {
                     var match = uploadedFilesSorter[matchIdx];
