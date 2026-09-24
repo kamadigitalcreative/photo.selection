@@ -9079,6 +9079,7 @@
             var lines = rawTargets.split(/[\n,]+/);
             var currentFolder = "";
             var targets = [];
+            var seenKeys = new Set();
 
             for (var j = 0; j < lines.length; j++) {
                 var rawLine = lines[j];
@@ -9101,11 +9102,18 @@
                 var extRemoved = cleanTarget.replace(/\.[^/.]+$/, "").toLowerCase();
 
                 if (cleanTarget && cleanTarget.length > 0) {
+                    var baseLow = normalizeBase(cleanTarget);
+                    // Deduplikasi: Jika file yang sama tertulis berulang di list, proses hanya 1 kali
+                    if (seenKeys.has(baseLow)) {
+                        continue;
+                    }
+                    seenKeys.add(baseLow);
+
                     targets.push({
                         raw: line,
                         clean: cleanTarget,
                         cleanLower: normalizeName(cleanTarget),
-                        baseLower: normalizeBase(cleanTarget),
+                        baseLower: baseLow,
                         folder: currentFolder
                     });
                 }
@@ -9325,12 +9333,13 @@
 
             if (resStatusBadge) { resStatusBadge.textContent = 'Sedang Mengemas'; resStatusBadge.className = 'px-3 py-1 bg-blue-100 text-blue-600 text-xs font-bold rounded-full border border-blue-200'; }
 
-            // --- AUTOMATIC CHUNKING ENGINE (1 SINGLE ZIP IF FEW/SAFE SIZE, MULTI-PART IF LARGE > 2 GB) ---
-            var MAX_PART_BYTES = 2000 * 1024 * 1024; // 2 GB (2000 MB) safe limit per ZIP file
+            // --- AUTOMATIC CHUNKING ENGINE (SAFE RAM ALLOCATION) ---
+            // Batas aman untuk mencegah crash "Array buffer allocation failed" di browser:
+            var MAX_PART_BYTES = 600 * 1024 * 1024; // Maksimum 600 MB per file ZIP
+            var MAX_PART_COUNT = 50;                // Maksimum 50 file per file ZIP
             var parts = [];
 
-            // Kondisi: Jika total file <= 250 ATAU total ukuran <= 2 GB, kemas dalam 1 file ZIP tunggal
-            if (matchedFiles.length <= 250 || totalFoundSize <= MAX_PART_BYTES) {
+            if (matchedFiles.length <= MAX_PART_COUNT && totalFoundSize <= MAX_PART_BYTES) {
                 parts = [matchedFiles];
             } else {
                 var currentPartItems = [];
@@ -9338,7 +9347,7 @@
 
                 matchedFiles.forEach(function (item) {
                     var fSize = item.file.size || 0;
-                    if (currentPartSize + fSize > MAX_PART_BYTES && currentPartItems.length > 0) {
+                    if ((currentPartSize + fSize > MAX_PART_BYTES || currentPartItems.length >= MAX_PART_COUNT) && currentPartItems.length > 0) {
                         parts.push(currentPartItems);
                         currentPartItems = [];
                         currentPartSize = 0;
@@ -9374,7 +9383,7 @@
                                 '<p>Berhasil menyortir <b>' + matchedFiles.length + ' foto</b> (Total ' + formatBytes(totalFoundSize) + ').</p>' +
                                 '<div class="bg-blue-50 text-blue-800 p-3 rounded-xl border border-blue-100 font-medium">' +
                                 '<p class="font-bold text-blue-900 mb-1"><i class="fa-solid fa-layer-group mr-1"></i> Terbagi Menjadi ' + totalParts + ' File ZIP Otomatis:</p>' +
-                                '<p>Foto otomatis dikemas ke dalam <b>' + totalParts + ' file ZIP</b> (Part 1 s/d Part ' + totalParts + ') untuk mencegah memori RAM crash & menjamin tidak ada foto ganda.</p>' +
+                                '<p>Foto otomatis dikemas ke dalam <b>' + totalParts + ' file ZIP</b> (Part 1 s/d Part ' + totalParts + ') untuk mencegah memori RAM browser crash & menjamin tidak ada foto ganda.</p>' +
                                 '</div></div>',
                             icon: 'success'
                         });
@@ -9413,10 +9422,13 @@
                     var zipFilename = totalParts > 1 ? "Hasil_Sortir_Foto_Part" + partNum + "_dari_" + totalParts + ".zip" : "Hasil_Sortir_Foto.zip";
                     saveAs(blob, zipFilename);
 
-                    // Jeda 1.2 detik sebelum part berikutnya agar browser sempat melepaskan RAM & mentrigger download
+                    // Bersihkan memori dan beri jeda 1.5 detik agar browser melepaskan RAM & trigger download
+                    zip = null;
+                    blob = null;
+
                     setTimeout(function () {
                         processPartSequentially(pIndex + 1);
-                    }, 1200);
+                    }, 1500);
 
                 } catch (err) {
                     if (resStatusBadge) { resStatusBadge.textContent = 'Gagal Mengemas'; resStatusBadge.className = 'px-3 py-1 bg-red-100 text-red-600 text-xs font-bold rounded-full border border-red-200'; }
