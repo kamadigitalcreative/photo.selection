@@ -2851,15 +2851,22 @@
                                     </div>
 
                                     <!-- Actions -->
-                                    <div class="flex items-center gap-4 mt-2">
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-2">
                                         <button type="button"
                                             onclick="clearUploadedFiles(); document.getElementById('targetNames').value=''; updateLineCount();"
-                                            class="px-6 py-3.5 bg-white border border-gray-200 text-gray-600 text-sm font-bold rounded-xl hover:bg-gray-50 hover:text-gray-800 transition-colors flex items-center gap-2 shadow-sm shrink-0">
+                                            class="px-5 py-3.5 bg-white border border-gray-200 text-gray-600 text-sm font-bold rounded-xl hover:bg-gray-50 hover:text-gray-800 transition-colors flex items-center justify-center gap-2 shadow-sm shrink-0">
                                             <i class="fa-solid fa-rotate-right"></i> Reset
                                         </button>
-                                        <button type="submit" id="btnProsesZIP"
-                                            class="w-full py-3.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 shadow-[0_4px_12px_rgba(37,99,235,0.2)] hover:shadow-[0_6px_16px_rgba(37,99,235,0.3)] transition-all flex items-center justify-center gap-2">
-                                            <i class="fa-solid fa-file-zipper"></i> Proses & Download ZIP
+                                        <button type="button" onclick="handleDirectFolderCopy(event)" id="btnDirectCopy"
+                                            class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-[0_4px_12px_rgba(16,185,129,0.25)] hover:shadow-[0_6px_16px_rgba(16,185,129,0.35)] transition-all flex items-center justify-center gap-2">
+                                            <i class="fa-solid fa-folder-tree text-base"></i>
+                                            <span>Salin ke Folder Baru</span>
+                                            <span class="text-[10px] bg-emerald-700/60 px-2 py-0.5 rounded-md font-normal hidden sm:inline">Rekomendasi / Instan</span>
+                                        </button>
+                                        <button type="button" onclick="handleProsesSingleZip(event)" id="btnSingleZip"
+                                            class="py-3.5 px-5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-[0_4px_12px_rgba(37,99,235,0.2)] hover:shadow-[0_6px_16px_rgba(37,99,235,0.3)] transition-all flex items-center justify-center gap-2 shrink-0">
+                                            <i class="fa-solid fa-file-zipper"></i>
+                                            <span>1 File ZIP Utuh</span>
                                         </button>
                                     </div>
 
@@ -9266,14 +9273,16 @@
             if (mfl) mfl.innerHTML = '';
         }
 
-        function handleProsesSorter(event) {
-            event.preventDefault();
+        function getMatchedFilesAndValidate() {
             var targets = parseTargetList();
-
-            if (uploadedFilesSorter.length === 0) { Swal.fire('Peringatan', 'Silakan pilih folder sumber terlebih dahulu.', 'warning'); return; }
-            if (targets.length === 0) { Swal.fire('Peringatan', 'Silakan masukkan nomor/nama file klien.', 'warning'); return; }
-
-            startSorterLoading();
+            if (uploadedFilesSorter.length === 0) {
+                Swal.fire('Peringatan', 'Silakan pilih folder sumber terlebih dahulu.', 'warning');
+                return null;
+            }
+            if (targets.length === 0) {
+                Swal.fire('Peringatan', 'Silakan masukkan nomor/nama file klien.', 'warning');
+                return null;
+            }
 
             var matchedFiles = [];
             var missingTargets = [];
@@ -9282,7 +9291,6 @@
 
             targets.forEach(function (t) {
                 var matchIdx = findMatchForTarget(uploadedFilesSorter, t, usedFileIndices);
-
                 if (matchIdx !== -1) {
                     var match = uploadedFilesSorter[matchIdx];
                     usedFileIndices.add(matchIdx);
@@ -9327,121 +9335,329 @@
             if (matchedFiles.length === 0) {
                 if (resStatusBadge) { resStatusBadge.textContent = 'Tidak Ada Cocok'; resStatusBadge.className = 'px-3 py-1 bg-red-100 text-red-600 text-xs font-bold rounded-full border border-red-200'; }
                 Swal.fire('Hasil Sortir', 'Tidak ada foto yang cocok dari daftar yang dimasukkan.', 'info');
-                endSorterLoading();
+                return null;
+            }
+
+            return { matchedFiles: matchedFiles, totalFoundSize: totalFoundSize, missingTargets: missingTargets };
+        }
+
+        // ==========================================
+        // 1. SALIN LANGSUNG KE FOLDER (INSTAN & 0% RAM)
+        // ==========================================
+        async function handleDirectFolderCopy(event) {
+            if (event) event.preventDefault();
+
+            var data = getMatchedFilesAndValidate();
+            if (!data) return;
+            var matchedFiles = data.matchedFiles;
+            var totalFoundSize = data.totalFoundSize;
+
+            if (!('showDirectoryPicker' in window)) {
+                Swal.fire({
+                    title: 'Info Browser',
+                    text: 'Browser ini tidak mendukung pemilihan folder langsung. Sistem akan membuat 1 File ZIP untuk Anda.',
+                    icon: 'info'
+                });
+                handleProsesSingleZip(event);
                 return;
             }
 
-            if (resStatusBadge) { resStatusBadge.textContent = 'Sedang Mengemas'; resStatusBadge.className = 'px-3 py-1 bg-blue-100 text-blue-600 text-xs font-bold rounded-full border border-blue-200'; }
-
-            // --- AUTOMATIC CHUNKING ENGINE (SAFE RAM ALLOCATION) ---
-            // Batas ultra-aman untuk mencegah crash "Array buffer allocation failed" di browser:
-            var MAX_PART_BYTES = 250 * 1024 * 1024; // Maksimum 250 MB per file ZIP
-            var MAX_PART_COUNT = 15;                // Maksimum 15 file per file ZIP
-            var parts = [];
-
-            if (matchedFiles.length <= MAX_PART_COUNT && totalFoundSize <= MAX_PART_BYTES) {
-                parts = [matchedFiles];
-            } else {
-                var currentPartItems = [];
-                var currentPartSize = 0;
-
-                matchedFiles.forEach(function (item) {
-                    var fSize = item.file.size || 0;
-                    if ((currentPartSize + fSize > MAX_PART_BYTES || currentPartItems.length >= MAX_PART_COUNT) && currentPartItems.length > 0) {
-                        parts.push(currentPartItems);
-                        currentPartItems = [];
-                        currentPartSize = 0;
-                    }
-                    currentPartItems.push(item);
-                    currentPartSize += fSize;
+            let destDirHandle;
+            try {
+                destDirHandle = await window.showDirectoryPicker({
+                    id: 'ps_sortir_dest',
+                    mode: 'readwrite',
+                    startIn: 'pictures'
                 });
-                if (currentPartItems.length > 0) {
-                    parts.push(currentPartItems);
-                }
+            } catch (err) {
+                if (err.name === 'AbortError') return; // User membatalkan pemilihan folder
+                Swal.fire('Error', 'Gagal mengakses folder tujuan: ' + err.message, 'error');
+                return;
             }
 
-            var totalParts = parts.length;
+            startSorterLoading("Menyalin foto langsung ke folder...");
+            var resStatusBadge = document.getElementById('resStatusBadge');
+            if (resStatusBadge) { resStatusBadge.textContent = 'Sedang Menyalin'; resStatusBadge.className = 'px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200'; }
 
-            async function processPartSequentially(pIndex) {
-                if (isCancelledSorter) {
-                    updateProgress("Dibatalkan!", 0, "Proses dihentikan.");
-                    if (resStatusBadge) { resStatusBadge.textContent = 'Dibatalkan'; resStatusBadge.className = 'px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full border border-yellow-200'; }
-                    endSorterLoading();
-                    Swal.fire('Dibatalkan', 'Proses sortir telah dihentikan.', 'info');
-                    return;
-                }
+            var copiedCount = 0;
+            var folderHandlesCache = {};
 
-                if (pIndex >= totalParts) {
-                    // ALL PARTS FINISHED!
-                    var statusText = totalParts > 1 ? 'Selesai (' + totalParts + ' Part ZIP)' : 'Selesai & Diunduh';
-                    if (resStatusBadge) { resStatusBadge.textContent = statusText; resStatusBadge.className = 'px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full border border-green-200'; }
-
-                    if (totalParts > 1) {
-                        Swal.fire({
-                            title: 'Selesai Sempurna! 🎉',
-                            html: '<div class="text-left text-xs text-slate-600 space-y-2">' +
-                                '<p>Berhasil menyortir <b>' + matchedFiles.length + ' foto</b> (Total ' + formatBytes(totalFoundSize) + ').</p>' +
-                                '<div class="bg-blue-50 text-blue-800 p-3 rounded-xl border border-blue-100 font-medium">' +
-                                '<p class="font-bold text-blue-900 mb-1"><i class="fa-solid fa-layer-group mr-1"></i> Terbagi Menjadi ' + totalParts + ' File ZIP Otomatis:</p>' +
-                                '<p>Foto otomatis dikemas ke dalam <b>' + totalParts + ' file ZIP</b> (Part 1 s/d Part ' + totalParts + ') untuk mencegah memori RAM browser crash & menjamin tidak ada foto ganda.</p>' +
-                                '</div></div>',
-                            icon: 'success'
-                        });
-                    } else {
-                        Swal.fire('Selesai!', "Berhasil menyortir " + matchedFiles.length + " file foto (" + formatBytes(totalFoundSize) + "). File ZIP telah diunduh.", 'success');
+            try {
+                for (var i = 0; i < matchedFiles.length; i++) {
+                    if (isCancelledSorter) {
+                        updateProgress("Dibatalkan!", 0, "Proses penyalinan dihentikan.");
+                        if (resStatusBadge) { resStatusBadge.textContent = 'Dibatalkan'; resStatusBadge.className = 'px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full border border-yellow-200'; }
+                        endSorterLoading();
+                        Swal.fire('Dibatalkan', 'Proses penyalinan telah dihentikan.', 'info');
+                        return;
                     }
-                    endSorterLoading();
-                    return;
-                }
 
-                var partItems = parts[pIndex];
-                var partNum = pIndex + 1;
-                var zip = new JSZip();
-                var partFolderName = totalParts > 1 ? "Hasil_Sortir_Foto_Part" + partNum : "Hasil_Sortir_Foto";
-                var rootFolder = zip.folder(partFolderName);
+                    var item = matchedFiles[i];
+                    var targetDir = destDirHandle;
 
-                var partSize = 0;
-                partItems.forEach(function (item) {
-                    partSize += item.file.size || 0;
                     if (item.folder) {
-                        rootFolder.folder(item.folder).file(item.file.name, item.file);
-                    } else {
-                        rootFolder.file(item.file.name, item.file);
+                        var fNorm = item.folder.trim();
+                        if (!folderHandlesCache[fNorm]) {
+                            folderHandlesCache[fNorm] = await destDirHandle.getDirectoryHandle(fNorm, { create: true });
+                        }
+                        targetDir = folderHandlesCache[fNorm];
                     }
+
+                    var fileHandle = await targetDir.getFileHandle(item.file.name, { create: true });
+                    var writable = await fileHandle.createWritable();
+                    await item.file.stream().pipeTo(writable);
+
+                    copiedCount++;
+                    var pct = Math.round((copiedCount / matchedFiles.length) * 100);
+                    updateProgress("Menyalin (" + copiedCount + "/" + matchedFiles.length + ")...", pct, item.file.name + " (" + formatBytes(item.file.size) + ")");
+                }
+
+                if (resStatusBadge) { resStatusBadge.textContent = 'Selesai Disalin'; resStatusBadge.className = 'px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full border border-green-200'; }
+                endSorterLoading();
+
+                Swal.fire({
+                    title: 'Selesai Sempurna! 🎉',
+                    html: '<div class="text-left text-xs text-slate-600 space-y-2">' +
+                        '<p>Berhasil menyalin <b>' + matchedFiles.length + ' foto</b> (Total ' + formatBytes(totalFoundSize) + ') langsung ke folder komputer Anda.</p>' +
+                        '<div class="bg-emerald-50 text-emerald-800 p-3 rounded-xl border border-emerald-100 font-medium">' +
+                        '<p class="font-bold text-emerald-900 mb-0.5"><i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i> Siap Digunakan Tanpa Unzip!</p>' +
+                        '<p>Foto-foto telah tersusun rapi di folder yang Anda pilih tanpa resiko file corrupt atau memori RAM penuh.</p>' +
+                        '</div></div>',
+                    icon: 'success'
                 });
 
-                var statusMsg = totalParts > 1 ? "Mengemas Part " + partNum + " dari " + totalParts + "..." : "Membuat ZIP...";
-                updateProgress(statusMsg, Math.round((pIndex / totalParts) * 100), "Part " + partNum + "/" + totalParts + " (" + partItems.length + " foto, " + formatBytes(partSize) + ")...");
+            } catch (err) {
+                if (resStatusBadge) { resStatusBadge.textContent = 'Gagal Menyalin'; resStatusBadge.className = 'px-3 py-1 bg-red-100 text-red-600 text-xs font-bold rounded-full border border-red-200'; }
+                Swal.fire('Gagal Menyalin', err.message || 'Terjadi kesalahan saat menyalin file.', 'error');
+                endSorterLoading();
+            }
+        }
+
+        // ==========================================
+        // 2. STREAMING 1 FILE ZIP UTUH LANGSUNG KE DISK
+        // ==========================================
+        async function streamZipDirectToDisk(writable, matchedFiles, progressFn) {
+            var crcTable = [];
+            for (var n = 0; n < 256; n++) {
+                var c = n;
+                for (var k = 0; k < 8; k++) {
+                    c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+                }
+                crcTable[n] = c >>> 0;
+            }
+
+            function calcCrc32(crc, uint8arr) {
+                var cc = crc ^ (-1);
+                for (var i = 0; i < uint8arr.length; i++) {
+                    cc = (cc >>> 8) ^ crcTable[(cc ^ uint8arr[i]) & 0xFF];
+                }
+                return (cc ^ (-1)) >>> 0;
+            }
+
+            var encoder = new TextEncoder();
+            var centralDirectory = [];
+            var currentOffset = 0;
+            var totalFiles = matchedFiles.length;
+
+            var now = new Date();
+            var dosTime = ((now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1)) & 0xFFFF;
+            var dosDate = (((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate()) & 0xFFFF;
+
+            for (var i = 0; i < totalFiles; i++) {
+                if (isCancelledSorter) {
+                    await writable.abort();
+                    throw new Error("Proses dihentikan.");
+                }
+
+                var item = matchedFiles[i];
+                var entryPath = item.folder ? (item.folder.replace(/\\/g, '/') + '/' + item.file.name) : item.file.name;
+                var nameBytes = encoder.encode(entryPath);
+                var fileSize = item.file.size || 0;
+
+                // Hitung CRC32 dan simpan potongan data secara streaming
+                var crc = 0;
+                var stream = item.file.stream();
+                var reader = stream.getReader();
+                var chunks = [];
+                while (true) {
+                    var res = await reader.read();
+                    if (res.done) break;
+                    crc = calcCrc32(crc, res.value);
+                    chunks.push(res.value);
+                }
+
+                // Tulis Local Header (30 bytes + name)
+                var localHeader = new ArrayBuffer(30 + nameBytes.length);
+                var view = new DataView(localHeader);
+                view.setUint32(0, 0x04034b50, true);
+                view.setUint16(4, 20, true);
+                view.setUint16(6, 0x0800, true);
+                view.setUint16(8, 0, true);
+                view.setUint16(10, dosTime, true);
+                view.setUint16(12, dosDate, true);
+                view.setUint32(14, crc, true);
+                view.setUint32(18, fileSize, true);
+                view.setUint32(22, fileSize, true);
+                view.setUint16(26, nameBytes.length, true);
+                view.setUint16(28, 0, true);
+                new Uint8Array(localHeader).set(nameBytes, 30);
+
+                await writable.write(localHeader);
+                var headerOffset = currentOffset;
+                currentOffset += localHeader.byteLength;
+
+                // Tulis isi file langsung ke disk
+                for (var c = 0; c < chunks.length; c++) {
+                    await writable.write(chunks[c]);
+                }
+                currentOffset += fileSize;
+
+                centralDirectory.push({
+                    nameBytes: nameBytes,
+                    fileSize: fileSize,
+                    crc: crc,
+                    offset: headerOffset
+                });
+
+                var pct = Math.round(((i + 1) / totalFiles) * 100);
+                if (progressFn) progressFn(i + 1, totalFiles, pct, item.file.name, fileSize);
+            }
+
+            // Tulis Central Directory
+            var cdStartOffset = currentOffset;
+            for (var j = 0; j < centralDirectory.length; j++) {
+                var cd = centralDirectory[j];
+                var cdHeader = new ArrayBuffer(46 + cd.nameBytes.length);
+                var cdView = new DataView(cdHeader);
+                cdView.setUint32(0, 0x02014b50, true);
+                cdView.setUint16(4, 20, true);
+                cdView.setUint16(6, 20, true);
+                cdView.setUint16(8, 0x0800, true);
+                cdView.setUint16(10, 0, true);
+                cdView.setUint16(12, dosTime, true);
+                cdView.setUint16(14, dosDate, true);
+                cdView.setUint32(16, cd.crc, true);
+                cdView.setUint32(20, cd.fileSize, true);
+                cdView.setUint32(24, cd.fileSize, true);
+                cdView.setUint16(28, cd.nameBytes.length, true);
+                cdView.setUint16(30, 0, true);
+                cdView.setUint16(32, 0, true);
+                cdView.setUint16(34, 0, true);
+                cdView.setUint16(36, 0, true);
+                cdView.setUint32(38, 0, true);
+                cdView.setUint32(42, cd.offset, true);
+                new Uint8Array(cdHeader).set(cd.nameBytes, 46);
+
+                await writable.write(cdHeader);
+                currentOffset += cdHeader.byteLength;
+            }
+
+            var cdSize = currentOffset - cdStartOffset;
+
+            // Tulis End of Central Directory
+            var eocd = new ArrayBuffer(22);
+            var eocdView = new DataView(eocd);
+            eocdView.setUint32(0, 0x06054b50, true);
+            eocdView.setUint16(4, 0, true);
+            eocdView.setUint16(6, 0, true);
+            eocdView.setUint16(8, totalFiles, true);
+            eocdView.setUint16(10, totalFiles, true);
+            eocdView.setUint32(12, cdSize, true);
+            eocdView.setUint32(16, cdStartOffset, true);
+            eocdView.setUint16(20, 0, true);
+
+            await writable.write(eocd);
+            await writable.close();
+        }
+
+        async function handleProsesSingleZip(event) {
+            if (event) event.preventDefault();
+
+            var data = getMatchedFilesAndValidate();
+            if (!data) return;
+            var matchedFiles = data.matchedFiles;
+            var totalFoundSize = data.totalFoundSize;
+
+            var resStatusBadge = document.getElementById('resStatusBadge');
+
+            // Jika browser mendukung File System Save Picker -> Streaming 1 file ZIP langsung ke disk!
+            if ('showSaveFilePicker' in window) {
+                let fileHandle;
+                try {
+                    fileHandle = await window.showSaveFilePicker({
+                        suggestedName: 'Hasil_Sortir_Foto.zip',
+                        types: [{
+                            description: 'ZIP Archive',
+                            accept: { 'application/zip': ['.zip'] }
+                        }]
+                    });
+                } catch (err) {
+                    if (err.name === 'AbortError') return;
+                    Swal.fire('Error', 'Gagal memilih lokasi simpan: ' + err.message, 'error');
+                    return;
+                }
+
+                startSorterLoading("Mengemas 1 File ZIP Streaming...");
+                if (resStatusBadge) { resStatusBadge.textContent = 'Sedang Mengemas'; resStatusBadge.className = 'px-3 py-1 bg-blue-100 text-blue-600 text-xs font-bold rounded-full border border-blue-200'; }
 
                 try {
-                    var blob = await zip.generateAsync({
-                        type: "blob",
-                        compression: "STORE",
-                        streamFiles: true
-                    }, function (metadata) {
-                        var partProgress = Math.round(((pIndex + metadata.percent / 100) / totalParts) * 100);
-                        updateProgress(statusMsg, partProgress, "Part " + partNum + "/" + totalParts + " (" + metadata.percent.toFixed(0) + "%) - Total: " + partProgress + "%");
+                    var writable = await fileHandle.createWritable();
+                    await streamZipDirectToDisk(writable, matchedFiles, function (current, total, pct, fileName, fSize) {
+                        updateProgress("Mengemas 1 File ZIP (" + current + "/" + total + ")...", pct, fileName + " (" + formatBytes(fSize) + ")");
                     });
 
-                    var zipFilename = totalParts > 1 ? "Hasil_Sortir_Foto_Part" + partNum + "_dari_" + totalParts + ".zip" : "Hasil_Sortir_Foto.zip";
-                    saveAs(blob, zipFilename);
+                    if (resStatusBadge) { resStatusBadge.textContent = 'Selesai & Tersimpan'; resStatusBadge.className = 'px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full border border-green-200'; }
+                    endSorterLoading();
 
-                    // Bersihkan memori dan beri jeda 1.5 detik agar browser melepaskan RAM & trigger download
-                    zip = null;
-                    blob = null;
-
-                    setTimeout(function () {
-                        processPartSequentially(pIndex + 1);
-                    }, 1500);
+                    Swal.fire({
+                        title: '1 File ZIP Selesai! 🎉',
+                        html: '<div class="text-left text-xs text-slate-600 space-y-2">' +
+                            '<p>Berhasil mengemas <b>' + matchedFiles.length + ' foto</b> (Total ' + formatBytes(totalFoundSize) + ') ke dalam <b>1 file ZIP tunggal</b>.</p>' +
+                            '<div class="bg-blue-50 text-blue-800 p-3 rounded-xl border border-blue-100 font-medium">' +
+                            '<p class="font-bold text-blue-900 mb-0.5"><i class="fa-solid fa-file-zipper mr-1"></i> File ZIP Tersimpan Utuh!</p>' +
+                            '<p>File telah tersimpan langsung di lokasi yang Anda tentukan tanpa terbagi-bagi menjadi part.</p>' +
+                            '</div></div>',
+                        icon: 'success'
+                    });
 
                 } catch (err) {
                     if (resStatusBadge) { resStatusBadge.textContent = 'Gagal Mengemas'; resStatusBadge.className = 'px-3 py-1 bg-red-100 text-red-600 text-xs font-bold rounded-full border border-red-200'; }
-                    Swal.fire('Gagal Mengemas Part ' + partNum, err.message || 'Terjadi kesalahan saat memproses file.', 'error');
+                    Swal.fire('Gagal Mengemas ZIP', err.message || 'Terjadi kesalahan.', 'error');
+                    endSorterLoading();
+                }
+            } else {
+                // Fallback untuk browser lama: JSZip Download
+                startSorterLoading("Membuat ZIP...");
+                if (resStatusBadge) { resStatusBadge.textContent = 'Sedang Mengemas'; resStatusBadge.className = 'px-3 py-1 bg-blue-100 text-blue-600 text-xs font-bold rounded-full border border-blue-200'; }
+
+                var zip = new JSZip();
+                matchedFiles.forEach(function (item) {
+                    if (item.folder) {
+                        zip.folder(item.folder).file(item.file.name, item.file);
+                    } else {
+                        zip.file(item.file.name, item.file);
+                    }
+                });
+
+                try {
+                    var blob = await zip.generateAsync({ type: "blob", compression: "STORE", streamFiles: true }, function (metadata) {
+                        updateProgress("Membuat ZIP...", Math.round(metadata.percent), Math.round(metadata.percent) + "%");
+                    });
+
+                    saveAs(blob, "Hasil_Sortir_Foto.zip");
+                    if (resStatusBadge) { resStatusBadge.textContent = 'Selesai & Diunduh'; resStatusBadge.className = 'px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full border border-green-200'; }
+                    endSorterLoading();
+                    Swal.fire('Selesai!', "Berhasil mengemas " + matchedFiles.length + " foto (" + formatBytes(totalFoundSize) + "). File ZIP telah diunduh.", 'success');
+                } catch (err) {
+                    if (resStatusBadge) { resStatusBadge.textContent = 'Gagal Mengemas'; resStatusBadge.className = 'px-3 py-1 bg-red-100 text-red-600 text-xs font-bold rounded-full border border-red-200'; }
+                    Swal.fire('Gagal Mengemas', err.message || 'Terjadi kesalahan.', 'error');
                     endSorterLoading();
                 }
             }
+        }
 
-            processPartSequentially(0);
+        function handleProsesSorter(event) {
+            handleDirectFolderCopy(event);
         }
 
         function handleCancelSorter() {
@@ -9452,9 +9668,13 @@
             }
         }
 
-        function startSorterLoading() {
+        function startSorterLoading(statusMsg) {
             isProcessingSorter = true; isCancelledSorter = false;
-            setButtonState('btnProsesSorter', true, 'Memproses ZIP...');
+
+            var btnDirectCopy = document.getElementById('btnDirectCopy');
+            var btnSingleZip = document.getElementById('btnSingleZip');
+            if (btnDirectCopy) btnDirectCopy.disabled = true;
+            if (btnSingleZip) btnSingleZip.disabled = true;
 
             var btnCancelSorter = document.getElementById('btnCancelSorter');
             var progressArea = document.getElementById('progressArea');
@@ -9466,12 +9686,16 @@
             if (srcDir) srcDir.disabled = true;
             if (targetNames) targetNames.disabled = true;
 
-            updateProgress("Memulai...", 0, "Menyiapkan file...");
+            updateProgress("Memulai...", 0, statusMsg || "Menyiapkan file...");
         }
 
         function endSorterLoading() {
             isProcessingSorter = false; isCancelledSorter = false;
-            setButtonState('btnProsesSorter', false, '<i class="fa-solid fa-file-zipper" id="iconProsesSorter"></i> <span>Proses & Download ZIP</span>');
+
+            var btnDirectCopy = document.getElementById('btnDirectCopy');
+            var btnSingleZip = document.getElementById('btnSingleZip');
+            if (btnDirectCopy) btnDirectCopy.disabled = false;
+            if (btnSingleZip) btnSingleZip.disabled = false;
 
             var btnCancelSorter = document.getElementById('btnCancelSorter');
             var progressArea = document.getElementById('progressArea');
