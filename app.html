@@ -2968,8 +2968,7 @@
                                                         <h4 id="tx-sl-found" class="text-xs font-bold text-gray-700">
                                                             Ditemukan</h4>
                                                         <p id="tx-sl-found-desc"
-                                                            class="text-[9px] text-gray-400 mt-0.5">File yang ditemukan
-                                                            di folder master</p>
+                                                            class="text-[9px] text-gray-400 mt-0.5">File unik di folder master</p>
                                                     </div>
                                                 </div>
                                                 <span class="text-lg font-black text-green-600"
@@ -2996,6 +2995,24 @@
                                             </div>
 
                                             <div
+                                                class="flex items-center justify-between p-3 bg-amber-50/60 border border-amber-100 rounded-xl">
+                                                <div class="flex items-center gap-3">
+                                                    <div
+                                                        class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                                                        <i class="fa-solid fa-clone text-xs"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h4 id="tx-sl-duplicate" class="text-xs font-bold text-gray-700">
+                                                            Duplikat / Kembar</h4>
+                                                        <p id="tx-sl-duplicate-desc"
+                                                            class="text-[9px] text-gray-400 mt-0.5">File kembar yang disatukan</p>
+                                                    </div>
+                                                </div>
+                                                <span class="text-lg font-black text-amber-600"
+                                                    id="detect-duplicate">0</span>
+                                            </div>
+
+                                            <div
                                                 class="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-xl">
                                                 <div class="flex items-center gap-3">
                                                     <div
@@ -3006,8 +3023,7 @@
                                                         <h4 id="tx-sl-ready" class="text-xs font-bold text-blue-900">
                                                             Siap Diproses</h4>
                                                         <p id="tx-sl-ready-desc"
-                                                            class="text-[9px] text-blue-400 mt-0.5">File yang akan
-                                                            dikemas ke ZIP</p>
+                                                            class="text-[9px] text-blue-400 mt-0.5">Total file unik siap sortir</p>
                                                     </div>
                                                 </div>
                                                 <span class="text-lg font-black text-blue-700"
@@ -3015,8 +3031,6 @@
                                             </div>
                                         </div>
                                     </div>
-
-                                    <!-- Removed Security Notice -->
 
                                 </div>
                             </div>
@@ -3032,8 +3046,8 @@
                                         <i
                                             class="fa-regular fa-circle-question text-gray-400 text-xs cursor-pointer hover:text-blue-500 transition-colors"></i>
                                     </div>
-                                    <p id="tx-sl-hasil-desc" class="text-[11px] text-gray-500 mt-1">Ringkasan hasil akan
-                                        muncul setelah proses dijalankan.</p>
+                                    <p id="tx-sl-hasil-desc" class="text-[11px] text-gray-500 mt-1">Ringkasan riil akan
+                                        muncul saat tombol sortir dijalankan.</p>
                                 </div>
                                 <div class="flex items-center gap-4">
                                     <div class="text-right">
@@ -3047,18 +3061,18 @@
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <!-- Found Result -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <!-- Found / Success Result -->
                                 <div
-                                    class="flex items-center p-4 border border-gray-100 rounded-xl hover:shadow-sm transition-shadow">
+                                    class="flex items-center p-4 border border-gray-100 rounded-xl hover:shadow-sm transition-shadow bg-gray-50/30">
                                     <div
-                                        class="w-10 h-10 rounded-xl bg-green-50 text-green-500 flex items-center justify-center shrink-0 border border-green-100 mr-4">
+                                        class="w-10 h-10 rounded-xl bg-green-50 text-green-500 flex items-center justify-center shrink-0 border border-green-100 mr-3.5">
                                         <i class="fa-regular fa-square-check text-lg"></i>
                                     </div>
                                     <div>
-                                        <h4 id="tx-sl-res-found" class="text-xs font-bold text-gray-800">Ditemukan</h4>
+                                        <h4 id="tx-sl-res-found" class="text-xs font-bold text-gray-800">Sukses Diproses</h4>
                                         <div class="flex items-baseline gap-1 mt-0.5">
-                                            <span class="text-lg font-black text-gray-800" id="resFoundCount">0</span>
+                                            <span class="text-lg font-black text-green-600" id="resFoundCount">0</span>
                                             <span id="tx-sl-f1" class="text-[10px] text-gray-500">file</span>
                                         </div>
                                         <p class="text-[10px] text-gray-400 mt-0.5 font-mono" id="resFoundSize">0 B</p>
@@ -3067,35 +3081,49 @@
 
                                 <!-- Missing Result -->
                                 <div
-                                    class="flex items-center p-4 border border-gray-100 rounded-xl hover:shadow-sm transition-shadow">
+                                    class="flex items-center p-4 border border-gray-100 rounded-xl hover:shadow-sm transition-shadow bg-gray-50/30">
                                     <div
-                                        class="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center shrink-0 border border-red-100 mr-4">
+                                        class="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center shrink-0 border border-red-100 mr-3.5">
                                         <i class="fa-solid fa-ban text-lg"></i>
                                     </div>
                                     <div>
-                                        <h4 id="tx-sl-res-notfound" class="text-xs font-bold text-gray-800">Tidak
-                                            Ditemukan</h4>
+                                        <h4 id="tx-sl-res-notfound" class="text-xs font-bold text-gray-800">Tidak Ditemukan</h4>
                                         <div class="flex items-baseline gap-1 mt-0.5">
-                                            <span class="text-lg font-black text-gray-800" id="resMissingCount">0</span>
+                                            <span class="text-lg font-black text-red-500" id="resMissingCount">0</span>
                                             <span id="tx-sl-f2" class="text-[10px] text-gray-500">file</span>
                                         </div>
-                                        <p class="text-[10px] text-gray-400 mt-0.5 font-mono" id="resMissingSize">0 B
-                                        </p>
+                                        <p class="text-[10px] text-gray-400 mt-0.5 font-mono" id="resMissingSize">0 B</p>
                                     </div>
                                 </div>
 
-                                <!-- Ready/Zipped Result -->
+                                <!-- Duplicates Handled Result -->
                                 <div
-                                    class="flex items-center p-4 border border-gray-100 rounded-xl hover:shadow-sm transition-shadow">
+                                    class="flex items-center p-4 border border-gray-100 rounded-xl hover:shadow-sm transition-shadow bg-gray-50/30">
                                     <div
-                                        class="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0 border border-blue-100 mr-4">
+                                        class="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0 border border-amber-100 mr-3.5">
+                                        <i class="fa-solid fa-clone text-lg"></i>
+                                    </div>
+                                    <div>
+                                        <h4 id="tx-sl-res-dup" class="text-xs font-bold text-gray-800">Duplikat Dilewati</h4>
+                                        <div class="flex items-baseline gap-1 mt-0.5">
+                                            <span class="text-lg font-black text-amber-600" id="resDuplicateCount">0</span>
+                                            <span id="tx-sl-f4" class="text-[10px] text-gray-500">file</span>
+                                        </div>
+                                        <p class="text-[10px] text-gray-400 mt-0.5" id="resDuplicateSize">Disatukan</p>
+                                    </div>
+                                </div>
+
+                                <!-- Ready / Total Output -->
+                                <div
+                                    class="flex items-center p-4 border border-gray-100 rounded-xl hover:shadow-sm transition-shadow bg-gray-50/30">
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0 border border-blue-100 mr-3.5">
                                         <i class="fa-regular fa-file-zipper text-lg"></i>
                                     </div>
                                     <div>
-                                        <h4 id="tx-sl-res-ready" class="text-xs font-bold text-gray-800">Siap Diproses
-                                        </h4>
+                                        <h4 id="tx-sl-res-ready" class="text-xs font-bold text-gray-800">Total File Output</h4>
                                         <div class="flex items-baseline gap-1 mt-0.5">
-                                            <span class="text-lg font-black text-gray-800" id="resReadyCount">0</span>
+                                            <span class="text-lg font-black text-blue-600" id="resReadyCount">0</span>
                                             <span id="tx-sl-f3" class="text-[10px] text-gray-500">file</span>
                                         </div>
                                         <p class="text-[10px] text-gray-400 mt-0.5 font-mono" id="resReadySize">0 B</p>
@@ -3107,12 +3135,25 @@
                             <div id="missingFilesArea" class="hidden mt-6 pt-5 border-t border-gray-100">
                                 <h4 id="tx-sl-detail-notfound"
                                     class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
-                                    <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Detail File Tidak
-                                    Ditemukan
+                                    <i class="fa-solid fa-triangle-exclamation text-red-500"></i> Detail File Tidak Ditemukan
+                                </h4>
+                                <div
+                                    class="bg-red-50/50 border border-red-100 rounded-xl p-4 max-h-40 overflow-y-auto custom-scrollbar">
+                                    <ul id="missingFilesList" class="text-[11px] font-mono text-red-800 space-y-1">
+                                        <!-- Dynamic -->
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Duplicate files details -->
+                            <div id="duplicateFilesArea" class="hidden mt-4 pt-4 border-t border-gray-100">
+                                <h4 id="tx-sl-detail-dup"
+                                    class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                    <i class="fa-solid fa-clone text-amber-500"></i> Detail File Kembar / Duplikat (Otomatis Disatukan)
                                 </h4>
                                 <div
                                     class="bg-amber-50/50 border border-amber-100 rounded-xl p-4 max-h-40 overflow-y-auto custom-scrollbar">
-                                    <ul id="missingFilesList" class="text-[11px] font-mono text-amber-800 space-y-1">
+                                    <ul id="duplicateFilesList" class="text-[11px] font-mono text-amber-800 space-y-1">
                                         <!-- Dynamic -->
                                     </ul>
                                 </div>
@@ -4994,10 +5035,14 @@
             setTx('#tx-sl-ringkasan', 'Ringkasan Deteksi', 'Detection Summary');
             setTx('#tx-sl-found', 'Ditemukan', 'Found');
             setTx('#tx-sl-found-desc', 'File yang ditemukan di folder master', 'Files found in master folder');
-            setTx('#tx-sl-notfound', 'Tidak Ditemukan', 'Not Found');
-            setTx('#tx-sl-notfound-desc', 'File yang tidak ditemukan', 'Files not found');
+            setTx('#tx-sl-duplicate', 'Duplikat / Kembar', 'Duplicates');
+            setTx('#tx-sl-duplicate-desc', 'File kembar yang disatukan', 'Duplicate files merged');
             setTx('#tx-sl-ready', 'Siap Diproses', 'Ready to Process');
-            setTx('#tx-sl-ready-desc', 'File yang akan dikemas ke ZIP', 'Files to be packed into ZIP');
+            setTx('#tx-sl-ready-desc', 'Total file unik siap sortir', 'Unique files ready to sort');
+            setTx('#tx-sl-res-found', 'Sukses Diproses', 'Successfully Processed');
+            setTx('#tx-sl-res-notfound', 'Tidak Ditemukan', 'Not Found');
+            setTx('#tx-sl-res-dup', 'Duplikat Dilewati', 'Duplicates Skipped');
+            setTx('#tx-sl-res-ready', 'Total File Output', 'Total Output Files');
 
             // Kolase Cepat
             setTx('#tx-kl-h2', 'Kolase Cepat', 'Quick Collage');
@@ -9081,11 +9126,12 @@
         function parseTargetList() {
             var textarea = document.getElementById('targetNames');
             var rawTargets = textarea ? textarea.value : '';
-            if (!rawTargets.trim()) return [];
+            if (!rawTargets.trim()) return { targets: [], duplicates: [] };
 
             var lines = rawTargets.split(/[\n,]+/);
             var currentFolder = "";
             var targets = [];
+            var duplicates = [];
             var seenKeys = new Set();
 
             for (var j = 0; j < lines.length; j++) {
@@ -9110,22 +9156,25 @@
 
                 if (cleanTarget && cleanTarget.length > 0) {
                     var baseLow = normalizeBase(cleanTarget);
-                    // Deduplikasi: Jika file yang sama tertulis berulang di list, proses hanya 1 kali
-                    if (seenKeys.has(baseLow)) {
-                        continue;
-                    }
-                    seenKeys.add(baseLow);
-
-                    targets.push({
+                    var targetObj = {
                         raw: line,
                         clean: cleanTarget,
                         cleanLower: normalizeName(cleanTarget),
                         baseLower: baseLow,
                         folder: currentFolder
-                    });
+                    };
+
+                    // Jika nama file ini sudah pernah ada di list sebelumnya -> catat sebagai duplikat / kembar
+                    if (seenKeys.has(baseLow)) {
+                        duplicates.push(targetObj);
+                        continue;
+                    }
+                    seenKeys.add(baseLow);
+
+                    targets.push(targetObj);
                 }
             }
-            return targets;
+            return { targets: targets, duplicates: duplicates };
         }
 
         function matchFileWithTarget(file, t, checkFolder) {
@@ -9192,13 +9241,19 @@
         }
 
         function updateDetectionSummary() {
-            var targets = parseTargetList();
+            var parsed = parseTargetList();
+            var targets = parsed.targets;
+            var duplicates = parsed.duplicates;
             var totalTargets = targets.length;
 
+            var df = document.getElementById('detect-found');
+            var dm = document.getElementById('detect-missing');
+            var dd = document.getElementById('detect-duplicate');
+            var dr = document.getElementById('detect-ready');
+
+            if (dd) dd.textContent = duplicates.length;
+
             if (uploadedFilesSorter.length === 0 || totalTargets === 0) {
-                var df = document.getElementById('detect-found');
-                var dm = document.getElementById('detect-missing');
-                var dr = document.getElementById('detect-ready');
                 if (df) df.textContent = '0';
                 if (dm) dm.textContent = '0';
                 if (dr) dr.textContent = '0';
@@ -9218,10 +9273,6 @@
                     missingCount++;
                 }
             });
-
-            var df = document.getElementById('detect-found');
-            var dm = document.getElementById('detect-missing');
-            var dr = document.getElementById('detect-ready');
 
             if (df) df.textContent = foundCount;
             if (dm) dm.textContent = missingCount;
@@ -9261,25 +9312,34 @@
             var fileCountSpan = document.getElementById('fileCount');
             if (fileCountSpan) fileCountSpan.textContent = "0";
 
-            // Reset results panel
+            // Reset results panel (Hasil Proses)
             var resStatusBadge = document.getElementById('resStatusBadge');
             if (resStatusBadge) { resStatusBadge.textContent = 'Belum diproses'; resStatusBadge.className = 'px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full border border-gray-200'; }
-            ['resFoundCount', 'resMissingCount', 'resReadyCount'].forEach(function (id) { if (document.getElementById(id)) document.getElementById(id).textContent = '0'; });
-            ['resFoundSize', 'resMissingSize', 'resReadySize'].forEach(function (id) { if (document.getElementById(id)) document.getElementById(id).textContent = '0 B'; });
-            ['detect-found', 'detect-missing', 'detect-ready'].forEach(function (id) { if (document.getElementById(id)) document.getElementById(id).textContent = '0'; });
+            ['resFoundCount', 'resMissingCount', 'resDuplicateCount', 'resReadyCount'].forEach(function (id) { if (document.getElementById(id)) document.getElementById(id).textContent = '0'; });
+            ['resFoundSize', 'resMissingSize', 'resDuplicateSize', 'resReadySize'].forEach(function (id) { if (document.getElementById(id)) document.getElementById(id).textContent = '0 B'; });
+            ['detect-found', 'detect-missing', 'detect-duplicate', 'detect-ready'].forEach(function (id) { if (document.getElementById(id)) document.getElementById(id).textContent = '0'; });
+            
             var mfa = document.getElementById('missingFilesArea');
             if (mfa) mfa.classList.add('hidden');
             var mfl = document.getElementById('missingFilesList');
             if (mfl) mfl.innerHTML = '';
+
+            var dfa = document.getElementById('duplicateFilesArea');
+            if (dfa) dfa.classList.add('hidden');
+            var dfl = document.getElementById('duplicateFilesList');
+            if (dfl) dfl.innerHTML = '';
         }
 
         function getMatchedFilesAndValidate() {
-            var targets = parseTargetList();
+            var parsed = parseTargetList();
+            var targets = parsed.targets;
+            var duplicates = parsed.duplicates;
+
             if (uploadedFilesSorter.length === 0) {
                 Swal.fire('Peringatan', 'Silakan pilih folder sumber terlebih dahulu.', 'warning');
                 return null;
             }
-            if (targets.length === 0) {
+            if (targets.length === 0 && duplicates.length === 0) {
                 Swal.fire('Peringatan', 'Silakan masukkan nomor/nama file klien.', 'warning');
                 return null;
             }
@@ -9301,21 +9361,25 @@
                 }
             });
 
-            // Update DOM Hasil Proses Panel
+            // Update DOM HASIL PROSES Panel (Hanya saat tombol eksekusi dijalankan)
             var resFoundCount = document.getElementById('resFoundCount');
             var resMissingCount = document.getElementById('resMissingCount');
+            var resDuplicateCount = document.getElementById('resDuplicateCount');
             var resReadyCount = document.getElementById('resReadyCount');
             var resFoundSize = document.getElementById('resFoundSize');
             var resMissingSize = document.getElementById('resMissingSize');
+            var resDuplicateSize = document.getElementById('resDuplicateSize');
             var resReadySize = document.getElementById('resReadySize');
             var resStatusBadge = document.getElementById('resStatusBadge');
 
             if (resFoundCount) resFoundCount.textContent = matchedFiles.length;
             if (resMissingCount) resMissingCount.textContent = missingTargets.length;
+            if (resDuplicateCount) resDuplicateCount.textContent = duplicates.length;
             if (resReadyCount) resReadyCount.textContent = matchedFiles.length;
 
             if (resFoundSize) resFoundSize.textContent = formatBytes(totalFoundSize);
             if (resMissingSize) resMissingSize.textContent = '0 B';
+            if (resDuplicateSize) resDuplicateSize.textContent = duplicates.length > 0 ? (duplicates.length + ' file') : '0 file';
             if (resReadySize) resReadySize.textContent = formatBytes(totalFoundSize);
 
             // Update Missing Files List
@@ -9325,11 +9389,25 @@
                 if (mfa) mfa.classList.remove('hidden');
                 if (mfl) {
                     mfl.innerHTML = missingTargets.map(function (t) {
-                        return '<li><i class="fa-solid fa-xmark text-red-400 mr-1.5"></i>' + escapeHTML(t.raw) + '</li>';
+                        return '<li><i class="fa-solid fa-xmark text-red-500 mr-1.5"></i>' + escapeHTML(t.raw) + '</li>';
                     }).join('');
                 }
             } else {
                 if (mfa) mfa.classList.add('hidden');
+            }
+
+            // Update Duplicate Files List
+            var dfa = document.getElementById('duplicateFilesArea');
+            var dfl = document.getElementById('duplicateFilesList');
+            if (duplicates.length > 0) {
+                if (dfa) dfa.classList.remove('hidden');
+                if (dfl) {
+                    dfl.innerHTML = duplicates.map(function (t) {
+                        return '<li><i class="fa-solid fa-clone text-amber-500 mr-1.5"></i>' + escapeHTML(t.raw) + ' <span class="text-[9px] text-gray-400 font-sans">(otomatis disatukan jadi 1 file)</span></li>';
+                    }).join('');
+                }
+            } else {
+                if (dfa) dfa.classList.add('hidden');
             }
 
             if (matchedFiles.length === 0) {
@@ -9338,7 +9416,7 @@
                 return null;
             }
 
-            return { matchedFiles: matchedFiles, totalFoundSize: totalFoundSize, missingTargets: missingTargets };
+            return { matchedFiles: matchedFiles, totalFoundSize: totalFoundSize, missingTargets: missingTargets, duplicates: duplicates };
         }
 
         // ==========================================
