@@ -8,6 +8,9 @@ const crypto = require('crypto');
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jqptagcbkyxxqqmxqusf.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_TL_Et1x8IlEwxKASjF0K8Q_t72R3f_9';
 const KAMA_SALT = "KamaSecretSalt";
+const GAS_MAILER_URL = process.env.GAS_MAILER_URL || 'https://script.google.com/macros/s/AKfycbwzw3k--HOqHS0As2PCrz6m7c3VKqKlifdJVrb9Cy15ScvmHNB5lFFDNTRR5xfmzf4/exec';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'kamabalicreative@gmail.com';
+const APP_URL = process.env.APP_URL || 'https://ps.kamacreative.my.id';
 
 async function supabaseQuery(endpoint, options = {}) {
   const url = `${SUPABASE_URL}/rest/v1/${endpoint}`;
@@ -115,6 +118,223 @@ async function sendMetaCAPIEvent(eventName, eventData = {}) {
   } catch (err) {
     console.error('Meta CAPI Error:', err);
   }
+}
+
+async function sendEmailViaGAS({ to, subject, htmlBody, textBody }) {
+  const mailerUrl = process.env.GAS_MAILER_URL || GAS_MAILER_URL;
+  if (!mailerUrl) {
+    console.warn('[MAILER] GAS_MAILER_URL belum diatur di Environment Variables. Email ke', to, 'tidak dapat dikirim.');
+    return false;
+  }
+  try {
+    const res = await fetch(mailerUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: to,
+        subject: subject,
+        htmlBody: htmlBody,
+        textBody: textBody || ''
+      })
+    });
+    return res.ok;
+  } catch (err) {
+    console.error('[MAILER] Gagal mengirim email via GAS:', err);
+    return false;
+  }
+}
+
+function buildAdminNewUserEmail({ nama, username, email, nohp, paket, status }) {
+  const isPending = status === 'Pending';
+  return `
+  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+    <div style="background: #1e3a8a; padding: 24px; color: #ffffff;">
+      <h2 style="margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.025em;">Pendaftaran Fotografer Baru</h2>
+      <p style="margin: 6px 0 0 0; font-size: 13px; color: #bfdbfe;">Photo Selection &bull; Notifikasi Sistem</p>
+    </div>
+    <div style="padding: 24px; color: #334155; font-size: 14px; line-height: 1.6;">
+      <p style="margin-top: 0;">Halo <strong>Admin Kama Creative</strong>, akun fotografer baru telah mendaftar:</p>
+      <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
+        <tr style="border-bottom: 1px solid #f1f5f9;">
+          <td style="padding: 10px 0; font-weight: 600; color: #64748b; width: 140px;">Nama Studio / User</td>
+          <td style="padding: 10px 0; color: #0f172a; font-weight: 500;">${nama}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #f1f5f9;">
+          <td style="padding: 10px 0; font-weight: 600; color: #64748b;">Username</td>
+          <td style="padding: 10px 0; color: #0f172a;"><code>@${username}</code></td>
+        </tr>
+        <tr style="border-bottom: 1px solid #f1f5f9;">
+          <td style="padding: 10px 0; font-weight: 600; color: #64748b;">Email</td>
+          <td style="padding: 10px 0;"><a href="mailto:${email}" style="color: #2563eb; text-decoration: none;">${email}</a></td>
+        </tr>
+        <tr style="border-bottom: 1px solid #f1f5f9;">
+          <td style="padding: 10px 0; font-weight: 600; color: #64748b;">No HP / WA</td>
+          <td style="padding: 10px 0;"><a href="https://wa.me/${(nohp || '').replace(/[^0-9]/g, '')}" style="color: #059669; text-decoration: none; font-weight: 600;">${nohp || '-'}</a></td>
+        </tr>
+        <tr style="border-bottom: 1px solid #f1f5f9;">
+          <td style="padding: 10px 0; font-weight: 600; color: #64748b;">Pilihan Paket</td>
+          <td style="padding: 10px 0;"><span style="display: inline-block; background: #dbeafe; color: #1e40af; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 6px;">${paket}</span></td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 0; font-weight: 600; color: #64748b;">Status Akun</td>
+          <td style="padding: 10px 0;"><span style="display: inline-block; background: ${isPending ? '#fef3c7; color: #92400e;' : '#d1fae5; color: #065f46;'} font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 6px;">${status}</span></td>
+        </tr>
+      </table>
+      <p style="color: #64748b; font-size: 13px; margin: 20px 0;">
+        Silakan login ke sistem Photo Selector Anda untuk menyetujui (ACC) dan mengatur masa aktif akun tersebut.
+      </p>
+      <div style="text-align: center; margin: 24px 0 10px 0;">
+        <a href="${APP_URL}/login" style="background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; display: inline-block; font-size: 14px;">Buka Dashboard Admin</a>
+      </div>
+    </div>
+    <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 24px; text-align: center; font-size: 12px; color: #94a3b8;">
+      &copy; Photo Selection System &bull; Kama Creative
+    </div>
+  </div>`;
+}
+
+function buildPhotographerWelcomeEmail({ nama, username, email, paket, status, paymentUrl }) {
+  const isPending = status === 'Pending';
+  return `
+  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+    <div style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); padding: 26px; color: #ffffff;">
+      <h2 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.025em;">Selamat Datang di Photo Selection! 📸</h2>
+      <p style="margin: 6px 0 0 0; font-size: 13px; color: #bfdbfe;">Aplikasi Galeri & Seleksi Foto Klien Praktis</p>
+    </div>
+    <div style="padding: 24px; color: #334155; font-size: 14px; line-height: 1.6;">
+      <p style="margin-top: 0;">Halo <strong>${nama}</strong>,</p>
+      <p>Terima kasih telah mendaftar di <strong>Photo Selection</strong>. Akun Anda berhasil dicatat dengan rincian:</p>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+        <table style="width: 100%; font-size: 14px;">
+          <tr><td style="padding: 6px 0; color: #64748b; width: 130px;"><strong>Username:</strong></td><td style="color: #0f172a; font-weight: 600;">@${username}</td></tr>
+          <tr><td style="padding: 6px 0; color: #64748b;"><strong>Email:</strong></td><td style="color: #0f172a;">${email}</td></tr>
+          <tr><td style="padding: 6px 0; color: #64748b;"><strong>Paket:</strong></td><td style="color: #0f172a;"><span style="background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">${paket}</span></td></tr>
+          <tr><td style="padding: 6px 0; color: #64748b;"><strong>Status Akun:</strong></td><td><span style="background: ${isPending ? '#fef3c7; color: #b45309;' : '#dcfce7; color: #15803d;'} padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">${isPending ? 'Menunggu Pembayaran / ACC' : 'Aktif'}</span></td></tr>
+        </table>
+      </div>
+      ${isPending && paymentUrl ? `
+        <div style="background: #eff6ff; border-left: 4px solid #2563eb; padding: 14px; margin: 18px 0; border-radius: 0 8px 8px 0;">
+          <strong style="color: #1e40af; font-size: 14px;">Langkah Aktivasi Akun:</strong>
+          <p style="margin: 6px 0 12px 0; font-size: 13px; color: #1e3a8a;">Selesaikan pembayaran Anda untuk langsung mengaktifkan akun secara otomatis:</p>
+          <a href="${paymentUrl}" style="background: #2563eb; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; display: inline-block; font-size: 13px;">Bayar Sekarang via Mayar &rarr;</a>
+        </div>
+      ` : `
+        <p style="font-size: 13px; color: #4b5563;">Akun Anda sudah aktif dan dapat langsung digunakan untuk mengunggah dan membagikan galeri foto klien.</p>
+        <div style="text-align: center; margin: 20px 0 10px 0;">
+          <a href="${APP_URL}/login" style="background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; display: inline-block;">Masuk ke Aplikasi</a>
+        </div>
+      `}
+      <p style="font-size: 13px; color: #64748b; margin-top: 20px;">Jika ada pertanyaan atau butuh bantuan, hubungi kami melalui WhatsApp tim support Kama Creative.</p>
+    </div>
+    <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 24px; text-align: center; font-size: 12px; color: #94a3b8;">
+      &copy; Photo Selection &bull; Kama Creative
+    </div>
+  </div>`;
+}
+
+function buildPhotographerActivatedEmail({ nama, username, email, paket, expiredAt, tempPassword }) {
+  return `
+  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+    <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 26px; color: #ffffff;">
+      <h2 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.025em;">Akun Photo Selection Anda Telah Aktif! 🎉</h2>
+      <p style="margin: 6px 0 0 0; font-size: 13px; color: #d1fae5;">Selamat berkarya dan selamat menikmati alur kerja seleksi foto otomatis</p>
+    </div>
+    <div style="padding: 24px; color: #334155; font-size: 14px; line-height: 1.6;">
+      <p style="margin-top: 0;">Halo <strong>${nama}</strong>,</p>
+      <p>Kabar gembira! Akun <strong>Photo Selection</strong> Anda telah resmi <strong>diaktifkan</strong>.</p>
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+        <table style="width: 100%; font-size: 14px;">
+          <tr><td style="padding: 6px 0; color: #166534; width: 140px;"><strong>Username:</strong></td><td style="color: #0f172a; font-weight: 600;">@${username}</td></tr>
+          <tr><td style="padding: 6px 0; color: #166534;"><strong>Email:</strong></td><td style="color: #0f172a;">${email}</td></tr>
+          ${tempPassword ? `<tr><td style="padding: 6px 0; color: #166534;"><strong>Password Login:</strong></td><td style="color: #b91c1c; font-weight: 700;"><code>${tempPassword}</code></td></tr>` : ''}
+          <tr><td style="padding: 6px 0; color: #166534;"><strong>Paket:</strong></td><td style="color: #0f172a;"><span style="background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">${paket}</span></td></tr>
+          <tr><td style="padding: 6px 0; color: #166534;"><strong>Masa Aktif Sampai:</strong></td><td style="color: #0f172a; font-weight: 600;">${expiredAt || 'Lifetime'}</td></tr>
+        </table>
+      </div>
+      <div style="text-align: center; margin: 24px 0 14px 0;">
+        <a href="${APP_URL}/login" style="background: #059669; color: #ffffff; text-decoration: none; padding: 12px 30px; border-radius: 8px; font-weight: 700; display: inline-block; font-size: 15px; box-shadow: 0 2px 5px rgba(5,150,105,0.25);">Buka Aplikasi & Masuk Sekarang &rarr;</a>
+      </div>
+      <p style="font-size: 13px; color: #64748b; text-align: center; margin-top: 20px;">
+        URL Akses: <a href="${APP_URL}/login" style="color: #059669; text-decoration: none; font-weight: 500;">${APP_URL}/login</a>
+      </p>
+    </div>
+    <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 24px; text-align: center; font-size: 12px; color: #94a3b8;">
+      &copy; Photo Selection &bull; Kama Creative
+    </div>
+  </div>`;
+}
+
+function buildAdminPaymentSuccessEmail({ nama, username, email, nohp, paket, amount, expiredAt }) {
+  return `
+  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+    <div style="background: #065f46; padding: 24px; color: #ffffff;">
+      <h2 style="margin: 0; font-size: 20px; font-weight: 700;">Pembayaran Mayar Diterima 💰</h2>
+      <p style="margin: 6px 0 0 0; font-size: 13px; color: #a7f3d0;">Akun fotografer berhasil diaktifkan otomatis</p>
+    </div>
+    <div style="padding: 24px; color: #334155; font-size: 14px; line-height: 1.6;">
+      <p style="margin-top: 0;">Halo <strong>Admin Kama Creative</strong>, pembayaran baru telah sukses diterima melalui Mayar:</p>
+      <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
+        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; font-weight: 600; color: #64748b; width: 140px;">Nama Customer</td><td style="padding: 8px 0; color: #0f172a; font-weight: 500;">${nama}</td></tr>
+        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; font-weight: 600; color: #64748b;">Username</td><td style="padding: 8px 0; color: #0f172a;">@${username}</td></tr>
+        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; font-weight: 600; color: #64748b;">Email</td><td style="padding: 8px 0;"><a href="mailto:${email}" style="color: #2563eb; text-decoration: none;">${email}</a></td></tr>
+        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; font-weight: 600; color: #64748b;">No HP / WA</td><td style="padding: 8px 0;"><a href="https://wa.me/${(nohp || '').replace(/[^0-9]/g, '')}" style="color: #059669; text-decoration: none; font-weight: 600;">${nohp || '-'}</a></td></tr>
+        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; font-weight: 600; color: #64748b;">Paket</td><td style="padding: 8px 0; color: #065f46; font-weight: 700;">${paket}</td></tr>
+        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; font-weight: 600; color: #64748b;">Nominal</td><td style="padding: 8px 0; color: #0f172a; font-weight: 600;">Rp ${(amount || 0).toLocaleString('id-ID')}</td></tr>
+        <tr><td style="padding: 8px 0; font-weight: 600; color: #64748b;">Masa Aktif</td><td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${expiredAt || 'Lifetime'}</td></tr>
+      </table>
+      <div style="text-align: center; margin: 20px 0 10px 0;">
+        <a href="${APP_URL}/login" style="background: #059669; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; display: inline-block;">Lihat di Dashboard Admin</a>
+      </div>
+    </div>
+    <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 24px; text-align: center; font-size: 12px; color: #94a3b8;">
+      &copy; Photo Selection &bull; Kama Creative
+    </div>
+  </div>`;
+}
+
+function buildExpiryReminderEmail({ nama, username, expiredAt }) {
+  return `
+  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+    <div style="background: #d97706; padding: 24px; color: #ffffff;">
+      <h2 style="margin: 0; font-size: 20px; font-weight: 700;">Pengingat Masa Aktif Akun Photo Selection ⏳</h2>
+      <p style="margin: 6px 0 0 0; font-size: 13px; color: #fef3c7;">Perpanjang masa aktif untuk menjaga galeri klien tetap dapat diakses</p>
+    </div>
+    <div style="padding: 24px; color: #334155; font-size: 14px; line-height: 1.6;">
+      <p style="margin-top: 0;">Halo <strong>${nama}</strong> (<code>@${username}</code>),</p>
+      <p>Masa aktif akun Photo Selection Anda akan segera berakhir pada: <strong style="color: #b45309;">${expiredAt}</strong>.</p>
+      <p>Agar klien tetap dapat memilih dan mengunduh foto tanpa hambatan, segera perpanjang langganan akun Anda.</p>
+      <div style="text-align: center; margin: 24px 0 10px 0;">
+        <a href="${APP_URL}/login" style="background: #d97706; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; display: inline-block;">Perpanjang Langganan Sekarang &rarr;</a>
+      </div>
+    </div>
+    <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 24px; text-align: center; font-size: 12px; color: #94a3b8;">
+      &copy; Photo Selection &bull; Kama Creative
+    </div>
+  </div>`;
+}
+
+function buildOtpResetPasswordEmail({ nama, username, otp }) {
+  return `
+  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+    <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 26px; color: #ffffff;">
+      <h2 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.025em;">Kode Keamanan Reset Password 🔐</h2>
+      <p style="margin: 6px 0 0 0; font-size: 13px; color: #94a3b8;">Permintaan Pengaturan Ulang Kata Sandi Akun</p>
+    </div>
+    <div style="padding: 24px; color: #334155; font-size: 14px; line-height: 1.6;">
+      <p style="margin-top: 0;">Halo <strong>${nama || username}</strong> (<code>@${username}</code>),</p>
+      <p>Kami menerima permintaan untuk mereset kata sandi akun <strong>Photo Selection</strong> Anda. Gunakan 6 digit Kode OTP berikut untuk memverifikasi akun Anda:</p>
+      
+      <div style="background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 10px; padding: 20px; text-align: center; margin: 24px 0;">
+        <span style="font-family: 'Courier New', Courier, monospace; font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #1e40af; display: inline-block;">${otp}</span>
+        <p style="margin: 8px 0 0 0; font-size: 12px; color: #64748b;">Kode OTP ini berlaku selama 15 menit. Jangan berikan kode ini kepada siapa pun.</p>
+      </div>
+
+      <p style="font-size: 13px; color: #64748b;">Jika Anda tidak merasa meminta reset password, silakan abaikan email ini. Akun Anda tetap aman.</p>
+    </div>
+    <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 24px; text-align: center; font-size: 12px; color: #94a3b8;">
+      &copy; Photo Selection &bull; Kama Creative
+    </div>
+  </div>`;
 }
 
 function sendJSON(res, statusCode, payload) {
@@ -341,6 +561,34 @@ async function handleRegister(payload, res) {
   else if (paket === '6 Bulan') paymentUrl = 'https://kamacreative.myr.id/pl/paket-6-bulan-photo-selection';
   else if (paket === '1 Tahun') paymentUrl = 'https://kamacreative.myr.id/pl/paket-1-tahunn-photo-selection';
   else if (paket === 'Lifetime') paymentUrl = 'https://kamacreative.myr.id/pl/paket-lifetime-photo-selection';
+
+  // Kirim email notifikasi ke Admin (kamabalicreative@gmail.com)
+  sendEmailViaGAS({
+    to: ADMIN_EMAIL,
+    subject: `Pendaftaran Fotografer Baru - Photo Selection (${nama})`,
+    htmlBody: buildAdminNewUserEmail({
+      nama: nama,
+      username: username,
+      email: email,
+      nohp: nohp,
+      paket: paket,
+      status: initialStatus
+    })
+  }).catch(e => console.error('[MAILER] Error kirim email ke Admin:', e));
+
+  // Kirim email notifikasi ke Fotografer pendaftar
+  sendEmailViaGAS({
+    to: email,
+    subject: `Pendaftaran Akun Berhasil - Photo Selection`,
+    htmlBody: buildPhotographerWelcomeEmail({
+      nama: nama,
+      username: username,
+      email: email,
+      paket: paket,
+      status: initialStatus,
+      paymentUrl: paymentUrl
+    })
+  }).catch(e => console.error('[MAILER] Error kirim email ke Fotografer:', e));
 
   return success(res, { success: true, paymentUrl: paymentUrl, eventId: eventId }, 'Pendaftaran berhasil');
 }
@@ -1152,6 +1400,27 @@ async function handleApproveUser(payload, res) {
     body: { Status: 'Active', ExpiredAt: expiredAt, Role: role }
   });
 
+  // Kirim email aktivasi ke fotografer
+  try {
+    const users = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(username)}&select=*`);
+    if (users && users.length > 0) {
+      const u = users[0];
+      if (u.Email) {
+        sendEmailViaGAS({
+          to: u.Email,
+          subject: `Akun Photo Selection Anda Telah Aktif! 🎉`,
+          htmlBody: buildPhotographerActivatedEmail({
+            nama: u.Nama || u.Username,
+            username: u.Username,
+            email: u.Email,
+            paket: u.Paket || '1 Bulan',
+            expiredAt: expiredAt
+          })
+        }).catch(e => console.error('[MAILER] Error kirim email aktivasi ke user:', e));
+      }
+    }
+  } catch (e) { }
+
   return success(res, { success: true, message: 'User approved' });
 }
 
@@ -1169,7 +1438,24 @@ async function handleUpdateExpiry(payload, res) {
 }
 
 async function handleSendExpiryReminder(payload, res) {
-  const targetUsername = payload.targetUsername || payload.username;
+  const targetUsername = (payload.targetUsername || payload.username || '').trim();
+  try {
+    const users = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(targetUsername)}&select=*`);
+    if (users && users.length > 0) {
+      const u = users[0];
+      if (u.Email) {
+        await sendEmailViaGAS({
+          to: u.Email,
+          subject: `Pengingat Masa Aktif Akun Photo Selection - @${u.Username}`,
+          htmlBody: buildExpiryReminderEmail({
+            nama: u.Nama || u.Username,
+            username: u.Username,
+            expiredAt: u.ExpiredAt || 'Segera Berakhir'
+          })
+        });
+      }
+    }
+  } catch (e) { }
   return success(res, { success: true, message: `Email pengingat berhasil dikirim ke @${targetUsername}.` });
 }
 
@@ -1181,37 +1467,70 @@ async function handleDeleteUser(payload, res) {
 }
 
 async function handleRequestOTP(payload, res) {
-  const email = (payload.email || payload.username || '').trim().toLowerCase();
-  let users = await supabaseQuery(`users?Email=ilike.${encodeURIComponent(email)}&select=*`);
-  if (!users || users.length === 0) {
-    users = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(email)}&select=*`);
-  }
-  if (!users || users.length === 0) return error(res, 'Email/Username tidak terdaftar.');
+  const emailOrUser = (payload.email || payload.username || '').trim().toLowerCase();
+  if (!emailOrUser) return error(res, 'Masukkan Username atau Email Anda.');
 
-  const uName = users[0].Username;
+  let users = await supabaseQuery(`users?Email=ilike.${encodeURIComponent(emailOrUser)}&select=*`);
+  if (!users || users.length === 0) {
+    users = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(emailOrUser)}&select=*`);
+  }
+  if (!users || users.length === 0) return error(res, 'Email atau Username tidak terdaftar.');
+
+  const user = users[0];
+  const uName = user.Username;
+  const userEmail = user.Email;
+
+  if (!userEmail) {
+    return error(res, 'Akun ini tidak memiliki email yang tersimpan. Hubungi Admin.');
+  }
+
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  
+  // Simpan OTP ke tabel reset_tokens
   await supabaseQuery('reset_tokens', {
     method: 'POST',
     body: { Username: uName, OTP: otp, CreatedAt: new Date().toISOString() }
   });
 
-  return success(res, { success: true, otp: otp, message: 'OTP terkirim' });
+  // Kirim email OTP ke fotografer
+  sendEmailViaGAS({
+    to: userEmail,
+    subject: `Kode Keamanan Reset Password (${otp}) - Photo Selection`,
+    htmlBody: buildOtpResetPasswordEmail({
+      nama: user.Nama || uName,
+      username: uName,
+      otp: otp
+    })
+  }).catch(e => console.error('[MAILER] Error kirim email OTP:', e));
+
+  // Sensor email untuk keamanan (contoh: pu***15@gmail.com)
+  const parts = userEmail.split('@');
+  const maskedName = parts[0].length > 3 ? (parts[0].substring(0, 2) + '***' + parts[0].slice(-2)) : (parts[0] + '***');
+  const maskedEmail = maskedName + '@' + (parts[1] || 'gmail.com');
+
+  return success(res, {
+    success: true,
+    maskedEmail: maskedEmail,
+    message: `Kode OTP 6 digit telah dikirim ke email ${maskedEmail}. Silakan periksa inbox/spam email Anda.`
+  });
 }
 
 async function handleResetPasswordWithOTP(payload, res) {
-  const email = (payload.email || payload.username || '').trim().toLowerCase();
+  const emailOrUser = (payload.email || payload.username || '').trim().toLowerCase();
   const otp = (payload.otp || '').trim();
   const newPassword = (payload.newPassword || '').trim();
 
-  let users = await supabaseQuery(`users?Email=ilike.${encodeURIComponent(email)}&select=*`);
+  if (!emailOrUser || !otp || !newPassword) return error(res, 'Lengkapi semua isian form.');
+
+  let users = await supabaseQuery(`users?Email=ilike.${encodeURIComponent(emailOrUser)}&select=*`);
   if (!users || users.length === 0) {
-    users = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(email)}&select=*`);
+    users = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(emailOrUser)}&select=*`);
   }
   if (!users || users.length === 0) return error(res, 'User tidak ditemukan.');
 
   const uName = users[0].Username;
-  const tokens = await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}&OTP=eq.${encodeURIComponent(otp)}&limit=1`);
-  if (!tokens || tokens.length === 0) return error(res, 'Kode OTP salah.');
+  const tokens = await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}&OTP=eq.${encodeURIComponent(otp)}&order=id.desc&limit=1`);
+  if (!tokens || tokens.length === 0) return error(res, 'Kode OTP salah atau sudah kedaluwarsa.');
 
   const newHash = hashPassword(newPassword);
   await supabaseQuery(`users?Username=ilike.${encodeURIComponent(uName)}`, {
@@ -1219,7 +1538,10 @@ async function handleResetPasswordWithOTP(payload, res) {
     body: { Password: newHash }
   });
 
-  return success(res, { success: true, message: 'Password berhasil direset' });
+  // Bersihkan token yang sudah digunakan
+  await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}`, { method: 'DELETE' }).catch(() => {});
+
+  return success(res, { success: true, message: 'Password Anda berhasil direset! Silakan login dengan password baru.' });
 }
 
 async function handleConfirmEmail(payload, res) {
@@ -1528,30 +1850,43 @@ async function handleMayarWebhook(payload, res) {
   const name = (customer.name || '').trim();
   const product = (d.productName || d.description || '').toUpperCase();
 
+  let addDays = 30;
+  let paketName = '1 Bulan';
+  if (product.includes('6 BULAN')) { addDays = 180; paketName = '6 Bulan'; }
+  else if (product.includes('1 TAHUN')) { addDays = 365; paketName = '1 Tahun'; }
+  else if (product.includes('LIFETIME')) { addDays = 36500; paketName = 'Lifetime'; }
+
+  const expDate = new Date();
+  expDate.setDate(expDate.getDate() + addDays);
+  const expiredAt = (paketName === 'Lifetime') ? 'Lifetime' : expDate.toISOString().split('T')[0];
+
   let targetUser = null;
   if (email) {
-    const byEmail = await supabaseQuery(`users?Email=eq.${encodeURIComponent(email)}&select=*`);
+    const byEmail = await supabaseQuery(`users?Email=ilike.${encodeURIComponent(email)}&select=*`);
     if (byEmail && byEmail.length > 0) targetUser = byEmail[0];
   }
   if (!targetUser && mobile) {
     const cleanPhone = mobile.replace(/[^0-9]/g, '');
-    const byPhone = await supabaseQuery(`users?No%20HP=like.*${encodeURIComponent(cleanPhone)}*&select=*`);
-    if (byPhone && byPhone.length > 0) targetUser = byPhone[0];
+    if (cleanPhone.length >= 7) {
+      const byPhone = await supabaseQuery(`users?No%20HP=like.*${encodeURIComponent(cleanPhone)}*&select=*`);
+      if (byPhone && byPhone.length > 0) targetUser = byPhone[0];
+    }
   }
 
   let hasilAktivasi = 'User tidak ditemukan';
+  let userActivatedName = name;
+  let userActivatedUsername = '';
+  let userActivatedEmail = email;
+  let userActivatedPhone = mobile;
+  let temporaryPassword = '';
+
   if (targetUser) {
-    let addDays = 30;
-    let paketName = '1 Bulan';
-    if (product.includes('6 BULAN')) { addDays = 180; paketName = '6 Bulan'; }
-    else if (product.includes('1 TAHUN')) { addDays = 365; paketName = '1 Tahun'; }
-    else if (product.includes('LIFETIME')) { addDays = 36500; paketName = 'Lifetime'; }
-
-    const expDate = new Date();
-    expDate.setDate(expDate.getDate() + addDays);
-    const expiredAt = (paketName === 'Lifetime') ? 'Lifetime' : expDate.toISOString().split('T')[0];
-
     const uName = targetUser.Username;
+    userActivatedName = targetUser.Nama || name;
+    userActivatedUsername = uName;
+    userActivatedEmail = targetUser.Email || email;
+    userActivatedPhone = targetUser['No HP'] || mobile;
+
     const isProAddon = product.includes('ADD-ON') || product.includes('PRO');
 
     if (isProAddon) {
@@ -1573,8 +1908,56 @@ async function handleMayarWebhook(payload, res) {
     const purAmount = Number(d.amount || d.netAmount || 100000);
     sendMetaCAPIEvent('Purchase', {
       eventId: purEventId,
-      email: email || targetUser.Email,
-      phone: mobile || targetUser['No HP'],
+      email: userActivatedEmail,
+      phone: userActivatedPhone,
+      customData: {
+        content_name: product || paketName,
+        value: purAmount,
+        currency: 'IDR'
+      }
+    }).catch(() => { });
+
+  } else if (email) {
+    // KASUS: Fotografer membayar langsung di Mayar sebelum membuat akun di app.html
+    // Otomatis buatkan akun agar fotografer langsung mendapatkan akses & detail login
+    const baseUser = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '') || 'photographer';
+    let newUsername = baseUser;
+    const existingCheck = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(newUsername)}&select=id`);
+    if (existingCheck && existingCheck.length > 0) {
+      newUsername = `${baseUser}_${Math.floor(100 + Math.random() * 900)}`;
+    }
+
+    // Buat password default yang mudah & aman
+    temporaryPassword = 'Kama' + Math.floor(1000 + Math.random() * 9000);
+    const passHash = hashPassword(temporaryPassword);
+
+    const autoUser = {
+      Username: newUsername,
+      Password: passHash,
+      Nama: name || baseUser,
+      Role: 'Photographer',
+      Status: 'Active',
+      Email: email,
+      'No HP': mobile,
+      Paket: paketName,
+      ExpiredAt: expiredAt,
+      ConfirmToken: '',
+      ProjectCreated: '0',
+      Akses_Watermark: product.includes('ADD-ON') || product.includes('PRO') ? 'TRUE' : 'FALSE'
+    };
+
+    await supabaseQuery('users', { method: 'POST', body: autoUser });
+    userActivatedName = name || baseUser;
+    userActivatedUsername = newUsername;
+    hasilAktivasi = `Akun baru otomatis dibuat & diaktifkan: ${newUsername} (${paketName})`;
+
+    // Meta CAPI Purchase Event
+    const purEventId = d.id || ('pur_' + newUsername + '_' + Date.now());
+    const purAmount = Number(d.amount || d.netAmount || 100000);
+    sendMetaCAPIEvent('Purchase', {
+      eventId: purEventId,
+      email: email,
+      phone: mobile,
       customData: {
         content_name: product || paketName,
         value: purAmount,
@@ -1582,6 +1965,38 @@ async function handleMayarWebhook(payload, res) {
       }
     }).catch(() => { });
   }
+
+  // Kirim email notifikasi aktivasi ke Fotografer
+  if (userActivatedEmail) {
+    sendEmailViaGAS({
+      to: userActivatedEmail,
+      subject: `Pembayaran Diterima - Akun Photo Selection Anda Telah Aktif! 🎉`,
+      htmlBody: buildPhotographerActivatedEmail({
+        nama: userActivatedName,
+        username: userActivatedUsername,
+        email: userActivatedEmail,
+        paket: paketName,
+        expiredAt: expiredAt,
+        tempPassword: temporaryPassword || undefined
+      })
+    }).catch(e => console.error('[MAILER] Error kirim email aktivasi Mayar ke fotografer:', e));
+  }
+
+  // Kirim email notifikasi pembayaran sukses ke Admin
+  const paidAmount = Number(d.amount || d.netAmount || 0);
+  sendEmailViaGAS({
+    to: ADMIN_EMAIL,
+    subject: `Pembayaran Mayar Diterima: ${userActivatedName} (@${userActivatedUsername}) - ${paketName}`,
+    htmlBody: buildAdminPaymentSuccessEmail({
+      nama: userActivatedName,
+      username: userActivatedUsername,
+      email: userActivatedEmail,
+      nohp: userActivatedPhone,
+      paket: paketName,
+      amount: paidAmount,
+      expiredAt: expiredAt
+    })
+  }).catch(e => console.error('[MAILER] Error kirim email pembayaran ke Admin:', e));
 
   await supabaseQuery('mayar_logs', {
     method: 'POST',
