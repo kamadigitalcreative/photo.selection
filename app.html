@@ -12288,19 +12288,19 @@
 
         // --- FITUR LUPA PASSWORD (SISTEM OTP & CUSTOM PASSWORD) ---
         async function forgotPasswordPrompt() {
-            // TAHAP 1: Minta Username & Kirim OTP
+            // TAHAP 1: Minta Username / Email & Kirim OTP
             const { value: usernameInput } = await Swal.fire({
                 title: 'Lupa Password',
-                text: 'Masukkan Username Anda. Kami akan mengirimkan Kode Keamanan (OTP) ke email terdaftar Anda.',
+                text: 'Masukkan Username atau Email terdaftar Anda. Kode Keamanan (OTP) akan dikirimkan ke email Anda.',
                 input: 'text',
-                inputPlaceholder: 'Ketik Username Anda di sini...',
+                inputPlaceholder: 'Ketik Username atau Email Anda...',
                 showCancelButton: true,
                 confirmButtonText: 'Kirim Kode OTP',
                 cancelButtonText: 'Batal',
                 confirmButtonColor: '#1e1e2d',
                 showLoaderOnConfirm: true,
                 preConfirm: async (user) => {
-                    if (!user) { Swal.showValidationMessage('Username tidak boleh kosong'); return false; }
+                    if (!user) { Swal.showValidationMessage('Username atau Email tidak boleh kosong'); return false; }
                     try {
                         const response = await fetch(API_ENDPOINT, {
                             method: 'POST',
