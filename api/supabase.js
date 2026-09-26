@@ -198,8 +198,8 @@ function buildPhotographerWelcomeEmail({ nama, username, email, paket, status, p
   return `
   <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
     <div style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); padding: 26px; color: #ffffff;">
-      <h2 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.025em;">Selamat Datang di Photo Selection! 📸</h2>
-      <p style="margin: 6px 0 0 0; font-size: 13px; color: #bfdbfe;">Aplikasi Galeri & Seleksi Foto Klien Praktis</p>
+      <h2 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.025em;">Selamat Datang di Photo Selection!</h2>
+      <p style="margin: 6px 0 0 0; font-size: 13px; color: #bfdbfe;">Aplikasi Galeri &amp; Seleksi Foto Klien Praktis</p>
     </div>
     <div style="padding: 24px; color: #334155; font-size: 14px; line-height: 1.6;">
       <p style="margin-top: 0;">Halo <strong>${nama}</strong>,</p>
@@ -209,13 +209,13 @@ function buildPhotographerWelcomeEmail({ nama, username, email, paket, status, p
           <tr><td style="padding: 6px 0; color: #64748b; width: 130px;"><strong>Username:</strong></td><td style="color: #0f172a; font-weight: 600;">@${username}</td></tr>
           <tr><td style="padding: 6px 0; color: #64748b;"><strong>Email:</strong></td><td style="color: #0f172a;">${email}</td></tr>
           <tr><td style="padding: 6px 0; color: #64748b;"><strong>Paket:</strong></td><td style="color: #0f172a;"><span style="background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">${paket}</span></td></tr>
-          <tr><td style="padding: 6px 0; color: #64748b;"><strong>Status Akun:</strong></td><td><span style="background: ${isPending ? '#fef3c7; color: #b45309;' : '#dcfce7; color: #15803d;'} padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">${isPending ? 'Menunggu Pembayaran / ACC' : 'Aktif'}</span></td></tr>
+          <tr><td style="padding: 6px 0; color: #64748b;"><strong>Status Akun:</strong></td><td><span style="background: ${isPending ? '#fef3c7; color: #b45309;' : '#dcfce7; color: #15803d;'} padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">${isPending ? 'Menunggu Pembayaran' : 'Aktif'}</span></td></tr>
         </table>
       </div>
       ${isPending && paymentUrl ? `
         <div style="background: #eff6ff; border-left: 4px solid #2563eb; padding: 14px; margin: 18px 0; border-radius: 0 8px 8px 0;">
-          <strong style="color: #1e40af; font-size: 14px;">Langkah Aktivasi Akun:</strong>
-          <p style="margin: 6px 0 12px 0; font-size: 13px; color: #1e3a8a;">Selesaikan pembayaran Anda untuk langsung mengaktifkan akun secara otomatis:</p>
+          <strong style="color: #1e40af; font-size: 14px;">Langkah Aktivasi Otomatis:</strong>
+          <p style="margin: 6px 0 12px 0; font-size: 13px; color: #1e3a8a;">Selesaikan pembayaran Anda untuk langsung mengaktifkan akun secara otomatis tanpa perlu konfirmasi:</p>
           <a href="${paymentUrl}" style="background: #2563eb; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; display: inline-block; font-size: 13px;">Bayar Sekarang via Mayar &rarr;</a>
         </div>
       ` : `
@@ -236,7 +236,7 @@ function buildPhotographerActivatedEmail({ nama, username, email, paket, expired
   return `
   <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
     <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 26px; color: #ffffff;">
-      <h2 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.025em;">Akun Photo Selection Anda Telah Aktif! 🎉</h2>
+      <h2 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.025em;">Akun Photo Selection Anda Telah Aktif!</h2>
       <p style="margin: 6px 0 0 0; font-size: 13px; color: #d1fae5;">Selamat berkarya dan selamat menikmati alur kerja seleksi foto otomatis</p>
     </div>
     <div style="padding: 24px; color: #334155; font-size: 14px; line-height: 1.6;">
@@ -268,7 +268,7 @@ function buildAdminPaymentSuccessEmail({ nama, username, email, nohp, paket, amo
   return `
   <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
     <div style="background: #065f46; padding: 24px; color: #ffffff;">
-      <h2 style="margin: 0; font-size: 20px; font-weight: 700;">Pembayaran Mayar Diterima 💰</h2>
+      <h2 style="margin: 0; font-size: 20px; font-weight: 700;">Pembayaran Mayar Diterima</h2>
       <p style="margin: 6px 0 0 0; font-size: 13px; color: #a7f3d0;">Akun fotografer berhasil diaktifkan otomatis</p>
     </div>
     <div style="padding: 24px; color: #334155; font-size: 14px; line-height: 1.6;">
@@ -296,7 +296,7 @@ function buildExpiryReminderEmail({ nama, username, expiredAt }) {
   return `
   <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
     <div style="background: #d97706; padding: 24px; color: #ffffff;">
-      <h2 style="margin: 0; font-size: 20px; font-weight: 700;">Pengingat Masa Aktif Akun Photo Selection ⏳</h2>
+      <h2 style="margin: 0; font-size: 20px; font-weight: 700;">Pengingat Masa Aktif Akun Photo Selection</h2>
       <p style="margin: 6px 0 0 0; font-size: 13px; color: #fef3c7;">Perpanjang masa aktif untuk menjaga galeri klien tetap dapat diakses</p>
     </div>
     <div style="padding: 24px; color: #334155; font-size: 14px; line-height: 1.6;">
@@ -317,7 +317,7 @@ function buildOtpResetPasswordEmail({ nama, username, otp }) {
   return `
   <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
     <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 26px; color: #ffffff;">
-      <h2 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.025em;">Kode Keamanan Reset Password 🔐</h2>
+      <h2 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.025em;">Kode Keamanan Reset Password</h2>
       <p style="margin: 6px 0 0 0; font-size: 13px; color: #94a3b8;">Permintaan Pengaturan Ulang Kata Sandi Akun</p>
     </div>
     <div style="padding: 24px; color: #334155; font-size: 14px; line-height: 1.6;">
