@@ -5420,8 +5420,17 @@
             }
         }
 
-        // --- MESIN DETEKSI & AUTO-LOGIN AKUN DEMO ---
+        // --- MESIN DETEKSI & AUTO-LOGIN AKUN DEMO / TANGKAP REFERRAL ---
         window.addEventListener('DOMContentLoaded', function () {
+            // Tangkap kode referral dari URL (?ref=... / ?refCode=... / ?r=...)
+            try {
+                var urlParams = new URLSearchParams(window.location.search);
+                var refFromUrl = urlParams.get('ref') || urlParams.get('refCode') || urlParams.get('r');
+                if (refFromUrl) {
+                    localStorage.setItem('kama_ref_code', refFromUrl.trim().toUpperCase());
+                }
+            } catch (e) { }
+
             if (window.location.search.includes('demo=true')) {
                 var uName = document.getElementById('username');
                 var uPass = document.getElementById('password');
@@ -6409,6 +6418,7 @@
             var regUser = document.getElementById('reg_username');
             var regPass = document.getElementById('reg_password');
             var regPaket = document.getElementById('reg_paket');
+            var savedRef = localStorage.getItem('kama_ref_code') || '';
 
             var formData = {
                 nama: regNama ? regNama.value.trim() : '',
@@ -6416,7 +6426,8 @@
                 nohp: regNoHP ? regNoHP.value.trim() : '',
                 username: regUser ? regUser.value.trim() : '',
                 password: regPass ? regPass.value.trim() : '',
-                paket: regPaket ? regPaket.value : ''
+                paket: regPaket ? regPaket.value : '',
+                refCode: savedRef
             };
 
             // Validasi jika ada formulir yang kosong
