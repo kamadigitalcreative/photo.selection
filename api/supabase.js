@@ -9,6 +9,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jqptagcbkyxxqqmxqusf.s
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_TL_Et1x8IlEwxKASjF0K8Q_t72R3f_9';
 const KAMA_SALT = "KamaSecretSalt";
 const GAS_MAILER_URL = process.env.GAS_MAILER_URL || 'https://script.google.com/macros/s/AKfycbwzw3k--HOqHS0As2PCrz6m7c3VKqKlifdJVrb9Cy15ScvmHNB5lFFDNTRR5xfmzf4/exec';
+const STORE_GAS_URL = process.env.STORE_GAS_URL || 'https://script.google.com/macros/s/AKfycbwspMxe6cCGjy5t4isufXfOGH_GYqXWhw-BQTqDHP2AeJq3yabsXE6oRAa3iJi6H2V8/exec';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'kamabalicreative@gmail.com';
 const APP_URL = process.env.APP_URL || 'https://ps.kamacreative.my.id';
 
@@ -141,6 +142,31 @@ async function sendEmailViaGAS({ to, subject, htmlBody, textBody }) {
   } catch (err) {
     console.error('[MAILER] Gagal mengirim email via GAS:', err);
     return false;
+  }
+}
+
+async function trackSaleToStore({ refCode, idProduk, namaProduk, harga, jumlah }) {
+  const storeUrl = process.env.STORE_GAS_URL || STORE_GAS_URL;
+  if (!storeUrl) return;
+  try {
+    const res = await fetch(storeUrl, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'trackSale',
+        payload: {
+          refCode: (refCode || 'DIRECT').toUpperCase(),
+          idProduk: idProduk || 'prod_photo',
+          namaProduk: namaProduk || 'Photo Selection',
+          harga: Number(harga || 0),
+          jumlah: Number(jumlah || 1)
+        }
+      })
+    });
+    console.log('[STORE] Sale tracked successfully to Store GAS:', refCode, namaProduk, harga);
+  } catch (err) {
+    console.error('[STORE] Gagal kirim trackSale ke Store GAS:', err);
   }
 }
 
@@ -514,6 +540,8 @@ async function handleRegister(payload, res) {
   const passHash = hashPassword(password);
   const confirmToken = crypto.randomUUID();
   const isDemo = (paket.toUpperCase().includes('DEMO') || paket === 'Free');
+  const refCode = (d.refCode || d.ref || '').trim().toUpperCase();
+  const tokenPayload = refCode ? `REF:${refCode}` : confirmToken;
 
   let expiredAt = 'Lifetime';
   let initialStatus = 'Pending';
@@ -535,7 +563,7 @@ async function handleRegister(payload, res) {
     'No HP': nohp,
     Paket: paket,
     ExpiredAt: expiredAt,
-    ConfirmToken: confirmToken,
+    ConfirmToken: tokenPayload,
     ProjectCreated: '0'
   };
 
@@ -561,6 +589,16 @@ async function handleRegister(payload, res) {
   else if (paket === '6 Bulan') paymentUrl = 'https://kamacreative.myr.id/pl/paket-6-bulan-photo-selection';
   else if (paket === '1 Tahun') paymentUrl = 'https://kamacreative.myr.id/pl/paket-1-tahunn-photo-selection';
   else if (paket === 'Lifetime') paymentUrl = 'https://kamacreative.myr.id/pl/paket-lifetime-photo-selection';
+
+  if (paymentUrl) {
+    try {
+      const pUrl = new URL(paymentUrl);
+      if (nama) pUrl.searchParams.set('name', nama);
+      if (email) pUrl.searchParams.set('email', email);
+      if (nohp) pUrl.searchParams.set('mobile', nohp);
+      paymentUrl = pUrl.toString();
+    } catch (e) { }
+  }
 
   // Kirim email notifikasi ke Admin (kamabalicreative@gmail.com)
   sendEmailViaGAS({
@@ -1850,28 +1888,65 @@ async function handleMayarWebhook(payload, res) {
   const name = (customer.name || '').trim();
   const product = (d.productName || d.description || '').toUpperCase();
 
+  // Fungsi Normalisasi Nomor HP (menghilangkan awalan 0 / 62 / +62 / spasi / strip)
+  function normalizePhone(phoneStr) {
+    if (!phoneStr) return '';
+    let num = String(phoneStr).replace(/[^0-9]/g, '');
+    if (num.startsWith('62')) num = num.substring(2);
+    else if (num.startsWith('0')) num = num.substring(1);
+    return num;
+  }
+
+  const cleanIncomingPhone = normalizePhone(mobile);
+
+  // Layer 1: Cocokkan via Email
+  let targetUser = null;
+  if (email) {
+    const byEmail = await supabaseQuery(`users?Email=ilike.${encodeURIComponent(email)}&select=*`);
+    if (byEmail && byEmail.length > 0) targetUser = byEmail[0];
+  }
+
+  // Layer 2: Cocokkan via Nomor HP / WhatsApp (kebal format 0 / 62 / +62)
+  if (!targetUser && cleanIncomingPhone.length >= 7) {
+    const byPhone = await supabaseQuery(`users?No%20HP=like.*${encodeURIComponent(cleanIncomingPhone)}*&select=*`);
+    if (byPhone && byPhone.length > 0) {
+      targetUser = byPhone[0];
+    } else {
+      const allUsers = await supabaseQuery('users?select=*').catch(() => []);
+      if (allUsers && allUsers.length > 0) {
+        targetUser = allUsers.find(u => {
+          const uPhoneNorm = normalizePhone(u['No HP']);
+          return uPhoneNorm && (uPhoneNorm === cleanIncomingPhone || uPhoneNorm.endsWith(cleanIncomingPhone) || cleanIncomingPhone.endsWith(uPhoneNorm));
+        });
+      }
+    }
+  }
+
+  // Layer 3: Cocokkan via Username / Nama Studio jika email & no hp tidak sama
+  if (!targetUser && name) {
+    const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (cleanName.length >= 3) {
+      const byName = await supabaseQuery(`users?or=(Username.ilike.${encodeURIComponent(cleanName)},Nama.ilike.*${encodeURIComponent(name)}*)&select=*`);
+      if (byName && byName.length > 0) targetUser = byName[0];
+    }
+  }
+
   let addDays = 30;
   let paketName = '1 Bulan';
   if (product.includes('6 BULAN')) { addDays = 180; paketName = '6 Bulan'; }
   else if (product.includes('1 TAHUN')) { addDays = 365; paketName = '1 Tahun'; }
   else if (product.includes('LIFETIME')) { addDays = 36500; paketName = 'Lifetime'; }
 
-  const expDate = new Date();
-  expDate.setDate(expDate.getDate() + addDays);
-  const expiredAt = (paketName === 'Lifetime') ? 'Lifetime' : expDate.toISOString().split('T')[0];
-
-  let targetUser = null;
-  if (email) {
-    const byEmail = await supabaseQuery(`users?Email=ilike.${encodeURIComponent(email)}&select=*`);
-    if (byEmail && byEmail.length > 0) targetUser = byEmail[0];
-  }
-  if (!targetUser && mobile) {
-    const cleanPhone = mobile.replace(/[^0-9]/g, '');
-    if (cleanPhone.length >= 7) {
-      const byPhone = await supabaseQuery(`users?No%20HP=like.*${encodeURIComponent(cleanPhone)}*&select=*`);
-      if (byPhone && byPhone.length > 0) targetUser = byPhone[0];
+  // Hitung Masa Aktif Bertingkat (Akumulasi jika masa aktif sebelumnya belum habis)
+  let baseDate = new Date();
+  if (targetUser && targetUser.ExpiredAt && targetUser.ExpiredAt !== 'Lifetime') {
+    const currExp = parseSafeDate(targetUser.ExpiredAt);
+    if (currExp && currExp.getTime() > baseDate.getTime()) {
+      baseDate = currExp; // Perpanjang dari tanggal berakhir yang sekarang
     }
   }
+  baseDate.setDate(baseDate.getDate() + addDays);
+  const expiredAt = (paketName === 'Lifetime') ? 'Lifetime' : baseDate.toISOString().split('T')[0];
 
   let hasilAktivasi = 'User tidak ditemukan';
   let userActivatedName = name;
@@ -1900,7 +1975,7 @@ async function handleMayarWebhook(payload, res) {
         method: 'PATCH',
         body: { Status: 'Active', Paket: paketName, ExpiredAt: expiredAt }
       });
-      hasilAktivasi = `Aktivasi ${paketName} untuk ${uName}`;
+      hasilAktivasi = `Perpanjangan ${paketName} berhasil untuk @${uName} (s/d ${expiredAt})`;
     }
 
     // Trigger Meta CAPI Purchase
@@ -1966,11 +2041,31 @@ async function handleMayarWebhook(payload, res) {
     }).catch(() => { });
   }
 
+  // Ekstrak Kode Referal dari profil user atau payload Mayar
+  let userRefCode = 'DIRECT';
+  if (targetUser && targetUser.ConfirmToken && targetUser.ConfirmToken.includes('REF:')) {
+    const parts = targetUser.ConfirmToken.split('REF:');
+    if (parts[1]) userRefCode = parts[1].split('|')[0].trim().toUpperCase();
+  } else if (d.couponUsed) {
+    userRefCode = String(d.couponUsed).trim().toUpperCase();
+  }
+
+  const paidAmount = Number(d.amount || d.netAmount || (paketName === '1 Bulan' ? 50000 : (paketName === '6 Bulan' ? 250000 : (paketName === '1 Tahun' ? 450000 : 750000))));
+
+  // Catat Penjualan ke Google Sheet Store Kama Creative (trackSale)
+  trackSaleToStore({
+    refCode: userRefCode,
+    idProduk: 'prod_photo',
+    namaProduk: `Photo Selection (${paketName})`,
+    harga: paidAmount,
+    jumlah: 1
+  }).catch(e => console.error('[STORE] Error catat penjualan ke Store:', e));
+
   // Kirim email notifikasi aktivasi ke Fotografer
   if (userActivatedEmail) {
     sendEmailViaGAS({
       to: userActivatedEmail,
-      subject: `Pembayaran Diterima - Akun Photo Selection Anda Telah Aktif! 🎉`,
+      subject: `Pembayaran Diterima - Akun Photo Selection Anda Telah Aktif!`,
       htmlBody: buildPhotographerActivatedEmail({
         nama: userActivatedName,
         username: userActivatedUsername,
@@ -1983,7 +2078,6 @@ async function handleMayarWebhook(payload, res) {
   }
 
   // Kirim email notifikasi pembayaran sukses ke Admin
-  const paidAmount = Number(d.amount || d.netAmount || 0);
   sendEmailViaGAS({
     to: ADMIN_EMAIL,
     subject: `Pembayaran Mayar Diterima: ${userActivatedName} (@${userActivatedUsername}) - ${paketName}`,
