@@ -1886,7 +1886,57 @@ async function handleMayarWebhook(payload, res) {
   const email = (customer.email || '').trim().toLowerCase();
   const mobile = (customer.mobile || customer.phone || '').trim();
   const name = (customer.name || '').trim();
-  const product = (d.productName || d.description || '').toUpperCase();
+  const rawProductName = d.productName || d.description || '';
+  const productUpper = rawProductName.toUpperCase();
+  const isPhotoSelection = productUpper.includes('PHOTO') || 
+                           productUpper.includes('SELECTION') || 
+                           productUpper.includes('PAKET 1 BULAN') ||
+                           productUpper.includes('PAKET 6 BULAN') ||
+                           productUpper.includes('PAKET 1 TAHUN') ||
+                           productUpper.includes('PAKET LIFETIME');
+
+  // ============================================================
+  // KASUS A: PRODUK BUKAN PHOTO SELECTION (NETFLIX, CANVA, DLL)
+  // ============================================================
+  if (!isPhotoSelection) {
+    let userRefCode = 'DIRECT';
+    if (d.couponUsed) {
+      userRefCode = String(d.couponUsed).trim().toUpperCase();
+    } else if (d.notes && d.notes.toUpperCase().includes('REF:')) {
+      userRefCode = d.notes.toUpperCase().split('REF:')[1].trim().split(' ')[0];
+    }
+
+    const paidAmount = Number(d.amount || d.netAmount || 0);
+    const qty = Number(d.qty || 1);
+
+    // Langsung catat transaksi ke Google Sheet Store Kama Creative
+    await trackSaleToStore({
+      refCode: userRefCode,
+      idProduk: d.productId || '',
+      namaProduk: rawProductName || 'Produk Digital',
+      harga: paidAmount,
+      jumlah: qty
+    });
+
+    await supabaseQuery('mayar_logs', {
+      method: 'POST',
+      body: {
+        Event: event,
+        'Customer Email': email,
+        'Customer Name': name,
+        'Status/Product': rawProductName,
+        'Hasil Aktivasi': `Transaksi Store dicatat (${rawProductName}) - Ref: ${userRefCode}`,
+        'Raw JSON Payload': JSON.stringify(payload),
+        Timestamp: new Date().toISOString()
+      }
+    }).catch(() => { });
+
+    return success(res, { success: true, status: 'processed', result: `Store sale tracked: ${rawProductName}` });
+  }
+
+  // ============================================================
+  // KASUS B: PRODUK PHOTO SELECTION (AKTIVASI AKUN + TRACK STORE)
+  // ============================================================
 
   // Fungsi Normalisasi Nomor HP (menghilangkan awalan 0 / 62 / +62 / spasi / strip)
   function normalizePhone(phoneStr) {
@@ -1933,9 +1983,9 @@ async function handleMayarWebhook(payload, res) {
 
   let addDays = 30;
   let paketName = '1 Bulan';
-  if (product.includes('6 BULAN')) { addDays = 180; paketName = '6 Bulan'; }
-  else if (product.includes('1 TAHUN')) { addDays = 365; paketName = '1 Tahun'; }
-  else if (product.includes('LIFETIME')) { addDays = 36500; paketName = 'Lifetime'; }
+  if (productUpper.includes('6 BULAN')) { addDays = 180; paketName = '6 Bulan'; }
+  else if (productUpper.includes('1 TAHUN')) { addDays = 365; paketName = '1 Tahun'; }
+  else if (productUpper.includes('LIFETIME')) { addDays = 36500; paketName = 'Lifetime'; }
 
   // Hitung Masa Aktif Bertingkat (Akumulasi jika masa aktif sebelumnya belum habis)
   let baseDate = new Date();
@@ -1962,7 +2012,7 @@ async function handleMayarWebhook(payload, res) {
     userActivatedEmail = targetUser.Email || email;
     userActivatedPhone = targetUser['No HP'] || mobile;
 
-    const isProAddon = product.includes('ADD-ON') || product.includes('PRO');
+    const isProAddon = productUpper.includes('ADD-ON') || productUpper.includes('PRO');
 
     if (isProAddon) {
       await supabaseQuery(`users?Username=eq.${encodeURIComponent(uName)}`, {
@@ -1986,7 +2036,7 @@ async function handleMayarWebhook(payload, res) {
       email: userActivatedEmail,
       phone: userActivatedPhone,
       customData: {
-        content_name: product || paketName,
+        content_name: rawProductName || paketName,
         value: purAmount,
         currency: 'IDR'
       }
@@ -1994,7 +2044,6 @@ async function handleMayarWebhook(payload, res) {
 
   } else if (email) {
     // KASUS: Fotografer membayar langsung di Mayar sebelum membuat akun di app.html
-    // Otomatis buatkan akun agar fotografer langsung mendapatkan akses & detail login
     const baseUser = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '') || 'photographer';
     let newUsername = baseUser;
     const existingCheck = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(newUsername)}&select=id`);
@@ -2018,7 +2067,7 @@ async function handleMayarWebhook(payload, res) {
       ExpiredAt: expiredAt,
       ConfirmToken: '',
       ProjectCreated: '0',
-      Akses_Watermark: product.includes('ADD-ON') || product.includes('PRO') ? 'TRUE' : 'FALSE'
+      Akses_Watermark: productUpper.includes('ADD-ON') || productUpper.includes('PRO') ? 'TRUE' : 'FALSE'
     };
 
     await supabaseQuery('users', { method: 'POST', body: autoUser });
@@ -2034,7 +2083,7 @@ async function handleMayarWebhook(payload, res) {
       email: email,
       phone: mobile,
       customData: {
-        content_name: product || paketName,
+        content_name: rawProductName || paketName,
         value: purAmount,
         currency: 'IDR'
       }
