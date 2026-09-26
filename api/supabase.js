@@ -1895,17 +1895,28 @@ async function handleMayarWebhook(payload, res) {
                            productUpper.includes('PAKET 1 TAHUN') ||
                            productUpper.includes('PAKET LIFETIME');
 
+  // Helper ekstraksi kode referral dari Mayar
+  function extractMayarRefCode(payloadData, userObj = null) {
+    if (userObj && userObj.ConfirmToken && userObj.ConfirmToken.includes('REF:')) {
+      const parts = userObj.ConfirmToken.split('REF:');
+      if (parts[1]) return parts[1].split('|')[0].trim().toUpperCase();
+    }
+    if (payloadData.couponUsed) {
+      return String(payloadData.couponUsed).trim().toUpperCase();
+    }
+    const combinedNotes = `${payloadData.notes || ''} ${payloadData.description || ''} ${payloadData.customField || ''} ${payloadData.extra || ''}`;
+    const match = combinedNotes.toUpperCase().match(/REF[:=\s]+([A-Z0-9_\-]+)/);
+    if (match && match[1]) {
+      return match[1].trim().toUpperCase();
+    }
+    return 'DIRECT';
+  }
+
   // ============================================================
   // KASUS A: PRODUK BUKAN PHOTO SELECTION (NETFLIX, CANVA, DLL)
   // ============================================================
   if (!isPhotoSelection) {
-    let userRefCode = 'DIRECT';
-    if (d.couponUsed) {
-      userRefCode = String(d.couponUsed).trim().toUpperCase();
-    } else if (d.notes && d.notes.toUpperCase().includes('REF:')) {
-      userRefCode = d.notes.toUpperCase().split('REF:')[1].trim().split(' ')[0];
-    }
-
+    const userRefCode = extractMayarRefCode(d, null);
     const paidAmount = Number(d.amount || d.netAmount || 0);
     const qty = Number(d.qty || 1);
 
@@ -2091,13 +2102,7 @@ async function handleMayarWebhook(payload, res) {
   }
 
   // Ekstrak Kode Referal dari profil user atau payload Mayar
-  let userRefCode = 'DIRECT';
-  if (targetUser && targetUser.ConfirmToken && targetUser.ConfirmToken.includes('REF:')) {
-    const parts = targetUser.ConfirmToken.split('REF:');
-    if (parts[1]) userRefCode = parts[1].split('|')[0].trim().toUpperCase();
-  } else if (d.couponUsed) {
-    userRefCode = String(d.couponUsed).trim().toUpperCase();
-  }
+  const userRefCode = extractMayarRefCode(d, targetUser);
 
   const paidAmount = Number(d.amount || d.netAmount || (paketName === '1 Bulan' ? 50000 : (paketName === '6 Bulan' ? 250000 : (paketName === '1 Tahun' ? 450000 : 750000))));
 
