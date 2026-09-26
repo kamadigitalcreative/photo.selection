@@ -5177,6 +5177,19 @@
             return expDate < new Date();
         }
 
+        function getMayarUrlWithUser(baseUrl) {
+            if (!baseUrl) return '';
+            if (!currentUser) return baseUrl;
+            var uName = currentUser.nama || currentUser.username || '';
+            var uEmail = currentUser.email || '';
+            var uPhone = currentUser.nohp || '';
+            var params = [];
+            if (uName) params.push('name=' + encodeURIComponent(uName));
+            if (uEmail) params.push('email=' + encodeURIComponent(uEmail));
+            if (uPhone) params.push('mobile=' + encodeURIComponent(uPhone));
+            return params.length > 0 ? (baseUrl + (baseUrl.includes('?') ? '&' : '?') + params.join('&')) : baseUrl;
+        }
+
         function showExpiredAlert() {
             var isEn = document.getElementById('langSelector') && document.getElementById('langSelector').value === 'en';
 
@@ -5200,6 +5213,10 @@
                 `;
             }
 
+            var url1Bulan = getMayarUrlWithUser('https://kamacreative.myr.id/pl/paket-1-bulan-photo-selection');
+            var url6Bulan = getMayarUrlWithUser('https://kamacreative.myr.id/pl/paket-6-bulan-photo-selection');
+            var url1Tahun = getMayarUrlWithUser('https://kamacreative.myr.id/pl/paket-1-tahunn-photo-selection');
+
             Swal.fire({
                 title: isEn ? 'Renew Subscription ⚡' : 'Perpanjang Masa Aktif Paket ⚡',
                 html: `
@@ -5208,15 +5225,15 @@
                         <p>${isEn ? 'Select a package below to renew your subscription instantly via Mayar.id and keep your galleries & automation features active uninterrupted.' : 'Pilih paket di bawah untuk memperpanjang masa aktif akun Anda secara otomatis via Mayar.id agar galeri klien dan fitur otomatisasi tetap aktif tanpa kendala.'}</p>
                         <p class="font-bold text-slate-800 text-xs uppercase border-b pb-1 pt-1"><i class="fa-solid fa-wallet text-blue-500 mr-1"></i> ${isEn ? 'Choose Renewal Package:' : 'Pilih Paket Perpanjangan Instan (Mayar):'}</p>
                         <div class="grid grid-cols-1 gap-2 pt-1">
-                            <a href="https://kamacreative.myr.id/pl/paket-1-bulan-photo-selection" target="_blank" class="flex justify-between items-center bg-blue-50 border border-blue-200 hover:bg-blue-100 p-3 rounded-xl transition-all text-blue-700 font-bold shadow-sm">
+                            <a href="${url1Bulan}" target="_blank" class="flex justify-between items-center bg-blue-50 border border-blue-200 hover:bg-blue-100 p-3 rounded-xl transition-all text-blue-700 font-bold shadow-sm">
                                 <span><i class="fa-solid fa-box mr-1.5"></i> ${isEn ? '1 Month Subscription' : 'Paket Langganan 1 Bulan'}</span>
                                 <i class="fa-solid fa-chevron-right text-xs"></i>
                             </a>
-                            <a href="https://kamacreative.myr.id/pl/paket-6-bulan-photo-selection" target="_blank" class="flex justify-between items-center bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 p-3 rounded-xl transition-all text-indigo-700 font-bold shadow-sm">
+                            <a href="${url6Bulan}" target="_blank" class="flex justify-between items-center bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 p-3 rounded-xl transition-all text-indigo-700 font-bold shadow-sm">
                                 <span><i class="fa-solid fa-cubes mr-1.5"></i> ${isEn ? '6 Months Subscription (Save)' : 'Paket Langganan 6 Bulan (Hemat)'}</span>
                                 <i class="fa-solid fa-chevron-right text-xs"></i>
                             </a>
-                            <a href="https://kamacreative.myr.id/pl/paket-1-tahunn-photo-selection" target="_blank" class="flex justify-between items-center bg-purple-50 border border-purple-200 hover:bg-purple-100 p-3 rounded-xl transition-all text-purple-700 font-bold shadow-sm">
+                            <a href="${url1Tahun}" target="_blank" class="flex justify-between items-center bg-purple-50 border border-purple-200 hover:bg-purple-100 p-3 rounded-xl transition-all text-purple-700 font-bold shadow-sm">
                                 <span><i class="fa-solid fa-gem mr-1.5"></i> ${isEn ? '1 Year Subscription (Best)' : 'Paket Langganan 1 Tahun (Terbaik)'}</span>
                                 <i class="fa-solid fa-chevron-right text-xs"></i>
                             </a>
@@ -5427,6 +5444,10 @@
         }
 
         function showDemoSubscribeAlert() {
+            var url1Bulan = getMayarUrlWithUser('https://kamacreative.myr.id/pl/paket-1-bulan-photo-selection');
+            var url6Bulan = getMayarUrlWithUser('https://kamacreative.myr.id/pl/paket-6-bulan-photo-selection');
+            var url1Tahun = getMayarUrlWithUser('https://kamacreative.myr.id/pl/paket-1-tahunn-photo-selection');
+
             Swal.fire({
                 title: 'Fitur Premium 🔒',
                 html: `
@@ -5434,15 +5455,15 @@
                         <p>Anda saat ini menggunakan <b>Paket Demo</b>. Kustomisasi Logo dan Unlimited Project hanya tersedia untuk Fotografer Berlangganan Premium.</p>
                         <p class="font-bold text-slate-800 text-xs uppercase border-b pb-1 pt-1"><i class="fa-solid fa-star text-yellow-500 mr-1"></i> Upgrade Akun Anda Sekarang:</p>
                         <div class="grid grid-cols-1 gap-2 pt-1">
-                            <a href="https://kamacreative.myr.id/pl/paket-1-bulan-photo-selection" target="_blank" class="flex justify-between items-center bg-blue-50 border border-blue-200 hover:bg-blue-100 p-3 rounded-xl transition-all text-blue-700 font-bold shadow-sm">
+                            <a href="${url1Bulan}" target="_blank" class="flex justify-between items-center bg-blue-50 border border-blue-200 hover:bg-blue-100 p-3 rounded-xl transition-all text-blue-700 font-bold shadow-sm">
                                 <span><i class="fa-solid fa-box mr-1.5"></i> Langganan 1 Bulan</span>
                                 <i class="fa-solid fa-chevron-right text-xs"></i>
                             </a>
-                            <a href="https://kamacreative.myr.id/pl/paket-6-bulan-photo-selection" target="_blank" class="flex justify-between items-center bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 p-3 rounded-xl transition-all text-indigo-700 font-bold shadow-sm">
+                            <a href="${url6Bulan}" target="_blank" class="flex justify-between items-center bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 p-3 rounded-xl transition-all text-indigo-700 font-bold shadow-sm">
                                 <span><i class="fa-solid fa-cubes mr-1.5"></i> Langganan 6 Bulan (Hemat)</span>
                                 <i class="fa-solid fa-chevron-right text-xs"></i>
                             </a>
-                            <a href="https://kamacreative.myr.id/pl/paket-1-tahunn-photo-selection" target="_blank" class="flex justify-between items-center bg-purple-50 border border-purple-200 hover:bg-purple-100 p-3 rounded-xl transition-all text-purple-700 font-bold shadow-sm">
+                            <a href="${url1Tahun}" target="_blank" class="flex justify-between items-center bg-purple-50 border border-purple-200 hover:bg-purple-100 p-3 rounded-xl transition-all text-purple-700 font-bold shadow-sm">
                                 <span><i class="fa-solid fa-gem mr-1.5"></i> Langganan 1 Tahun (Terbaik)</span>
                                 <i class="fa-solid fa-chevron-right text-xs"></i>
                             </a>
