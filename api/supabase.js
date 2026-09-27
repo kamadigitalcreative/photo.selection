@@ -9,7 +9,6 @@ const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jqptagcbkyxxqqmxqusf.s
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_TL_Et1x8IlEwxKASjF0K8Q_t72R3f_9';
 const KAMA_SALT = "KamaSecretSalt";
 const GAS_MAILER_URL = process.env.GAS_MAILER_URL || 'https://script.google.com/macros/s/AKfycbwzw3k--HOqHS0As2PCrz6m7c3VKqKlifdJVrb9Cy15ScvmHNB5lFFDNTRR5xfmzf4/exec';
-const STORE_GAS_URL = process.env.STORE_GAS_URL || 'https://script.google.com/macros/s/AKfycbwspMxe6cCGjy5t4isufXfOGH_GYqXWhw-BQTqDHP2AeJq3yabsXE6oRAa3iJi6H2V8/exec';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'kamabalicreative@gmail.com';
 const APP_URL = process.env.APP_URL || 'https://ps.kamacreative.my.id';
 
@@ -142,31 +141,6 @@ async function sendEmailViaGAS({ to, subject, htmlBody, textBody }) {
   } catch (err) {
     console.error('[MAILER] Gagal mengirim email via GAS:', err);
     return false;
-  }
-}
-
-async function trackSaleToStore({ refCode, idProduk, namaProduk, harga, jumlah }) {
-  const storeUrl = process.env.STORE_GAS_URL || STORE_GAS_URL;
-  if (!storeUrl) return;
-  try {
-    const res = await fetch(storeUrl, {
-      method: 'POST',
-      redirect: 'follow',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({
-        action: 'trackSale',
-        payload: {
-          refCode: (refCode || 'DIRECT').toUpperCase(),
-          idProduk: idProduk || 'prod_photo',
-          namaProduk: namaProduk || 'Photo Selection',
-          harga: Number(harga || 0),
-          jumlah: Number(jumlah || 1)
-        }
-      })
-    });
-    console.log('[STORE] Sale tracked successfully to Store GAS:', refCode, namaProduk, harga);
-  } catch (err) {
-    console.error('[STORE] Gagal kirim trackSale ke Store GAS:', err);
   }
 }
 
@@ -1920,15 +1894,7 @@ async function handleMayarWebhook(payload, res) {
     const paidAmount = Number(d.amount || d.netAmount || 0);
     const qty = Number(d.qty || 1);
 
-    // Langsung catat transaksi ke Google Sheet Store Kama Creative
-    await trackSaleToStore({
-      refCode: userRefCode,
-      idProduk: d.productId || '',
-      namaProduk: rawProductName || 'Produk Digital',
-      harga: paidAmount,
-      jumlah: qty
-    });
-
+    // Catat log transaksi langsung ke Supabase
     await supabaseQuery('mayar_logs', {
       method: 'POST',
       body: {
@@ -1936,13 +1902,13 @@ async function handleMayarWebhook(payload, res) {
         'Customer Email': email,
         'Customer Name': name,
         'Status/Product': rawProductName,
-        'Hasil Aktivasi': `Transaksi Store dicatat (${rawProductName}) - Ref: ${userRefCode}`,
+        'Hasil Aktivasi': `Transaksi dicatat (${rawProductName}) - Ref: ${userRefCode} - Rp ${paidAmount} (Qty: ${qty})`,
         'Raw JSON Payload': JSON.stringify(payload),
         Timestamp: new Date().toISOString()
       }
     }).catch(() => { });
 
-    return success(res, { success: true, status: 'processed', result: `Store sale tracked: ${rawProductName}` });
+    return success(res, { success: true, status: 'processed', result: `Store sale tracked to Supabase: ${rawProductName}` });
   }
 
   // ============================================================
@@ -2105,15 +2071,6 @@ async function handleMayarWebhook(payload, res) {
   const userRefCode = extractMayarRefCode(d, targetUser);
 
   const paidAmount = Number(d.amount || d.netAmount || (paketName === '1 Bulan' ? 50000 : (paketName === '6 Bulan' ? 250000 : (paketName === '1 Tahun' ? 450000 : 750000))));
-
-  // Catat Penjualan ke Google Sheet Store Kama Creative (trackSale)
-  trackSaleToStore({
-    refCode: userRefCode,
-    idProduk: 'prod_photo',
-    namaProduk: `Photo Selection (${paketName})`,
-    harga: paidAmount,
-    jumlah: 1
-  }).catch(e => console.error('[STORE] Error catat penjualan ke Store:', e));
 
   // Kirim email notifikasi aktivasi ke Fotografer
   if (userActivatedEmail) {
