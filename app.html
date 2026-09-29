@@ -5183,10 +5183,15 @@
             var uName = currentUser.nama || currentUser.username || '';
             var uEmail = currentUser.email || '';
             var uPhone = currentUser.nohp || '';
+            var uUser = currentUser.username || '';
             var params = [];
             if (uName) params.push('name=' + encodeURIComponent(uName));
             if (uEmail) params.push('email=' + encodeURIComponent(uEmail));
             if (uPhone) params.push('mobile=' + encodeURIComponent(uPhone));
+            if (uUser) {
+                params.push('notes=' + encodeURIComponent('@' + uUser));
+                params.push('customField=' + encodeURIComponent('@' + uUser));
+            }
             return params.length > 0 ? (baseUrl + (baseUrl.includes('?') ? '&' : '?') + params.join('&')) : baseUrl;
         }
 
@@ -6197,6 +6202,63 @@
             }
         }
 
+        function syncCurrentUser(freshUser) {
+            if (!currentUser || !freshUser) return;
+            var changed = false;
+            if (freshUser.expiredAt && freshUser.expiredAt !== currentUser.expiredAt) {
+                currentUser.expiredAt = freshUser.expiredAt;
+                changed = true;
+            }
+            if (freshUser.status && freshUser.status !== currentUser.status) {
+                currentUser.status = freshUser.status;
+                changed = true;
+            }
+            if (freshUser.paket && freshUser.paket !== currentUser.paket) {
+                currentUser.paket = freshUser.paket;
+                changed = true;
+            }
+            if (freshUser.role && freshUser.role !== currentUser.role) {
+                currentUser.role = freshUser.role;
+                changed = true;
+            }
+            if (freshUser.isPremiumAddon !== undefined && freshUser.isPremiumAddon !== currentUser.isPremiumAddon) {
+                currentUser.isPremiumAddon = freshUser.isPremiumAddon;
+                changed = true;
+            }
+            if (freshUser.brandName && freshUser.brandName !== currentUser.brandName) {
+                currentUser.brandName = freshUser.brandName;
+                appBranding.name = freshUser.brandName;
+                changed = true;
+            }
+            if (freshUser.brandLogo && freshUser.brandLogo !== currentUser.brandLogo) {
+                currentUser.brandLogo = freshUser.brandLogo;
+                appBranding.logo = freshUser.brandLogo;
+                changed = true;
+            }
+
+            if (changed) {
+                localStorage.setItem('ps_user', JSON.stringify(currentUser));
+                if (typeof updateRenewPackageHeaderButton === 'function') updateRenewPackageHeaderButton();
+                if (typeof checkLoginState === 'function') checkLoginState();
+            }
+        }
+
+        async function requestUserPing() {
+            if (!currentUser || !currentUser.username) return;
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'pingUser', currentUser: currentUser }),
+                    keepalive: true
+                });
+                const res = await response.json();
+                if (res.status === 'success' && res.data && res.data.user) {
+                    syncCurrentUser(res.data.user);
+                }
+            } catch (e) { }
+        }
+
         function checkLoginState() {
             try { currentUser = JSON.parse(localStorage.getItem('ps_user')) || JSON.parse(sessionStorage.getItem('ps_user')); } catch (e) { currentUser = null; }
             var themeToggle = document.getElementById('hide-checkbox');
@@ -6369,23 +6431,12 @@
                 }
                 if (currentUser.role === 'Admin') { loadDataUsers(); }
 
-                // Robot ping online/offline
+                // Robot ping online/offline & Sinkronisasi User Data Realtime
                 clearInterval(userPingInterval);
-                userPingInterval = setInterval(function () {
-                    fetch(API_ENDPOINT, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'pingUser', currentUser: currentUser }),
-                        keepalive: true
-                    }).catch(function (e) { });
-                }, 30000); // Ping tiap 30 detik
+                userPingInterval = setInterval(requestUserPing, 30000); // Ping tiap 30 detik
 
                 // Pancing ping pertama kali login/buka web
-                fetch(API_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'pingUser', currentUser: currentUser })
-                }).catch(function (e) { });
+                requestUserPing();
 
             } else {
                 clearInterval(userPingInterval);
