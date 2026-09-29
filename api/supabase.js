@@ -666,12 +666,46 @@ async function handleUploadPaymentProof(payload, res) {
 async function handlePingUser(payload, res) {
   const user = payload.currentUser || {};
   const username = (user.username || payload.username || '').trim();
-  if (username) {
+  if (!username) {
+    return success(res, { success: true, ok: true });
+  }
+
+  try {
+    // 1. Update timestamp LastActive
     await supabaseQuery(`users?Username=ilike.${encodeURIComponent(username)}`, {
       method: 'PATCH',
       body: { LastActive: new Date().toISOString() }
     }).catch(() => { });
-  }
+
+    // 2. Ambil data profil terbaru dari database (agar perpanjangan masa aktif langsung tersinkronisasi)
+    const rows = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(username)}&select=*`);
+    if (rows && rows.length > 0) {
+      const u = rows[0];
+      const rawPaket = u.Paket || '';
+      const isPro = Boolean(String(u.Akses_Watermark).toUpperCase() === 'TRUE' || rawPaket.toUpperCase().includes('PRO') || rawPaket.toUpperCase().includes('LIFETIME'));
+
+      const freshUserData = {
+        username: u.Username,
+        nama: u.Nama || u.Username,
+        role: u.Role || 'Photographer',
+        status: u.Status || 'Active',
+        brandName: u.BrandName || 'Photo Selection',
+        brandLogo: u.BrandLogo || '',
+        watermarkUrl: u.WatermarkUrl || '',
+        bankName: u.BankName || '',
+        bankAccount: u.BankAccount || '',
+        bankAccountName: u.BankAccountName || '',
+        email: u.Email || '',
+        nohp: u['No HP'] || '',
+        paket: rawPaket || '1 Bulan',
+        expiredAt: u.ExpiredAt || 'Lifetime',
+        isPremiumAddon: isPro
+      };
+
+      return success(res, { success: true, ok: true, user: freshUserData });
+    }
+  } catch (e) { }
+
   return success(res, { success: true, ok: true });
 }
 
@@ -1854,20 +1888,27 @@ async function handleSyncBackground(payload, res) {
 }
 
 async function handleMayarWebhook(payload, res) {
-  const event = payload.event;
-  const d = payload.data || {};
-  const customer = d.customer || {};
-  const email = (customer.email || '').trim().toLowerCase();
-  const mobile = (customer.mobile || customer.phone || '').trim();
-  const name = (customer.name || '').trim();
-  const rawProductName = d.productName || d.description || '';
+  const event = payload.event || payload.action || 'payment.success';
+  const d = payload.data || payload || {};
+  const customer = d.customer || payload.customer || {};
+
+  // Ekstraksi data customer yang fleksibel (mendukung berbagai format payload Mayar)
+  const email = (customer.email || d.customerEmail || d.email || '').trim().toLowerCase();
+  const mobile = (customer.mobile || customer.phone || d.customerMobile || d.mobile || d.phone || '').trim();
+  const name = (customer.name || d.customerName || d.name || '').trim();
+  const rawProductName = d.productName || d.description || d.title || (d.product && d.product.name) || '';
   const productUpper = rawProductName.toUpperCase();
+
   const isPhotoSelection = productUpper.includes('PHOTO') || 
                            productUpper.includes('SELECTION') || 
-                           productUpper.includes('PAKET 1 BULAN') ||
-                           productUpper.includes('PAKET 6 BULAN') ||
-                           productUpper.includes('PAKET 1 TAHUN') ||
-                           productUpper.includes('PAKET LIFETIME');
+                           productUpper.includes('PAKET') ||
+                           productUpper.includes('BULAN') ||
+                           productUpper.includes('TAHUN') ||
+                           productUpper.includes('LIFETIME') ||
+                           productUpper.includes('PRO') ||
+                           productUpper.includes('PERPANJANG') ||
+                           productUpper.includes('RENEW') ||
+                           productUpper.includes('LANGGANAN');
 
   // Helper ekstraksi kode referral dari Mayar
   function extractMayarRefCode(payloadData, userObj = null) {
@@ -1958,18 +1999,37 @@ async function handleMayarWebhook(payload, res) {
     }
   }
 
+  // Layer 4: Cek jika ada customField / notes yang mengandung username
+  if (!targetUser) {
+    const combinedNotes = `${d.notes || ''} ${d.description || ''} ${d.customField || ''} ${d.extra || ''}`;
+    const userMatch = combinedNotes.match(/@([a-zA-Z0-9_\-\.]+)/);
+    if (userMatch && userMatch[1]) {
+      const byUsername = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(userMatch[1].trim())}&select=*`);
+      if (byUsername && byUsername.length > 0) targetUser = byUsername[0];
+    }
+  }
+
   let addDays = 30;
   let paketName = '1 Bulan';
-  if (productUpper.includes('6 BULAN')) { addDays = 180; paketName = '6 Bulan'; }
-  else if (productUpper.includes('1 TAHUN')) { addDays = 365; paketName = '1 Tahun'; }
-  else if (productUpper.includes('LIFETIME')) { addDays = 36500; paketName = 'Lifetime'; }
+  if (productUpper.includes('6 BULAN') || productUpper.includes('6-BULAN') || productUpper.includes('6BULAN') || productUpper.includes('SEMESTER')) { 
+    addDays = 180; 
+    paketName = '6 Bulan'; 
+  }
+  else if (productUpper.includes('1 TAHUN') || productUpper.includes('1-TAHUN') || productUpper.includes('TAHUNN') || productUpper.includes('TAHUN') || productUpper.includes('ANNUAL') || productUpper.includes('YEAR')) { 
+    addDays = 365; 
+    paketName = '1 Tahun'; 
+  }
+  else if (productUpper.includes('LIFETIME') || productUpper.includes('SELAMANYA') || productUpper.includes('PERMANEN')) { 
+    addDays = 36500; 
+    paketName = 'Lifetime'; 
+  }
 
   // Hitung Masa Aktif Bertingkat (Akumulasi jika masa aktif sebelumnya belum habis)
   let baseDate = new Date();
   if (targetUser && targetUser.ExpiredAt && targetUser.ExpiredAt !== 'Lifetime') {
     const currExp = parseSafeDate(targetUser.ExpiredAt);
     if (currExp && currExp.getTime() > baseDate.getTime()) {
-      baseDate = currExp; // Perpanjang dari tanggal berakhir yang sekarang
+      baseDate = new Date(currExp.getTime()); // Perpanjang dari tanggal berakhir yang sekarang
     }
   }
   baseDate.setDate(baseDate.getDate() + addDays);
@@ -2109,7 +2169,7 @@ async function handleMayarWebhook(payload, res) {
       Event: event,
       'Customer Email': email,
       'Customer Name': name,
-      'Status/Product': product,
+      'Status/Product': rawProductName || paketName,
       'Hasil Aktivasi': hasilAktivasi,
       'Raw JSON Payload': JSON.stringify(payload),
       Timestamp: new Date().toISOString()
