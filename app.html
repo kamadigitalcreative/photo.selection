@@ -1860,146 +1860,98 @@
                     </div>
 
                     <!-- SECTION: PREMIUM COLLAGE (FASE 6 - SCRL FREEFORM) -->
-                    <div id="section-collage" class="hidden flex-1 flex-col fade-in relative w-full min-h-full">
+                    <div id="section-collage" class="hidden flex-1 flex-col fade-in relative w-full">
 
                         <!-- Kolase Top Header -->
-                        <div class="mb-6">
-                            <h2 id="tx-kl-h2" class="text-2xl font-bold text-gray-900 tracking-tight">Kolase Cepat</h2>
-                            <p id="tx-kl-p1" class="text-sm text-gray-500 mt-1">Buat kolase profesional dalam hitungan
-                                detik untuk media sosial, portofolio, atau presentasi klien.</p>
+                        <div class="mb-5">
+                            <div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+                                <h2 id="tx-kl-h2" class="text-2xl font-bold text-gray-900 tracking-tight">Kolase Cepat</h2>
+                                <span class="text-xs text-gray-400 font-medium">Pilih format &rarr; pilih foto &rarr; pilih template &rarr; atur &rarr; download</span>
+                            </div>
+                            <p id="tx-kl-p1" class="text-sm text-gray-500 mt-1">Buat kolase profesional dalam hitungan detik untuk media sosial, portofolio, atau presentasi klien.</p>
                         </div>
 
                         <!-- Main Grid: Left (Templates + Preview), Right (Settings) -->
-                        <div class="flex flex-col lg:flex-row gap-6 items-stretch h-full pb-10 w-full">
+                        <div class="flex flex-col lg:flex-row gap-5 items-start pb-10 w-full">
 
                             <!-- Left Column: Templates and Preview -->
-                            <div class="flex-1 min-w-0 flex flex-col w-full space-y-6">
+                            <div class="flex-1 min-w-0 flex flex-col w-full space-y-5">
 
-                                <!-- Pilih Template -->
-                                <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-                                    <h3 class="text-sm font-bold text-gray-900 mb-4">Rasio Kanvas</h3>
-                                    <div class="flex overflow-x-auto gap-4 pb-2 custom-scrollbar">
+                                <!-- Format Kanvas & Template Library Card -->
+                                <div class="bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 shadow-sm">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h3 class="text-xs font-bold text-gray-800 uppercase tracking-wider text-[11px]">Format Kanvas</h3>
+                                    </div>
+                                    <div class="flex overflow-x-auto gap-3 pb-2 custom-scrollbar">
 
-                                        <!-- Template 1: Story -->
+                                        <!-- Format 1: Story -->
                                         <button onclick="setCollageTemplate('story', 1080, 1920, 'Story 9:16')"
-                                            class="flex flex-col items-center bg-white border border-gray-200 hover:border-gray-300 rounded-xl p-3 shrink-0 w-[120px] hover:shadow-sm transition-all text-gray-600 group hover:border-blue-500 hover:bg-blue-50"
+                                            class="flex flex-col items-center bg-blue-50/80 border-2 border-blue-600 rounded-xl p-2.5 shrink-0 w-[105px] sm:w-[115px] shadow-sm transition-all text-blue-700 ring-2 ring-blue-500/20 group cursor-pointer"
                                             id="btn_tpl_story">
-                                            <div class="w-10 h-16 bg-gray-200 rounded mb-3 overflow-hidden shadow-sm">
-                                                <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=200&auto=format&fit=crop"
-                                                    class="w-full h-full object-cover">
+                                            <div class="w-10 h-14 bg-gray-100 rounded-lg mb-2 flex items-center justify-center border border-gray-200 shadow-sm pointer-events-none">
+                                                <div class="w-4 h-9 bg-gray-300 rounded-[2px] group-hover:bg-blue-400 transition-colors"></div>
                                             </div>
                                             <span class="text-xs font-bold">Story 9:16</span>
-                                            <span class="text-[10px] text-gray-400 mt-0.5">1080 &times; 1920</span>
+                                            <span class="text-[10px] text-gray-400 mt-0.5 font-mono">1080 &times; 1920</span>
                                         </button>
 
-                                        <!-- Template 2: Feed -->
+                                        <!-- Format 2: Feed -->
                                         <button onclick="setCollageTemplate('feed', 1080, 1350, 'Feed 4:5')"
-                                            class="flex flex-col items-center bg-white border border-gray-200 hover:border-gray-300 rounded-xl p-3 shrink-0 w-[120px] hover:shadow-sm transition-all text-gray-600 group hover:border-blue-500 hover:bg-blue-50"
+                                            class="flex flex-col items-center bg-white border border-gray-200 hover:border-gray-300 rounded-xl p-2.5 shrink-0 w-[105px] sm:w-[115px] hover:shadow-sm transition-all text-gray-700 hover:bg-gray-50/80 group cursor-pointer"
                                             id="btn_tpl_feed">
-                                            <div
-                                                class="w-12 h-14 bg-gray-200 rounded mb-3 overflow-hidden flex gap-0.5 shadow-sm group-hover:scale-105 transition-transform">
-                                                <img src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=100&auto=format&fit=crop"
-                                                    class="w-full h-full object-cover">
+                                            <div class="w-10 h-14 bg-gray-100 rounded-lg mb-2 flex items-center justify-center border border-gray-200 shadow-sm pointer-events-none">
+                                                <div class="w-6 h-8 bg-gray-300 rounded-[2px] group-hover:bg-blue-400 transition-colors"></div>
                                             </div>
-                                            <span class="text-xs font-bold text-gray-800">Feed 4:5</span>
-                                            <span class="text-[10px] text-gray-400 mt-0.5">1080 &times; 1350</span>
+                                            <span class="text-xs font-bold">Feed 4:5</span>
+                                            <span class="text-[10px] text-gray-400 mt-0.5 font-mono">1080 &times; 1350</span>
                                         </button>
 
-                                        <!-- Template 3: Square -->
+                                        <!-- Format 3: Square -->
                                         <button onclick="setCollageTemplate('square', 1080, 1080, 'Square 1:1')"
-                                            class="flex flex-col items-center bg-white border border-gray-200 hover:border-gray-300 rounded-xl p-3 shrink-0 w-[120px] hover:shadow-sm transition-all text-gray-600 group hover:border-blue-500 hover:bg-blue-50"
+                                            class="flex flex-col items-center bg-white border border-gray-200 hover:border-gray-300 rounded-xl p-2.5 shrink-0 w-[105px] sm:w-[115px] hover:shadow-sm transition-all text-gray-700 hover:bg-gray-50/80 group cursor-pointer"
                                             id="btn_tpl_square">
-                                            <div
-                                                class="w-12 h-12 bg-gray-200 rounded mb-3 overflow-hidden shadow-sm group-hover:scale-105 transition-transform">
-                                                <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=100&auto=format&fit=crop"
-                                                    class="w-full h-full object-cover">
+                                            <div class="w-10 h-14 bg-gray-100 rounded-lg mb-2 flex items-center justify-center border border-gray-200 shadow-sm pointer-events-none">
+                                                <div class="w-7 h-7 bg-gray-300 rounded-[2px] group-hover:bg-blue-400 transition-colors"></div>
                                             </div>
-                                            <span class="text-xs font-bold text-gray-800">Square 1:1</span>
-                                            <span class="text-[10px] text-gray-400 mt-0.5">1080 &times; 1080</span>
+                                            <span class="text-xs font-bold">Square 1:1</span>
+                                            <span class="text-[10px] text-gray-400 mt-0.5 font-mono">1080 &times; 1080</span>
                                         </button>
 
-                                        <!-- Template 4: Moodboard -->
-                                        <button onclick="setCollageTemplate('moodboard', 1200, 800, 'Moodboard')"
-                                            class="flex flex-col items-center bg-white border border-gray-200 hover:border-gray-300 rounded-xl p-3 shrink-0 w-[120px] hover:shadow-sm transition-all text-gray-600 group hover:border-blue-500 hover:bg-blue-50 relative"
-                                            id="btn_tpl_moodboard">
-                                            <div
-                                                class="w-16 h-10 bg-gray-200 rounded mb-3 overflow-hidden shadow-sm group-hover:scale-105 transition-transform grid grid-cols-3 gap-0.5">
-                                                <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=100&auto=format&fit=crop"
-                                                    class="w-full h-full object-cover col-span-1">
-                                                <img src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=100&auto=format&fit=crop"
-                                                    class="w-full h-full object-cover col-span-2">
+                                        <!-- Format 4: Landscape -->
+                                        <button onclick="setCollageTemplate('landscape', 1920, 1080, 'Landscape 16:9')"
+                                            class="flex flex-col items-center bg-white border border-gray-200 hover:border-gray-300 rounded-xl p-2.5 shrink-0 w-[105px] sm:w-[115px] hover:shadow-sm transition-all text-gray-700 hover:bg-gray-50/80 group cursor-pointer"
+                                            id="btn_tpl_landscape">
+                                            <div class="w-10 h-14 bg-gray-100 rounded-lg mb-2 flex items-center justify-center border border-gray-200 shadow-sm pointer-events-none">
+                                                <div class="w-8 h-[18px] bg-gray-300 rounded-[2px] group-hover:bg-blue-400 transition-colors"></div>
                                             </div>
-                                            <span class="text-xs font-bold text-gray-800">Moodboard</span>
-                                            <span class="text-[10px] text-gray-400 mt-0.5">1200 &times; 800</span>
+                                            <span class="text-xs font-bold">Landscape 16:9</span>
+                                            <span class="text-[10px] text-gray-400 mt-0.5 font-mono">1920 &times; 1080</span>
                                         </button>
 
-                                        <!-- Template 5: Before-After -->
-                                        <button onclick="setCollageTemplate('beforeafter', 1200, 800, 'Before-After')"
-                                            class="flex flex-col items-center bg-white border border-gray-200 hover:border-gray-300 rounded-xl p-3 shrink-0 w-[120px] hover:shadow-sm transition-all text-gray-600 group hover:border-blue-500 hover:bg-blue-50 relative"
-                                            id="btn_tpl_beforeafter">
-                                            <div
-                                                class="w-16 h-10 bg-gray-200 rounded mb-3 overflow-hidden flex gap-0.5 shadow-sm group-hover:scale-105 transition-transform">
-                                                <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=100&auto=format&fit=crop"
-                                                    class="w-1/2 h-full object-cover">
-                                                <img src="https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=100&auto=format&fit=crop"
-                                                    class="w-1/2 h-full object-cover">
+                                        <!-- Format 5: Custom Ukuran -->
+                                        <button onclick="toggleCustomSizeModal()" id="btn_tpl_custom"
+                                            class="flex flex-col items-center bg-gray-50/60 border border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50/50 rounded-xl p-2.5 shrink-0 w-[105px] sm:w-[115px] hover:shadow-sm transition-all text-gray-500 hover:text-blue-600 group cursor-pointer">
+                                            <div class="w-10 h-14 bg-white border border-gray-200 rounded-lg mb-2 shadow-sm group-hover:scale-105 transition-transform flex items-center justify-center pointer-events-none">
+                                                <i class="fa-solid fa-pen-ruler text-sm text-gray-400 group-hover:text-blue-600 transition-colors"></i>
                                             </div>
-                                            <span class="text-xs font-bold text-gray-800">Before-After</span>
-                                            <span class="text-[10px] text-gray-400 mt-0.5">1200 &times; 800</span>
-                                        </button>
-
-                                        <!-- Template 6: 2x2 Grid -->
-                                        <button onclick="setCollageTemplate('grid2x2', 1200, 1200, '2x2 Grid')"
-                                            class="flex flex-col items-center bg-white border border-gray-200 hover:border-gray-300 rounded-xl p-3 shrink-0 w-[120px] hover:shadow-sm transition-all text-gray-600 group hover:border-blue-500 hover:bg-blue-50 relative"
-                                            id="btn_tpl_grid2x2">
-                                            <div
-                                                class="w-12 h-12 bg-gray-200 rounded mb-3 overflow-hidden grid grid-cols-2 grid-rows-2 gap-0.5 shadow-sm group-hover:scale-105 transition-transform">
-                                                <div class="bg-gray-300"></div>
-                                                <div class="bg-gray-400"></div>
-                                                <div class="bg-gray-400"></div>
-                                                <div class="bg-gray-300"></div>
-                                            </div>
-                                            <span class="text-xs font-bold text-gray-800">2x2 Grid</span>
-                                            <span class="text-[10px] text-gray-400 mt-0.5">1200 &times; 1200</span>
-                                        </button>
-
-                                        <!-- Template 7: Cinematic -->
-                                        <button onclick="setCollageTemplate('cinematic', 1920, 1080, 'Cinematic')"
-                                            class="flex flex-col items-center bg-white border border-gray-200 hover:border-gray-300 rounded-xl p-3 shrink-0 w-[120px] hover:shadow-sm transition-all text-gray-600 group hover:border-blue-500 hover:bg-blue-50 relative"
-                                            id="btn_tpl_cinematic">
-                                            <div
-                                                class="w-16 h-8 bg-gray-200 rounded mb-3 overflow-hidden shadow-sm group-hover:scale-105 transition-transform">
-                                                <div class="w-full h-full bg-gray-300"></div>
-                                            </div>
-                                            <span class="text-xs font-bold text-gray-800">Cinematic</span>
-                                            <span class="text-[10px] text-gray-400 mt-0.5">1920 &times; 1080</span>
-                                        </button>
-
-                                        <!-- Template 8: Custom Ukuran -->
-                                        <button onclick="toggleCustomSizeModal()"
-                                            class="flex flex-col items-center bg-gray-50 border border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50 rounded-xl p-3 shrink-0 w-[120px] hover:shadow-sm transition-all text-gray-500 hover:text-blue-600 group relative">
-                                            <div
-                                                class="w-12 h-12 bg-white border border-gray-200 rounded mb-3 shadow-sm group-hover:scale-105 transition-transform flex items-center justify-center">
-                                                <i class="fa-solid fa-pen-ruler text-xl"></i>
-                                            </div>
-                                            <span class="text-xs font-bold">Custom Ukuran</span>
+                                            <span class="text-xs font-bold">Custom</span>
                                             <span class="text-[10px] opacity-70 mt-0.5">Bebas</span>
                                         </button>
                                     </div>
 
                                     <!-- Template Library Header + Category Filters -->
-                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-5 mb-3 border-t border-gray-100 pt-4">
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mt-4 mb-2.5 border-t border-gray-100 pt-3.5">
                                         <div class="flex items-center gap-2">
-                                            <h3 class="text-xs font-bold text-gray-800">Pilih Template</h3>
+                                            <h3 class="text-xs font-bold text-gray-800">Template Layout</h3>
                                             <span id="collageActiveTplBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200">Smart Auto</span>
                                         </div>
                                         <div id="collageTemplateCategoryTabs" class="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full custom-scrollbar">
-                                            <button type="button" onclick="setCollageTemplateCategory('all')" id="btn_cat_all" class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all bg-gray-900 text-white shrink-0 shadow-sm">Semua</button>
-                                            <button type="button" onclick="setCollageTemplateCategory('story')" id="btn_cat_story" class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all bg-gray-100 text-gray-600 hover:bg-gray-200 shrink-0">Story</button>
-                                            <button type="button" onclick="setCollageTemplateCategory('feed')" id="btn_cat_feed" class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all bg-gray-100 text-gray-600 hover:bg-gray-200 shrink-0">Feed</button>
-                                            <button type="button" onclick="setCollageTemplateCategory('square')" id="btn_cat_square" class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all bg-gray-100 text-gray-600 hover:bg-gray-200 shrink-0">Square</button>
-                                            <button type="button" onclick="setCollageTemplateCategory('landscape')" id="btn_cat_landscape" class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all bg-gray-100 text-gray-600 hover:bg-gray-200 shrink-0">Landscape</button>
-                                            <button type="button" onclick="setCollageTemplateCategory('beforeafter')" id="btn_cat_beforeafter" class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all bg-gray-100 text-gray-600 hover:bg-gray-200 shrink-0">Before-After</button>
+                                            <button type="button" onclick="setCollageTemplateCategory('all')" id="btn_cat_all" class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all bg-gray-900 text-white shrink-0 shadow-sm cursor-pointer">Semua</button>
+                                            <button type="button" onclick="setCollageTemplateCategory('story')" id="btn_cat_story" class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all bg-gray-100 text-gray-600 hover:bg-gray-200 shrink-0 cursor-pointer">Story</button>
+                                            <button type="button" onclick="setCollageTemplateCategory('feed')" id="btn_cat_feed" class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all bg-gray-100 text-gray-600 hover:bg-gray-200 shrink-0 cursor-pointer">Feed</button>
+                                            <button type="button" onclick="setCollageTemplateCategory('square')" id="btn_cat_square" class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all bg-gray-100 text-gray-600 hover:bg-gray-200 shrink-0 cursor-pointer">Square</button>
+                                            <button type="button" onclick="setCollageTemplateCategory('landscape')" id="btn_cat_landscape" class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all bg-gray-100 text-gray-600 hover:bg-gray-200 shrink-0 cursor-pointer">Landscape</button>
+                                            <button type="button" onclick="setCollageTemplateCategory('beforeafter')" id="btn_cat_beforeafter" class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all bg-gray-100 text-gray-600 hover:bg-gray-200 shrink-0 cursor-pointer">Before-After</button>
                                         </div>
                                     </div>
 
@@ -2009,14 +1961,14 @@
                                     </div>
                                 </div>
 
-                                <!-- Preview Kolase -->
+                                <!-- Preview Kolase (Dominant but Compact Height) -->
                                 <div
-                                    class="bg-white border border-gray-100 rounded-2xl flex-1 flex flex-col overflow-hidden min-h-[550px] lg:min-h-[700px] shadow-sm">
+                                    class="bg-white border border-gray-100 rounded-2xl flex-1 flex flex-col overflow-hidden min-h-[480px] lg:min-h-[560px] xl:min-h-[620px] shadow-sm">
                                     <div
-                                        class="p-4 border-b border-gray-100 bg-white flex items-center justify-between">
+                                        class="py-3 px-4 border-b border-gray-100 bg-white flex items-center justify-between">
                                         <h3 id="tx-kl-preview" class="text-sm font-bold text-gray-900">Preview Kolase
                                         </h3>
-                                        <div class="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded"
+                                        <div class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full border border-gray-200"
                                             id="collageSelectedCountDisplay">0 Foto Terpilih</div>
                                     </div>
 
@@ -2043,42 +1995,46 @@
 
                                     <!-- Footer Toolbar -->
                                     <div
-                                        class="bg-white border-t border-gray-100 p-3 px-5 flex items-center justify-between">
-                                        <div class="flex gap-4 text-gray-400">
+                                        class="bg-white border-t border-gray-100 py-2.5 px-4 flex items-center justify-between">
+                                        <div class="flex gap-3 text-gray-400">
                                             <button
-                                                class="hover:text-gray-800 transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100"
+                                                class="hover:text-gray-800 transition-colors w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 cursor-pointer"
                                                 onclick="initWorkspace()" title="Reset Zoom/Pan"><i
-                                                    class="fa-solid fa-arrows-to-eye"></i></button>
+                                                    class="fa-solid fa-arrows-to-eye text-xs"></i></button>
                                         </div>
 
                                         <div
-                                            class="flex items-center gap-4 bg-gray-50 rounded-full px-4 py-1.5 border border-gray-200 shadow-sm">
-                                            <button class="text-gray-400 hover:text-gray-800"
+                                            class="flex items-center gap-3 bg-gray-50 rounded-full px-3 py-1 border border-gray-200 shadow-sm">
+                                            <button class="text-gray-400 hover:text-gray-800 text-xs cursor-pointer"
                                                 onclick="zoomWorkspace(-0.1)"><i class="fa-solid fa-minus"></i></button>
-                                            <span class="text-xs font-bold text-gray-600 w-12 text-center"
+                                            <span class="text-xs font-bold text-gray-600 w-11 text-center font-mono"
                                                 id="workspaceZoomDisplay">100%</span>
-                                            <button class="text-gray-400 hover:text-gray-800"
+                                            <button class="text-gray-400 hover:text-gray-800 text-xs cursor-pointer"
                                                 onclick="zoomWorkspace(0.1)"><i class="fa-solid fa-plus"></i></button>
                                         </div>
 
-                                        <div class="w-8"></div>
+                                        <div class="w-7"></div>
                                     </div>
                                 </div>
 
                             </div>
 
-                            <!-- Right Column: Settings Sidebar -->
+                            <!-- Right Column: Settings Sidebar (Compact, Grouped, No Blank Space) -->
                             <div
-                                class="w-full lg:w-[320px] bg-white border border-gray-100 shadow-sm rounded-2xl p-6 shrink-0 flex flex-col gap-6">
-                                <h3 id="tx-kl-pengaturan"
-                                    class="text-sm font-bold text-gray-900 border-b border-gray-100 pb-4">Pengaturan
-                                    Kolase</h3>
+                                class="w-full lg:w-[340px] bg-white border border-gray-100 shadow-sm rounded-2xl p-4 sm:p-5 shrink-0 self-start flex flex-col gap-4">
+                                <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                                    <h3 id="tx-kl-pengaturan"
+                                        class="text-sm font-bold text-gray-900">Pengaturan Kolase</h3>
+                                </div>
 
-                                <!-- Sumber Foto -->
+                                <!-- A. SUMBER FOTO -->
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-2">Sumber Foto</label>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <label class="text-xs font-bold text-gray-700 uppercase tracking-wider text-[11px]">Sumber Foto</label>
+                                        <span id="collagePhotoLibraryCount" class="text-[10px] text-gray-400 font-medium">0 foto</span>
+                                    </div>
                                     <div class="flex flex-col gap-2">
-                                        <!-- FIX 2: Restore Google Drive project selector -->
+                                        <!-- Google Drive project selector -->
                                         <select id="collageProjectSelector" onchange="loadCollageProjectData()"
                                             class="w-full py-2 px-3 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:outline-none focus:border-blue-500 shadow-sm cursor-pointer">
                                             <option value="">-- Pilih Project Klien --</option>
@@ -2091,7 +2047,7 @@
                                         </div>
 
                                         <button onclick="document.getElementById('cLocalUploader').click()"
-                                            class="w-full py-2 bg-gray-50 border border-dashed border-gray-300 hover:border-blue-500 rounded-xl text-xs font-bold text-gray-600 hover:text-blue-600 transition-colors flex items-center justify-center gap-2 shadow-sm">
+                                            class="w-full py-2 bg-gray-50 border border-dashed border-gray-300 hover:border-blue-500 rounded-xl text-xs font-bold text-gray-600 hover:text-blue-600 transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer">
                                             <i class="fa-solid fa-cloud-arrow-up"></i> Upload Foto Lokal
                                         </button>
                                         <input type="file" id="cLocalUploader" accept="image/*" multiple class="hidden"
@@ -2099,8 +2055,8 @@
 
                                         <!-- Area Thumbnails (Photo Pool) -->
                                         <div
-                                            class="bg-gray-50 border border-gray-100 rounded-xl p-2 min-h-[60px] max-h-[140px] overflow-y-auto custom-scrollbar">
-                                            <div class="grid grid-cols-4 gap-1" id="collagePhotoPicker">
+                                            class="bg-gray-50 border border-gray-100 rounded-xl p-2 min-h-[80px] max-h-[220px] lg:max-h-[240px] overflow-y-auto custom-scrollbar">
+                                            <div class="grid grid-cols-4 gap-1.5" id="collagePhotoPicker">
                                                 <div
                                                     class="text-[10px] text-gray-400 italic col-span-4 text-center py-3">
                                                     Belum ada foto yang dipilih.</div>
@@ -2109,135 +2065,121 @@
                                     </div>
                                 </div>
 
-                                <!-- Template Selection Dropdown -->
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-2">Template Terpilih</label>
-                                    <div
-                                        class="w-full flex items-center justify-between border border-gray-200 rounded-xl p-3 cursor-pointer hover:border-gray-300 transition-colors bg-gray-50/50">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-6 h-8 bg-blue-50 border border-blue-200 rounded flex items-center justify-center text-blue-600 overflow-hidden"
-                                                id="selectedTemplatePreview">
-                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                                <!-- B. LAYOUT (Template Terpilih & Spacing) -->
+                                <div class="border-t border-gray-100 pt-3.5 space-y-3">
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider text-[11px] mb-2">Layout</label>
+                                        <!-- Template Selection Card -->
+                                        <div
+                                            class="w-full flex items-center justify-between border border-gray-200 rounded-xl p-2.5 bg-gray-50/50">
+                                            <div class="flex items-center gap-2.5 min-w-0">
+                                                <div class="w-6 h-8 bg-blue-50 border border-blue-200 rounded flex items-center justify-center text-blue-600 overflow-hidden shrink-0"
+                                                    id="selectedTemplatePreview">
+                                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <div class="text-xs font-bold text-gray-800 truncate" id="selectedTemplateName">
+                                                        Smart Auto</div>
+                                                    <div class="text-[10px] text-gray-400 font-mono mt-0.5 truncate"
+                                                        id="selectedTemplateDims">1080 &times; 1920 &bull; Otomatis</div>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <div class="text-xs font-bold text-gray-800" id="selectedTemplateName">
-                                                    Smart Auto</div>
-                                                <div class="text-[10px] text-gray-400 font-mono mt-0.5"
-                                                    id="selectedTemplateDims">1080 &times; 1920 &bull; Otomatis</div>
-                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Spacing -->
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Jarak Antar Foto (Spacing)</label>
+                                        <div class="flex gap-2">
+                                            <!-- Rapat -->
+                                            <button id="btn-spacing-0" onclick="setCollageSpacing(0)"
+                                                class="flex-1 flex flex-col items-center gap-1.5 group cursor-pointer">
+                                                <div class="w-14 h-9 border border-gray-200 rounded-lg flex items-center justify-center bg-gray-50 transition-colors hover:border-gray-300"
+                                                    id="wrapper-spacing-0">
+                                                    <div class="w-8 h-5 border-[1px] border-gray-400 rounded-sm"></div>
+                                                </div>
+                                                <span class="text-[10px] font-bold text-gray-400 transition-colors"
+                                                    id="label-spacing-0">Rapat</span>
+                                            </button>
+
+                                            <!-- Normal -->
+                                            <button id="btn-spacing-20" onclick="setCollageSpacing(20)"
+                                                class="flex-1 flex flex-col items-center gap-1.5 cursor-pointer">
+                                                <div class="w-14 h-9 border-2 border-blue-600 rounded-lg flex items-center justify-center bg-blue-50 transition-colors shadow-sm"
+                                                    id="wrapper-spacing-20">
+                                                    <div class="w-8 h-5 border-[3px] border-blue-600 rounded-sm"></div>
+                                                </div>
+                                                <span
+                                                    class="text-[10px] font-bold text-blue-600 transition-colors">Normal</span>
+                                            </button>
+
+                                            <!-- Longgar -->
+                                            <button id="btn-spacing-60" onclick="setCollageSpacing(60)"
+                                                class="flex-1 flex flex-col items-center gap-1.5 group cursor-pointer">
+                                                <div
+                                                    class="w-14 h-9 border border-gray-200 rounded-lg flex items-center justify-center bg-gray-50 transition-colors hover:border-gray-300">
+                                                    <div class="w-8 h-5 border-[5px] border-gray-400 rounded-sm"></div>
+                                                </div>
+                                                <span
+                                                    class="text-[10px] font-bold text-gray-400 transition-colors">Longgar</span>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Jumlah Foto -->
-                                <div class="hidden">
-                                    <label class="block text-xs font-bold text-gray-700 mb-2">Jumlah Foto</label>
-                                    <div class="flex gap-2 min-w-0">
-                                        <button
-                                            class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">1</button>
-                                        <button
-                                            class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">2</button>
-                                        <button
-                                            class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">3</button>
-                                        <button
-                                            class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">4</button>
-                                        <button
-                                            class="flex-1 py-2 rounded-lg border border-blue-600 text-xs font-bold text-blue-600 bg-blue-50 transition-colors shadow-sm">5</button>
-                                        <button
-                                            class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">6</button>
-                                        <button
-                                            class="flex-1 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors">7+</button>
-                                    </div>
-                                </div>
+                                <!-- C. TAMPILAN (Judul & Warna) -->
+                                <div class="border-t border-gray-100 pt-3.5 space-y-3">
+                                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider text-[11px]">Tampilan</label>
 
-                                <!-- Spacing -->
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-2">Spacing</label>
-                                    <div class="flex gap-3">
-                                        <!-- Rapat -->
-                                        <button id="btn-spacing-0" onclick="setCollageSpacing(0)"
-                                            class="flex-1 flex flex-col items-center gap-2 group">
-                                            <div class="w-14 h-10 border border-gray-200 rounded-lg flex items-center justify-center bg-gray-50 transition-colors"
-                                                id="wrapper-spacing-0">
-                                                <div class="w-8 h-6 border-[1px] border-gray-400 rounded-sm"></div>
-                                            </div>
-                                            <span class="text-[10px] font-bold text-gray-400 transition-colors"
-                                                id="label-spacing-0">Rapat</span>
-                                        </button>
-
-                                        <!-- Normal -->
-                                        <button id="btn-spacing-20" onclick="setCollageSpacing(20)"
-                                            class="flex-1 flex flex-col items-center gap-2">
-                                            <div class="w-14 h-10 border-2 border-blue-600 rounded-lg flex items-center justify-center bg-blue-50 transition-colors shadow-sm"
-                                                id="wrapper-spacing-20">
-                                                <div class="w-8 h-6 border-[3px] border-blue-600 rounded-sm"></div>
-                                            </div>
-                                            <span
-                                                class="text-[10px] font-bold text-blue-600 transition-colors">Normal</span>
-                                        </button>
-
-                                        <!-- Longgar -->
-                                        <button id="btn-spacing-60" onclick="setCollageSpacing(60)"
-                                            class="flex-1 flex flex-col items-center gap-2 group">
-                                            <div
-                                                class="w-14 h-10 border border-gray-200 rounded-lg flex items-center justify-center bg-gray-50 transition-colors">
-                                                <div class="w-8 h-6 border-[5px] border-gray-400 rounded-sm"></div>
-                                            </div>
-                                            <span
-                                                class="text-[10px] font-bold text-gray-400 transition-colors">Longgar</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Judul -->
-                                <div>
-                                    <div class="flex justify-between items-center mb-2">
-                                        <label class="text-xs font-bold text-gray-700">Judul <span
-                                                class="text-gray-400 font-normal">(Opsional)</span></label>
-                                    </div>
-                                    <div class="relative">
-                                        <input type="text" id="collageTitleInput" oninput="updateCollageTitle()"
-                                            value="Rizky & Anisa" maxlength="60"
-                                            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-gray-50 focus:bg-white shadow-sm">
-                                        <span id="collageTitleCounter"
-                                            class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400">13
-                                            / 60</span>
-                                    </div>
-                                    <p id="tx-kl-info" class="text-[9px] text-gray-400 mt-2"><i
-                                            class="fa-solid fa-circle-info mr-1"></i> Judul akan otomatis ditampilkan di
-                                        bagian bawah kolase.</p>
-                                </div>
-
-                                <!-- Gaya & Warna -->
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-2">Gaya & Warna</label>
-                                    <div class="relative">
-                                        <select id="collageBgSelect" onchange="updateCollageBgColor()"
-                                            class="w-full appearance-none border border-gray-200 rounded-xl pl-11 pr-4 py-2.5 text-sm font-bold text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer bg-gray-50 focus:bg-white shadow-sm">
-                                            <option value="#ffffff">Putih Bersih</option>
-                                            <option value="#1a1a1a">Hitam Elegan</option>
-                                            <option value="#f8ede3">Pastel Hangat</option>
-                                            <option value="transparent">Transparan (PNG)</option>
-                                        </select>
-                                        <div id="collageBgPreviewBox"
-                                            class="w-4 h-4 rounded shadow-sm border border-gray-300 absolute left-3.5 top-1/2 -translate-y-1/2 bg-white">
+                                    <!-- Judul -->
+                                    <div>
+                                        <div class="flex justify-between items-center mb-1.5">
+                                            <label class="text-xs font-medium text-gray-600">Judul <span
+                                                    class="text-gray-400 font-normal">(Opsional)</span></label>
                                         </div>
-                                        <i
-                                            class="fa-solid fa-chevron-down text-gray-400 text-xs absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                                        <div class="relative">
+                                            <input type="text" id="collageTitleInput" oninput="updateCollageTitle()"
+                                                value="" placeholder="Tambahkan judul (opsional)" maxlength="60"
+                                                class="w-full border border-gray-200 rounded-xl px-3.5 py-2 text-xs font-bold text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-gray-50 focus:bg-white shadow-sm">
+                                            <span id="collageTitleCounter"
+                                                class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400">0
+                                                / 60</span>
+                                        </div>
+                                        <p id="tx-kl-info" class="text-[9px] text-gray-400 mt-1"><i
+                                                class="fa-solid fa-circle-info mr-1"></i> Ditampilkan otomatis di
+                                            bagian bawah kolase.</p>
+                                    </div>
+
+                                    <!-- Gaya & Warna -->
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Warna Latar (Background)</label>
+                                        <div class="relative">
+                                            <select id="collageBgSelect" onchange="updateCollageBgColor()"
+                                                class="w-full appearance-none border border-gray-200 rounded-xl pl-10 pr-4 py-2 text-xs font-bold text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer bg-gray-50 focus:bg-white shadow-sm">
+                                                <option value="#ffffff">Putih Bersih</option>
+                                                <option value="#1a1a1a">Hitam Elegan</option>
+                                                <option value="#f8ede3">Pastel Hangat</option>
+                                                <option value="transparent">Transparan (PNG)</option>
+                                            </select>
+                                            <div id="collageBgPreviewBox"
+                                                class="w-4 h-4 rounded shadow-sm border border-gray-300 absolute left-3 top-1/2 -translate-y-1/2 bg-white">
+                                            </div>
+                                            <i
+                                                class="fa-solid fa-chevron-down text-gray-400 text-xs absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- Generate Action -->
-                                <div class="pt-4 border-t border-gray-100 mt-auto">
-                                    <!-- Generate Button -->
+                                <!-- D. ACTION (Generate HD) -->
+                                <div class="pt-3 border-t border-gray-100">
                                     <button
-                                        class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-bold text-sm transition-all shadow-[0_4px_15px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] flex justify-center items-center gap-2"
+                                        class="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-bold text-xs transition-all shadow-[0_4px_15px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] flex justify-center items-center gap-2 cursor-pointer active:scale-[0.99]"
                                         onclick="downloadCollage()">
                                         <i class="fa-solid fa-wand-magic-sparkles"></i>
                                         <span class="tx-kl-gen">Generate Kolase HD</span>
                                     </button>
                                     <p
-                                        class="text-[9px] text-gray-400 text-center mt-3 flex items-center justify-center gap-1">
+                                        class="text-[9px] text-gray-400 text-center mt-2 flex items-center justify-center gap-1">
                                         <i class="fa-solid fa-bolt text-amber-500"></i> Render secepat kilat.
                                     </p>
                                 </div>
@@ -2246,7 +2188,6 @@
 
                         </div>
                     </div>
-
 
                     <!-- SECTION PREMIUM ADD-ON -->
                     <div id="section-premium-addon" class="hidden flex-1 flex-col max-w-4xl mx-auto w-full">
@@ -3185,7 +3126,33 @@
                 }
             }
 
-            function syncCollageTemplateUI() {
+                        function syncCollageCanvasFormatUI() {
+                var curRatioId = (typeof collageState !== 'undefined' && collageState && collageState.currentRatioId) ? collageState.currentRatioId : 'story';
+                var allRatioBtnIds = ['btn_tpl_story', 'btn_tpl_feed', 'btn_tpl_square', 'btn_tpl_landscape', 'btn_tpl_custom', 'btn_tpl_cinematic', 'btn_tpl_moodboard', 'btn_tpl_beforeafter', 'btn_tpl_grid2x2'];
+
+                allRatioBtnIds.forEach(function (btnId) {
+                    var btn = document.getElementById(btnId);
+                    if (!btn) return;
+                    var active = (btnId === 'btn_tpl_' + curRatioId) ||
+                                 (btnId === 'btn_tpl_landscape' && (curRatioId === 'cinematic' || curRatioId === 'landscape'));
+
+                    if (btnId === 'btn_tpl_custom') {
+                        if (active) {
+                            btn.className = 'flex flex-col items-center bg-blue-50/80 border-2 border-blue-600 rounded-xl p-2.5 shrink-0 w-[105px] sm:w-[115px] shadow-sm transition-all text-blue-700 ring-2 ring-blue-500/20 group cursor-pointer';
+                        } else {
+                            btn.className = 'flex flex-col items-center bg-gray-50/60 border border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50/50 rounded-xl p-2.5 shrink-0 w-[105px] sm:w-[115px] hover:shadow-sm transition-all text-gray-500 hover:text-blue-600 group cursor-pointer';
+                        }
+                    } else {
+                        if (active) {
+                            btn.className = 'flex flex-col items-center bg-blue-50/80 border-2 border-blue-600 rounded-xl p-2.5 shrink-0 w-[105px] sm:w-[115px] shadow-sm transition-all text-blue-700 ring-2 ring-blue-500/20 group cursor-pointer';
+                        } else {
+                            btn.className = 'flex flex-col items-center bg-white border border-gray-200 hover:border-gray-300 rounded-xl p-2.5 shrink-0 w-[105px] sm:w-[115px] hover:shadow-sm transition-all text-gray-700 hover:bg-gray-50/80 group cursor-pointer';
+                        }
+                    }
+                });
+            }
+
+function syncCollageTemplateUI() {
                 var curId = (typeof collageState !== 'undefined' && collageState.currentTemplateId) || 'smart_auto';
                 var t = (typeof collageTemplates !== 'undefined' && collageTemplates[curId]) ? collageTemplates[curId] : null;
 
@@ -3264,6 +3231,7 @@
                 collageState.canvasW = pxW;
                 collageState.canvasH = pxH;
                 collageState.unit = unit;
+                collageState.currentRatioId = 'custom';
 
                 var curId = collageState.currentTemplateId;
                 var curT = (curId && typeof collageTemplates !== 'undefined') ? collageTemplates[curId] : null;
@@ -3291,6 +3259,7 @@
                 requestRenderCollage();
                 setTimeout(initWorkspace, 50);
                 syncCollageTemplateUI();
+                syncCollageCanvasFormatUI();
 
                 toggleCustomSizeModal();
             }
@@ -3367,17 +3336,7 @@
                 collageState.currentRatioId = ratioId;
 
                 // Highlight active ratio button
-                var allRatioBtnIds = ['btn_tpl_story', 'btn_tpl_feed', 'btn_tpl_square', 'btn_tpl_moodboard', 'btn_tpl_beforeafter', 'btn_tpl_grid2x2', 'btn_tpl_cinematic'];
-                allRatioBtnIds.forEach(function (btnId) {
-                    var btn = document.getElementById(btnId);
-                    if (!btn) return;
-                    var active = (btnId === 'btn_tpl_' + ratioId);
-                    if (active) {
-                        btn.className = 'flex flex-col items-center bg-blue-50/80 border-2 border-blue-600 rounded-xl p-3 shrink-0 w-[120px] shadow-sm transition-all text-blue-700 ring-2 ring-blue-500/20';
-                    } else {
-                        btn.className = 'flex flex-col items-center bg-white border border-gray-200 hover:border-gray-300 rounded-xl p-3 shrink-0 w-[120px] hover:shadow-sm transition-all text-gray-600 group hover:border-blue-500 hover:bg-blue-50';
-                    }
-                });
+                syncCollageCanvasFormatUI();
 
                 // Auto-filter category in template picker to match selected ratio
                 var catMap = {
@@ -3385,6 +3344,7 @@
                     'feed': 'feed',
                     'square': 'square',
                     'moodboard': 'landscape',
+                    'landscape': 'landscape',
                     'cinematic': 'landscape',
                     'beforeafter': 'beforeafter',
                     'grid2x2': 'square'
@@ -3435,6 +3395,7 @@
                     'story': { id: 'story', w: 1080, h: 1920, name: 'Story 9:16' },
                     'feed': { id: 'feed', w: 1080, h: 1350, name: 'Feed 4:5' },
                     'square': { id: 'square', w: 1080, h: 1080, name: 'Square 1:1' },
+                    'landscape': { id: 'landscape', w: 1920, h: 1080, name: 'Landscape 16:9' },
                     'moodboard': { id: 'moodboard', w: 1200, h: 800, name: 'Moodboard 3:2' },
                     'beforeafter': { id: 'beforeafter', w: 1200, h: 800, name: 'Before-After' },
                     'grid2x2': { id: 'grid2x2', w: 1200, h: 1200, name: '2x2 Grid' },
@@ -3477,12 +3438,12 @@
                     var textSpan = btn.querySelector('span');
 
                     if (val === spacingVal) {
-                        iconBox.className = 'w-14 h-10 border-2 border-blue-600 rounded-lg flex items-center justify-center bg-blue-50 transition-colors shadow-sm';
-                        iconInner.className = 'w-8 h-6 border-[' + (val === 0 ? '1' : val === 20 ? '3' : '5') + 'px] border-blue-600 rounded-sm';
+                        iconBox.className = 'w-14 h-9 border-2 border-blue-600 rounded-lg flex items-center justify-center bg-blue-50 transition-colors shadow-sm';
+                        iconInner.className = 'w-8 h-5 border-[' + (val === 0 ? '1' : val === 20 ? '3' : '5') + 'px] border-blue-600 rounded-sm';
                         textSpan.className = 'text-[10px] font-bold text-blue-600 transition-colors';
                     } else {
-                        iconBox.className = 'w-14 h-10 border border-gray-200 rounded-lg flex items-center justify-center bg-gray-50 transition-colors hover:border-gray-300';
-                        iconInner.className = 'w-8 h-6 border-[' + (val === 0 ? '1' : val === 20 ? '3' : '5') + 'px] border-gray-400 rounded-sm';
+                        iconBox.className = 'w-14 h-9 border border-gray-200 rounded-lg flex items-center justify-center bg-gray-50 transition-colors hover:border-gray-300';
+                        iconInner.className = 'w-8 h-5 border-[' + (val === 0 ? '1' : val === 20 ? '3' : '5') + 'px] border-gray-400 rounded-sm';
                         textSpan.className = 'text-[10px] font-bold text-gray-400 transition-colors group-hover:text-gray-600';
                     }
                 });
@@ -13961,7 +13922,27 @@
         }
 
         function loadCollageProjectsList() {
-            // FIX 1: SELALU inisialisasi Collage UI terlebih dahulu (tidak bergantung pada project selector)
+            // FIX 3: Sinkronkan kategori awal berdasarkan currentRatioId
+            var curRatio = (typeof collageState !== 'undefined' && collageState && collageState.currentRatioId) ? collageState.currentRatioId : 'story';
+            var ratioToCatMap = {
+                'story': 'story',
+                'feed': 'feed',
+                'square': 'square',
+                'landscape': 'landscape',
+                'cinematic': 'landscape',
+                'moodboard': 'landscape',
+                'beforeafter': 'beforeafter',
+                'grid2x2': 'square',
+                'custom': 'all'
+            };
+            var initialCategory = ratioToCatMap[curRatio] || 'story';
+            if (typeof setCollageTemplateCategory === 'function') {
+                setCollageTemplateCategory(initialCategory, false);
+            }
+            if (typeof syncCollageCanvasFormatUI === 'function') {
+                syncCollageCanvasFormatUI();
+            }
+
             renderTemplateGrid();
             updateBackgroundConfig();
             syncCollageTemplateUI();
@@ -14385,6 +14366,9 @@
             container.innerHTML = '';
 
             let library = collageState.photoLibrary.filter(p => p && typeof p.url === 'string' && p.url !== '');
+            let countEl = document.getElementById('collagePhotoLibraryCount');
+            if (countEl) countEl.innerText = library.length + ' foto';
+
             if (library.length === 0) {
                 container.innerHTML = '<div class="text-[10px] text-gray-400 italic col-span-4 text-center py-3">Belum ada foto yang dipilih.</div>';
                 return;
@@ -14513,12 +14497,12 @@
 
                 html += `
                 <div onclick="applyCollageTemplate('${id}')"
-                    class="flex flex-col items-center justify-between p-2.5 rounded-xl border-2 cursor-pointer transition-all shrink-0 w-[110px] group ${isActive ? 'border-blue-600 bg-blue-50/70 shadow-sm ring-2 ring-blue-500/20' : 'border-gray-200 hover:border-gray-400 bg-white hover:shadow-xs'}">
+                    class="flex flex-col items-center justify-between p-2.5 rounded-xl border-2 cursor-pointer transition-all shrink-0 w-[110px] group ${isActive ? 'border-blue-600 bg-blue-50/70 shadow-sm ring-2 ring-blue-500/20' : 'border-gray-200 hover:border-gray-400 bg-white hover:shadow-sm'}">
                     <div class="w-14 h-14 bg-gray-50 border border-gray-200 rounded-lg p-1 mb-2 pointer-events-none flex items-center justify-center overflow-hidden">
                         ${t.previewHtml || '<div class="w-full h-full bg-gray-200 rounded-sm"></div>'}
                     </div>
                     <span class="text-[11px] font-bold text-center truncate w-full ${isActive ? 'text-blue-700' : 'text-gray-800'}">${t.name}</span>
-                    <span class="text-[9px] font-medium mt-0.5 px-1.5 py-0.2 rounded-full ${isActive ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}">${countLabel}</span>
+                    <span class="text-[9px] font-medium mt-0.5 px-1.5 py-[1px] rounded-full ${isActive ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}">${countLabel}</span>
                 </div>
                 `;
             }
