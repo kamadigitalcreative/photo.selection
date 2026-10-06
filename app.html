@@ -2237,9 +2237,9 @@
                                     </div>
                                     <div class="relative">
                                         <input type="text" id="collageTitleInput" oninput="updateCollageTitle()"
-                                            value="Rizky & Anisa"
+                                            value="Rizky & Anisa" maxlength="60"
                                             class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-gray-50 focus:bg-white shadow-sm">
-                                        <span
+                                        <span id="collageTitleCounter"
                                             class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400">13
                                             / 60</span>
                                     </div>
@@ -3226,9 +3226,23 @@
             }
 
             function applyCustomSize() {
-                var w = parseFloat(document.getElementById('csWidth').value) || 1080;
-                var h = parseFloat(document.getElementById('csHeight').value) || 1080;
-                var unit = document.getElementById('csUnit').value || 'px';
+                var wEl = document.getElementById('csWidth');
+                var hEl = document.getElementById('csHeight');
+                var unitEl = document.getElementById('csUnit');
+                var rawW = wEl ? parseFloat(wEl.value) : NaN;
+                var rawH = hEl ? parseFloat(hEl.value) : NaN;
+
+                // Phase 1: Defensive validation (finite & > 0)
+                if (!Number.isFinite(rawW) || !Number.isFinite(rawH) || rawW <= 0 || rawH <= 0) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ toast: true, position: 'top', icon: 'warning', text: 'Ukuran tidak valid. Lebar dan tinggi harus lebih dari 0.', showConfirmButton: false, timer: 2500 });
+                    }
+                    return;
+                }
+
+                var w = rawW;
+                var h = rawH;
+                var unit = (unitEl && unitEl.value) || 'px';
 
                 // Convert to px for internal canvas rendering (assuming 300 DPI)
                 // 1 inch = 2.54 cm = 25.4 mm
@@ -3239,20 +3253,39 @@
                 else if (unit === 'cm') { pxW = (w / 2.54) * 300; pxH = (h / 2.54) * 300; }
                 else if (unit === 'mm') { pxW = (w / 25.4) * 300; pxH = (h / 25.4) * 300; }
 
-                // Register a temporary custom template
+                // Phase 1: Guard ukuran kanvas proporsional (100 - 4000 px)
+                var COLLAGE_MIN_PX = 100;
+                var COLLAGE_MAX_PX = 4000;
+                var maxSide = Math.max(pxW, pxH);
+                if (maxSide > COLLAGE_MAX_PX) {
+                    var down = COLLAGE_MAX_PX / maxSide;
+                    pxW = pxW * down;
+                    pxH = pxH * down;
+                }
+                if (pxW < COLLAGE_MIN_PX) pxW = COLLAGE_MIN_PX;
+                if (pxH < COLLAGE_MIN_PX) pxH = COLLAGE_MIN_PX;
+                pxW = Math.round(pxW);
+                pxH = Math.round(pxH);
+
+                // Custom size adalah perubahan canvas size, bukan template layout kosong
+                var prevId = collageState.currentTemplateId;
+                var prevT = prevId ? collageTemplates[prevId] : null;
+                var keepLayout = !!(prevT && prevId !== 'custom' && !prevT.isSmartAuto && typeof prevT.calculateLayout === 'function');
+
+                // Register temporary custom template dengan fallback grid aman
                 collageTemplates['custom'] = {
                     name: 'Custom',
                     previewHtml: '',
                     maxPhotos: 99,
+                    isSmartAuto: true,
                     calculateLayout: function (width, height, count) {
-                        // Auto grid calculation logic will go here
                         return [];
                     }
                 };
 
-                // Apply it
+                // Apply
                 collageState.unit = unit;
-                setCollageTemplate('custom', pxW, pxH, unit !== 'px' ? w + 'x' + h + ' ' + unit : w + 'x' + h);
+                setCollageTemplate(keepLayout ? prevId : 'custom', pxW, pxH, unit !== 'px' ? w + 'x' + h + ' ' + unit : w + 'x' + h);
 
                 toggleCustomSizeModal();
             }
@@ -3318,6 +3351,14 @@
                     };
                 }
 
+                // Defensive guards
+                if (typeof id !== 'string' || !id) return;
+                w = Number(w);
+                h = Number(h);
+                if (!isFinite(w) || w <= 0) w = Number(collageState.canvasW) || 1080;
+                if (!isFinite(h) || h <= 0) h = Number(collageState.canvasH) || 1080;
+                if (!name) name = id;
+
                 let isScrl = id.startsWith('scrl_');
                 if (!collageTemplates[id]) {
                     collageTemplates[id] = {
@@ -3332,8 +3373,10 @@
                 collageState.canvasH = h;
                 collageState.currentTemplateId = id;
 
-                document.getElementById('selectedTemplateName').innerText = name;
-                document.getElementById('selectedTemplateDims').innerText = Math.round(w) + ' x ' + Math.round(h);
+                let tplNameEl = document.getElementById('selectedTemplateName');
+                let tplDimsEl = document.getElementById('selectedTemplateDims');
+                if (tplNameEl) tplNameEl.innerText = name;
+                if (tplDimsEl) tplDimsEl.innerText = Math.round(w) + ' x ' + Math.round(h);
 
                 recalculateSmartAutoLayout();
                 initWorkspace();
@@ -3367,50 +3410,81 @@
             }
 
             // Override calculate auto grid to respect spacing
+            // Phase 1 helper: filter boxes yang valid
+            function sanitizeCollageBoxes(boxes) {
+                if (!Array.isArray(boxes)) return [];
+                return boxes.filter(b => b && isFinite(b.x) && isFinite(b.y) && isFinite(b.w) && isFinite(b.h) && b.w > 0 && b.h > 0);
+            }
+
+            // Phase 1 helper: grid aman dengan fallback spacing 0 jika kanvas padat
+            function computeSafeCollageGridBoxes(w, h, count, space) {
+                let boxes = [];
+                if (!(count > 0) || !(w > 0) || !(h > 0)) return boxes;
+                let cols = Math.ceil(Math.sqrt(count));
+                let rows = Math.ceil(count / cols);
+                let s = Math.max(0, Number(space) || 0);
+
+                let boxW = (w - (s * (cols + 1))) / cols;
+                let boxH = (h - (s * (rows + 1))) / rows;
+                if (!(boxW > 0) || !(boxH > 0)) {
+                    s = 0;
+                    boxW = w / cols;
+                    boxH = h / rows;
+                }
+
+                for (let i = 0; i < count; i++) {
+                    let r = Math.floor(i / cols);
+                    let c = i % cols;
+                    boxes.push({
+                        x: s + c * (boxW + s),
+                        y: s + r * (boxH + s),
+                        w: boxW,
+                        h: boxH
+                    });
+                }
+                return boxes;
+            }
+
+            // Override calculate auto grid to respect spacing
             function recalculateSmartAutoLayout() {
-                let count = collageState.smartAutoPhotos ? collageState.smartAutoPhotos.length : 0;
+                if (!Array.isArray(collageState.smartAutoPhotos)) collageState.smartAutoPhotos = [];
+                let photosToPlace = collageState.smartAutoPhotos.filter(u => typeof u === 'string' && u !== '');
+                let count = photosToPlace.length;
                 if (count === 0) {
                     collageState.layers = [];
                     requestRenderCollage();
                     return;
                 }
 
-                let w = collageState.canvasW;
-                let h = collageState.canvasH;
+                let w = Number(collageState.canvasW) || 1080;
+                let h = Number(collageState.canvasH) || 1080;
                 let space = collageState.spacing !== undefined ? collageState.spacing : 20;
                 let boxes = [];
 
                 let t = collageTemplates[collageState.currentTemplateId];
 
-                if (t && !t.isSmartAuto && t.calculateLayout) {
-                    // It's a custom template, use its layout logic
-                    boxes = t.calculateLayout(w, h, count);
-                    count = Math.min(count, boxes.length); // Limit count to what the layout can handle
-                } else {
-                    // Standard grid calculation
-                    let cols = Math.ceil(Math.sqrt(count));
-                    let rows = Math.ceil(count / cols);
-
-                    let boxW = (w - (space * (cols + 1))) / cols;
-                    let boxH = (h - (space * (rows + 1))) / rows;
-
-                    for (let i = 0; i < count; i++) {
-                        let r = Math.floor(i / cols);
-                        let c = i % cols;
-                        boxes.push({
-                            x: space + c * (boxW + space),
-                            y: space + r * (boxH + space),
-                            w: boxW,
-                            h: boxH
-                        });
-                    }
+                if (t && !t.isSmartAuto && typeof t.calculateLayout === 'function') {
+                    // Custom layout logic
+                    boxes = sanitizeCollageBoxes(t.calculateLayout(w, h, count));
                 }
+
+                if (boxes.length === 0) {
+                    // Safe grid calculation fallback
+                    boxes = computeSafeCollageGridBoxes(w, h, count, space);
+                }
+
+                // Phase 1: Batasi layer hanya sebanyak kapasitas layout
+                // Foto ekstra tetap tersimpan di smartAutoPhotos / photoLibrary tanpa crash
+                const usableCount = Math.min(count, boxes.length);
 
                 collageState.layers = [];
                 collageState.activeLayerId = null;
 
-                collageState.smartAutoPhotos.forEach((photoUrl, i) => {
+                for (let i = 0; i < usableCount; i++) {
+                    let photoUrl = photosToPlace[i];
                     let box = boxes[i];
+                    if (!box || !photoUrl) continue;
+
                     let layer = {
                         id: 'layer_smart_' + i + '_' + new Date().getTime(),
                         isPlaceholder: false,
@@ -3431,6 +3505,15 @@
                     };
                     collageState.layers.push(layer);
 
+                    // Gunakan imageCache jika sudah ada
+                    let cachedImg = imageCache[photoUrl];
+                    if (cachedImg && cachedImg.naturalWidth > 0) {
+                        layer.photoScale = Math.max(box.w / cachedImg.width, box.h / cachedImg.height);
+                        layer.photoOrigW = cachedImg.width;
+                        layer.photoOrigH = cachedImg.height;
+                        continue;
+                    }
+
                     // Load actual image to get dimensions for scale
                     let img = new Image();
                     img.crossOrigin = "anonymous";
@@ -3445,8 +3528,11 @@
                         layer.photoOrigH = img.height;
                         requestRenderCollage();
                     };
+                    img.onerror = function () {
+                        console.warn('[Collage] Gagal memuat foto untuk layer:', photoUrl);
+                    };
                     img.src = thumbUrl;
-                });
+                }
 
                 requestRenderCollage();
             }
@@ -13336,7 +13422,11 @@
         // ==========================================
 
         let collageState = {
-            photos: [],       // All photos (from project or local upload)
+            photos: [],       // All photos (from project or local upload - compatibility state)
+            photoLibrary: [], // All photos available in editor
+            smartAutoPhotos: [], // Photos currently selected / used by Smart Auto
+            selectedPhotoIds: [], // IDs of selected photos
+            title: '',
 
             // Canvas dimensions (aspect ratio)
             canvasW: 1080,
@@ -13369,6 +13459,7 @@
             // Queue
             queue: []
         };
+        collageState.photos = collageState.photoLibrary;
 
         // --- TEMPLATES ---
         const collageTemplates = {
@@ -13533,14 +13624,26 @@
 
             renderTemplateGrid();
             updateBackgroundConfig();
+
+            // Sinkronkan judul dan counter
+            let titleInput = document.getElementById('collageTitleInput');
+            if (titleInput) {
+                collageState.title = (titleInput.value || '').slice(0, 60);
+                let counter = document.getElementById('collageTitleCounter');
+                if (counter) counter.innerText = collageState.title.length + ' / 60';
+            }
+
             requestRenderCollage();
         }
 
         async function loadCollageProjectData() {
-            let token = document.getElementById('collageProjectSelector').value;
+            let selector = document.getElementById('collageProjectSelector');
+            if (!selector) return;
+            let token = selector.value;
             if (!token) return;
 
-            document.getElementById('collagePhotoPicker').innerHTML = '<div class="text-xs text-gray-400 text-center col-span-3 py-4"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat foto...</div>';
+            let picker = document.getElementById('collagePhotoPicker');
+            if (picker) picker.innerHTML = '<div class="text-xs text-gray-400 text-center col-span-4 py-4"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat foto...</div>';
             switchCollageSidebar('photos');
 
             try {
@@ -13549,8 +13652,8 @@
                     body: JSON.stringify({ action: 'getProjectForClient', token: token })
                 });
                 const res = await response.json();
-                if (res.status === 'success' && res.data && res.data.success) {
-                    let driveLink = res.data.project.driveLink;
+                if (res && res.status === 'success' && res.data && res.data.success) {
+                    let driveLink = res.data.project ? res.data.project.driveLink : '';
                     if (driveLink) {
                         // Tarik struktur folder Drive karena res.data.project tidak punya 'config'
                         const driveRes = await fetch(typeof API_ENDPOINT !== 'undefined' ? API_ENDPOINT : '/api/bridge', {
@@ -13560,84 +13663,263 @@
 
                         let allPhotos = [];
                         function extractPhotos(folder) {
-                            if (folder.images) folder.images.forEach(img => allPhotos.push({ url: img.url, id: img.id }));
-                            if (folder.subfolders) folder.subfolders.forEach(sub => extractPhotos(sub));
+                            if (!folder) return;
+                            if (Array.isArray(folder.images)) folder.images.forEach(img => { if (img && img.url) allPhotos.push({ url: img.url, id: img.id }); });
+                            if (Array.isArray(folder.subfolders)) folder.subfolders.forEach(sub => extractPhotos(sub));
                         }
 
-                        if (driveRes.status === 'success') {
+                        if (driveRes && driveRes.status === 'success') {
                             extractPhotos(driveRes.data);
+                        } else {
+                            console.warn('[Collage] getDriveContent gagal:', driveRes ? driveRes.message : driveRes);
                         }
 
-                        collageState.photos = allPhotos;
+                        // Normalisasi ke Photo Library. TIDAK otomatis dimasukkan ke smartAutoPhotos.
+                        let seenIds = {};
+                        let normalizedPhotos = [];
+                        allPhotos.forEach((p, i) => {
+                            let id = String(p.id || ('drive_' + i));
+                            if (seenIds[id]) return;
+                            seenIds[id] = true;
+                            normalizedPhotos.push({
+                                id: id,
+                                url: String(p.url),
+                                source: 'drive',
+                                isLocal: false
+                            });
+                        });
+
+                        ensureCollagePhotoState();
+                        // 1. Pertahankan localPhotos yang memang sengaja dipertahankan
+                        let localPhotos = collageState.photoLibrary.filter(p => p && p.isLocal);
+                        collageState.photoLibrary = localPhotos.concat(normalizedPhotos);
+                        collageState.photos = collageState.photoLibrary; // backward compatibility
+
+                        // 2. Hapus dari smartAutoPhotos semua URL Drive yang tidak lagi terdapat dalam photoLibrary baru
+                        let validUrls = new Set(collageState.photoLibrary.map(p => p && p.url).filter(Boolean));
+                        collageState.smartAutoPhotos = (Array.isArray(collageState.smartAutoPhotos) ? collageState.smartAutoPhotos : []).filter(url => validUrls.has(url));
+
+                        // 3. Local photo yang masih ada di library boleh tetap selected
+                        let validIds = new Set(collageState.photoLibrary.map(p => p && p.id).filter(Boolean));
+                        collageState.selectedPhotoIds = (Array.isArray(collageState.selectedPhotoIds) ? collageState.selectedPhotoIds : []).filter(id => validIds.has(id));
+
+                        // 4. Setelah sinkronisasi: recalculateSmartAutoLayout() jika diperlukan, renderCollagePhotoPicker(), updateCollageSelectedCount()
+                        let t = collageTemplates[collageState.currentTemplateId];
+                        if (t && t.isSmartAuto) {
+                            recalculateSmartAutoLayout();
+                        } else {
+                            if (Array.isArray(collageState.layers)) {
+                                collageState.layers.forEach(layer => {
+                                    if (layer && layer.isFrame && layer.url && !validUrls.has(layer.url) && !layer.isPlaceholder) {
+                                        layer.isPlaceholder = true;
+                                        delete imageCache[layer.url];
+                                        layer.url = '';
+                                    }
+                                });
+                            }
+                            requestRenderCollage();
+                        }
+
                         renderCollagePhotoPicker();
+                        updateCollageSelectedCount();
 
                         // Init workspace after project load
                         setTimeout(initWorkspace, 100);
                     } else {
-                        document.getElementById('collagePhotoPicker').innerHTML = '<div class="text-xs text-gray-400 text-center col-span-3 py-4 italic">Project ini tidak memiliki link Google Drive.</div>';
+                        ensureCollagePhotoState();
+                        // 1. Pertahankan localPhotos
+                        let localPhotos = collageState.photoLibrary.filter(p => p && p.isLocal);
+                        collageState.photoLibrary = localPhotos;
+                        collageState.photos = collageState.photoLibrary;
+
+                        // 2. Filter smartAutoPhotos hanya ke valid local URL
+                        let validUrls = new Set(localPhotos.map(p => p && p.url).filter(Boolean));
+                        collageState.smartAutoPhotos = (Array.isArray(collageState.smartAutoPhotos) ? collageState.smartAutoPhotos : []).filter(url => validUrls.has(url));
+
+                        // 3. Filter selectedPhotoIds hanya ke ID local yang valid
+                        let validIds = new Set(localPhotos.map(p => p && p.id).filter(Boolean));
+                        collageState.selectedPhotoIds = (Array.isArray(collageState.selectedPhotoIds) ? collageState.selectedPhotoIds : []).filter(id => validIds.has(id));
+
+                        // 4. Sinkronisasi layout/frame jika smart auto atau reset frame Drive lama menjadi placeholder
+                        let t = collageTemplates[collageState.currentTemplateId];
+                        if (t && t.isSmartAuto) {
+                            recalculateSmartAutoLayout();
+                        } else {
+                            if (Array.isArray(collageState.layers)) {
+                                collageState.layers.forEach(layer => {
+                                    if (layer && layer.isFrame && layer.url && !validUrls.has(layer.url) && !layer.isPlaceholder) {
+                                        layer.isPlaceholder = true;
+                                        delete imageCache[layer.url];
+                                        layer.url = '';
+                                    }
+                                });
+                            }
+                            requestRenderCollage();
+                        }
+
+                        // 5. Render picker & update selected count
+                        renderCollagePhotoPicker();
+                        updateCollageSelectedCount();
+
+                        if (picker && localPhotos.length === 0) {
+                            picker.innerHTML = '<div class="text-xs text-gray-400 text-center col-span-4 py-4 italic">Project ini tidak memiliki link Google Drive.</div>';
+                        }
                     }
+                } else {
+                    console.warn('[Collage] getProjectForClient gagal:', res ? res.message : res);
+                    if (picker) picker.innerHTML = '<div class="text-xs text-red-400 text-center col-span-4 py-4 italic">Gagal memuat data project.</div>';
                 }
             } catch (e) {
-                document.getElementById('collagePhotoPicker').innerHTML = '<div class="text-xs text-red-400 text-center col-span-3 py-4 italic">Gagal memuat foto.</div>';
+                console.error('[Collage] loadCollageProjectData error:', e);
+                if (picker) picker.innerHTML = '<div class="text-xs text-red-400 text-center col-span-4 py-4 italic">Gagal memuat foto.</div>';
             }
         }
 
         // --- LOCAL PHOTOS UPLOAD ---
         function handleLocalPhotosUpload(e) {
-            let files = e.target.files;
+            let input = e && e.target ? e.target : null;
+            let files = input ? input.files : null;
             if (!files || files.length === 0) return;
 
-            // Automatically use Smart Auto mode for Kolase Cepat
-            if (!collageState.smartAutoPhotos) collageState.smartAutoPhotos = [];
+            ensureCollagePhotoState();
 
             for (let i = 0; i < files.length; i++) {
                 let f = files[i];
+                if (!f) continue;
+                if (f.type && f.type.indexOf('image/') !== 0) continue;
+                // Jangan revoke ObjectURL selama file masih digunakan
                 let url = URL.createObjectURL(f);
-                // Add to main pool
-                collageState.photos.unshift({ url: url, id: 'local_' + new Date().getTime() + '_' + i, isLocal: true });
-                // Add to smart auto list
+                collageState.photoLibrary.unshift({
+                    id: 'local_' + Date.now() + '_' + i + '_' + Math.random().toString(36).slice(2, 8),
+                    url: url,
+                    source: 'local',
+                    isLocal: true
+                });
+                // Foto lokal langsung tersedia di Smart Auto
                 collageState.smartAutoPhotos.push(url);
             }
 
+            if (input) input.value = '';
+
+            collageState.photos = collageState.photoLibrary;
             renderCollagePhotoPicker();
             recalculateSmartAutoLayout();
-            document.getElementById('collageSelectedCountDisplay').innerText = collageState.smartAutoPhotos.length + ' Foto Terpilih';
+            updateCollageSelectedCount();
         }
 
         // --- LAYERS ENGINE (SCRL STYLE) ---
         let imageCache = {}; // Cache to avoid reloading HD images
 
+        // --- PHASE 1: PHOTO LIBRARY HELPERS ---
+        function ensureCollagePhotoState() {
+            if (!Array.isArray(collageState.photoLibrary)) collageState.photoLibrary = [];
+            if (!Array.isArray(collageState.smartAutoPhotos)) collageState.smartAutoPhotos = [];
+            if (!Array.isArray(collageState.selectedPhotoIds)) collageState.selectedPhotoIds = [];
+            if (!Array.isArray(collageState.layers)) collageState.layers = [];
+            if (collageState.photos !== collageState.photoLibrary) collageState.photos = collageState.photoLibrary;
+        }
+
+        function getCollageThumbUrl(url, size) {
+            if (typeof url !== 'string' || !url) return '';
+            if (url.indexOf('blob:') === 0 || url.indexOf('data:') === 0) return url;
+            let px = size || 300;
+            if (url.indexOf('googleusercontent.com') !== -1) return url.replace(/=[ws]\d+$/, '=w' + px);
+            return url.replace('=s0', '=w' + px);
+        }
+
+        function updateCollageSelectedCount() {
+            ensureCollagePhotoState();
+            let el = document.getElementById('collageSelectedCountDisplay');
+            if (el) el.innerText = collageState.smartAutoPhotos.length + ' Foto Terpilih';
+        }
+
+        function handleCollagePhotoClick(photoId) {
+            ensureCollagePhotoState();
+            let photo = collageState.photoLibrary.find(p => p && p.id === photoId);
+            if (!photo || !photo.url) return;
+
+            let t = collageTemplates[collageState.currentTemplateId];
+            let activeLayer = collageState.layers.find(l => l && l.id === collageState.activeLayerId);
+
+            // Jika frame placeholder sedang aktif, gunakan addPhotoLayer
+            if (t && !t.isSmartAuto && activeLayer && activeLayer.isFrame && String(activeLayer.id).indexOf('layer_tpl_') === 0) {
+                addPhotoLayer(photo.url);
+                return;
+            }
+
+            if (collageState.smartAutoPhotos.indexOf(photo.url) !== -1) return; // sudah dipilih
+
+            if (t && t.isSmartAuto) {
+                addPhotoLayer(photo.url);
+            } else {
+                collageState.smartAutoPhotos.push(photo.url);
+                recalculateSmartAutoLayout();
+            }
+
+            renderCollagePhotoPicker();
+            updateCollageSelectedCount();
+        }
+
         function renderCollagePhotoPicker() {
             let container = document.getElementById('collagePhotoPicker');
             if (!container) return;
+            ensureCollagePhotoState();
             container.innerHTML = '';
 
-            if (collageState.smartAutoPhotos.length === 0) {
+            let library = collageState.photoLibrary.filter(p => p && typeof p.url === 'string' && p.url !== '');
+            if (library.length === 0) {
                 container.innerHTML = '<div class="text-[10px] text-gray-400 italic col-span-4 text-center py-3">Belum ada foto yang dipilih.</div>';
                 return;
             }
 
-            collageState.smartAutoPhotos.forEach((url, i) => {
+            library.forEach((photo) => {
+                let selIdx = collageState.smartAutoPhotos.indexOf(photo.url);
+                let isSelected = selIdx !== -1;
+
                 let div = document.createElement('div');
-                div.className = "relative aspect-square bg-gray-200 rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:opacity-80 transition-all";
+                div.className = "relative aspect-square bg-gray-200 rounded-lg overflow-hidden cursor-pointer border-2 transition-all " + (isSelected ? 'border-blue-600' : 'border-transparent hover:opacity-80');
+                div.title = isSelected ? 'Sedang dipakai di kolase' : 'Klik untuk menambahkan ke kolase';
+                div.addEventListener('click', function () { handleCollagePhotoClick(photo.id); });
 
-                let thumbUrl = url.includes('blob:') ? url : url.replace('=s0', '=w300');
+                let img = document.createElement('img');
+                img.className = 'w-full h-full object-cover';
+                img.loading = 'lazy';
+                img.alt = '';
+                img.onerror = function () { img.style.visibility = 'hidden'; };
+                img.src = getCollageThumbUrl(photo.url, 300);
+                div.appendChild(img);
 
-                div.innerHTML = `
-            <img src="${thumbUrl}" class="w-full h-full object-cover">
-            <div class="absolute inset-0 bg-red-500/80 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity" onclick="removeSmartAutoPhoto(${i})">
-                <i class="fa-solid fa-trash text-white text-xs"></i>
-            </div>
-        `;
+                if (isSelected) {
+                    let badge = document.createElement('div');
+                    badge.className = 'absolute top-0.5 left-0.5 bg-blue-600 text-white text-[9px] font-bold rounded px-1 leading-4 pointer-events-none';
+                    badge.innerText = String(selIdx + 1);
+                    div.appendChild(badge);
+
+                    let removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'absolute top-0.5 right-0.5 w-5 h-5 bg-red-500/90 hover:bg-red-600 text-white rounded flex items-center justify-center';
+                    removeBtn.title = 'Lepas dari kolase (foto tetap di library)';
+                    removeBtn.innerHTML = '<i class="fa-solid fa-trash text-[9px]"></i>';
+                    removeBtn.addEventListener('click', function (ev) {
+                        ev.stopPropagation();
+                        let idx = collageState.smartAutoPhotos.indexOf(photo.url);
+                        if (idx !== -1) removeSmartAutoPhoto(idx);
+                    });
+                    div.appendChild(removeBtn);
+                }
+
                 container.appendChild(div);
             });
         }
 
         function removeSmartAutoPhoto(index) {
+            ensureCollagePhotoState();
+            if (typeof index !== 'number' || index < 0 || index >= collageState.smartAutoPhotos.length) return;
+            // Hanya mengeluarkan dari smartAutoPhotos; TIDAK menghapus dari photoLibrary
             collageState.smartAutoPhotos.splice(index, 1);
             renderCollagePhotoPicker();
             recalculateSmartAutoLayout();
-            document.getElementById('collageSelectedCountDisplay').innerText = collageState.smartAutoPhotos.length + ' Foto Terpilih';
+            updateCollageSelectedCount();
         }
         function renderTemplateGrid() {
             let container = document.getElementById('collageTemplateGrid');
@@ -13674,7 +13956,7 @@
                 return;
             }
 
-            let boxes = t.calculateLayout(collageState.canvasW, collageState.canvasH, count);
+            let boxes = sanitizeCollageBoxes(typeof t.calculateLayout === 'function' ? t.calculateLayout(collageState.canvasW, collageState.canvasH, count) : []);
 
             boxes.forEach((box, i) => {
                 let layer = {
@@ -13802,6 +14084,8 @@
                         collageState.layers.splice(idx, 1);
                         collageState.activeLayerId = null;
                         recalculateSmartAutoLayout();
+                        renderCollagePhotoPicker();
+                        updateCollageSelectedCount();
                         return;
                     }
                     collageState.layers.splice(idx, 1);
@@ -13848,8 +14132,13 @@
 
         // --- CANVAS SETTINGS ---
         function applyCustomCanvasSize() {
-            let w = parseFloat(document.getElementById('cWidth').value) || 10;
-            let h = parseFloat(document.getElementById('cHeight').value) || 15;
+            let wEl = document.getElementById('cWidth');
+            let hEl = document.getElementById('cHeight');
+            let rawW = wEl ? parseFloat(wEl.value) : NaN;
+            let rawH = hEl ? parseFloat(hEl.value) : NaN;
+            if (!Number.isFinite(rawW) || !Number.isFinite(rawH) || rawW <= 0 || rawH <= 0) return;
+            let w = rawW;
+            let h = rawH;
             let unit = document.getElementById('cUnit').value;
 
             collageState.unit = unit;
@@ -13930,12 +14219,21 @@
 
             // Background Layer setup
             let bgLayer = document.getElementById('collageBackgroundLayer');
-            bgLayer.style.backgroundColor = collageState.bgColor;
-            if (collageState.bgImage) {
-                bgLayer.innerHTML = `<img src="${collageState.bgImage}" style="width:100%;height:100%;object-fit:cover;opacity:${collageState.bgOpacity / 100};filter:blur(${collageState.bgBlur}px);">`;
-            } else {
-                bgLayer.innerHTML = '';
-                bgLayer.style.opacity = collageState.bgOpacity / 100;
+            if (bgLayer) {
+                if (collageState.bgColor === 'transparent') {
+                    bgLayer.style.backgroundColor = 'transparent';
+                    bgLayer.innerHTML = '';
+                    bgLayer.style.opacity = '0';
+                } else {
+                    bgLayer.style.backgroundColor = collageState.bgColor || '#ffffff';
+                    if (collageState.bgImage) {
+                        bgLayer.style.opacity = '1';
+                        bgLayer.innerHTML = `<img src="${collageState.bgImage}" style="width:100%;height:100%;object-fit:cover;opacity:${collageState.bgOpacity / 100};filter:blur(${collageState.bgBlur}px);">`;
+                    } else {
+                        bgLayer.innerHTML = '';
+                        bgLayer.style.opacity = collageState.bgOpacity / 100;
+                    }
+                }
             }
 
             // Clear canvas
@@ -13943,7 +14241,7 @@
 
             // Draw Layers (Photos)
             // Sort by Z-Index
-            let sortedLayers = [...collageState.layers].sort((a, b) => a.zIndex - b.zIndex);
+            let sortedLayers = (Array.isArray(collageState.layers) ? collageState.layers : []).filter(l => l).sort((a, b) => a.zIndex - b.zIndex);
 
             sortedLayers.forEach(layer => {
                 ctx.save();
@@ -14076,10 +14374,22 @@
         function applyWorkspaceTransform() {
             let area = document.getElementById('collageInteractiveArea');
             if (!area) return;
+
             area.style.width = collageState.canvasW + 'px';
             area.style.height = collageState.canvasH + 'px';
-            area.style.transform = `translate(calc(-50% + ${collageWorkspace.panX}px), calc(-50% + ${collageWorkspace.panY}px)) scale(${collageWorkspace.zoom})`;
-            document.getElementById('workspaceZoomDisplay').innerText = Math.round(collageWorkspace.zoom * 100) + '%';
+
+            area.style.transform =
+                `translate(calc(-50% + ${collageWorkspace.panX}px),
+                           calc(-50% + ${collageWorkspace.panY}px))
+                 scale(${collageWorkspace.zoom})`;
+
+            let zoomDisplay =
+                document.getElementById('workspaceZoomDisplay');
+
+            if (zoomDisplay) {
+                zoomDisplay.innerText =
+                    Math.round(collageWorkspace.zoom * 100) + '%';
+            }
         }
 
         function zoomWorkspace(delta) {
@@ -14127,10 +14437,11 @@
         // --- INTERACTIVE DRAG & DROP UI ---
         function updateInteractiveOverlays(viewScale) {
             let overlayContainer = document.getElementById('collageOverlays');
+            if (!overlayContainer) return;
             let html = '';
 
             // For each layer, draw a bounding box if active, or invisible hit box if not
-            let sortedLayers = [...collageState.layers].sort((a, b) => a.zIndex - b.zIndex);
+            let sortedLayers = (Array.isArray(collageState.layers) ? collageState.layers : []).filter(l => l).sort((a, b) => a.zIndex - b.zIndex);
 
             sortedLayers.forEach(layer => {
                 let pxX = layer.x;
@@ -14274,25 +14585,31 @@
             let ctx = finalCanvas.getContext('2d');
 
             // BG
-            ctx.fillStyle = collageState.bgColor;
-            ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+            if (collageState.bgColor === 'transparent') {
+                ctx.clearRect(0, 0, finalCanvas.width, finalCanvas.height);
+            } else {
+                ctx.fillStyle = collageState.bgColor || '#ffffff';
+                ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+            }
 
-            if (collageState.bgImage) {
+            if (collageState.bgImage && collageState.bgColor !== 'transparent') {
                 ctx.globalAlpha = collageState.bgOpacity / 100;
                 let img = new Image();
                 img.crossOrigin = "anonymous";
                 await new Promise(r => { img.onload = r; img.onerror = r; img.src = collageState.bgImage; });
-                let s = Math.max(finalCanvas.width / img.width, finalCanvas.height / img.height);
-                let dw = img.width * s; let dh = img.height * s;
-                let dx = (finalCanvas.width - dw) / 2; let dy = (finalCanvas.height - dh) / 2;
-                ctx.filter = `blur(${collageState.bgBlur * exportScale}px)`;
-                ctx.drawImage(img, dx, dy, dw, dh);
-                ctx.filter = 'none';
+                if (img.naturalWidth > 0) {
+                    let s = Math.max(finalCanvas.width / img.width, finalCanvas.height / img.height);
+                    let dw = img.width * s; let dh = img.height * s;
+                    let dx = (finalCanvas.width - dw) / 2; let dy = (finalCanvas.height - dh) / 2;
+                    ctx.filter = `blur(${collageState.bgBlur * exportScale}px)`;
+                    ctx.drawImage(img, dx, dy, dw, dh);
+                    ctx.filter = 'none';
+                }
                 ctx.globalAlpha = 1.0;
             }
 
             // Draw HD Layers
-            let sortedLayers = [...collageState.layers].sort((a, b) => a.zIndex - b.zIndex);
+            let sortedLayers = (Array.isArray(collageState.layers) ? collageState.layers : []).filter(l => l).sort((a, b) => a.zIndex - b.zIndex);
             for (let i = 0; i < sortedLayers.length; i++) {
                 let layer = sortedLayers[i];
 
@@ -14318,25 +14635,48 @@
                     hdImg.crossOrigin = "anonymous";
                     await new Promise(r => { hdImg.onload = r; hdImg.onerror = r; hdImg.src = hdUrl; });
 
-                    ctx.beginPath();
-                    ctx.rect(-layer.w / 2, -layer.h / 2, layer.w, layer.h);
-                    ctx.clip();
+                    if (hdImg.naturalWidth > 0) {
+                        ctx.beginPath();
+                        ctx.rect(-layer.w / 2, -layer.h / 2, layer.w, layer.h);
+                        ctx.clip();
 
-                    let drawW = layer.photoOrigW * layer.photoScale;
-                    let drawH = layer.photoOrigH * layer.photoScale;
-                    let drawX = (-drawW / 2) + layer.photoOffsetX;
-                    let drawY = (-drawH / 2) + layer.photoOffsetY;
+                        let drawW = layer.photoOrigW * layer.photoScale;
+                        let drawH = layer.photoOrigH * layer.photoScale;
+                        let drawX = (-drawW / 2) + layer.photoOffsetX;
+                        let drawY = (-drawH / 2) + layer.photoOffsetY;
 
-                    ctx.drawImage(hdImg, drawX, drawY, drawW, drawH);
+                        ctx.drawImage(hdImg, drawX, drawY, drawW, drawH);
+                    }
                 } else {
                     let hdUrl = layer.url.includes('blob:') ? layer.url : layer.url.replace(/=w\d+/, '=s0');
                     let hdImg = new Image();
                     hdImg.crossOrigin = "anonymous";
                     await new Promise(r => { hdImg.onload = r; hdImg.onerror = r; hdImg.src = hdUrl; });
-                    ctx.drawImage(hdImg, -layer.w / 2, -layer.h / 2, layer.w, layer.h);
+                    if (hdImg.naturalWidth > 0) {
+                        ctx.drawImage(hdImg, -layer.w / 2, -layer.h / 2, layer.w, layer.h);
+                    }
                 }
                 ctx.restore();
             }
+
+            // Draw Title on HD export if exists
+            if (collageState.title && collageState.title.trim() !== "") {
+                ctx.save();
+                ctx.fillStyle = '#ffffff';
+                let totalW = finalCanvas.width;
+                let totalH = finalCanvas.height;
+                let fontSize = Math.min(150 * exportScale, totalW * 0.05);
+                ctx.font = `bold ${fontSize}px sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = 10 * exportScale;
+                ctx.shadowOffsetX = 2 * exportScale;
+                ctx.shadowOffsetY = 2 * exportScale;
+                ctx.fillText(collageState.title, totalW / 2, totalH - (fontSize / 2));
+                ctx.restore();
+            }
+
             Swal.close();
             return finalCanvas;
         }
@@ -14345,6 +14685,8 @@
             if (collageState.layers.length === 0) return;
 
             let hdCanvas = await compositeFinalHDCanvas();
+            let isTransparent = collageState.bgColor === 'transparent';
+            let ext = isTransparent ? '.png' : '.jpg';
 
             if (collageState.isCarousel && collageState.carouselScreens > 1) {
                 // Slice the carousel
@@ -14356,11 +14698,14 @@
                     let sliceCanvas = document.createElement('canvas');
                     sliceCanvas.width = screenW; sliceCanvas.height = hdCanvas.height;
                     let sCtx = sliceCanvas.getContext('2d');
+                    if (isTransparent) {
+                        sCtx.clearRect(0, 0, screenW, hdCanvas.height);
+                    }
                     sCtx.drawImage(hdCanvas, i * screenW, 0, screenW, hdCanvas.height, 0, 0, screenW, hdCanvas.height);
 
-                    let dataUrl = sliceCanvas.toDataURL('image/jpeg', 0.95);
+                    let dataUrl = isTransparent ? sliceCanvas.toDataURL('image/png') : sliceCanvas.toDataURL('image/jpeg', 0.95);
                     let base64Data = dataUrl.split(',')[1];
-                    folder.file(`Slide_${i + 1}.jpg`, base64Data, { base64: true });
+                    folder.file(`Slide_${i + 1}${ext}`, base64Data, { base64: true });
                 }
                 zip.generateAsync({ type: "blob" }).then(function (content) {
                     saveAs(content, "Kama_Carousel_Seamless.zip");
@@ -14368,10 +14713,10 @@
                 });
             } else {
                 // Single download
-                let dataUrl = hdCanvas.toDataURL('image/jpeg', 0.95);
+                let dataUrl = isTransparent ? hdCanvas.toDataURL('image/png') : hdCanvas.toDataURL('image/jpeg', 0.95);
                 let a = document.createElement('a');
                 a.href = dataUrl;
-                a.download = `PremiumCollage-${new Date().getTime()}.jpg`;
+                a.download = `PremiumCollage-${new Date().getTime()}${ext}`;
                 document.body.appendChild(a); a.click(); document.body.removeChild(a);
             }
         }
@@ -14431,7 +14776,13 @@
         function updateCollageTitle() {
             var el = document.getElementById('collageTitleInput');
             if (el) {
-                collageState.title = el.value;
+                var val = (el.value || '').slice(0, 60);
+                if (el.value !== val) el.value = val;
+                collageState.title = val;
+                var counter = document.getElementById('collageTitleCounter');
+                if (counter) {
+                    counter.innerText = val.length + ' / 60';
+                }
                 requestRenderCollage();
             }
         }
