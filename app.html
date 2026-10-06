@@ -2150,22 +2150,74 @@
                                             bagian bawah kolase.</p>
                                     </div>
 
-                                    <!-- Gaya & Warna -->
+                                    <!-- Gaya & Warna / Background -->
                                     <div>
-                                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Warna Latar (Background)</label>
-                                        <div class="relative">
-                                            <select id="collageBgSelect" onchange="updateCollageBgColor()"
-                                                class="w-full appearance-none border border-gray-200 rounded-xl pl-10 pr-4 py-2 text-xs font-bold text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer bg-gray-50 focus:bg-white shadow-sm">
-                                                <option value="#ffffff">Putih Bersih</option>
-                                                <option value="#1a1a1a">Hitam Elegan</option>
-                                                <option value="#f8ede3">Pastel Hangat</option>
-                                                <option value="transparent">Transparan (PNG)</option>
-                                            </select>
-                                            <div id="collageBgPreviewBox"
-                                                class="w-4 h-4 rounded shadow-sm border border-gray-300 absolute left-3 top-1/2 -translate-y-1/2 bg-white">
+                                        <div class="flex items-center justify-between mb-1.5">
+                                            <label class="block text-xs font-medium text-gray-600">Warna Latar (Background)</label>
+                                        </div>
+
+                                        <!-- Hidden compatibility select for collageBgSelect -->
+                                        <select id="collageBgSelect" onchange="updateCollageBgColor()" class="hidden">
+                                            <option value="#ffffff">Putih Bersih</option>
+                                            <option value="#1a1a1a">Hitam Elegan</option>
+                                            <option value="#f8ede3">Pastel Hangat</option>
+                                            <option value="transparent">Transparan (PNG)</option>
+                                        </select>
+
+                                        <!-- Quick Presets Swatches -->
+                                        <div class="grid grid-cols-4 gap-1.5 mb-2.5">
+                                            <!-- Putih -->
+                                            <button type="button" id="btn_bg_white" onclick="setCollageBackgroundColor('#ffffff')"
+                                                class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-gray-200 text-xs font-bold transition-all bg-white hover:bg-gray-50 text-gray-700 cursor-pointer shadow-sm"
+                                                title="Putih (#FFFFFF)">
+                                                <span class="w-3.5 h-3.5 rounded-full border border-gray-300 bg-white shrink-0"></span>
+                                                <span class="text-[11px]">Putih</span>
+                                            </button>
+
+                                            <!-- Hitam -->
+                                            <button type="button" id="btn_bg_black" onclick="setCollageBackgroundColor('#1a1a1a')"
+                                                class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-gray-200 text-xs font-bold transition-all bg-white hover:bg-gray-50 text-gray-700 cursor-pointer shadow-sm"
+                                                title="Hitam (#1A1A1A)">
+                                                <span class="w-3.5 h-3.5 rounded-full border border-gray-900 bg-[#1a1a1a] shrink-0"></span>
+                                                <span class="text-[11px]">Hitam</span>
+                                            </button>
+
+                                            <!-- Cream / Pastel -->
+                                            <button type="button" id="btn_bg_cream" onclick="setCollageBackgroundColor('#f8ede3')"
+                                                class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-gray-200 text-xs font-bold transition-all bg-white hover:bg-gray-50 text-gray-700 cursor-pointer shadow-sm"
+                                                title="Cream (#F8EDE3)">
+                                                <span class="w-3.5 h-3.5 rounded-full border border-[#e5d5c5] bg-[#f8ede3] shrink-0"></span>
+                                                <span class="text-[11px]">Cream</span>
+                                            </button>
+
+                                            <!-- Transparan -->
+                                            <button type="button" id="btn_bg_transparent" onclick="setCollageBackgroundColor('transparent')"
+                                                class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-gray-200 text-xs font-bold transition-all bg-white hover:bg-gray-50 text-gray-700 cursor-pointer shadow-sm"
+                                                title="Transparan (PNG)">
+                                                <span class="w-3.5 h-3.5 rounded-full border border-gray-300 bg-[linear-gradient(45deg,#ccc_25%,transparent_25%),linear-gradient(-45deg,#ccc_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#ccc_75%),linear-gradient(-45deg,transparent_75%,#ccc_75%)] bg-[size:6px_6px] bg-[position:0_0,0_3px,3px_-3px,-3px_0] shrink-0"></span>
+                                                <span class="text-[11px]">Transparan</span>
+                                            </button>
+                                        </div>
+
+                                        <!-- Custom Color Controls (Color Picker + HEX Input) -->
+                                        <div class="flex items-center gap-2 bg-gray-50/70 border border-gray-200 rounded-xl p-1.5 pr-2.5 shadow-sm">
+                                            <!-- Native Color Picker with visual preview swatch -->
+                                            <div class="relative w-7 h-7 rounded-lg overflow-hidden border border-gray-300 shadow-sm shrink-0 cursor-pointer group" title="Pilih warna custom">
+                                                <input type="color" id="collageBgColorPicker" oninput="handleCollageBgColorPicker(this.value)"
+                                                    class="absolute -inset-2 w-12 h-12 cursor-pointer border-0 p-0 opacity-0">
+                                                <div id="collageBgPreviewBox" class="w-full h-full bg-white flex items-center justify-center pointer-events-none transition-colors">
+                                                    <i class="fa-solid fa-eye-dropper text-[10px] text-gray-400 group-hover:text-gray-700"></i>
+                                                </div>
                                             </div>
-                                            <i
-                                                class="fa-solid fa-chevron-down text-gray-400 text-xs absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+
+                                            <div class="flex-1 flex items-center gap-1.5 min-w-0">
+                                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0">HEX</span>
+                                                <input type="text" id="collageBgHexInput" maxlength="7" placeholder="#FFFFFF"
+                                                    oninput="handleCollageBgHexTyping(this.value)"
+                                                    onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }"
+                                                    onblur="handleCollageBgHexInput(this.value)"
+                                                    class="w-full bg-white border border-gray-200 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-gray-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all uppercase placeholder-gray-300">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -13524,7 +13576,7 @@ function syncCollageTemplateUI() {
 
             // Background
             bgType: 'color', // 'color' or 'image'
-            bgColor: '#F4F4F0',
+            bgColor: '#ffffff',
             bgImage: null,
             bgOpacity: 100,
             bgBlur: 0,
@@ -13946,6 +13998,7 @@ function syncCollageTemplateUI() {
             renderTemplateGrid();
             updateBackgroundConfig();
             syncCollageTemplateUI();
+            if (typeof syncCollageBackgroundUI === 'function') syncCollageBackgroundUI();
 
             // Sinkronkan judul dan counter
             let titleInput = document.getElementById('collageTitleInput');
@@ -15453,15 +15506,129 @@ function syncCollageTemplateUI() {
             }
         }
 
+        function setCollageBackgroundColor(value) {
+            if (!value) return;
+            collageState.bgColor = value;
+            syncCollageBackgroundUI();
+            requestRenderCollage();
+        }
+
+        function handleCollageBgColorPicker(val) {
+            if (!val) return;
+            setCollageBackgroundColor(val.toLowerCase());
+        }
+
+        function handleCollageBgHexTyping(value) {
+            let raw = String(value || '').trim();
+            if (/^#?[0-9A-Fa-f]{6}$/.test(raw)) {
+                handleCollageBgHexInput(raw);
+            }
+        }
+
+        function handleCollageBgHexInput(val) {
+            if (val === undefined || val === null) return;
+            let hex = String(val).trim();
+            if (!hex) {
+                syncCollageBackgroundUI();
+                return;
+            }
+            if (!hex.startsWith('#')) {
+                hex = '#' + hex;
+            }
+            if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+                setCollageBackgroundColor(hex.toLowerCase());
+            } else {
+                let input = document.getElementById('collageBgHexInput');
+                if (input) {
+                    input.classList.add('border-red-400', 'ring-1', 'ring-red-300');
+                    setTimeout(() => {
+                        if (input) {
+                            input.classList.remove('border-red-400', 'ring-1', 'ring-red-300');
+                            syncCollageBackgroundUI();
+                        }
+                    }, 800);
+                }
+            }
+        }
+
+        function syncCollageBackgroundUI() {
+            ensureCollagePhotoState();
+            let current = (collageState.bgColor || '#ffffff').toLowerCase();
+
+            // 1. Sync compatibility select if present
+            let sel = document.getElementById('collageBgSelect');
+            if (sel && sel.options) {
+                let matchedPreset = false;
+                for (let i = 0; i < sel.options.length; i++) {
+                    let opt = sel.options[i];
+                    if (opt && opt.value && opt.value.toLowerCase() === current) {
+                        sel.value = opt.value;
+                        matchedPreset = true;
+                        break;
+                    }
+                }
+                if (!matchedPreset) {
+                    sel.selectedIndex = -1;
+                }
+            }
+
+            // 2. Preset buttons active state
+            let presets = {
+                'btn_bg_white': '#ffffff',
+                'btn_bg_black': '#1a1a1a',
+                'btn_bg_cream': '#f8ede3',
+                'btn_bg_transparent': 'transparent'
+            };
+
+            for (let btnId in presets) {
+                let btn = document.getElementById(btnId);
+                if (!btn) continue;
+                let isActive = (current === presets[btnId]);
+                if (isActive) {
+                    btn.className = 'flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border-2 border-blue-600 bg-blue-50/80 text-blue-700 text-xs font-bold transition-all cursor-pointer shadow-sm ring-1 ring-blue-500/20';
+                } else {
+                    btn.className = 'flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-gray-200 text-xs font-bold transition-all bg-white hover:bg-gray-50 text-gray-700 cursor-pointer shadow-sm';
+                }
+            }
+
+            // 3. Color Picker & HEX Input & Preview Box
+            let picker = document.getElementById('collageBgColorPicker');
+            let hexInput = document.getElementById('collageBgHexInput');
+            let previewBox = document.getElementById('collageBgPreviewBox');
+
+            if (current === 'transparent') {
+                if (hexInput) {
+                    hexInput.value = 'TRANSPARENT';
+                    hexInput.disabled = true;
+                    hexInput.classList.add('bg-gray-100', 'text-gray-400', 'italic');
+                }
+                if (previewBox) {
+                    previewBox.style.backgroundColor = 'transparent';
+                    previewBox.style.backgroundImage = 'linear-gradient(45deg,#ccc 25%,transparent 25%),linear-gradient(-45deg,#ccc 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ccc 75%),linear-gradient(-45deg,transparent 75%,#ccc 75%)';
+                    previewBox.style.backgroundSize = '6px 6px';
+                    previewBox.style.backgroundPosition = '0 0,0 3px,3px -3px,-3px 0';
+                }
+            } else {
+                let hex = current.startsWith('#') ? current : ('#' + current);
+                if (picker && /^#[0-9a-f]{6}$/i.test(hex)) {
+                    picker.value = hex;
+                }
+                if (hexInput) {
+                    hexInput.value = hex.toUpperCase();
+                    hexInput.disabled = false;
+                    hexInput.classList.remove('bg-gray-100', 'text-gray-400', 'italic');
+                }
+                if (previewBox) {
+                    previewBox.style.backgroundImage = 'none';
+                    previewBox.style.backgroundColor = hex;
+                }
+            }
+        }
+
         function updateCollageBgColor() {
             var el = document.getElementById('collageBgSelect');
             if (el) {
-                collageState.bgColor = el.value;
-                var previewBox = document.getElementById('collageBgPreviewBox');
-                if (previewBox) {
-                    previewBox.style.backgroundColor = el.value === 'transparent' ? '#ffffff' : el.value;
-                }
-                requestRenderCollage();
+                setCollageBackgroundColor(el.value);
             }
         }
 
