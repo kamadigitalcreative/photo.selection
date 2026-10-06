@@ -13992,6 +13992,70 @@
             requestRenderCollage();
         }
 
+        async function collectCollageDrivePhotos(rootFolderId) {
+            const visitedFolderIds = new Set();
+            const seenPhotoKeys = new Set();
+            const collectedPhotos = [];
+            let hadFetchError = false;
+
+            async function traverseFolder(folderId) {
+                if (!folderId) return;
+                const normalizedFolderId = String(folderId).trim();
+                if (!normalizedFolderId || visitedFolderIds.has(normalizedFolderId)) return;
+                visitedFolderIds.add(normalizedFolderId);
+
+                let res = null;
+                try {
+                    const response = await fetch(typeof API_ENDPOINT !== 'undefined' ? API_ENDPOINT : '/api/bridge', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'getDriveContent', folder_id: normalizedFolderId })
+                    });
+                    res = await response.json();
+                } catch (err) {
+                    console.warn('[Collage] getDriveContent error for folder ' + normalizedFolderId + ':', err);
+                    hadFetchError = true;
+                    return;
+                }
+
+                if (!res || res.status !== 'success' || !res.data) {
+                    console.warn('[Collage] getDriveContent unsuccessful for folder ' + normalizedFolderId + ':', res);
+                    hadFetchError = true;
+                    return;
+                }
+
+                const images = Array.isArray(res.data.images) ? res.data.images : [];
+                images.forEach(img => {
+                    if (!img || !img.url) return;
+                    const key = img.id ? ('id:' + String(img.id)) : ('url:' + String(img.url));
+                    if (seenPhotoKeys.has(key)) return;
+                    seenPhotoKeys.add(key);
+
+                    collectedPhotos.push({
+                        id: String(img.id || ('drive_' + collectedPhotos.length)),
+                        url: String(img.url),
+                        name: img.name || '',
+                        source: 'drive',
+                        isLocal: false
+                    });
+                });
+
+                const subfolders = Array.isArray(res.data.folders) ? res.data.folders : [];
+                for (const sub of subfolders) {
+                    if (sub && sub.id) {
+                        await traverseFolder(sub.id);
+                    }
+                }
+            }
+
+            await traverseFolder(rootFolderId);
+
+            return {
+                photos: collectedPhotos,
+                hasError: hadFetchError && collectedPhotos.length === 0
+            };
+        }
+
         async function loadCollageProjectData() {
             let selector = document.getElementById('collageProjectSelector');
             if (!selector) return;
@@ -13999,7 +14063,7 @@
             if (!token) return;
 
             let picker = document.getElementById('collagePhotoPicker');
-            if (picker) picker.innerHTML = '<div class="text-xs text-gray-400 text-center col-span-4 py-4"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat foto...</div>';
+            if (picker) picker.innerHTML = '<div class="text-xs text-gray-400 text-center col-span-4 py-4"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat foto dari Google Drive...</div>';
             switchCollageSidebar('photos');
 
             try {
@@ -14011,39 +14075,8 @@
                 if (res && res.status === 'success' && res.data && res.data.success) {
                     let driveLink = res.data.project ? res.data.project.driveLink : '';
                     if (driveLink) {
-                        // Tarik struktur folder Drive karena res.data.project tidak punya 'config'
-                        const driveRes = await fetch(typeof API_ENDPOINT !== 'undefined' ? API_ENDPOINT : '/api/bridge', {
-                            method: 'POST', headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'getDriveContent', folder_id: driveLink })
-                        }).then(r => r.json());
-
-                        let allPhotos = [];
-                        function extractPhotos(folder) {
-                            if (!folder) return;
-                            if (Array.isArray(folder.images)) folder.images.forEach(img => { if (img && img.url) allPhotos.push({ url: img.url, id: img.id }); });
-                            if (Array.isArray(folder.subfolders)) folder.subfolders.forEach(sub => extractPhotos(sub));
-                        }
-
-                        if (driveRes && driveRes.status === 'success') {
-                            extractPhotos(driveRes.data);
-                        } else {
-                            console.warn('[Collage] getDriveContent gagal:', driveRes ? driveRes.message : driveRes);
-                        }
-
-                        // Normalisasi ke Photo Library. TIDAK otomatis dimasukkan ke smartAutoPhotos.
-                        let seenIds = {};
-                        let normalizedPhotos = [];
-                        allPhotos.forEach((p, i) => {
-                            let id = String(p.id || ('drive_' + i));
-                            if (seenIds[id]) return;
-                            seenIds[id] = true;
-                            normalizedPhotos.push({
-                                id: id,
-                                url: String(p.url),
-                                source: 'drive',
-                                isLocal: false
-                            });
-                        });
+                        const driveResult = await collectCollageDrivePhotos(driveLink);
+                        let normalizedPhotos = driveResult.photos || [];
 
                         ensureCollagePhotoState();
                         // 1. Pertahankan localPhotos yang memang sengaja dipertahankan
@@ -14070,6 +14103,11 @@
                                         layer.isPlaceholder = true;
                                         delete imageCache[layer.url];
                                         layer.url = '';
+                                        layer.photoOffsetX = 0;
+                                        layer.photoOffsetY = 0;
+                                        layer.photoScale = 1;
+                                        layer.photoOrigW = 0;
+                                        layer.photoOrigH = 0;
                                     }
                                 });
                             }
@@ -14078,6 +14116,14 @@
 
                         renderCollagePhotoPicker();
                         updateCollageSelectedCount();
+
+                        if (picker && localPhotos.length === 0) {
+                            if (driveResult.hasError) {
+                                picker.innerHTML = '<div class="text-xs text-red-400 text-center col-span-4 py-4 italic">Gagal memuat foto dari Google Drive.</div>';
+                            } else if (normalizedPhotos.length === 0) {
+                                picker.innerHTML = '<div class="text-xs text-gray-400 text-center col-span-4 py-4 italic">Folder Google Drive tidak memiliki foto yang dapat ditampilkan.</div>';
+                            }
+                        }
 
                         // Init workspace after project load
                         setTimeout(initWorkspace, 100);
@@ -14107,6 +14153,11 @@
                                         layer.isPlaceholder = true;
                                         delete imageCache[layer.url];
                                         layer.url = '';
+                                        layer.photoOffsetX = 0;
+                                        layer.photoOffsetY = 0;
+                                        layer.photoScale = 1;
+                                        layer.photoOrigW = 0;
+                                        layer.photoOrigH = 0;
                                     }
                                 });
                             }
@@ -14127,7 +14178,7 @@
                 }
             } catch (e) {
                 console.error('[Collage] loadCollageProjectData error:', e);
-                if (picker) picker.innerHTML = '<div class="text-xs text-red-400 text-center col-span-4 py-4 italic">Gagal memuat foto.</div>';
+                if (picker) picker.innerHTML = '<div class="text-xs text-red-400 text-center col-span-4 py-4 italic">Gagal memuat foto dari Google Drive.</div>';
             }
         }
 
