@@ -502,6 +502,65 @@ async function handleLogout(payload, req, res) {
   return success(res, { success: true, message: 'Logout berhasil' });
 }
 
+async function requireProjectAccess(authUser, idOrToken, res) {
+  if (!authUser || !authUser.username) {
+    if (res) error(res, 'Sesi tidak valid atau telah berakhir. Silakan login kembali.', 401);
+    return null;
+  }
+
+  const cleanId = String(idOrToken || '').trim();
+  if (!cleanId) {
+    if (res) error(res, 'Project tidak ditemukan', 404);
+    return null;
+  }
+
+  let projects = null;
+  try {
+    projects = await supabaseQuery(`projects?or=(id.eq.${encodeURIComponent(cleanId)},Token.eq.${encodeURIComponent(cleanId)})&select=*`);
+  } catch (err) {
+    console.error('requireProjectAccess lookup error:', err);
+    if (res) error(res, 'Gagal memuat data project', 500);
+    return null;
+  }
+
+  if (!projects || !Array.isArray(projects) || projects.length === 0) {
+    if (res) error(res, 'Project tidak ditemukan', 404);
+    return null;
+  }
+
+  const project = projects[0];
+
+  // Admin retains global access
+  if (authUser.role === 'Admin') {
+    return project;
+  }
+
+  // Non-Admin: normalized Owner vs authUser.username comparison
+  const projectOwner = String(project.Owner || '').trim().toLowerCase();
+  const callerUsername = String(authUser.username || '').trim().toLowerCase();
+
+  if (projectOwner !== callerUsername) {
+    if (res) error(res, 'Akses project ditolak.', 403);
+    return null;
+  }
+
+  return project;
+}
+
+function getProjectMutationFilter(project) {
+  const dbId = String((project && project.id) || '').trim();
+  if (dbId) {
+    return `id=eq.${encodeURIComponent(dbId)}`;
+  }
+
+  const token = String((project && project.Token) || '').trim();
+  if (token) {
+    return `Token=eq.${encodeURIComponent(token)}`;
+  }
+
+  throw new Error('Authorized project has no stable identifier');
+}
+
 module.exports = async function handler(req, res) {
   const allowedOrigins = [
     'https://ps.kamacreative.my.id',
@@ -888,8 +947,8 @@ async function handlePingUser(payload, res) {
 
 async function handleGetProjects(payload, res) {
   const authUser = payload.authUser || {};
-  const username = authUser.username || (payload.currentUser && payload.currentUser.username) || payload.username || '';
-  const role = authUser.role || (payload.currentUser && payload.currentUser.role) || payload.role || 'Photographer';
+  const username = authUser.username || '';
+  const role = authUser.role || 'Photographer';
 
   let endpoint = 'projects?select=*&order=created_at.desc';
   if (role !== 'Admin') {
@@ -986,7 +1045,10 @@ async function handleGetProjects(payload, res) {
 async function handleCreateProject(payload, res) {
   const d = payload.formData || payload.data || payload || {};
   const authUser = payload.authUser || {};
-  const username = authUser.username || 'admin';
+  const username = String(authUser.username || '').trim();
+  if (!username) {
+    return error(res, 'Sesi tidak valid atau telah berakhir. Silakan login kembali.', 401);
+  }
 
   const token = crypto.randomBytes(6).toString('hex');
   const projectId = crypto.randomUUID();
@@ -1175,9 +1237,13 @@ async function handleVerifyClientPassword(payload, res) {
 }
 
 async function handleUpdateClientPassword(payload, res) {
-  const idOrToken = (payload.id || payload.token || '').trim();
+  const idOrToken = (payload.id || payload.token || payload.projectId || '').trim();
+  const project = await requireProjectAccess(payload.authUser, idOrToken, res);
+  if (!project) return;
+
   const newPassword = (payload.newPassword || '').trim();
-  await supabaseQuery(`projects?or=(id.eq.${encodeURIComponent(idOrToken)},Token.eq.${encodeURIComponent(idOrToken)})`, {
+  const filter = getProjectMutationFilter(project);
+  await supabaseQuery(`projects?${filter}`, {
     method: 'PATCH',
     body: { 'Password Client': newPassword }
   });
@@ -1260,10 +1326,14 @@ async function handleReleaseClientSession(payload, res) {
 }
 
 async function handleUpdateDeadline(payload, res) {
-  const idOrToken = (payload.id || payload.token || '').trim();
-  const newDeadline = payload.newDeadline || '';
+  const idOrToken = (payload.id || payload.token || payload.projectId || '').trim();
+  const project = await requireProjectAccess(payload.authUser, idOrToken, res);
+  if (!project) return;
 
-  await supabaseQuery(`projects?or=(id.eq.${encodeURIComponent(idOrToken)},Token.eq.${encodeURIComponent(idOrToken)})`, {
+  const newDeadline = payload.newDeadline || '';
+  const filter = getProjectMutationFilter(project);
+
+  await supabaseQuery(`projects?${filter}`, {
     method: 'PATCH',
     body: { Deadline: newDeadline }
   });
@@ -1272,19 +1342,27 @@ async function handleUpdateDeadline(payload, res) {
 }
 
 async function handleDeleteProject(payload, res) {
-  const idOrToken = (payload.id || payload.token || '').trim();
-  await supabaseQuery(`projects?or=(id.eq.${encodeURIComponent(idOrToken)},Token.eq.${encodeURIComponent(idOrToken)})`, { method: 'DELETE' });
+  const idOrToken = (payload.id || payload.token || payload.projectId || '').trim();
+  const project = await requireProjectAccess(payload.authUser, idOrToken, res);
+  if (!project) return;
+
+  const filter = getProjectMutationFilter(project);
+  await supabaseQuery(`projects?${filter}`, { method: 'DELETE' });
   return success(res, { success: true, message: 'Project berhasil dihapus' });
 }
 
 async function handleReopenProject(payload, res) {
   const projectId = (payload.projectId || payload.id || payload.token || '').trim();
+  const project = await requireProjectAccess(payload.authUser, projectId, res);
+  if (!project) return;
+
   const updateBody = { Status: 'Sedang Memilih', 'Status Client': 'Sedang Memilih' };
   if (payload.newMax) {
     updateBody['Max Foto'] = String(payload.newMax);
   }
 
-  await supabaseQuery(`projects?or=(id.eq.${encodeURIComponent(projectId)},Token.eq.${encodeURIComponent(projectId)})`, {
+  const filter = getProjectMutationFilter(project);
+  await supabaseQuery(`projects?${filter}`, {
     method: 'PATCH',
     body: updateBody
   });
@@ -1293,15 +1371,15 @@ async function handleReopenProject(payload, res) {
 }
 
 async function handleToggleProjectWatermark(payload, res) {
-  const idOrToken = (payload.id || payload.token || '').trim();
-  const existing = await supabaseQuery(`projects?or=(id.eq.${encodeURIComponent(idOrToken)},Token.eq.${encodeURIComponent(idOrToken)})&select=*`);
-  if (!existing || existing.length === 0) return error(res, 'Project tidak ditemukan');
+  const idOrToken = (payload.id || payload.token || payload.projectId || '').trim();
+  const project = await requireProjectAccess(payload.authUser, idOrToken, res);
+  if (!project) return;
 
-  const p = existing[0];
-  const currentVal = String(p.UseWatermark).toUpperCase() === 'TRUE';
+  const currentVal = String(project.UseWatermark).toUpperCase() === 'TRUE';
   const newVal = !currentVal;
+  const filter = getProjectMutationFilter(project);
 
-  await supabaseQuery(`projects?or=(id.eq.${encodeURIComponent(idOrToken)},Token.eq.${encodeURIComponent(idOrToken)})`, {
+  await supabaseQuery(`projects?${filter}`, {
     method: 'PATCH',
     body: { UseWatermark: String(newVal).toUpperCase() }
   });
@@ -1310,15 +1388,15 @@ async function handleToggleProjectWatermark(payload, res) {
 }
 
 async function handleToggleProjectDownload(payload, res) {
-  const idOrToken = (payload.id || payload.token || '').trim();
-  const existing = await supabaseQuery(`projects?or=(id.eq.${encodeURIComponent(idOrToken)},Token.eq.${encodeURIComponent(idOrToken)})&select=*`);
-  if (!existing || existing.length === 0) return error(res, 'Project tidak ditemukan');
+  const idOrToken = (payload.id || payload.token || payload.projectId || '').trim();
+  const project = await requireProjectAccess(payload.authUser, idOrToken, res);
+  if (!project) return;
 
-  const p = existing[0];
-  const currentVal = String(p.AksesDownload || p.Akses_Download).toUpperCase() !== 'FALSE';
+  const currentVal = String(project.AksesDownload || project.Akses_Download).toUpperCase() !== 'FALSE';
   const newVal = !currentVal;
+  const filter = getProjectMutationFilter(project);
 
-  await supabaseQuery(`projects?or=(id.eq.${encodeURIComponent(idOrToken)},Token.eq.${encodeURIComponent(idOrToken)})`, {
+  await supabaseQuery(`projects?${filter}`, {
     method: 'PATCH',
     body: {
       AksesDownload: String(newVal).toUpperCase(),
@@ -1330,14 +1408,15 @@ async function handleToggleProjectDownload(payload, res) {
 }
 
 async function handleUpdateProjectMaxFoto(payload, res) {
-  const idOrToken = (payload.id || payload.token || '').trim();
+  const idOrToken = (payload.id || payload.token || payload.projectId || '').trim();
   const newMax = parseInt(payload.newMax);
   if (isNaN(newMax) || newMax < 0) return error(res, 'Batas maksimal foto tidak valid');
 
-  const existing = await supabaseQuery(`projects?or=(id.eq.${encodeURIComponent(idOrToken)},Token.eq.${encodeURIComponent(idOrToken)})&select=*`);
-  if (!existing || existing.length === 0) return error(res, 'Project tidak ditemukan');
+  const project = await requireProjectAccess(payload.authUser, idOrToken, res);
+  if (!project) return;
 
-  await supabaseQuery(`projects?or=(id.eq.${encodeURIComponent(idOrToken)},Token.eq.${encodeURIComponent(idOrToken)})`, {
+  const filter = getProjectMutationFilter(project);
+  await supabaseQuery(`projects?${filter}`, {
     method: 'PATCH',
     body: {
       'Max Foto': String(newMax)
@@ -1349,9 +1428,13 @@ async function handleUpdateProjectMaxFoto(payload, res) {
 
 async function handleProcessPayment(payload, res) {
   const projectId = (payload.projectId || payload.id || payload.token || '').trim();
-  const status = payload.status || 'Selesai';
+  const project = await requireProjectAccess(payload.authUser, projectId, res);
+  if (!project) return;
 
-  await supabaseQuery(`projects?or=(id.eq.${encodeURIComponent(projectId)},Token.eq.${encodeURIComponent(projectId)})`, {
+  const status = payload.status || 'Selesai';
+  const filter = getProjectMutationFilter(project);
+
+  await supabaseQuery(`projects?${filter}`, {
     method: 'PATCH',
     body: { Status: status, 'Status Client': status }
   });
