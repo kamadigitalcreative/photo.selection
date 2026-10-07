@@ -7009,12 +7009,19 @@ function syncCollageTemplateUI() {
                     '/reports/feedback': 'admin-feedback',
                     '/docs/guide': 'panduan',
                     '/support/feedback': 'feedback',
+                    '/admin/settings': 'settings',
+                    '/admin/premium-addon': 'premium-addon',
                     // Fallbacks
+                    '/settings': 'settings',
+                    '/pengaturan': 'settings',
+                    '/premium-addon': 'premium-addon',
                     '/dashboard': 'dashboard',
                     '/projects': 'projects',
                     '/users': 'users',
                     '/status': 'status',
                     '/collage': 'collage',
+                    '/sortir-lokal': 'sortir-lokal',
+                    '/sortirlokal': 'sortir-lokal',
                     '/admin-feedback': 'admin-feedback',
                     '/panduan': 'panduan',
                     '/feedback': 'feedback'
@@ -7049,7 +7056,7 @@ function syncCollageTemplateUI() {
                     showView('admin-view');
 
                     // Buka tab sesuai link, jika link tidak dikenali, kembali ke dashboard
-                    var validAdminTabs = ['dashboard', 'projects', 'status', 'users', 'admin-feedback', 'sortir-lokal'];
+                    var validAdminTabs = ['dashboard', 'projects', 'status', 'users', 'admin-feedback', 'sortir-lokal', 'collage', 'settings', 'premium-addon', 'panduan'];
                     if (currentTab === 'sortirlokal' || currentTab === 'sortir-lokal') {
                         showView('admin-view');
                         switchAdminTab('sortir-lokal', true);
@@ -7069,7 +7076,7 @@ function syncCollageTemplateUI() {
                     for (var p = 0; p < photoCols.length; p++) { if (photoCols[p] && photoCols[p].classList) photoCols[p].classList.remove('hidden'); } // Tampilkan khusus fotografer
 
                     // Buka tab sesuai link, jika link tidak dikenali, kembali ke projects
-                    var validPhotoTabs = ['projects', 'status', 'panduan', 'feedback', 'collage', 'sortir-lokal'];
+                    var validPhotoTabs = ['projects', 'status', 'panduan', 'feedback', 'collage', 'sortir-lokal', 'settings', 'premium-addon'];
                     if (currentTab === 'sortirlokal' || currentTab === 'sortir-lokal') {
                         showView('admin-view');
                         switchAdminTab('sortir-lokal', true);
@@ -7327,7 +7334,10 @@ function syncCollageTemplateUI() {
                     'panduan': '/docs/guide',
                     'premium-addon': '/admin/premium-addon',
                     'feedback': '/support/feedback',
-                    'pengaturan': '/admin/settings'
+                    'settings': '/admin/settings',
+                    'pengaturan': '/admin/settings',
+                    'collage': '/collage',
+                    'sortir-lokal': '/sortir-lokal'
                 };
                 var targetUrl = urlMap[tabId] || ('/' + tabId);
                 try { window.history.pushState({ tab: tabId }, '', targetUrl); } catch (e) { }

@@ -26,6 +26,14 @@
       "destination": "/app.html"
     },
     {
+      "source": "/admin/settings",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/admin/premium-addon",
+      "destination": "/app.html"
+    },
+    {
       "source": "/projects(.*)",
       "destination": "/app.html"
     },
@@ -47,6 +55,30 @@
     },
     {
       "source": "/reports/feedback",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/collage",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/sortir-lokal",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/sortirlokal",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/settings",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/pengaturan",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/premium-addon",
       "destination": "/app.html"
     },
     {
