@@ -2487,6 +2487,7 @@
                                 <!-- D. ACTION (Generate HD) -->
                                 <div class="pt-3 border-t border-gray-100">
                                     <button
+                                        id="btnGenerateCollageHD"
                                         class="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-bold text-xs transition-all shadow-[0_4px_15px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] flex justify-center items-center gap-2 cursor-pointer active:scale-[0.99]"
                                         onclick="downloadCollage()">
                                         <i class="fa-solid fa-wand-magic-sparkles"></i>
@@ -16907,164 +16908,459 @@ function syncCollageTemplateUI() {
             document.removeEventListener('touchend', endDragLayer);
         }
 
-        // --- HD EXPORT LOGIC (3X MULTIPLIER) ---
-        async function compositeFinalHDCanvas() {
-            Swal.fire({ title: 'Memproses 4K HD...', text: 'Mengunduh gambar resolusi tinggi (3X).', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        // --- PHASE 3.6 SAFE ADAPTIVE EXPORT & MEMORY HARDENING ---
+        const COLLAGE_EXPORT_REQUESTED_SCALE = 3;
+        const COLLAGE_EXPORT_MAX_DIMENSION = 8192;
+        const COLLAGE_EXPORT_MAX_PIXELS = 32000000;
 
-            // 3X Export Scale for Ultra HD Print Quality
-            let exportScale = 3;
+        function getSafeCollageExportScale(
+            baseW,
+            baseH,
+            requestedScale = COLLAGE_EXPORT_REQUESTED_SCALE
+        ) {
+            baseW = Number(baseW);
+            baseH = Number(baseH);
+            requestedScale = Number(requestedScale);
 
-            let finalCanvas = document.createElement('canvas');
-            finalCanvas.width = collageState.canvasW * exportScale;
-            finalCanvas.height = collageState.canvasH * exportScale;
-            let ctx = finalCanvas.getContext('2d');
+            if (
+                !Number.isFinite(baseW) ||
+                !Number.isFinite(baseH) ||
+                baseW <= 0 ||
+                baseH <= 0
+            ) {
+                return 1;
+            }
 
-            // BG
-            if (collageState.bgColor === 'transparent') {
-                ctx.clearRect(0, 0, finalCanvas.width, finalCanvas.height);
+            if (
+                !Number.isFinite(requestedScale) ||
+                requestedScale <= 0
+            ) {
+                requestedScale = 1;
+            }
+
+            const dimensionScale = Math.min(
+                COLLAGE_EXPORT_MAX_DIMENSION / baseW,
+                COLLAGE_EXPORT_MAX_DIMENSION / baseH
+            );
+
+            const pixelScale = Math.sqrt(
+                COLLAGE_EXPORT_MAX_PIXELS /
+                (baseW * baseH)
+            );
+
+            let safeScale = Math.min(
+                requestedScale,
+                dimensionScale,
+                pixelScale
+            );
+
+            if (
+                !Number.isFinite(safeScale) ||
+                safeScale <= 0
+            ) {
+                safeScale = 1;
+            }
+
+            return Math.max(0.1, safeScale);
+        }
+
+        function canvasToBlobAsync(
+            canvas,
+            type,
+            quality
+        ) {
+            return new Promise((resolve, reject) => {
+                if (
+                    !canvas ||
+                    typeof canvas.toBlob !== 'function'
+                ) {
+                    reject(
+                        new Error(
+                            'Browser tidak mendukung export Blob.'
+                        )
+                    );
+                    return;
+                }
+
+                try {
+                    canvas.toBlob(
+                        blob => {
+                            if (!blob) {
+                                reject(
+                                    new Error(
+                                        'Gagal membuat file gambar.'
+                                    )
+                                );
+                                return;
+                            }
+
+                            resolve(blob);
+                        },
+                        type,
+                        quality
+                    );
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+
+        function releaseCollageExportCanvas(canvas) {
+            if (!canvas) return;
+
+            try {
+                canvas.width = 1;
+                canvas.height = 1;
+            } catch (e) {
+                // no-op
+            }
+        }
+
+        let collageExportInProgress = false;
+
+        function setCollageExportBusyState(isBusy) {
+            const btn =
+                document.getElementById(
+                    'btnGenerateCollageHD'
+                );
+
+            if (!btn) return;
+
+            btn.disabled = Boolean(isBusy);
+
+            if (isBusy) {
+                btn.classList.add(
+                    'opacity-60',
+                    'cursor-not-allowed'
+                );
             } else {
-                ctx.fillStyle = collageState.bgColor || '#ffffff';
-                ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+                btn.classList.remove(
+                    'opacity-60',
+                    'cursor-not-allowed'
+                );
             }
+        }
 
-            if (collageState.bgImage && collageState.bgColor !== 'transparent') {
-                ctx.globalAlpha = collageState.bgOpacity / 100;
-                let img = new Image();
-                img.crossOrigin = "anonymous";
-                await new Promise(r => { img.onload = r; img.onerror = r; img.src = collageState.bgImage; });
-                if (img.naturalWidth > 0) {
-                    let s = Math.max(finalCanvas.width / img.width, finalCanvas.height / img.height);
-                    let dw = img.width * s; let dh = img.height * s;
-                    let dx = (finalCanvas.width - dw) / 2; let dy = (finalCanvas.height - dh) / 2;
-                    ctx.filter = `blur(${collageState.bgBlur * exportScale}px)`;
-                    ctx.drawImage(img, dx, dy, dw, dh);
-                    ctx.filter = 'none';
+        async function compositeFinalHDCanvas() {
+            let finalCanvas = null;
+
+            try {
+                const baseW = Number(collageState.canvasW) || 1080;
+                const baseH = Number(collageState.canvasH) || 1080;
+
+                const exportScale = getSafeCollageExportScale(
+                    baseW,
+                    baseH,
+                    COLLAGE_EXPORT_REQUESTED_SCALE
+                );
+
+                let finalW = Math.max(1, Math.round(baseW * exportScale));
+                let finalH = Math.max(1, Math.round(baseH * exportScale));
+
+                const needsCorrection =
+                    finalW > COLLAGE_EXPORT_MAX_DIMENSION ||
+                    finalH > COLLAGE_EXPORT_MAX_DIMENSION ||
+                    (finalW * finalH) > COLLAGE_EXPORT_MAX_PIXELS;
+
+                if (needsCorrection) {
+                    const correctionScale = Math.min(
+                        COLLAGE_EXPORT_MAX_DIMENSION / finalW,
+                        COLLAGE_EXPORT_MAX_DIMENSION / finalH,
+                        Math.sqrt(
+                            COLLAGE_EXPORT_MAX_PIXELS /
+                            (finalW * finalH)
+                        )
+                    );
+
+                    finalW = Math.max(
+                        1,
+                        Math.floor(finalW * correctionScale)
+                    );
+
+                    finalH = Math.max(
+                        1,
+                        Math.floor(finalH * correctionScale)
+                    );
                 }
-                ctx.globalAlpha = 1.0;
-            }
 
-            // Draw HD Layers
-            let sortedLayers = (Array.isArray(collageState.layers) ? collageState.layers : []).filter(l => l).sort((a, b) => a.zIndex - b.zIndex);
-            const hdTextLayers = sortedLayers.filter(l => l && l.isText);
-            if (typeof ensureCollageTextFontLoaded === 'function') {
-                await Promise.all(hdTextLayers.map(layer => ensureCollageTextFontLoaded(layer)));
-            }
-            if (typeof measureCollageTextLayer === 'function') {
-                hdTextLayers.forEach(layer => measureCollageTextLayer(layer));
-            }
-            for (let i = 0; i < sortedLayers.length; i++) {
-                let layer = sortedLayers[i];
+                finalCanvas = document.createElement('canvas');
+                finalCanvas.width = finalW;
+                finalCanvas.height = finalH;
+                let ctx = finalCanvas.getContext('2d');
+                if (!ctx) {
+                    throw new Error('Canvas export tidak tersedia di browser ini.');
+                }
 
-                ctx.save();
-                // Multiply translation and scale by exportScale
-                ctx.translate(layer.x * exportScale, layer.y * exportScale);
-                ctx.rotate(layer.rotation * Math.PI / 180);
-                ctx.scale(layer.scale * exportScale, layer.scale * exportScale);
-
-                if (layer.isPlaceholder) {
-                    ctx.fillStyle = '#e5e7eb';
-                    ctx.fillRect(-layer.w / 2, -layer.h / 2, layer.w, layer.h);
-                } else if (layer.isText) {
-                    let fontSize = Number(layer.fontSize) || 150;
-                    let fontWeight = layer.fontWeight || 700;
-                    let fontStyle = layer.fontStyle || 'normal';
-                    let fontFamily = layer.font || 'Inter';
-
-                    ctx.globalAlpha = Math.max(0, Math.min(1, Number.isFinite(Number(layer.opacity)) ? Number(layer.opacity) : 1));
-                    ctx.fillStyle = layer.color || '#111827';
-                    ctx.textAlign = layer.align || 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px "${fontFamily}"`;
-                    ctx.fillText(layer.text || '', getCollageTextDrawX(layer), 0);
-                } else if (layer.isFrame) {
-                    let hdUrl = layer.url.includes('blob:') ? layer.url : layer.url.replace(/=w\d+/, '=s0');
-                    let hdImg = new Image();
-                    hdImg.crossOrigin = "anonymous";
-                    await new Promise(r => { hdImg.onload = r; hdImg.onerror = r; hdImg.src = hdUrl; });
-
-                    if (hdImg.naturalWidth > 0) {
-                        ctx.beginPath();
-                        ctx.rect(-layer.w / 2, -layer.h / 2, layer.w, layer.h);
-                        ctx.clip();
-
-                        let drawW = layer.photoOrigW * layer.photoScale;
-                        let drawH = layer.photoOrigH * layer.photoScale;
-                        let drawX = (-drawW / 2) + layer.photoOffsetX;
-                        let drawY = (-drawH / 2) + layer.photoOffsetY;
-
-                        ctx.drawImage(hdImg, drawX, drawY, drawW, drawH);
-                    }
+                // BG
+                if (collageState.bgColor === 'transparent') {
+                    ctx.clearRect(0, 0, finalCanvas.width, finalCanvas.height);
                 } else {
-                    let hdUrl = layer.url.includes('blob:') ? layer.url : layer.url.replace(/=w\d+/, '=s0');
-                    let hdImg = new Image();
-                    hdImg.crossOrigin = "anonymous";
-                    await new Promise(r => { hdImg.onload = r; hdImg.onerror = r; hdImg.src = hdUrl; });
-                    if (hdImg.naturalWidth > 0) {
-                        ctx.drawImage(hdImg, -layer.w / 2, -layer.h / 2, layer.w, layer.h);
-                    }
+                    ctx.fillStyle = collageState.bgColor || '#ffffff';
+                    ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
                 }
-                ctx.restore();
-            }
 
-            // Draw Title on HD export if exists
-            if (collageState.title && collageState.title.trim() !== "") {
-                ctx.save();
-                ctx.fillStyle = '#ffffff';
-                let totalW = finalCanvas.width;
-                let totalH = finalCanvas.height;
-                let fontSize = Math.min(150 * exportScale, totalW * 0.05);
-                ctx.font = `bold ${fontSize}px sans-serif`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'bottom';
-                ctx.shadowColor = 'rgba(0,0,0,0.5)';
-                ctx.shadowBlur = 10 * exportScale;
-                ctx.shadowOffsetX = 2 * exportScale;
-                ctx.shadowOffsetY = 2 * exportScale;
-                ctx.fillText(collageState.title, totalW / 2, totalH - (fontSize / 2));
-                ctx.restore();
-            }
+                if (collageState.bgImage && collageState.bgColor !== 'transparent') {
+                    ctx.globalAlpha = collageState.bgOpacity / 100;
+                    let img = new Image();
+                    img.crossOrigin = "anonymous";
+                    await new Promise(r => { img.onload = r; img.onerror = r; img.src = collageState.bgImage; });
+                    if (img.naturalWidth > 0) {
+                        let s = Math.max(finalCanvas.width / img.width, finalCanvas.height / img.height);
+                        let dw = img.width * s; let dh = img.height * s;
+                        let dx = (finalCanvas.width - dw) / 2; let dy = (finalCanvas.height - dh) / 2;
+                        ctx.filter = `blur(${collageState.bgBlur * exportScale}px)`;
+                        ctx.drawImage(img, dx, dy, dw, dh);
+                        ctx.filter = 'none';
+                    }
+                    ctx.globalAlpha = 1.0;
+                }
 
-            Swal.close();
-            return finalCanvas;
+                // Draw HD Layers
+                let sortedLayers = (Array.isArray(collageState.layers) ? collageState.layers : []).filter(l => l).sort((a, b) => a.zIndex - b.zIndex);
+                const hdTextLayers = sortedLayers.filter(l => l && l.isText);
+                if (typeof ensureCollageTextFontLoaded === 'function') {
+                    await Promise.all(hdTextLayers.map(layer => ensureCollageTextFontLoaded(layer)));
+                }
+                if (typeof measureCollageTextLayer === 'function') {
+                    hdTextLayers.forEach(layer => measureCollageTextLayer(layer));
+                }
+                for (let i = 0; i < sortedLayers.length; i++) {
+                    let layer = sortedLayers[i];
+
+                    ctx.save();
+                    // Multiply translation and scale by exportScale
+                    ctx.translate(layer.x * exportScale, layer.y * exportScale);
+                    ctx.rotate(layer.rotation * Math.PI / 180);
+                    ctx.scale(layer.scale * exportScale, layer.scale * exportScale);
+
+                    if (layer.isPlaceholder) {
+                        ctx.fillStyle = '#e5e7eb';
+                        ctx.fillRect(-layer.w / 2, -layer.h / 2, layer.w, layer.h);
+                    } else if (layer.isText) {
+                        let fontSize = Number(layer.fontSize) || 150;
+                        let fontWeight = layer.fontWeight || 700;
+                        let fontStyle = layer.fontStyle || 'normal';
+                        let fontFamily = layer.font || 'Inter';
+
+                        ctx.globalAlpha = Math.max(0, Math.min(1, Number.isFinite(Number(layer.opacity)) ? Number(layer.opacity) : 1));
+                        ctx.fillStyle = layer.color || '#111827';
+                        ctx.textAlign = layer.align || 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px "${fontFamily}"`;
+                        ctx.fillText(layer.text || '', getCollageTextDrawX(layer), 0);
+                    } else if (layer.isFrame) {
+                        let hdUrl = layer.url.includes('blob:') ? layer.url : layer.url.replace(/=w\d+/, '=s0');
+                        let hdImg = new Image();
+                        hdImg.crossOrigin = "anonymous";
+                        await new Promise(r => { hdImg.onload = r; hdImg.onerror = r; hdImg.src = hdUrl; });
+
+                        if (hdImg.naturalWidth > 0) {
+                            ctx.beginPath();
+                            ctx.rect(-layer.w / 2, -layer.h / 2, layer.w, layer.h);
+                            ctx.clip();
+
+                            let drawW = layer.photoOrigW * layer.photoScale;
+                            let drawH = layer.photoOrigH * layer.photoScale;
+                            let drawX = (-drawW / 2) + layer.photoOffsetX;
+                            let drawY = (-drawH / 2) + layer.photoOffsetY;
+
+                            ctx.drawImage(hdImg, drawX, drawY, drawW, drawH);
+                        }
+                    } else {
+                        let hdUrl = layer.url.includes('blob:') ? layer.url : layer.url.replace(/=w\d+/, '=s0');
+                        let hdImg = new Image();
+                        hdImg.crossOrigin = "anonymous";
+                        await new Promise(r => { hdImg.onload = r; hdImg.onerror = r; hdImg.src = hdUrl; });
+                        if (hdImg.naturalWidth > 0) {
+                            ctx.drawImage(hdImg, -layer.w / 2, -layer.h / 2, layer.w, layer.h);
+                        }
+                    }
+                    ctx.restore();
+                }
+
+                // Draw Title on HD export if exists
+                if (collageState.title && collageState.title.trim() !== "") {
+                    ctx.save();
+                    ctx.fillStyle = '#ffffff';
+                    let totalW = finalCanvas.width;
+                    let totalH = finalCanvas.height;
+                    let fontSize = Math.min(150 * exportScale, totalW * 0.05);
+                    ctx.font = `bold ${fontSize}px sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                    ctx.shadowBlur = 10 * exportScale;
+                    ctx.shadowOffsetX = 2 * exportScale;
+                    ctx.shadowOffsetY = 2 * exportScale;
+                    ctx.fillText(collageState.title, totalW / 2, totalH - (fontSize / 2));
+                    ctx.restore();
+                }
+
+                return finalCanvas;
+            } catch (error) {
+                if (finalCanvas) {
+                    releaseCollageExportCanvas(finalCanvas);
+                }
+                throw error;
+            }
         }
 
         async function downloadCollage() {
-            if (collageState.layers.length === 0) return;
+            if (!Array.isArray(collageState.layers) || collageState.layers.length === 0) {
+                return;
+            }
 
-            let hdCanvas = await compositeFinalHDCanvas();
-            let isTransparent = collageState.bgColor === 'transparent';
-            let ext = isTransparent ? '.png' : '.jpg';
+            if (collageExportInProgress) return;
 
-            if (collageState.isCarousel && collageState.carouselScreens > 1) {
-                // Slice the carousel
-                let zip = new JSZip();
-                let folder = zip.folder("Kama_Carousel");
+            collageExportInProgress = true;
+            setCollageExportBusyState(true);
 
-                let screenW = hdCanvas.width / collageState.carouselScreens;
-                for (let i = 0; i < collageState.carouselScreens; i++) {
-                    let sliceCanvas = document.createElement('canvas');
-                    sliceCanvas.width = screenW; sliceCanvas.height = hdCanvas.height;
-                    let sCtx = sliceCanvas.getContext('2d');
-                    if (isTransparent) {
-                        sCtx.clearRect(0, 0, screenW, hdCanvas.height);
-                    }
-                    sCtx.drawImage(hdCanvas, i * screenW, 0, screenW, hdCanvas.height, 0, 0, screenW, hdCanvas.height);
+            let hdCanvas = null;
 
-                    let dataUrl = isTransparent ? sliceCanvas.toDataURL('image/png') : sliceCanvas.toDataURL('image/jpeg', 0.95);
-                    let base64Data = dataUrl.split(',')[1];
-                    folder.file(`Slide_${i + 1}${ext}`, base64Data, { base64: true });
+            try {
+                if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+                    Swal.fire({
+                        title: 'Memproses Kolase HD...',
+                        text: 'Menyiapkan file resolusi tinggi...',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            if (typeof Swal.showLoading === 'function') {
+                                Swal.showLoading();
+                            }
+                        }
+                    });
                 }
-                zip.generateAsync({ type: "blob" }).then(function (content) {
-                    saveAs(content, "Kama_Carousel_Seamless.zip");
-                    Swal.fire({ toast: true, position: 'top', icon: 'success', text: 'Berhasil dipotong!', timer: 2000 });
-                });
-            } else {
-                // Single download
-                let dataUrl = isTransparent ? hdCanvas.toDataURL('image/png') : hdCanvas.toDataURL('image/jpeg', 0.95);
-                let a = document.createElement('a');
-                a.href = dataUrl;
-                a.download = `PremiumCollage-${new Date().getTime()}${ext}`;
-                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+
+                hdCanvas = await compositeFinalHDCanvas();
+
+                if (typeof Swal !== 'undefined' && typeof Swal.update === 'function') {
+                    Swal.update({
+                        text: `Menyiapkan ${hdCanvas.width} × ${hdCanvas.height} px...`
+                    });
+                }
+
+                let isTransparent = collageState.bgColor === 'transparent';
+                let ext = isTransparent ? '.png' : '.jpg';
+                let mimeType = isTransparent ? 'image/png' : 'image/jpeg';
+                let quality = isTransparent ? undefined : 0.95;
+
+                if (collageState.isCarousel && collageState.carouselScreens > 1) {
+                    if (typeof JSZip === 'undefined') {
+                        throw new Error('Library JSZip tidak ditemukan.');
+                    }
+                    let zip = new JSZip();
+                    let folder = zip.folder("Kama_Carousel");
+                    let screens = Number(collageState.carouselScreens) || 2;
+
+                    for (let i = 0; i < screens; i++) {
+                        let sliceCanvas = null;
+                        try {
+                            const sourceX = Math.round(
+                                (i * hdCanvas.width) / screens
+                            );
+                            const sourceEndX = Math.round(
+                                ((i + 1) * hdCanvas.width) / screens
+                            );
+                            const sliceW = Math.max(
+                                1,
+                                sourceEndX - sourceX
+                            );
+
+                            sliceCanvas = document.createElement('canvas');
+                            sliceCanvas.width = sliceW;
+                            sliceCanvas.height = hdCanvas.height;
+                            let sCtx = sliceCanvas.getContext('2d');
+                            if (!sCtx) {
+                                throw new Error('Canvas export tidak tersedia di browser ini.');
+                            }
+
+                            if (isTransparent) {
+                                sCtx.clearRect(0, 0, sliceW, hdCanvas.height);
+                            }
+                            sCtx.drawImage(
+                                hdCanvas,
+                                sourceX, 0, sliceW, hdCanvas.height,
+                                0, 0, sliceW, hdCanvas.height
+                            );
+
+                            const sliceBlob = await canvasToBlobAsync(sliceCanvas, mimeType, quality);
+                            folder.file(`Slide_${i + 1}${ext}`, sliceBlob);
+                        } finally {
+                            if (sliceCanvas) {
+                                releaseCollageExportCanvas(sliceCanvas);
+                            }
+                        }
+                    }
+
+                    const zipBlob = await zip.generateAsync({ type: 'blob' });
+                    if (typeof saveAs === 'function') {
+                        saveAs(zipBlob, "Kama_Carousel_Seamless.zip");
+                    } else {
+                        let a = document.createElement('a');
+                        let url = URL.createObjectURL(zipBlob);
+                        a.href = url;
+                        a.download = "Kama_Carousel_Seamless.zip";
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        setTimeout(() => URL.revokeObjectURL(url), 1000);
+                    }
+
+                    if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top',
+                            icon: 'success',
+                            text: 'Berhasil dipotong!',
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                    }
+                } else {
+                    // Single download
+                    const blob = await canvasToBlobAsync(hdCanvas, mimeType, quality);
+                    const filename = `PremiumCollage-${Date.now()}${ext}`;
+
+                    if (typeof saveAs === 'function') {
+                        saveAs(blob, filename);
+                    } else {
+                        let a = document.createElement('a');
+                        let url = URL.createObjectURL(blob);
+                        a.href = url;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        setTimeout(() => URL.revokeObjectURL(url), 1000);
+                    }
+
+                    if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top',
+                            icon: 'success',
+                            text: 'Kolase HD berhasil dibuat.',
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('[Collage] Export error:', error);
+                if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Export gagal',
+                        text: 'Kolase tidak dapat dibuat. Coba gunakan ukuran kanvas lebih kecil atau ulangi kembali.'
+                    });
+                }
+            } finally {
+                if (hdCanvas) {
+                    releaseCollageExportCanvas(hdCanvas);
+                }
+                collageExportInProgress = false;
+                setCollageExportBusyState(false);
             }
         }
         // ----------------------------------------------------
