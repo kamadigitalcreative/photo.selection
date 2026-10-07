@@ -4,6 +4,7 @@
  */
 
 const crypto = require('crypto');
+const { URL } = require('url');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jqptagcbkyxxqqmxqusf.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_TL_Et1x8IlEwxKASjF0K8Q_t72R3f_9';
@@ -561,6 +562,101 @@ function getProjectMutationFilter(project) {
   throw new Error('Authorized project has no stable identifier');
 }
 
+function verifyWebhookAuthenticity(req) {
+  const configuredSecret = String(process.env.MAYAR_WEBHOOK_SECRET || '').trim();
+  if (!configuredSecret) {
+    return { configured: false, valid: false };
+  }
+
+  let queryToken = '';
+  if (req && req.url) {
+    try {
+      const parsedUrl = new URL(req.url, 'http://localhost');
+      queryToken = parsedUrl.searchParams.get('token') || '';
+    } catch (e) { }
+  }
+
+  queryToken = String(queryToken || '').trim();
+  if (!queryToken) {
+    return { configured: true, valid: false };
+  }
+
+  const secretBuf = Buffer.from(configuredSecret);
+  const tokenBuf = Buffer.from(queryToken);
+
+  if (secretBuf.length !== tokenBuf.length) {
+    return { configured: true, valid: false };
+  }
+
+  const isMatch = crypto.timingSafeEqual(secretBuf, tokenBuf);
+  return { configured: true, valid: isMatch };
+}
+
+function isNewMembershipEvent(rawEvent) {
+  const ev = String(rawEvent || '').trim().toLowerCase();
+  return ev === 'new membership' ||
+         ev === 'new_membership' ||
+         ev === 'membership.created' ||
+         ev === 'membership.new' ||
+         ev.includes('membership');
+}
+
+function isConfirmedPaymentSuccess(rawEvent, data, payload) {
+  const ev = String(rawEvent || '').trim().toLowerCase();
+
+  const nonSuccessEvents = new Set([
+    'payment.reminder',
+    'payment.failed',
+    'payment.expired',
+    'payment.cancelled',
+    'payment.canceled',
+    'payment.unpaid',
+    'payment.pending'
+  ]);
+  if (nonSuccessEvents.has(ev)) {
+    return false;
+  }
+
+  const isPaymentEvent = ev === 'purchase' ||
+                         ev === 'payment.received' ||
+                         ev === 'payment.success' ||
+                         ev === 'transaction.success' ||
+                         ev === 'payment.paid' ||
+                         ev === 'invoice.paid' ||
+                         ev === 'invoice.settled';
+
+  if (!isPaymentEvent) {
+    return false;
+  }
+
+  const d = data || {};
+  const rawStatus = String(d.status || (payload && payload.status) || '').trim().toUpperCase();
+
+  const nonSuccessStatuses = new Set([
+    'PENDING',
+    'UNPAID',
+    'EXPIRED',
+    'FAILED',
+    'CANCELLED',
+    'CANCELED',
+    'REFUNDED',
+    'CLOSED'
+  ]);
+
+  if (rawStatus && nonSuccessStatuses.has(rawStatus)) {
+    return false;
+  }
+
+  if (rawStatus) {
+    const successStatuses = new Set(['PAID', 'SUCCESS', 'SETTLED', 'COMPLETED']);
+    if (!successStatuses.has(rawStatus)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 module.exports = async function handler(req, res) {
   const allowedOrigins = [
     'https://ps.kamacreative.my.id',
@@ -589,8 +685,20 @@ module.exports = async function handler(req, res) {
     }
     payload = payload || {};
 
-    if ((payload.action === 'mayarWebhook') || (payload.event && payload.data && (payload.event.includes('payment') || payload.event.includes('invoice') || payload.event.includes('transaction')))) {
-      return await handleMayarWebhook(payload, res);
+    let isWebhookRequest = false;
+    if (payload.action === 'mayarWebhook') {
+      isWebhookRequest = true;
+    } else if (req && req.url) {
+      try {
+        const u = new URL(req.url, 'http://localhost');
+        if (u.searchParams.get('action') === 'mayarWebhook') {
+          isWebhookRequest = true;
+        }
+      } catch (e) { }
+    }
+
+    if (isWebhookRequest) {
+      return await handleMayarWebhook(payload, req, res);
     }
 
     const action = payload.action;
@@ -613,7 +721,7 @@ module.exports = async function handler(req, res) {
     }
 
     switch (action) {
-      case 'mayarWebhook': return await handleMayarWebhook(payload, res);
+      case 'mayarWebhook': return await handleMayarWebhook(payload, req, res);
       case 'logout': return await handleLogout(payload, req, res);
       case 'login': return await handleLogin(payload, res);
       case 'register': return await handleRegister(payload, res);
@@ -882,7 +990,10 @@ async function handleUploadBrandLogo(payload, res) {
 
 async function handleSavePaymentSettings(payload, res) {
   const authUser = payload.authUser || {};
-  const username = (authUser.username || payload.username || '').trim();
+  const username = String(authUser.username || '').trim();
+  if (!username) {
+    return error(res, 'Sesi tidak valid atau telah berakhir. Silakan login kembali.', 401);
+  }
   const bankName = (payload.bankName || '').trim();
   const bankAccount = (payload.bankAccount || '').trim();
   const bankAccountName = (payload.bankAccountName || '').trim();
@@ -2155,8 +2266,21 @@ async function handleSyncBackground(payload, res) {
   });
 }
 
-async function handleMayarWebhook(payload, res) {
-  const event = payload.event || payload.action || 'payment.success';
+async function handleMayarWebhook(payload, req, res) {
+  const auth = verifyWebhookAuthenticity(req);
+  if (!auth.configured) {
+    return error(res, 'Webhook authentication is not configured.', 503);
+  }
+  if (!auth.valid) {
+    return error(res, 'Unauthorized webhook request', 401);
+  }
+
+  const rawEvent = String(payload.event || '').trim();
+  if (!rawEvent) {
+    return error(res, 'Webhook event is required', 400);
+  }
+  const event = rawEvent;
+
   const d = payload.data || payload || {};
   const customer = d.customer || payload.customer || {};
 
@@ -2166,6 +2290,45 @@ async function handleMayarWebhook(payload, res) {
   const name = (customer.name || d.customerName || d.name || '').trim();
   const rawProductName = d.productName || d.description || d.title || (d.product && d.product.name) || '';
   const productUpper = rawProductName.toUpperCase();
+
+  // Handle New Membership event safely (no Photo Selection mutation)
+  if (isNewMembershipEvent(rawEvent)) {
+    await supabaseQuery('mayar_logs', {
+      method: 'POST',
+      body: {
+        Event: rawEvent,
+        'Customer Email': email,
+        'Customer Name': name,
+        'Status/Product': rawProductName || 'Membership',
+        'Hasil Aktivasi': `Membership event dicatat (${rawEvent}) - Tanpa aktivasi Photo Selection`,
+        'Raw JSON Payload': JSON.stringify(payload),
+        Timestamp: new Date().toISOString()
+      }
+    }).catch(() => { });
+
+    return success(res, {
+      success: true,
+      status: 'acknowledged',
+      result: `New membership event logged without payment mutation: ${rawEvent}`
+    });
+  }
+
+  if (!isConfirmedPaymentSuccess(rawEvent, d, payload)) {
+    await supabaseQuery('mayar_logs', {
+      method: 'POST',
+      body: {
+        Event: rawEvent,
+        'Customer Email': email,
+        'Customer Name': name,
+        'Status/Product': rawProductName || 'Non-success event',
+        'Hasil Aktivasi': `Event diabaikan (bukan pembayaran sukses: event=${rawEvent}, status=${d.status || payload.status || 'none'})`,
+        'Raw JSON Payload': JSON.stringify(payload),
+        Timestamp: new Date().toISOString()
+      }
+    }).catch(() => { });
+
+    return success(res, { success: true, status: 'ignored', result: `Webhook event acknowledged without mutation: ${rawEvent}` });
+  }
 
   const isPhotoSelection = productUpper.includes('PHOTO') || 
                            productUpper.includes('SELECTION') || 
