@@ -15165,33 +15165,89 @@ function syncCollageTemplateUI() {
         let renderCollageTimeout = null;
         function requestRenderCollage() {
             clearTimeout(renderCollageTimeout);
-            renderCollageTimeout = setTimeout(renderCollagePreview, 50);
+            renderCollageTimeout = setTimeout(() => {
+                renderCollageTimeout = null;
+                renderCollagePreview();
+            }, 50);
         }
 
-        function renderCollagePreview() {
+        let collageInteractionRAF = null;
+        function requestCollageInteractionRender() {
+            if (collageInteractionRAF !== null) return;
+            const raf = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (cb => setTimeout(cb, 16));
+            collageInteractionRAF = raf(() => {
+                collageInteractionRAF = null;
+                renderCollagePreview({
+                    interactionOnly: true
+                });
+            });
+        }
+
+        function syncActiveCollageOverlay(layer) {
+            if (!layer || !layer.id) return;
+
+            const container = document.getElementById('collageOverlays');
+            if (!container) return;
+
+            let el = null;
+            if (typeof container.querySelector === 'function') {
+                try {
+                    el = container.querySelector(`[data-id="${layer.id}"]`);
+                } catch (e) {}
+            }
+            if (!el && typeof container.querySelectorAll === 'function') {
+                const overlays = container.querySelectorAll('[data-id]');
+                overlays.forEach(node => {
+                    if (!el && node.dataset && node.dataset.id === layer.id) {
+                        el = node;
+                    }
+                });
+            }
+            if (!el) return;
+
+            const pxW = (Number(layer.w) || 0) * (Number(layer.scale) || 1);
+            const pxH = (Number(layer.h) || 0) * (Number(layer.scale) || 1);
+
+            el.style.left = (Number(layer.x) || 0) + 'px';
+            el.style.top = (Number(layer.y) || 0) + 'px';
+            el.style.width = pxW + 'px';
+            el.style.height = pxH + 'px';
+            el.style.transform = `translate3d(-50%, -50%, 0) rotate(${Number(layer.rotation) || 0}deg)`;
+        }
+
+        function renderCollagePreview(options = {}) {
+            const interactionOnly = options && options.interactionOnly === true;
+
             const canvas = document.getElementById('collageCanvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
 
             let w = collageState.canvasW;
             let h = collageState.canvasH;
-            canvas.width = w; canvas.height = h;
+            if (canvas.width !== w) {
+                canvas.width = w;
+            }
+            if (canvas.height !== h) {
+                canvas.height = h;
+            }
 
-            // Background Layer setup
-            let bgLayer = document.getElementById('collageBackgroundLayer');
-            if (bgLayer) {
-                if (collageState.bgColor === 'transparent') {
-                    bgLayer.style.backgroundColor = 'transparent';
-                    bgLayer.innerHTML = '';
-                    bgLayer.style.opacity = '0';
-                } else {
-                    bgLayer.style.backgroundColor = collageState.bgColor || '#ffffff';
-                    if (collageState.bgImage) {
-                        bgLayer.style.opacity = '1';
-                        bgLayer.innerHTML = `<img src="${collageState.bgImage}" style="width:100%;height:100%;object-fit:cover;opacity:${collageState.bgOpacity / 100};filter:blur(${collageState.bgBlur}px);">`;
-                    } else {
+            // Background Layer setup (skipped during interaction drag)
+            if (!interactionOnly) {
+                let bgLayer = document.getElementById('collageBackgroundLayer');
+                if (bgLayer) {
+                    if (collageState.bgColor === 'transparent') {
+                        bgLayer.style.backgroundColor = 'transparent';
                         bgLayer.innerHTML = '';
-                        bgLayer.style.opacity = collageState.bgOpacity / 100;
+                        bgLayer.style.opacity = '0';
+                    } else {
+                        bgLayer.style.backgroundColor = collageState.bgColor || '#ffffff';
+                        if (collageState.bgImage) {
+                            bgLayer.style.opacity = '1';
+                            bgLayer.innerHTML = `<img src="${collageState.bgImage}" style="width:100%;height:100%;object-fit:cover;opacity:${collageState.bgOpacity / 100};filter:blur(${collageState.bgBlur}px);">`;
+                        } else {
+                            bgLayer.innerHTML = '';
+                            bgLayer.style.opacity = collageState.bgOpacity / 100;
+                        }
                     }
                 }
             }
@@ -15300,7 +15356,9 @@ function syncCollageTemplateUI() {
                 ctx.restore();
             }
 
-            updateInteractiveOverlays(1); // 1 to 1 mapping, scaled by workspace CSS transform
+            if (!interactionOnly) {
+                updateInteractiveOverlays(1); // 1 to 1 mapping, scaled by workspace CSS transform
+            }
         }
 
         // --- WORKSPACE PAN & ZOOM ---
@@ -15432,7 +15490,7 @@ function syncCollageTemplateUI() {
                 html += `
             <div data-id="${layer.id}" 
                  class="absolute cursor-move select-none ${isActive ? 'border-2 border-fuchsia-500' : 'hover:border-2 hover:border-white/50'}"
-                 style="left:${pxX}px; top:${pxY}px; width:${pxW}px; height:${pxH}px; transform: translate(-50%, -50%) rotate(${layer.rotation}deg); z-index:${overlayZ};"
+                 style="left:${pxX}px; top:${pxY}px; width:${pxW}px; height:${pxH}px; transform: translate3d(-50%, -50%, 0) rotate(${layer.rotation}deg); z-index:${overlayZ}; will-change: transform, left, top, width, height;"
                  onmousedown="startDragLayer(event, '${layer.id}', 'move')" ontouchstart="startDragLayerTouch(event, '${layer.id}', 'move')">
                  
                  ${isActive ? `
@@ -15501,9 +15559,26 @@ function syncCollageTemplateUI() {
             collageState.initPhotoOffsetY = layer.photoOffsetY || 0;
             collageState.initPhotoScale = layer.photoScale || 1;
 
+            if (layer.isFrame && !layer.isPlaceholder) {
+                collageState.initInteractionBaseHeight = Math.max(
+                    1,
+                    (Number(layer.photoOrigH) || 100) * (Number(collageState.initPhotoScale) || 1)
+                );
+            } else {
+                collageState.initInteractionBaseHeight = Math.max(
+                    1,
+                    (Number(layer.h) || 100) * (Number(collageState.initScale) || 1)
+                );
+            }
+
+            if (renderCollageTimeout !== null) {
+                clearTimeout(renderCollageTimeout);
+                renderCollageTimeout = null;
+            }
+
             document.addEventListener('mousemove', dragLayer);
             document.addEventListener('mouseup', endDragLayer);
-            requestRenderCollage(); // to show active bounding box immediately
+            renderCollagePreview();
         }
         function startDragLayerTouch(e, id, mode) {
             startDragLayer(e, id, mode);
@@ -15513,8 +15588,13 @@ function syncCollageTemplateUI() {
 
         function dragLayer(e) {
             if (!collageState.dragMode || !collageState.activeLayerId) return;
+            if (e && e.cancelable && (e.type === 'touchmove' || (e.touches && e.touches.length > 0))) {
+                e.preventDefault();
+            }
+
             let pos = getEventPos(e);
             let layer = collageState.layers.find(l => l.id === collageState.activeLayerId);
+            if (!layer) return;
 
             let dx = pos.x - collageState.startX;
             let dy = pos.y - collageState.startY;
@@ -15532,13 +15612,15 @@ function syncCollageTemplateUI() {
                     layer.y = collageState.initY + (dy * viewScale);
                 }
             } else if (collageState.dragMode.startsWith('scale')) {
-                let baseHeight = layer.isFrame ? (layer.photoOrigH * layer.photoScale) : (layer.h * layer.scale);
-                if (!baseHeight || baseHeight === 0) baseHeight = 100;
+                let baseHeight = collageState.initInteractionBaseHeight || 100;
 
-                let scaleFactor = (baseHeight + (dy * viewScale)) / baseHeight;
+                const deltaCanvasY = dy * viewScale;
+                let signedDelta = deltaCanvasY;
                 if (collageState.dragMode === 'scale_tl' || collageState.dragMode === 'scale_tr') {
-                    scaleFactor = (baseHeight - (dy * viewScale)) / baseHeight;
+                    signedDelta = -deltaCanvasY;
                 }
+
+                let scaleFactor = (baseHeight + signedDelta) / baseHeight;
 
                 if (layer.isFrame) {
                     let newScale = collageState.initPhotoScale * scaleFactor;
@@ -15549,11 +15631,26 @@ function syncCollageTemplateUI() {
                 }
             }
 
-            requestRenderCollage();
+            syncActiveCollageOverlay(layer);
+            requestCollageInteractionRender();
         }
 
         function endDragLayer() {
             collageState.dragMode = null;
+            if (renderCollageTimeout !== null) {
+                clearTimeout(renderCollageTimeout);
+                renderCollageTimeout = null;
+            }
+            if (collageInteractionRAF !== null) {
+                if (typeof cancelAnimationFrame === 'function') {
+                    cancelAnimationFrame(collageInteractionRAF);
+                } else {
+                    clearTimeout(collageInteractionRAF);
+                }
+                collageInteractionRAF = null;
+            }
+            renderCollagePreview();
+
             document.removeEventListener('mousemove', dragLayer);
             document.removeEventListener('mouseup', endDragLayer);
             document.removeEventListener('touchmove', dragLayer);
