@@ -2370,6 +2370,48 @@
                                         </div>
                                     </div>
 
+                                    <!-- Panel Atur Foto Frame (Fixed Template) -->
+                                    <div id="collageFramePhotoPanel" class="hidden p-3 bg-gray-50/80 rounded-xl border border-gray-200 flex flex-col gap-2.5 transition-all">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-gray-500">Atur Foto</span>
+                                            <span id="collageFramePhotoZoomVal" class="text-[11px] font-mono font-bold text-gray-700">100%</span>
+                                        </div>
+
+                                        <!-- Zoom Slider & Buttons -->
+                                        <div class="flex flex-col gap-1.5">
+                                            <div class="flex items-center gap-1.5">
+                                                <button type="button" onclick="changeActiveCollageFramePhotoZoom(-10)"
+                                                    class="w-7 h-7 bg-white hover:bg-gray-100 active:bg-gray-200 border border-gray-200 rounded-lg text-gray-700 text-xs font-bold transition-all shadow-sm flex items-center justify-center cursor-pointer shrink-0"
+                                                    title="Perkecil Zoom">−</button>
+                                                <input type="range" id="collageFramePhotoZoom" min="100" max="400" step="1" value="100"
+                                                    oninput="setActiveCollageFramePhotoZoom(this.value)"
+                                                    onchange="finalizeActiveCollageFramePhotoAdjustment()"
+                                                    class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                                                <button type="button" onclick="changeActiveCollageFramePhotoZoom(10)"
+                                                    class="w-7 h-7 bg-white hover:bg-gray-100 active:bg-gray-200 border border-gray-200 rounded-lg text-gray-700 text-xs font-bold transition-all shadow-sm flex items-center justify-center cursor-pointer shrink-0"
+                                                    title="Perbesar Zoom">+</button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Quick Action Buttons: Reset Posisi & Isi Frame -->
+                                        <div class="grid grid-cols-2 gap-1.5">
+                                            <button type="button" onclick="resetActiveCollageFramePhotoPosition()"
+                                                class="py-1.5 px-2 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 active:bg-blue-100 active:scale-[0.98] text-[10px] font-semibold text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer truncate"
+                                                title="Reset Posisi (Pusatkan Foto)">
+                                                <i class="fa-solid fa-arrows-to-dot text-[10px]"></i>
+                                                <span>Reset Posisi</span>
+                                            </button>
+                                            <button type="button" onclick="fillActiveCollageFramePhoto()"
+                                                class="py-1.5 px-2 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 active:bg-blue-100 active:scale-[0.98] text-[10px] font-semibold text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer truncate"
+                                                title="Isi Frame (100% Cover)">
+                                                <i class="fa-solid fa-expand text-[10px]"></i>
+                                                <span>Isi Frame</span>
+                                            </button>
+                                        </div>
+
+                                        <p class="text-[10px] text-gray-400 italic text-center leading-tight">Drag foto di kanvas untuk mengatur posisi.</p>
+                                    </div>
+
                                     <!-- Gaya & Warna / Background -->
                                     <div>
                                         <div class="flex items-center justify-between mb-1.5">
@@ -3499,11 +3541,23 @@ function syncCollageTemplateUI() {
                 pxW = Math.round(pxW);
                 pxH = Math.round(pxH);
 
+                const oldCanvasW = Number(collageState.canvasW) || 1080;
+                const oldCanvasH = Number(collageState.canvasH) || 1080;
+
                 // FIX 7: Set ukuran kanvas & unit
                 collageState.canvasW = pxW;
                 collageState.canvasH = pxH;
                 collageState.unit = unit;
                 collageState.currentRatioId = 'custom';
+
+                if (oldCanvasW !== pxW || oldCanvasH !== pxH) {
+                    if (typeof remapCollageTextPositions === 'function') {
+                        remapCollageTextPositions(oldCanvasW, oldCanvasH, pxW, pxH);
+                    }
+                    if (typeof syncCollageTextStylePanel === 'function') {
+                        syncCollageTextStylePanel();
+                    }
+                }
 
                 var curId = collageState.currentTemplateId;
                 var curT = (curId && typeof collageTemplates !== 'undefined') ? collageTemplates[curId] : null;
@@ -3609,10 +3663,14 @@ function syncCollageTemplateUI() {
                         layer.h = box.h;
 
                         if (!layer.isPlaceholder && layer.url && layer.photoOrigW > 0 && layer.photoOrigH > 0) {
-                            var minScale = Math.max(box.w / layer.photoOrigW, box.h / layer.photoOrigH);
-                            var currentScale = Number(layer.photoScale) || 1;
-                            if (currentScale < minScale) {
-                                layer.photoScale = minScale;
+                            if (typeof clampCollageFramePhotoCrop === 'function') {
+                                clampCollageFramePhotoCrop(layer);
+                            } else {
+                                var minScale = Math.max(box.w / layer.photoOrigW, box.h / layer.photoOrigH);
+                                var currentScale = Number(layer.photoScale) || 1;
+                                if (currentScale < minScale) {
+                                    layer.photoScale = minScale;
+                                }
                             }
                         }
                     }
@@ -3626,12 +3684,56 @@ function syncCollageTemplateUI() {
                 normalizeCollageLayerZOrder();
             }
 
+            function remapCollageTextPositions(oldW, oldH, newW, newH) {
+                oldW = Number(oldW);
+                oldH = Number(oldH);
+                newW = Number(newW);
+                newH = Number(newH);
+
+                if (
+                    !Number.isFinite(oldW) ||
+                    !Number.isFinite(oldH) ||
+                    !Number.isFinite(newW) ||
+                    !Number.isFinite(newH) ||
+                    oldW <= 0 ||
+                    oldH <= 0 ||
+                    newW <= 0 ||
+                    newH <= 0
+                ) {
+                    return;
+                }
+
+                const state = (typeof collageState !== 'undefined' && collageState) ? collageState : (typeof window !== 'undefined' ? window.collageState : null);
+                if (!state || !Array.isArray(state.layers)) return;
+
+                state.layers.forEach(layer => {
+                    if (!layer || !layer.isText) return;
+
+                    const xRatio = (Number(layer.x) || 0) / oldW;
+                    const yRatio = (Number(layer.y) || 0) / oldH;
+
+                    layer.x = Math.max(0, Math.min(newW, xRatio * newW));
+                    layer.y = Math.max(0, Math.min(newH, yRatio * newH));
+                });
+            }
+            window.remapCollageTextPositions = remapCollageTextPositions;
+
             function setCollageCanvasRatio(ratioId, w, h, name) {
+                const oldCanvasW = Number(collageState.canvasW) || 1080;
+                const oldCanvasH = Number(collageState.canvasH) || 1080;
+
                 w = Number(w) || 1080;
                 h = Number(h) || 1080;
                 collageState.canvasW = w;
                 collageState.canvasH = h;
                 collageState.currentRatioId = ratioId;
+
+                if (oldCanvasW !== w || oldCanvasH !== h) {
+                    remapCollageTextPositions(oldCanvasW, oldCanvasH, w, h);
+                    if (typeof syncCollageTextStylePanel === 'function') {
+                        syncCollageTextStylePanel();
+                    }
+                }
 
                 // Highlight active ratio button
                 syncCollageCanvasFormatUI();
@@ -3814,6 +3916,9 @@ function syncCollageTemplateUI() {
                     if (typeof syncCollageTextStylePanel === 'function') {
                         syncCollageTextStylePanel();
                     }
+                    if (typeof syncCollageFramePhotoPanel === 'function') {
+                        syncCollageFramePhotoPanel();
+                    }
                     requestRenderCollage();
                     return;
                 }
@@ -3946,6 +4051,9 @@ function syncCollageTemplateUI() {
                 }
                 if (typeof syncCollageTextStylePanel === 'function') {
                     syncCollageTextStylePanel();
+                }
+                if (typeof syncCollageFramePhotoPanel === 'function') {
+                    syncCollageFramePhotoPanel();
                 }
 
                 requestRenderCollage();
@@ -13877,6 +13985,9 @@ function syncCollageTemplateUI() {
             queue: []
         };
         collageState.photos = collageState.photoLibrary;
+        if (typeof window !== 'undefined') {
+            window.collageState = collageState;
+        }
 
         // --- TEMPLATES ---
         const collageTemplates = {
@@ -14428,6 +14539,9 @@ function syncCollageTemplateUI() {
 
                         renderCollagePhotoPicker();
                         updateCollageSelectedCount();
+                        if (typeof syncCollageFramePhotoPanel === 'function') {
+                            syncCollageFramePhotoPanel();
+                        }
 
                         if (picker && localPhotos.length === 0) {
                             if (driveResult.hasError) {
@@ -14479,6 +14593,9 @@ function syncCollageTemplateUI() {
                         // 5. Render picker & update selected count
                         renderCollagePhotoPicker();
                         updateCollageSelectedCount();
+                        if (typeof syncCollageFramePhotoPanel === 'function') {
+                            syncCollageFramePhotoPanel();
+                        }
 
                         if (picker && localPhotos.length === 0) {
                             picker.innerHTML = '<div class="text-xs text-gray-400 text-center col-span-4 py-4 italic">Project ini tidak memiliki link Google Drive.</div>';
@@ -14654,6 +14771,9 @@ function syncCollageTemplateUI() {
                 if (typeof syncCollageTextStylePanel === 'function') {
                     syncCollageTextStylePanel();
                 }
+                if (typeof syncCollageFramePhotoPanel === 'function') {
+                    syncCollageFramePhotoPanel();
+                }
 
                 // Sinkronkan smartAutoPhotos dan selectedPhotoIds untuk oldUrl jika diganti
                 if (oldUrl && oldUrl !== newUrl) {
@@ -14792,6 +14912,9 @@ function syncCollageTemplateUI() {
 
             renderCollagePhotoPicker();
             updateCollageSelectedCount();
+            if (typeof syncCollageFramePhotoPanel === 'function') {
+                syncCollageFramePhotoPanel();
+            }
         }
 
         let activeTemplateCategory = 'all';
@@ -14877,6 +15000,9 @@ function syncCollageTemplateUI() {
             if (t.isSmartAuto) {
                 recalculateSmartAutoLayout();
                 renderTemplateGrid();
+                if (typeof syncCollageFramePhotoPanel === 'function') {
+                    syncCollageFramePhotoPanel();
+                }
                 requestRenderCollage();
                 setTimeout(initWorkspace, 50);
                 switchCollageSidebar('photos');
@@ -14977,6 +15103,9 @@ function syncCollageTemplateUI() {
             if (typeof syncCollageTextStylePanel === 'function') {
                 syncCollageTextStylePanel();
             }
+            if (typeof syncCollageFramePhotoPanel === 'function') {
+                syncCollageFramePhotoPanel();
+            }
             requestRenderCollage();
             setTimeout(initWorkspace, 50);
 
@@ -15018,6 +15147,9 @@ function syncCollageTemplateUI() {
                     activeLayer.photoOffsetX = 0;
                     activeLayer.photoOffsetY = 0;
                     activeLayer.isPlaceholder = false;
+                    if (typeof clampCollageFramePhotoCrop === 'function') {
+                        clampCollageFramePhotoCrop(activeLayer);
+                    }
                 } else if (activeLayer && activeLayer.isFrame) {
                     // Replace photo inside existing Frame
                     let scaleW = activeLayer.w / img.width;
@@ -15030,6 +15162,9 @@ function syncCollageTemplateUI() {
                     activeLayer.photoScale = scale;
                     activeLayer.photoOffsetX = 0;
                     activeLayer.photoOffsetY = 0;
+                    if (typeof clampCollageFramePhotoCrop === 'function') {
+                        clampCollageFramePhotoCrop(activeLayer);
+                    }
                 } else {
                     // Normal Freeform Add
                     let targetW = collageState.canvasW * 0.5;
@@ -15059,6 +15194,9 @@ function syncCollageTemplateUI() {
                     if (typeof syncCollageTextStylePanel === 'function') {
                         syncCollageTextStylePanel();
                     }
+                    if (typeof syncCollageFramePhotoPanel === 'function') {
+                        syncCollageFramePhotoPanel();
+                    }
                 }
                 if (typeof normalizeCollageLayerZOrder === 'function') {
                     normalizeCollageLayerZOrder();
@@ -15082,6 +15220,9 @@ function syncCollageTemplateUI() {
                     renderCollageTextLayerList();
                     if (typeof syncCollageTextStylePanel === 'function') {
                         syncCollageTextStylePanel();
+                    }
+                    if (typeof syncCollageFramePhotoPanel === 'function') {
+                        syncCollageFramePhotoPanel();
                     }
                     requestRenderCollage();
                     return;
@@ -15119,6 +15260,9 @@ function syncCollageTemplateUI() {
                     if (typeof syncCollageTextStylePanel === 'function') {
                         syncCollageTextStylePanel();
                     }
+                    if (typeof syncCollageFramePhotoPanel === 'function') {
+                        syncCollageFramePhotoPanel();
+                    }
                     requestRenderCollage();
                     return;
                 } else {
@@ -15134,6 +15278,9 @@ function syncCollageTemplateUI() {
                         if (typeof syncCollageTextStylePanel === 'function') {
                             syncCollageTextStylePanel();
                         }
+                        if (typeof syncCollageFramePhotoPanel === 'function') {
+                            syncCollageFramePhotoPanel();
+                        }
                         return;
                     }
                     collageState.layers.splice(idx, 1);
@@ -15142,6 +15289,9 @@ function syncCollageTemplateUI() {
             }
             if (typeof syncCollageTextStylePanel === 'function') {
                 syncCollageTextStylePanel();
+            }
+            if (typeof syncCollageFramePhotoPanel === 'function') {
+                syncCollageFramePhotoPanel();
             }
             requestRenderCollage();
         }
@@ -15702,6 +15852,209 @@ function syncCollageTemplateUI() {
             }
         }
 
+        // --- FIXED FRAME PHOTO ZOOM & CROP CONTROLS (PHASE 3.5) ---
+        function getActiveCollageFilledFrame() {
+            if (!collageState || !Array.isArray(collageState.layers)) {
+                return null;
+            }
+
+            return collageState.layers.find(layer =>
+                layer &&
+                layer.id === collageState.activeLayerId &&
+                layer.isFrame &&
+                !layer.isPlaceholder &&
+                layer.url &&
+                Number(layer.photoOrigW) > 0 &&
+                Number(layer.photoOrigH) > 0
+            ) || null;
+        }
+
+        function getCollageFrameMinPhotoScale(layer) {
+            if (
+                !layer ||
+                !layer.isFrame ||
+                Number(layer.photoOrigW) <= 0 ||
+                Number(layer.photoOrigH) <= 0
+            ) {
+                return 1;
+            }
+
+            return Math.max(
+                Number(layer.w) / Number(layer.photoOrigW),
+                Number(layer.h) / Number(layer.photoOrigH)
+            );
+        }
+
+        function clampCollageFramePhotoCrop(layer) {
+            if (
+                !layer ||
+                !layer.isFrame ||
+                layer.isPlaceholder ||
+                Number(layer.photoOrigW) <= 0 ||
+                Number(layer.photoOrigH) <= 0
+            ) {
+                return;
+            }
+
+            const minScale = getCollageFrameMinPhotoScale(layer);
+            const maxScale = minScale * 4;
+
+            let scale = Number(layer.photoScale);
+            if (!Number.isFinite(scale)) {
+                scale = minScale;
+            }
+
+            scale = Math.max(minScale, Math.min(maxScale, scale));
+            layer.photoScale = scale;
+
+            const drawW = Number(layer.photoOrigW) * scale;
+            const drawH = Number(layer.photoOrigH) * scale;
+
+            const maxOffsetX = Math.max(0, (drawW - Number(layer.w)) / 2);
+            const maxOffsetY = Math.max(0, (drawH - Number(layer.h)) / 2);
+
+            let offsetX = Number(layer.photoOffsetX) || 0;
+            let offsetY = Number(layer.photoOffsetY) || 0;
+
+            layer.photoOffsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, offsetX));
+            layer.photoOffsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, offsetY));
+        }
+
+        function getCollageFramePhotoZoomPercent(layer) {
+            const minScale = getCollageFrameMinPhotoScale(layer);
+
+            if (!Number.isFinite(minScale) || minScale <= 0) {
+                return 100;
+            }
+
+            const scale = Number(layer.photoScale) || minScale;
+            const pct = Math.round((scale / minScale) * 100);
+
+            return Math.max(100, Math.min(400, pct));
+        }
+
+        function syncCollageFramePhotoPanel() {
+            const panel = document.getElementById('collageFramePhotoPanel');
+            if (!panel) return;
+
+            const frame = getActiveCollageFilledFrame();
+            if (!frame) {
+                panel.classList.add('hidden');
+                return;
+            }
+
+            panel.classList.remove('hidden');
+
+            const zoomPct = getCollageFramePhotoZoomPercent(frame);
+            const slider = document.getElementById('collageFramePhotoZoom');
+            const label = document.getElementById('collageFramePhotoZoomVal');
+
+            if (slider) slider.value = zoomPct;
+            if (label) label.innerText = zoomPct + '%';
+        }
+
+        function setActiveCollageFramePhotoZoom(percent) {
+            const layer = getActiveCollageFilledFrame();
+            if (!layer) return;
+
+            let pct = Number(percent);
+            if (!Number.isFinite(pct)) {
+                pct = 100;
+            }
+            pct = Math.max(100, Math.min(400, pct));
+
+            const minScale = getCollageFrameMinPhotoScale(layer);
+            layer.photoScale = minScale * (pct / 100);
+
+            clampCollageFramePhotoCrop(layer);
+
+            const slider = document.getElementById('collageFramePhotoZoom');
+            const label = document.getElementById('collageFramePhotoZoomVal');
+            if (slider) slider.value = pct;
+            if (label) label.innerText = pct + '%';
+
+            if (typeof syncActiveCollageOverlay === 'function') {
+                syncActiveCollageOverlay(layer);
+            }
+
+            if (typeof requestCollageInteractionRender === 'function') {
+                requestCollageInteractionRender();
+            } else {
+                requestRenderCollage();
+            }
+        }
+
+        function changeActiveCollageFramePhotoZoom(delta) {
+            const layer = getActiveCollageFilledFrame();
+            if (!layer) return;
+
+            const curPct = getCollageFramePhotoZoomPercent(layer);
+            const newPct = Math.max(100, Math.min(400, curPct + Number(delta)));
+            setActiveCollageFramePhotoZoom(newPct);
+            finalizeActiveCollageFramePhotoAdjustment();
+        }
+
+        function resetActiveCollageFramePhotoPosition() {
+            const layer = getActiveCollageFilledFrame();
+            if (!layer) return;
+
+            layer.photoOffsetX = 0;
+            layer.photoOffsetY = 0;
+
+            clampCollageFramePhotoCrop(layer);
+            syncCollageFramePhotoPanel();
+
+            if (typeof syncActiveCollageOverlay === 'function') {
+                syncActiveCollageOverlay(layer);
+            }
+
+            if (typeof renderCollagePreview === 'function') {
+                renderCollagePreview();
+            } else {
+                requestRenderCollage();
+            }
+        }
+
+        function fillActiveCollageFramePhoto() {
+            const layer = getActiveCollageFilledFrame();
+            if (!layer) return;
+
+            layer.photoScale = getCollageFrameMinPhotoScale(layer);
+            layer.photoOffsetX = 0;
+            layer.photoOffsetY = 0;
+
+            clampCollageFramePhotoCrop(layer);
+            syncCollageFramePhotoPanel();
+
+            if (typeof syncActiveCollageOverlay === 'function') {
+                syncActiveCollageOverlay(layer);
+            }
+
+            if (typeof renderCollagePreview === 'function') {
+                renderCollagePreview();
+            } else {
+                requestRenderCollage();
+            }
+        }
+
+        function finalizeActiveCollageFramePhotoAdjustment() {
+            const layer = getActiveCollageFilledFrame();
+            if (!layer) return;
+
+            clampCollageFramePhotoCrop(layer);
+            syncCollageFramePhotoPanel();
+
+            if (typeof syncActiveCollageOverlay === 'function') {
+                syncActiveCollageOverlay(layer);
+            }
+
+            if (typeof renderCollagePreview === 'function') {
+                renderCollagePreview();
+            } else {
+                requestRenderCollage();
+            }
+        }
+
         if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
             document.addEventListener('keydown', function (event) {
                 const target = event.target;
@@ -15910,6 +16263,9 @@ function syncCollageTemplateUI() {
             }
             renderCollageTextLayerList();
             syncCollageTextStylePanel();
+            if (typeof syncCollageFramePhotoPanel === 'function') {
+                syncCollageFramePhotoPanel();
+            }
             requestRenderCollage();
         }
 
@@ -15937,6 +16293,9 @@ function syncCollageTemplateUI() {
                 normalizeCollageLayerZOrder();
                 renderCollageTextLayerList();
                 syncCollageTextStylePanel();
+                if (typeof syncCollageFramePhotoPanel === 'function') {
+                    syncCollageFramePhotoPanel();
+                }
                 requestRenderCollage();
             }
         }
@@ -15946,6 +16305,9 @@ function syncCollageTemplateUI() {
             collageState.activeLayerId = null;
             if (typeof renderCollageTextLayerList === 'function') renderCollageTextLayerList();
             syncCollageTextStylePanel();
+            if (typeof syncCollageFramePhotoPanel === 'function') {
+                syncCollageFramePhotoPanel();
+            }
             requestRenderCollage();
         }
 
@@ -15970,7 +16332,17 @@ function syncCollageTemplateUI() {
             if (pxW > 4000) pxW = 4000; if (pxH > 4000) pxH = 4000;
             if (pxW < 100) pxW = 100; if (pxH < 100) pxH = 100;
 
+            let oldCanvasW = Number(collageState.canvasW) || 1080;
+            let oldCanvasH = Number(collageState.canvasH) || 1080;
             collageState.canvasW = pxW; collageState.canvasH = pxH;
+            if (oldCanvasW !== pxW || oldCanvasH !== pxH) {
+                if (typeof remapCollageTextPositions === 'function') {
+                    remapCollageTextPositions(oldCanvasW, oldCanvasH, pxW, pxH);
+                }
+                if (typeof syncCollageTextStylePanel === 'function') {
+                    syncCollageTextStylePanel();
+                }
+            }
 
             // Update the DOM container size to match resolution
             let area = document.getElementById('collageInteractiveArea');
@@ -16378,6 +16750,7 @@ function syncCollageTemplateUI() {
             collageState.activeLayerId = null;
             if (typeof renderCollageTextLayerList === 'function') renderCollageTextLayerList();
             if (typeof syncCollageTextStylePanel === 'function') syncCollageTextStylePanel();
+            if (typeof syncCollageFramePhotoPanel === 'function') syncCollageFramePhotoPanel();
             requestRenderCollage();
         }
 
@@ -16400,6 +16773,9 @@ function syncCollageTemplateUI() {
             }
             if (typeof syncCollageTextStylePanel === 'function') {
                 syncCollageTextStylePanel();
+            }
+            if (typeof syncCollageFramePhotoPanel === 'function') {
+                syncCollageFramePhotoPanel();
             }
 
             // Bring to front within its respective layer group (photo vs text)
@@ -16472,6 +16848,9 @@ function syncCollageTemplateUI() {
                     // Move internal photo
                     layer.photoOffsetX = collageState.initPhotoOffsetX + (dx * viewScale);
                     layer.photoOffsetY = collageState.initPhotoOffsetY + (dy * viewScale);
+                    if (typeof clampCollageFramePhotoCrop === 'function') {
+                        clampCollageFramePhotoCrop(layer);
+                    }
                 } else {
                     layer.x = collageState.initX + (dx * viewScale);
                     layer.y = collageState.initY + (dy * viewScale);
@@ -16489,7 +16868,10 @@ function syncCollageTemplateUI() {
 
                 if (layer.isFrame) {
                     let newScale = collageState.initPhotoScale * scaleFactor;
-                    if (newScale > 0.01) layer.photoScale = newScale;
+                    layer.photoScale = newScale;
+                    if (typeof clampCollageFramePhotoCrop === 'function') {
+                        clampCollageFramePhotoCrop(layer);
+                    }
                 } else {
                     let newScale = collageState.initScale * scaleFactor;
                     if (newScale > 0.01) layer.scale = newScale;
@@ -16515,6 +16897,9 @@ function syncCollageTemplateUI() {
                 collageInteractionRAF = null;
             }
             renderCollagePreview();
+            if (typeof syncCollageFramePhotoPanel === 'function') {
+                syncCollageFramePhotoPanel();
+            }
 
             document.removeEventListener('mousemove', dragLayer);
             document.removeEventListener('mouseup', endDragLayer);
