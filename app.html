@@ -2273,60 +2273,68 @@
                                             </div>
 
                                             <!-- Posisi & Rotasi -->
-                                            <div class="pt-2 border-t border-gray-100 flex flex-col gap-2">
+                                            <div class="pt-2 border-t border-gray-100 flex flex-col gap-3">
                                                 <span class="text-[10px] font-extrabold uppercase tracking-wider text-gray-500">Posisi & Rotasi</span>
 
-                                                <!-- Koordinat X & Y -->
-                                                <div>
-                                                    <div class="grid grid-cols-2 gap-2 mb-1.5">
-                                                        <div>
-                                                            <label class="block text-[10px] font-medium text-gray-500 mb-0.5">X (px)</label>
+                                                <!-- Subbagian Posisi -->
+                                                <div class="flex flex-col gap-1.5">
+                                                    <div class="flex items-center justify-between">
+                                                        <label class="text-[11px] font-medium text-gray-600">Posisi</label>
+                                                    </div>
+
+                                                    <!-- Koordinat X & Y Grid -->
+                                                    <div class="grid grid-cols-2 gap-2">
+                                                        <div class="flex items-center border border-gray-200 rounded-lg bg-white overflow-hidden shadow-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-100 transition-all">
+                                                            <span class="px-2 py-1 bg-gray-50 text-[10px] font-bold text-gray-500 border-r border-gray-200 select-none">X</span>
                                                             <input type="number" id="collageTextPositionX" step="1"
                                                                 oninput="setActiveCollageTextPosition('x', this.value)"
                                                                 onblur="commitActiveCollageTextPosition('x', this.value)"
                                                                 onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }"
-                                                                class="w-full bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-mono font-bold text-gray-800 text-center outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all shadow-sm">
+                                                                class="w-full bg-transparent px-2 py-1 text-xs font-mono font-bold text-gray-800 text-center outline-none">
                                                         </div>
-                                                        <div>
-                                                            <label class="block text-[10px] font-medium text-gray-500 mb-0.5">Y (px)</label>
+                                                        <div class="flex items-center border border-gray-200 rounded-lg bg-white overflow-hidden shadow-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-100 transition-all">
+                                                            <span class="px-2 py-1 bg-gray-50 text-[10px] font-bold text-gray-500 border-r border-gray-200 select-none">Y</span>
                                                             <input type="number" id="collageTextPositionY" step="1"
                                                                 oninput="setActiveCollageTextPosition('y', this.value)"
                                                                 onblur="commitActiveCollageTextPosition('y', this.value)"
                                                                 onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }"
-                                                                class="w-full bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-mono font-bold text-gray-800 text-center outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all shadow-sm">
+                                                                class="w-full bg-transparent px-2 py-1 text-xs font-mono font-bold text-gray-800 text-center outline-none">
                                                         </div>
                                                     </div>
 
-                                                    <!-- Tombol Quick Center -->
-                                                    <div class="grid grid-cols-3 gap-1">
+                                                    <!-- Tombol Quick Center (Action Buttons) -->
+                                                    <div class="grid grid-cols-3 gap-1.5 pt-0.5">
                                                         <button type="button" onclick="centerActiveCollageTextHorizontal()"
-                                                            class="py-1 px-1 rounded-md border border-gray-200 bg-white hover:bg-gray-50 active:bg-gray-100 text-[10px] font-semibold text-gray-700 transition-all shadow-sm text-center truncate cursor-pointer"
+                                                            class="py-1.5 px-1.5 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 active:bg-blue-100 active:scale-[0.98] text-[10px] font-semibold text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer truncate"
                                                             title="Tengah Horizontal">
-                                                            Tengah X
+                                                            <i class="fa-solid fa-arrows-left-right text-[10px]"></i>
+                                                            <span>Tengah X</span>
                                                         </button>
                                                         <button type="button" onclick="centerActiveCollageTextVertical()"
-                                                            class="py-1 px-1 rounded-md border border-gray-200 bg-white hover:bg-gray-50 active:bg-gray-100 text-[10px] font-semibold text-gray-700 transition-all shadow-sm text-center truncate cursor-pointer"
+                                                            class="py-1.5 px-1.5 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 active:bg-blue-100 active:scale-[0.98] text-[10px] font-semibold text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer truncate"
                                                             title="Tengah Vertikal">
-                                                            Tengah Y
+                                                            <i class="fa-solid fa-arrows-up-down text-[10px]"></i>
+                                                            <span>Tengah Y</span>
                                                         </button>
                                                         <button type="button" onclick="centerActiveCollageTextCanvas()"
-                                                            class="py-1 px-1 rounded-md border border-blue-200 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-[10px] font-bold text-blue-700 transition-all shadow-sm text-center truncate cursor-pointer"
+                                                            class="py-1.5 px-1.5 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 active:bg-blue-100 active:scale-[0.98] text-[10px] font-semibold text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer truncate"
                                                             title="Tengah Kanvas">
-                                                            Pusat
+                                                            <i class="fa-solid fa-crosshairs text-[10px]"></i>
+                                                            <span>Pusat</span>
                                                         </button>
                                                     </div>
                                                 </div>
 
-                                                <!-- Rotasi -->
-                                                <div>
-                                                    <div class="flex items-center justify-between mb-1">
+                                                <!-- Subbagian Rotasi -->
+                                                <div class="flex flex-col gap-1.5">
+                                                    <div class="flex items-center justify-between">
                                                         <label class="text-[11px] font-medium text-gray-600">Rotasi</label>
                                                         <div class="flex items-center gap-1">
                                                             <input type="number" id="collageTextRotationInput" min="-180" max="180" step="1" value="0"
                                                                 oninput="handleCollageTextRotationTyping(this.value)"
                                                                 onblur="commitCollageTextRotation(this.value)"
                                                                 onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }"
-                                                                class="w-14 bg-white border border-gray-200 rounded px-1 py-0.5 text-[11px] font-mono font-bold text-gray-800 text-center outline-none focus:border-blue-500 shadow-sm">
+                                                                class="w-14 bg-white border border-gray-200 rounded-lg px-1.5 py-0.5 text-[11px] font-mono font-bold text-gray-800 text-center outline-none focus:border-blue-500 shadow-sm">
                                                             <span class="text-[11px] text-gray-500 font-bold">°</span>
                                                         </div>
                                                     </div>
@@ -2334,24 +2342,24 @@
                                                     <input type="range" id="collageTextRotationSlider" min="-180" max="180" step="1" value="0"
                                                         oninput="setActiveCollageTextRotation(this.value)"
                                                         onchange="finalizeActiveCollageTextRotation()"
-                                                        class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 mb-1.5">
+                                                        class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
 
                                                     <!-- Quick Rotation Presets -->
-                                                    <div class="grid grid-cols-5 gap-1">
+                                                    <div class="grid grid-cols-5 gap-1 pt-0.5">
                                                         <button type="button" onclick="setQuickCollageTextRotation(-90)"
-                                                            class="py-0.5 px-1 rounded border border-gray-200 bg-white hover:bg-gray-50 text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center cursor-pointer"
+                                                            class="py-1 px-1 rounded-md border border-gray-200 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 active:bg-blue-100 active:scale-[0.98] text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center cursor-pointer"
                                                             title="-90 Derajat">-90°</button>
                                                         <button type="button" onclick="setQuickCollageTextRotation(-15)"
-                                                            class="py-0.5 px-1 rounded border border-gray-200 bg-white hover:bg-gray-50 text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center cursor-pointer"
+                                                            class="py-1 px-1 rounded-md border border-gray-200 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 active:bg-blue-100 active:scale-[0.98] text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center cursor-pointer"
                                                             title="-15 Derajat">-15°</button>
                                                         <button type="button" onclick="setQuickCollageTextRotation(0)"
-                                                            class="py-0.5 px-1 rounded border border-gray-200 bg-white hover:bg-gray-50 text-[10px] font-mono font-bold text-blue-600 transition-all shadow-sm text-center cursor-pointer"
+                                                            class="py-1 px-1 rounded-md border border-gray-200 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 active:bg-blue-100 active:scale-[0.98] text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center cursor-pointer"
                                                             title="Reset 0 Derajat">0°</button>
                                                         <button type="button" onclick="setQuickCollageTextRotation(15)"
-                                                            class="py-0.5 px-1 rounded border border-gray-200 bg-white hover:bg-gray-50 text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center cursor-pointer"
+                                                            class="py-1 px-1 rounded-md border border-gray-200 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 active:bg-blue-100 active:scale-[0.98] text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center cursor-pointer"
                                                             title="+15 Derajat">+15°</button>
                                                         <button type="button" onclick="setQuickCollageTextRotation(90)"
-                                                            class="py-0.5 px-1 rounded border border-gray-200 bg-white hover:bg-gray-50 text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center cursor-pointer"
+                                                            class="py-1 px-1 rounded-md border border-gray-200 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 active:bg-blue-100 active:scale-[0.98] text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center cursor-pointer"
                                                             title="+90 Derajat">+90°</button>
                                                     </div>
                                                 </div>
