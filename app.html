@@ -2304,19 +2304,22 @@
 
                                                     <!-- Tombol Quick Center (Action Buttons) -->
                                                     <div class="grid grid-cols-3 gap-1.5 pt-0.5">
-                                                        <button type="button" onclick="centerActiveCollageTextHorizontal()"
+                                                        <button type="button"
+                                                            onclick="event.preventDefault(); event.stopPropagation(); centerActiveCollageTextHorizontal();"
                                                             class="py-1.5 px-1.5 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 active:bg-blue-100 active:scale-[0.98] text-[10px] font-semibold text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer truncate"
                                                             title="Tengah Horizontal">
                                                             <i class="fa-solid fa-arrows-left-right text-[10px]"></i>
                                                             <span>Tengah X</span>
                                                         </button>
-                                                        <button type="button" onclick="centerActiveCollageTextVertical()"
+                                                        <button type="button"
+                                                            onclick="event.preventDefault(); event.stopPropagation(); centerActiveCollageTextVertical();"
                                                             class="py-1.5 px-1.5 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 active:bg-blue-100 active:scale-[0.98] text-[10px] font-semibold text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer truncate"
                                                             title="Tengah Vertikal">
                                                             <i class="fa-solid fa-arrows-up-down text-[10px]"></i>
                                                             <span>Tengah Y</span>
                                                         </button>
-                                                        <button type="button" onclick="centerActiveCollageTextCanvas()"
+                                                        <button type="button"
+                                                            onclick="event.preventDefault(); event.stopPropagation(); centerActiveCollageTextCanvas();"
                                                             class="py-1.5 px-1.5 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 active:bg-blue-100 active:scale-[0.98] text-[10px] font-semibold text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer truncate"
                                                             title="Tengah Kanvas">
                                                             <i class="fa-solid fa-crosshairs text-[10px]"></i>
@@ -15534,35 +15537,59 @@ function syncCollageTemplateUI() {
             requestRenderCollage();
         }
 
+        function finalizeActiveCollageTextPositionAction(layer) {
+            if (!layer || !layer.isText) return;
+
+            if (typeof clampActiveCollageTextPosition === 'function') {
+                clampActiveCollageTextPosition(layer);
+            }
+
+            if (typeof syncCollageTextStylePanel === 'function') {
+                syncCollageTextStylePanel();
+            }
+
+            if (typeof syncActiveCollageOverlay === 'function') {
+                syncActiveCollageOverlay(layer);
+            }
+
+            if (typeof renderCollagePreview === 'function') {
+                renderCollagePreview();
+            } else {
+                requestRenderCollage();
+            }
+        }
+
         function centerActiveCollageTextHorizontal() {
             const layer = getActiveCollageTextLayer();
             if (!layer) return;
 
-            layer.x = (Number(collageState.canvasW) || 1080) / 2;
-            clampActiveCollageTextPosition(layer);
-            syncCollageTextStylePanel();
-            requestRenderCollage();
+            const canvasW = Number(collageState.canvasW) || 1080;
+            layer.x = canvasW / 2;
+
+            finalizeActiveCollageTextPositionAction(layer);
         }
 
         function centerActiveCollageTextVertical() {
             const layer = getActiveCollageTextLayer();
             if (!layer) return;
 
-            layer.y = (Number(collageState.canvasH) || 1080) / 2;
-            clampActiveCollageTextPosition(layer);
-            syncCollageTextStylePanel();
-            requestRenderCollage();
+            const canvasH = Number(collageState.canvasH) || 1080;
+            layer.y = canvasH / 2;
+
+            finalizeActiveCollageTextPositionAction(layer);
         }
 
         function centerActiveCollageTextCanvas() {
             const layer = getActiveCollageTextLayer();
             if (!layer) return;
 
-            layer.x = (Number(collageState.canvasW) || 1080) / 2;
-            layer.y = (Number(collageState.canvasH) || 1080) / 2;
-            clampActiveCollageTextPosition(layer);
-            syncCollageTextStylePanel();
-            requestRenderCollage();
+            const canvasW = Number(collageState.canvasW) || 1080;
+            const canvasH = Number(collageState.canvasH) || 1080;
+
+            layer.x = canvasW / 2;
+            layer.y = canvasH / 2;
+
+            finalizeActiveCollageTextPositionAction(layer);
         }
 
         function normalizeCollageRotation(value) {
