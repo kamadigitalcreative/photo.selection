@@ -405,7 +405,14 @@ async function verifyUserSession(payload, req) {
   }
 
   const sessionRow = sessionRows[0];
+  const sessionRole = (sessionRow.Role || '').trim();
   const sessionUsername = (sessionRow.Username || '').trim();
+
+  // Cross-auth isolation: Client Gallery sessions must NEVER authenticate account actions
+  if (sessionRole === 'ClientGallery' || sessionUsername.startsWith('__CLIENT_GALLERY__')) {
+    return null;
+  }
+
   if (!sessionUsername) {
     return null;
   }
@@ -1007,6 +1014,23 @@ async function handleSavePaymentSettings(payload, res) {
 }
 
 async function handleUploadPaymentProof(payload, res) {
+  const token = (payload.token || '').trim();
+  const clientAccessToken = (payload.clientAccessToken || payload.tokenClient || '').trim();
+
+  if (!token || !clientAccessToken) {
+    return error(res, 'Unauthorized: Token and client access token required', 401);
+  }
+
+  const project = await findProjectForClient(token);
+  if (!project) {
+    return error(res, 'Project tidak ditemukan', 404);
+  }
+
+  const validSession = await verifyClientGallerySession(clientAccessToken, project);
+  if (!validSession) {
+    return error(res, 'Unauthorized: Invalid or expired client access token', 403);
+  }
+
   return success(res, { success: true });
 }
 
@@ -1231,42 +1255,109 @@ async function handleCreateProject(payload, res) {
   }, 'Project berhasil dibuat');
 }
 
-async function handleGetProjectForClient(payload, res) {
-  const tokenOrSlug = (payload.token || '').trim();
-  if (!tokenOrSlug) return error(res, 'Token or slug is required');
+// ============================================================
+// PHASE 4.4 — CLIENT GALLERY SECURITY & SESSION HELPERS
+// ============================================================
+const CLIENT_GALLERY_SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-  let projects = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(tokenOrSlug)},Slug.eq.${encodeURIComponent(tokenOrSlug)},%22Short%20Slug%22.eq.${encodeURIComponent(tokenOrSlug)})&select=*`);
-  if (!projects || projects.length === 0) return error(res, 'Project tidak ditemukan.', 404);
+function getStableProjectId(project) {
+  if (!project) return '';
+  const dbId = String((project && project.id) || '').trim();
+  if (dbId) return dbId;
+  return String((project && project.Token) || '').trim();
+}
 
-  const p = projects[0];
-  const ownerName = p.Owner;
-
-  let ownerBrand = {
-    brandName: 'Photo Selection',
-    brandLogo: '',
-    watermarkUrl: '',
-    bankName: '',
-    bankAccount: '',
-    bankAccountName: '',
-    isPremiumAddon: false
-  };
-
+async function findProjectForClient(tokenOrSlug) {
+  if (!tokenOrSlug || typeof tokenOrSlug !== 'string') return null;
+  const clean = tokenOrSlug.trim();
+  if (!clean) return null;
   try {
-    const owners = await supabaseQuery(`users?Username=eq.${encodeURIComponent(ownerName)}&select=*`);
-    if (owners && owners.length > 0) {
-      const o = owners[0];
-      ownerBrand = {
-        brandName: o.BrandName || 'Photo Selection',
-        brandLogo: o.BrandLogo || '',
-        watermarkUrl: o.WatermarkUrl || '',
-        bankName: o.BankName || '',
-        bankAccount: o.BankAccount || '',
-        bankAccountName: o.BankAccountName || '',
-        isPremiumAddon: Boolean(String(o.Akses_Watermark).toUpperCase() === 'TRUE')
-      };
+    const projects = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(clean)},Slug.eq.${encodeURIComponent(clean)},%22Short%20Slug%22.eq.${encodeURIComponent(clean)})&select=*`);
+    if (projects && Array.isArray(projects) && projects.length > 0) {
+      return projects[0];
     }
-  } catch (e) { }
+  } catch (err) {
+    console.error('findProjectForClient error:', err);
+  }
+  return null;
+}
 
+async function issueClientGallerySession(project) {
+  const stableId = getStableProjectId(project);
+  if (!stableId) return null;
+  const token = crypto.randomUUID();
+  const nowIso = new Date().toISOString();
+  await supabaseQuery('sessions', {
+    method: 'POST',
+    body: {
+      SessionID: token,
+      Username: `__CLIENT_GALLERY__:${stableId}`,
+      Role: 'ClientGallery',
+      CreatedAt: nowIso
+    }
+  });
+  return token;
+}
+
+async function verifyClientGallerySession(clientAccessToken, project) {
+  if (!clientAccessToken || typeof clientAccessToken !== 'string') return null;
+  const token = clientAccessToken.trim();
+  if (!token) return null;
+
+  const stableId = getStableProjectId(project);
+  if (!stableId) return null;
+
+  let sessionRows = null;
+  try {
+    sessionRows = await supabaseQuery(`sessions?SessionID=eq.${encodeURIComponent(token)}&select=*&limit=1`);
+  } catch (err) {
+    console.error('Client gallery session query error:', err);
+    return null;
+  }
+
+  if (!sessionRows || !Array.isArray(sessionRows) || sessionRows.length === 0) {
+    return null;
+  }
+
+  const s = sessionRows[0];
+  const role = (s.Role || '').trim();
+  const username = (s.Username || '').trim();
+
+  // Reject normal photographer/admin account sessions
+  if (role !== 'ClientGallery') {
+    return null;
+  }
+
+  // Ensure session is bound to this exact project using the same stable ID rule
+  const expectedUsername = `__CLIENT_GALLERY__:${stableId}`;
+  if (username !== expectedUsername) {
+    return null;
+  }
+
+  // Check expiration (24h TTL)
+  if (!s.CreatedAt) {
+    return null;
+  }
+
+  const createdTime = new Date(s.CreatedAt).getTime();
+  if (isNaN(createdTime)) {
+    return null;
+  }
+
+  if (Date.now() - createdTime > CLIENT_GALLERY_SESSION_TTL_MS) {
+    // Expired session - best effort deletion
+    try {
+      await supabaseQuery(`sessions?SessionID=eq.${encodeURIComponent(token)}`, {
+        method: 'DELETE'
+      });
+    } catch (delErr) { }
+    return null;
+  }
+
+  return s;
+}
+
+function buildAuthorizedProjectData(p, ownerBrand, clientAccessToken) {
   let dp = p['Daftar Pilihan'] || [];
   if (typeof dp === 'string') {
     try { dp = JSON.parse(dp); } catch (e) { dp = dp.split(',').map(s => s.trim()).filter(Boolean); }
@@ -1283,17 +1374,20 @@ async function handleGetProjectForClient(payload, res) {
   }
 
   const pass = p['Password Client'] || '';
+  const hasPassword = Boolean(pass && pass.trim() !== '');
 
-  const projectData = {
+  return {
     token: p.Token,
     slug: p['Short Slug'] || p.Slug || p.Token,
-    namaClient: p['Nama Client'],
-    name: p['Nama Client'],
-    nomorWA: p['Nomor WA'],
-    hasPassword: Boolean(pass && pass.trim() !== ''),
+    namaClient: p['Nama Client'] || '',
+    name: p['Nama Client'] || '',
+    nomorWA: p['Nomor WA'] || '',
+    hasPassword: hasPassword,
+    needsPassword: false,
+    accessGranted: true,
+    clientAccessToken: clientAccessToken || '',
     maxFoto: Number(p['Max Foto']) || 50,
-    driveLink: p['Drive Link'],
-    owner: ownerName,
+    driveLink: p['Drive Link'] || '',
     kategori: kat,
     categories: kat,
     useWatermark: String(p.UseWatermark).toUpperCase() === 'TRUE',
@@ -1315,7 +1409,7 @@ async function handleGetProjectForClient(payload, res) {
     selectedFiles: dp,
     'Daftar Pilihan': dp,
     notes: nt,
-    paymentProof: p.PaymentProof || p['Payment Proof'],
+    paymentProof: p.PaymentProof || p['Payment Proof'] || '',
     backupDrive: p['Backup Drive'] || p.BackupDrive || '',
     backupUrl: p['Backup Drive'] || p.BackupDrive || '',
     brandName: ownerBrand.brandName,
@@ -1326,11 +1420,98 @@ async function handleGetProjectForClient(payload, res) {
     bankAccountName: ownerBrand.bankAccountName,
     isPremiumAddon: ownerBrand.isPremiumAddon
   };
+}
+
+async function handleGetProjectForClient(payload, res) {
+  const tokenOrSlug = (payload.token || '').trim();
+  if (!tokenOrSlug) return error(res, 'Token or slug is required', 400);
+
+  const p = await findProjectForClient(tokenOrSlug);
+  if (!p) return error(res, 'Project tidak ditemukan.', 404);
+
+  const ownerName = p.Owner;
+  let ownerBrand = {
+    brandName: 'Photo Selection',
+    brandLogo: '',
+    watermarkUrl: '',
+    bankName: '',
+    bankAccount: '',
+    bankAccountName: '',
+    isPremiumAddon: false
+  };
+
+  if (ownerName) {
+    try {
+      const owners = await supabaseQuery(`users?Username=eq.${encodeURIComponent(ownerName)}&select=*`);
+      if (owners && owners.length > 0) {
+        const o = owners[0];
+        ownerBrand = {
+          brandName: o.BrandName || 'Photo Selection',
+          brandLogo: o.BrandLogo || '',
+          watermarkUrl: o.WatermarkUrl || '',
+          bankName: o.BankName || '',
+          bankAccount: o.BankAccount || '',
+          bankAccountName: o.BankAccountName || '',
+          isPremiumAddon: Boolean(String(o.Akses_Watermark).toUpperCase() === 'TRUE')
+        };
+      }
+    } catch (e) { }
+  }
+
+  const pass = (p['Password Client'] || '').trim();
+  const hasPassword = Boolean(pass !== '');
+  const clientAccessToken = (payload.clientAccessToken || payload.tokenClient || '').trim();
+
+  // PASSWORDLESS FLOW
+  if (!hasPassword) {
+    let activeToken = clientAccessToken;
+    let validSession = await verifyClientGallerySession(activeToken, p);
+    if (!validSession) {
+      activeToken = await issueClientGallerySession(p);
+    }
+    const fullData = buildAuthorizedProjectData(p, ownerBrand, activeToken);
+    return success(res, {
+      success: true,
+      accessGranted: true,
+      clientAccessToken: activeToken,
+      project: fullData,
+      ...fullData
+    });
+  }
+
+  // PASSWORD-PROTECTED FLOW (VALID SESSION RELOAD)
+  if (clientAccessToken) {
+    const validSession = await verifyClientGallerySession(clientAccessToken, p);
+    if (validSession) {
+      const fullData = buildAuthorizedProjectData(p, ownerBrand, clientAccessToken);
+      return success(res, {
+        success: true,
+        accessGranted: true,
+        clientAccessToken: clientAccessToken,
+        project: fullData,
+        ...fullData
+      });
+    }
+  }
+
+  // SAFE PUBLIC / PRE-AUTH RESPONSE
+  const publicData = {
+    token: p.Token,
+    slug: p['Short Slug'] || p.Slug || p.Token,
+    namaClient: p['Nama Client'] || '',
+    name: p['Nama Client'] || '',
+    hasPassword: true,
+    needsPassword: true,
+    accessGranted: false,
+    brandName: ownerBrand.brandName,
+    brandLogo: ownerBrand.brandLogo
+  };
 
   return success(res, {
     success: true,
-    project: projectData,
-    ...projectData
+    accessGranted: false,
+    project: publicData,
+    ...publicData
   });
 }
 
@@ -1338,13 +1519,57 @@ async function handleVerifyClientPassword(payload, res) {
   const token = (payload.token || '').trim();
   const password = (payload.passwordInput || payload.password || '').trim();
 
-  let projects = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)},%22Short%20Slug%22.eq.${encodeURIComponent(token)})&select=*`);
-  if (!projects || projects.length === 0) return error(res, 'Project tidak ditemukan');
+  const p = await findProjectForClient(token);
+  if (!p) return error(res, 'Project tidak ditemukan', 404);
 
-  const p = projects[0];
   const storedPass = (p['Password Client'] || '').trim();
   const isValid = (!storedPass || storedPass === password);
-  return success(res, { success: isValid, valid: isValid });
+
+  if (!isValid) {
+    return success(res, { success: false, valid: false, accessGranted: false, message: 'Password galeri salah.' });
+  }
+
+  const clientAccessToken = await issueClientGallerySession(p);
+
+  const ownerName = p.Owner;
+  let ownerBrand = {
+    brandName: 'Photo Selection',
+    brandLogo: '',
+    watermarkUrl: '',
+    bankName: '',
+    bankAccount: '',
+    bankAccountName: '',
+    isPremiumAddon: false
+  };
+
+  if (ownerName) {
+    try {
+      const owners = await supabaseQuery(`users?Username=eq.${encodeURIComponent(ownerName)}&select=*`);
+      if (owners && owners.length > 0) {
+        const o = owners[0];
+        ownerBrand = {
+          brandName: o.BrandName || 'Photo Selection',
+          brandLogo: o.BrandLogo || '',
+          watermarkUrl: o.WatermarkUrl || '',
+          bankName: o.BankName || '',
+          bankAccount: o.BankAccount || '',
+          bankAccountName: o.BankAccountName || '',
+          isPremiumAddon: Boolean(String(o.Akses_Watermark).toUpperCase() === 'TRUE')
+        };
+      }
+    } catch (e) { }
+  }
+
+  const fullData = buildAuthorizedProjectData(p, ownerBrand, clientAccessToken);
+
+  return success(res, {
+    success: true,
+    valid: true,
+    accessGranted: true,
+    clientAccessToken: clientAccessToken,
+    project: fullData,
+    ...fullData
+  });
 }
 
 async function handleUpdateClientPassword(payload, res) {
@@ -1363,41 +1588,38 @@ async function handleUpdateClientPassword(payload, res) {
 
 async function handleUpdateClientStatus(payload, res) {
   const token = (payload.token || '').trim();
-  if (!token) return error(res, 'Token required');
+  if (!token) return error(res, 'Token required', 400);
+
+  const clientAccessToken = (payload.clientAccessToken || payload.tokenClient || '').trim();
+  if (!clientAccessToken) {
+    return error(res, 'Unauthorized: Client access token required', 401);
+  }
+
+  const project = await findProjectForClient(token);
+  if (!project) {
+    return error(res, 'Project tidak ditemukan', 404);
+  }
+
+  const validSession = await verifyClientGallerySession(clientAccessToken, project);
+  if (!validSession) {
+    return error(res, 'Unauthorized: Invalid or expired client access token', 403);
+  }
 
   const updateBody = {};
-  let currentStatus = payload.status || 'Belum Memilih';
-  let currentMax = 50;
+  const curStatus = project.Status || project['Status Client'] || 'Belum Memilih';
+  let currentStatus = curStatus;
+  let currentMax = Number(project['Max Foto']) || Number(project.MaxFoto) || 50;
+  let isDownloadActive = String(project.AksesDownload || project.Akses_Download).toUpperCase() !== 'FALSE';
 
-  let isDownloadActive = true;
-  try {
-    const existing = await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)},%22Short%20Slug%22.eq.${encodeURIComponent(token)})&select=Status,"Status Client","Max Foto",AksesDownload,Akses_Download`);
-    if (existing && existing.length > 0) {
-      const curStatus = existing[0].Status || existing[0]['Status Client'] || 'Belum Memilih';
-      currentStatus = curStatus;
-      currentMax = Number(existing[0]['Max Foto']) || Number(existing[0].MaxFoto) || 50;
-      isDownloadActive = String(existing[0].AksesDownload || existing[0].Akses_Download).toUpperCase() !== 'FALSE';
-      const isAlreadyDone = (curStatus === 'Selesai' || curStatus === 'Menunggu Konfirmasi Pembayaran');
-      const isIncomingDraft = (payload.status === 'Sedang Memilih' || payload.status === 'Dalam Proses' || payload.status === 'Belum Memilih');
+  const isAlreadyDone = (curStatus === 'Selesai' || curStatus === 'Menunggu Konfirmasi Pembayaran');
+  const isIncomingDraft = (payload.status === 'Sedang Memilih' || payload.status === 'Dalam Proses' || payload.status === 'Belum Memilih');
 
-      if (isAlreadyDone && isIncomingDraft) {
-        // Tetap pertahankan status Selesai, jangan ditimpa status draft/heartbeat
-      } else if (payload.status) {
-        updateBody.Status = payload.status;
-        updateBody['Status Client'] = payload.status;
-        currentStatus = payload.status;
-      }
-    } else if (payload.status) {
-      updateBody.Status = payload.status;
-      updateBody['Status Client'] = payload.status;
-      currentStatus = payload.status;
-    }
-  } catch (e) {
-    if (payload.status) {
-      updateBody.Status = payload.status;
-      updateBody['Status Client'] = payload.status;
-      currentStatus = payload.status;
-    }
+  if (isAlreadyDone && isIncomingDraft) {
+    // Tetap pertahankan status Selesai, jangan ditimpa status draft/heartbeat
+  } else if (payload.status) {
+    updateBody.Status = payload.status;
+    updateBody['Status Client'] = payload.status;
+    currentStatus = payload.status;
   }
 
   if (payload.selectedCount !== undefined) {
@@ -1424,7 +1646,8 @@ async function handleUpdateClientStatus(payload, res) {
   const nowIso = new Date().toISOString();
   updateBody['Last Update'] = nowIso;
 
-  await supabaseQuery(`projects?or=(Token.eq.${encodeURIComponent(token)},Slug.eq.${encodeURIComponent(token)},%22Short%20Slug%22.eq.${encodeURIComponent(token)})`, {
+  const filter = getProjectMutationFilter(project);
+  await supabaseQuery(`projects?${filter}`, {
     method: 'PATCH',
     body: updateBody
   });
@@ -1433,6 +1656,23 @@ async function handleUpdateClientStatus(payload, res) {
 }
 
 async function handleReleaseClientSession(payload, res) {
+  const token = (payload.token || '').trim();
+  const clientAccessToken = (payload.clientAccessToken || payload.tokenClient || '').trim();
+
+  if (!token || !clientAccessToken) {
+    return error(res, 'Unauthorized: Token and client access token required', 401);
+  }
+
+  const project = await findProjectForClient(token);
+  if (!project) {
+    return error(res, 'Project tidak ditemukan', 404);
+  }
+
+  const validSession = await verifyClientGallerySession(clientAccessToken, project);
+  if (!validSession) {
+    return error(res, 'Unauthorized: Invalid or expired client access token', 403);
+  }
+
   return success(res, { success: true });
 }
 

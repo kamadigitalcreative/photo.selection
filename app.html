@@ -5707,6 +5707,7 @@ function syncCollageTemplateUI() {
         // GLOBAL VARIABLES
         const API_ENDPOINT = '/api/bridge';
         var baseAppUrl = "";
+        var clientRouteIdentifier = '';
         var clientState = {
             token: '', namaClient: '', nomorWA: '', maxFoto: 0, driveLink: '',
             selectedImages: [], downloadImages: [], folderHistory: [], currentFolderId: '', currentFolderName: '', currentContent: { folders: [], images: [] }, isPreviewMode: false, isFinished: false,
@@ -6237,9 +6238,11 @@ function syncCollageTemplateUI() {
                     verifyEmailToken(rawConfirm); // Jalankan fungsi verifikasi
                 } else if (rawToken) {
                     clientState.token = rawToken;
+                    clientRouteIdentifier = rawToken;
                     initClientApp();
                 } else if (rawC) {
                     clientState.token = rawC;
+                    clientRouteIdentifier = rawC;
                     initClientApp();
                 } else {
                     checkLoginState();
@@ -8898,6 +8901,7 @@ function syncCollageTemplateUI() {
 
         function simulateClientLink(token) {
             clientState.token = token;
+            clientRouteIdentifier = token;
             clientState.isPreviewMode = true;
             initClientApp();
         }
@@ -8905,6 +8909,7 @@ function syncCollageTemplateUI() {
         function exitClientPreview() {
             clientState.isPreviewMode = false;
             clientState.token = '';
+            clientRouteIdentifier = '';
 
             var audio = document.getElementById('bgm-audio');
             if (audio) {
@@ -10564,27 +10569,65 @@ function syncCollageTemplateUI() {
             sessionStorage.setItem('ps_client_tab_id', clientSessionId);
         }
 
+        function getClientAccessToken(token) {
+            var t = token || (clientState && clientState.token) || '';
+            if (!t) return '';
+            try {
+                return sessionStorage.getItem('ps_client_access_' + t) || '';
+            } catch(e) {
+                return '';
+            }
+        }
+
+        function setClientAccessToken(token, accessToken) {
+            var t = token || (clientState && clientState.token) || '';
+            if (!t) return;
+            try {
+                if (accessToken) {
+                    sessionStorage.setItem('ps_client_access_' + t, accessToken);
+                } else {
+                    sessionStorage.removeItem('ps_client_access_' + t);
+                }
+            } catch(e) {}
+        }
+
+        function clearClientAccessToken(token) {
+            var t = token || (clientState && clientState.token) || '';
+            if (!t) return;
+            try {
+                sessionStorage.removeItem('ps_client_access_' + t);
+            } catch(e) {}
+        }
+
+        var isClientReauthorizing = false;
+        function handleClientAuthExpired() {
+            if (clientSyncTimer) clearInterval(clientSyncTimer);
+            if (clientState.token) {
+                clearClientAccessToken(clientState.token);
+            }
+            if (clientRouteIdentifier) {
+                clearClientAccessToken(clientRouteIdentifier);
+            }
+            if (isClientReauthorizing) return;
+            isClientReauthorizing = true;
+            setTimeout(function() {
+                initClientApp(false).finally(function() {
+                    setTimeout(function() { isClientReauthorizing = false; }, 3000);
+                });
+            }, 100);
+        }
+
         async function initClientApp(takeOver = false) {
             document.documentElement.classList.remove('dark');
             var isEn = (localStorage.getItem('ps_lang') === 'en');
 
-            // 1. Tampilkan data dari cache lokal secara instan (0ms / super cepat)
+            // Phase 4.4: Insecure local project cache must NEVER bypass server authorization
             var projCacheKey = 'ps_proj_cache_' + clientState.token;
-            var hasCachedProj = false;
-            try {
-                var cachedRaw = sessionStorage.getItem(projCacheKey) || localStorage.getItem(projCacheKey);
-                if (cachedRaw) {
-                    var cachedObj = JSON.parse(cachedRaw);
-                    if (cachedObj && (cachedObj.namaClient || cachedObj.name)) {
-                        processClientProjectData(cachedObj);
-                        hasCachedProj = true;
-                    }
-                }
-            } catch(e) {}
+            try { localStorage.removeItem(projCacheKey); } catch(e) {}
 
-            if (!hasCachedProj) {
-                startLoading(isEn ? "Verifying..." : "Memverifikasi...");
-            }
+            startLoading(isEn ? "Verifying..." : "Memverifikasi...");
+
+            var clientAccessToken = getClientAccessToken(clientState.token) || (clientRouteIdentifier ? getClientAccessToken(clientRouteIdentifier) : null);
 
             var deviceName = 'Browser';
             if (/iphone|ipad|ipod/i.test(navigator.userAgent)) deviceName = 'iPhone / iPad';
@@ -10603,6 +10646,7 @@ function syncCollageTemplateUI() {
                             body: JSON.stringify({
                                 action: 'getProjectForClient',
                                 token: clientState.token,
+                                clientAccessToken: clientAccessToken,
                                 sessionId: clientSessionId,
                                 takeOver: takeOver,
                                 deviceName: deviceName
@@ -10647,22 +10691,66 @@ function syncCollageTemplateUI() {
                         return;
                     }
 
-                    if (res.data.success && res.data.project) {
-                        try { sessionStorage.setItem(projCacheKey, JSON.stringify(res.data.project)); } catch(e) {}
-                        processClientProjectData(res.data.project);
+                    var projectPayload = res.data.project || res.data;
+                    var isAccessGranted = Boolean(res.data.accessGranted || (res.data.project && res.data.project.accessGranted));
+
+                    if (isAccessGranted && projectPayload) {
+                        var tokenReturned = res.data.clientAccessToken || (res.data.project && res.data.project.clientAccessToken) || clientAccessToken;
+                        if (tokenReturned) {
+                            if (clientRouteIdentifier) {
+                                setClientAccessToken(clientRouteIdentifier, tokenReturned);
+                            } else if (clientState.token) {
+                                setClientAccessToken(clientState.token, tokenReturned);
+                            }
+                            if (projectPayload.token) {
+                                setClientAccessToken(projectPayload.token, tokenReturned);
+                            }
+                        }
+                        try { sessionStorage.setItem(projCacheKey, JSON.stringify(projectPayload)); } catch(e) {}
+                        if (projectPayload.token) {
+                            try { sessionStorage.setItem('ps_proj_cache_' + projectPayload.token, JSON.stringify(projectPayload)); } catch(e) {}
+                        }
+                        processClientProjectData(projectPayload);
+                    } else if (res.data.hasPassword || (projectPayload && projectPayload.hasPassword) || res.data.needsPassword || (projectPayload && projectPayload.needsPassword)) {
+                        // Password-protected gallery without valid session: Show locked password view, DO NOT expose private data
+                        clearClientAccessToken(clientState.token);
+                        if (clientRouteIdentifier) clearClientAccessToken(clientRouteIdentifier);
+                        try { sessionStorage.removeItem(projCacheKey); } catch(e) {}
+
+                        if (projectPayload.namaClient) clientState.namaClient = projectPayload.namaClient;
+                        if (projectPayload.brandName) appBranding.name = projectPayload.brandName;
+                        if (projectPayload.brandLogo) appBranding.logo = projectPayload.brandLogo;
+                        applyBranding();
+
+                        var btnBackAuth = document.getElementById('btn-back-dashboard-auth');
+                        if (clientState.isPreviewMode) {
+                            if (btnBackAuth) btnBackAuth.classList.remove('hidden');
+                        } else {
+                            if (btnBackAuth) btnBackAuth.classList.add('hidden');
+                        }
+
+                        showView('client-auth-view');
+                        var passEl = document.getElementById('client-password');
+                        if (passEl) passEl.value = '';
                     } else {
-                        if (hasCachedProj) return; // Jika sudah ada data dari cache, jangan ganggu pengguna
+                        clearClientAccessToken(clientState.token);
+                        if (clientRouteIdentifier) clearClientAccessToken(clientRouteIdentifier);
+                        try { sessionStorage.removeItem(projCacheKey); } catch(e) {}
                         var errorMsg = (res.data ? res.data.message : '') || res.message || 'Link galeri tidak dapat diakses.';
                         Swal.fire({ icon: 'error', title: 'Gagal Memuat Galeri', text: errorMsg, allowOutsideClick: false });
                     }
                 } else {
-                    if (hasCachedProj) return;
+                    clearClientAccessToken(clientState.token);
+                    if (clientRouteIdentifier) clearClientAccessToken(clientRouteIdentifier);
+                    try { sessionStorage.removeItem(projCacheKey); } catch(e) {}
                     var errorMsg = (res && (res.message || (res.data ? res.data.message : ''))) || 'Link galeri tidak dapat diakses.';
                     Swal.fire({ icon: 'error', title: 'Gagal Memuat Galeri', text: errorMsg, allowOutsideClick: false });
                 }
             } catch (err) {
                 endLoading();
-                if (hasCachedProj) return;
+                clearClientAccessToken(clientState.token);
+                if (clientRouteIdentifier) clearClientAccessToken(clientRouteIdentifier);
+                try { sessionStorage.removeItem(projCacheKey); } catch(e) {}
                 Swal.fire('Error', 'Gagal memuat galeri: ' + err.message, 'error');
             }
         }
@@ -10684,13 +10772,35 @@ function syncCollageTemplateUI() {
                 endLoading();
                 setButtonState('btnClientAuth', false, 'Unlock Gallery');
 
-                if (res.status === 'success' && res.data && res.data.success) {
+                if (res.status === 'success' && res.data && (res.data.valid || res.data.accessGranted)) {
+                    var tokenReturned = res.data.clientAccessToken || (res.data.project && res.data.project.clientAccessToken);
+                    var fullProject = res.data.project || res.data;
+                    if (tokenReturned) {
+                        if (clientRouteIdentifier) {
+                            setClientAccessToken(clientRouteIdentifier, tokenReturned);
+                        } else if (clientState.token) {
+                            setClientAccessToken(clientState.token, tokenReturned);
+                        }
+                        if (fullProject && fullProject.token) {
+                            setClientAccessToken(fullProject.token, tokenReturned);
+                        }
+                    }
+                    var projCacheKey = 'ps_proj_cache_' + clientState.token;
+                    try { sessionStorage.setItem(projCacheKey, JSON.stringify(fullProject)); } catch(e) {}
+                    if (fullProject && fullProject.token) {
+                        try { sessionStorage.setItem('ps_proj_cache_' + fullProject.token, JSON.stringify(fullProject)); } catch(e) {}
+                    }
+                    processClientProjectData(fullProject);
                     showClientModeSelection();
                 } else {
+                    clearClientAccessToken(clientState.token);
+                    if (clientRouteIdentifier) clearClientAccessToken(clientRouteIdentifier);
                     Swal.fire('Ditolak', (res.data ? res.data.message : null) || res.message || 'Password galeri salah.', 'error');
                 }
             } catch (err) {
                 endLoading();
+                clearClientAccessToken(clientState.token);
+                if (clientRouteIdentifier) clearClientAccessToken(clientRouteIdentifier);
                 setButtonState('btnClientAuth', false, 'Unlock Gallery');
                 Swal.fire('Error', err.message, 'error');
             }
@@ -10727,7 +10837,16 @@ function syncCollageTemplateUI() {
         }
 
         function processClientProjectData(projectData) {
-            if (projectData.token) clientState.token = projectData.token;
+            if (projectData.token) {
+                var existingTok = projectData.clientAccessToken || (clientRouteIdentifier ? getClientAccessToken(clientRouteIdentifier) : null) || getClientAccessToken(clientState.token) || getClientAccessToken(projectData.token);
+                if (existingTok) {
+                    setClientAccessToken(projectData.token, existingTok);
+                    if (clientRouteIdentifier) {
+                        setClientAccessToken(clientRouteIdentifier, existingTok);
+                    }
+                }
+                clientState.token = projectData.token;
+            }
             clientState.namaClient = projectData.namaClient;
             clientState.nomorWA = projectData.nomorWA;
             clientState.maxFoto = projectData.maxFoto;
@@ -12422,6 +12541,7 @@ function syncCollageTemplateUI() {
                 const payloadHeartbeat = { 
                     action: 'updateClientStatus', 
                     token: clientState.token, 
+                    clientAccessToken: getClientAccessToken(clientState.token),
                     sessionId: clientSessionId
                 };
                 if (!hasClientSubmitted) {
@@ -12433,7 +12553,15 @@ function syncCollageTemplateUI() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payloadHeartbeat)
                 });
+                if (response.status === 401 || response.status === 403) {
+                    handleClientAuthExpired();
+                    return;
+                }
                 const res = await response.json();
+                if (res && res.status === 'error' && (res.message || '').includes('Unauthorized')) {
+                    handleClientAuthExpired();
+                    return;
+                }
                 
                 if (res && res.data) {
                     // 1. Deteksi apakah fotografer membuka/membatalkan status kunci (Reopen Project)
@@ -12523,14 +12651,22 @@ function syncCollageTemplateUI() {
                     pingClientStatus(offStatus, '', false);
                 }
                 // Lepaskan sesi saat tab ditutup/di-minimize agar device lain bisa langsung membuka
-                try {
-                    fetch(API_ENDPOINT, {
-                        method: 'POST',
-                        keepalive: true,
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'releaseClientSession', token: clientState.token, sessionId: clientSessionId })
-                    });
-                } catch(e) {}
+                var clientAccessToken = getClientAccessToken(clientState.token);
+                if (clientAccessToken) {
+                    try {
+                        fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            keepalive: true,
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                action: 'releaseClientSession', 
+                                token: clientState.token, 
+                                clientAccessToken: clientAccessToken, 
+                                sessionId: clientSessionId 
+                            })
+                        });
+                    } catch(e) {}
+                }
             } else if (document.visibilityState === 'visible') {
                 if (!hasClientSubmitted) {
                     pingClientStatus('Sedang Memilih', '', false);
@@ -12556,9 +12692,11 @@ function syncCollageTemplateUI() {
                 return null;
             }
 
+            var clientAccessToken = getClientAccessToken(clientState.token);
             var payload = {
                 action: 'updateClientStatus',
                 token: clientState.token,
+                clientAccessToken: clientAccessToken,
                 sessionId: clientSessionId,
                 status: status,
                 paymentProof: proofUrl
@@ -12591,7 +12729,15 @@ function syncCollageTemplateUI() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+                if (response.status === 401 || response.status === 403) {
+                    handleClientAuthExpired();
+                    return null;
+                }
                 const res = await response.json();
+                if (res && res.status === 'error' && (res.message || '').includes('Unauthorized')) {
+                    handleClientAuthExpired();
+                    return null;
+                }
 
                 // Deteksi jika sesi telah dipindahkan / diambil alih di perangkat lain
                 if (res && res.data && res.data.sessionTakenOver) {
@@ -13260,12 +13406,18 @@ function syncCollageTemplateUI() {
         // --- DETEKSI KLIEN TUTUP TAB / KELUAR APLIKASI (PC & HP) ---
         function handleClientLeave() {
             var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
-            if (clientState.token && !isSubmitted && !clientState.isPreviewMode) {
+            var clientAccessToken = getClientAccessToken(clientState.token);
+            if (clientState.token && !isSubmitted && !clientState.isPreviewMode && clientAccessToken) {
                 try {
                     fetch(API_ENDPOINT, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'updateClientStatus', token: clientState.token, status: 'Belum Memilih' }),
+                        body: JSON.stringify({ 
+                            action: 'updateClientStatus', 
+                            token: clientState.token, 
+                            clientAccessToken: clientAccessToken,
+                            status: 'Belum Memilih' 
+                        }),
                         keepalive: true
                     });
                 } catch (e) { }
@@ -14560,120 +14712,167 @@ function syncCollageTemplateUI() {
             switchCollageSidebar('photos');
 
             try {
-                const response = await fetch(typeof API_ENDPOINT !== 'undefined' ? API_ENDPOINT : '/api/bridge', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'getProjectForClient', token: token })
-                });
-                const res = await response.json();
-                if (res && res.status === 'success' && res.data && res.data.success) {
-                    let driveLink = res.data.project ? res.data.project.driveLink : '';
-                    if (driveLink) {
-                        const driveResult = await collectCollageDrivePhotos(driveLink);
-                        let normalizedPhotos = driveResult.photos || [];
+                let driveLink = '';
+                let selectedProject = null;
 
-                        ensureCollagePhotoState();
-                        // 1. Pertahankan localPhotos yang memang sengaja dipertahankan
-                        let localPhotos = collageState.photoLibrary.filter(p => p && p.isLocal);
-                        collageState.photoLibrary = localPhotos.concat(normalizedPhotos);
-                        collageState.photos = collageState.photoLibrary; // backward compatibility
+                // 1. Coba cari di window.lastProjectsData
+                if (Array.isArray(window.lastProjectsData)) {
+                    selectedProject = window.lastProjectsData.find(p => p && (String(p.Token || p.token || p.ID || p.id).trim() === String(token).trim()));
+                }
 
-                        // 2. Hapus dari smartAutoPhotos semua URL Drive yang tidak lagi terdapat dalam photoLibrary baru
-                        let validUrls = new Set(collageState.photoLibrary.map(p => p && p.url).filter(Boolean));
-                        collageState.smartAutoPhotos = (Array.isArray(collageState.smartAutoPhotos) ? collageState.smartAutoPhotos : []).filter(url => validUrls.has(url));
-
-                        // 3. Local photo yang masih ada di library boleh tetap selected
-                        let validIds = new Set(collageState.photoLibrary.map(p => p && p.id).filter(Boolean));
-                        collageState.selectedPhotoIds = (Array.isArray(collageState.selectedPhotoIds) ? collageState.selectedPhotoIds : []).filter(id => validIds.has(id));
-
-                        // 4. Setelah sinkronisasi: recalculateSmartAutoLayout() jika diperlukan, renderCollagePhotoPicker(), updateCollageSelectedCount()
-                        let t = collageTemplates[collageState.currentTemplateId];
-                        if (t && t.isSmartAuto) {
-                            recalculateSmartAutoLayout();
-                        } else {
-                            if (Array.isArray(collageState.layers)) {
-                                collageState.layers.forEach(layer => {
-                                    if (layer && layer.isFrame && layer.url && !validUrls.has(layer.url) && !layer.isPlaceholder) {
-                                        layer.isPlaceholder = true;
-                                        delete imageCache[layer.url];
-                                        layer.url = '';
-                                        layer.photoOffsetX = 0;
-                                        layer.photoOffsetY = 0;
-                                        layer.photoScale = 1;
-                                        layer.photoOrigW = 0;
-                                        layer.photoOrigH = 0;
-                                    }
-                                });
-                            }
-                            requestRenderCollage();
-                        }
-
-                        renderCollagePhotoPicker();
-                        updateCollageSelectedCount();
-                        if (typeof syncCollageFramePhotoPanel === 'function') {
-                            syncCollageFramePhotoPanel();
-                        }
-
-                        if (picker && localPhotos.length === 0) {
-                            if (driveResult.hasError) {
-                                picker.innerHTML = '<div class="text-xs text-red-400 text-center col-span-4 py-4 italic">Gagal memuat foto dari Google Drive.</div>';
-                            } else if (normalizedPhotos.length === 0) {
-                                picker.innerHTML = '<div class="text-xs text-gray-400 text-center col-span-4 py-4 italic">Folder Google Drive tidak memiliki foto yang dapat ditampilkan.</div>';
+                // 2. Coba cari di cache proyek fotografer terotentikasi
+                if (!selectedProject) {
+                    let uname = (currentUser && currentUser.username) ? currentUser.username : 'guest';
+                    try {
+                        let cachedStr = localStorage.getItem('ps_cache_projects_' + uname);
+                        if (cachedStr) {
+                            let cachedProjects = JSON.parse(cachedStr);
+                            if (Array.isArray(cachedProjects)) {
+                                selectedProject = cachedProjects.find(p => p && (String(p.Token || p.token || p.ID || p.id).trim() === String(token).trim()));
                             }
                         }
+                    } catch(e) {}
+                }
 
-                        // Init workspace after project load
-                        setTimeout(initWorkspace, 100);
+                // 3. Jika belum ditemukan, panggil getProjects (terotentikasi fotografer)
+                if (!selectedProject && typeof currentUser !== 'undefined' && currentUser && currentUser.sessionId) {
+                    try {
+                        const response = await fetch(typeof API_ENDPOINT !== 'undefined' ? API_ENDPOINT : '/api/bridge', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + currentUser.sessionId
+                            },
+                            body: JSON.stringify({ action: 'getProjects', sessionId: currentUser.sessionId })
+                        });
+                        const res = await response.json();
+                        if (res && res.status === 'success' && res.data) {
+                            let projects = [];
+                            if (Array.isArray(res.data.data)) {
+                                projects = res.data.data;
+                            } else if (Array.isArray(res.data.projects)) {
+                                projects = res.data.projects;
+                            } else if (Array.isArray(res.data)) {
+                                projects = res.data;
+                            }
+                            selectedProject = projects.find(p => p && (String(p.Token || p.token || p.ID || p.id).trim() === String(token).trim()));
+                            if (selectedProject) {
+                                window.lastProjectsData = projects;
+                                let uname = (currentUser && currentUser.username) ? currentUser.username : 'guest';
+                                try { localStorage.setItem('ps_cache_projects_' + uname, JSON.stringify(projects)); } catch(e) {}
+                            }
+                        }
+                    } catch(netErr) {}
+                }
+
+                if (selectedProject) {
+                    driveLink = selectedProject['Drive Link'] || selectedProject.driveLink || selectedProject.DriveLink || '';
+                }
+
+                if (driveLink) {
+                    const driveResult = await collectCollageDrivePhotos(driveLink);
+                    let normalizedPhotos = driveResult.photos || [];
+
+                    ensureCollagePhotoState();
+                    // 1. Pertahankan localPhotos yang memang sengaja dipertahankan
+                    let localPhotos = collageState.photoLibrary.filter(p => p && p.isLocal);
+                    collageState.photoLibrary = localPhotos.concat(normalizedPhotos);
+                    collageState.photos = collageState.photoLibrary; // backward compatibility
+
+                    // 2. Hapus dari smartAutoPhotos semua URL Drive yang tidak lagi terdapat dalam photoLibrary baru
+                    let validUrls = new Set(collageState.photoLibrary.map(p => p && p.url).filter(Boolean));
+                    collageState.smartAutoPhotos = (Array.isArray(collageState.smartAutoPhotos) ? collageState.smartAutoPhotos : []).filter(url => validUrls.has(url));
+
+                    // 3. Local photo yang masih ada di library boleh tetap selected
+                    let validIds = new Set(collageState.photoLibrary.map(p => p && p.id).filter(Boolean));
+                    collageState.selectedPhotoIds = (Array.isArray(collageState.selectedPhotoIds) ? collageState.selectedPhotoIds : []).filter(id => validIds.has(id));
+
+                    // 4. Setelah sinkronisasi: recalculateSmartAutoLayout() jika diperlukan, renderCollagePhotoPicker(), updateCollageSelectedCount()
+                    let t = collageTemplates[collageState.currentTemplateId];
+                    if (t && t.isSmartAuto) {
+                        recalculateSmartAutoLayout();
                     } else {
-                        ensureCollagePhotoState();
-                        // 1. Pertahankan localPhotos
-                        let localPhotos = collageState.photoLibrary.filter(p => p && p.isLocal);
-                        collageState.photoLibrary = localPhotos;
-                        collageState.photos = collageState.photoLibrary;
-
-                        // 2. Filter smartAutoPhotos hanya ke valid local URL
-                        let validUrls = new Set(localPhotos.map(p => p && p.url).filter(Boolean));
-                        collageState.smartAutoPhotos = (Array.isArray(collageState.smartAutoPhotos) ? collageState.smartAutoPhotos : []).filter(url => validUrls.has(url));
-
-                        // 3. Filter selectedPhotoIds hanya ke ID local yang valid
-                        let validIds = new Set(localPhotos.map(p => p && p.id).filter(Boolean));
-                        collageState.selectedPhotoIds = (Array.isArray(collageState.selectedPhotoIds) ? collageState.selectedPhotoIds : []).filter(id => validIds.has(id));
-
-                        // 4. Sinkronisasi layout/frame jika smart auto atau reset frame Drive lama menjadi placeholder
-                        let t = collageTemplates[collageState.currentTemplateId];
-                        if (t && t.isSmartAuto) {
-                            recalculateSmartAutoLayout();
-                        } else {
-                            if (Array.isArray(collageState.layers)) {
-                                collageState.layers.forEach(layer => {
-                                    if (layer && layer.isFrame && layer.url && !validUrls.has(layer.url) && !layer.isPlaceholder) {
-                                        layer.isPlaceholder = true;
-                                        delete imageCache[layer.url];
-                                        layer.url = '';
-                                        layer.photoOffsetX = 0;
-                                        layer.photoOffsetY = 0;
-                                        layer.photoScale = 1;
-                                        layer.photoOrigW = 0;
-                                        layer.photoOrigH = 0;
-                                    }
-                                });
-                            }
-                            requestRenderCollage();
+                        if (Array.isArray(collageState.layers)) {
+                            collageState.layers.forEach(layer => {
+                                if (layer && layer.isFrame && layer.url && !validUrls.has(layer.url) && !layer.isPlaceholder) {
+                                    layer.isPlaceholder = true;
+                                    delete imageCache[layer.url];
+                                    layer.url = '';
+                                    layer.photoOffsetX = 0;
+                                    layer.photoOffsetY = 0;
+                                    layer.photoScale = 1;
+                                    layer.photoOrigW = 0;
+                                    layer.photoOrigH = 0;
+                                }
+                            });
                         }
+                        requestRenderCollage();
+                    }
 
-                        // 5. Render picker & update selected count
-                        renderCollagePhotoPicker();
-                        updateCollageSelectedCount();
-                        if (typeof syncCollageFramePhotoPanel === 'function') {
-                            syncCollageFramePhotoPanel();
-                        }
+                    // 5. Render picker & update selected count
+                    renderCollagePhotoPicker();
+                    updateCollageSelectedCount();
+                    if (typeof syncCollageFramePhotoPanel === 'function') {
+                        syncCollageFramePhotoPanel();
+                    }
 
-                        if (picker && localPhotos.length === 0) {
-                            picker.innerHTML = '<div class="text-xs text-gray-400 text-center col-span-4 py-4 italic">Project ini tidak memiliki link Google Drive.</div>';
+                    if (picker && localPhotos.length === 0) {
+                        if (driveResult.hasError) {
+                            picker.innerHTML = '<div class="text-xs text-red-400 text-center col-span-4 py-4 italic">Gagal memuat foto dari Google Drive.</div>';
+                        } else if (normalizedPhotos.length === 0) {
+                            picker.innerHTML = '<div class="text-xs text-gray-400 text-center col-span-4 py-4 italic">Folder Google Drive tidak memiliki foto yang dapat ditampilkan.</div>';
                         }
                     }
+
+                    // Init workspace after project load
+                    setTimeout(initWorkspace, 100);
                 } else {
-                    console.warn('[Collage] getProjectForClient gagal:', res ? res.message : res);
-                    if (picker) picker.innerHTML = '<div class="text-xs text-red-400 text-center col-span-4 py-4 italic">Gagal memuat data project.</div>';
+                    ensureCollagePhotoState();
+                    // 1. Pertahankan localPhotos
+                    let localPhotos = collageState.photoLibrary.filter(p => p && p.isLocal);
+                    collageState.photoLibrary = localPhotos;
+                    collageState.photos = collageState.photoLibrary;
+
+                    // 2. Filter smartAutoPhotos hanya ke valid local URL
+                    let validUrls = new Set(localPhotos.map(p => p && p.url).filter(Boolean));
+                    collageState.smartAutoPhotos = (Array.isArray(collageState.smartAutoPhotos) ? collageState.smartAutoPhotos : []).filter(url => validUrls.has(url));
+
+                    // 3. Filter selectedPhotoIds hanya ke ID local yang valid
+                    let validIds = new Set(localPhotos.map(p => p && p.id).filter(Boolean));
+                    collageState.selectedPhotoIds = (Array.isArray(collageState.selectedPhotoIds) ? collageState.selectedPhotoIds : []).filter(id => validIds.has(id));
+
+                    // 4. Sinkronisasi layout/frame jika smart auto atau reset frame Drive lama menjadi placeholder
+                    let t = collageTemplates[collageState.currentTemplateId];
+                    if (t && t.isSmartAuto) {
+                        recalculateSmartAutoLayout();
+                    } else {
+                        if (Array.isArray(collageState.layers)) {
+                            collageState.layers.forEach(layer => {
+                                if (layer && layer.isFrame && layer.url && !validUrls.has(layer.url) && !layer.isPlaceholder) {
+                                    layer.isPlaceholder = true;
+                                    delete imageCache[layer.url];
+                                    layer.url = '';
+                                    layer.photoOffsetX = 0;
+                                    layer.photoOffsetY = 0;
+                                    layer.photoScale = 1;
+                                    layer.photoOrigW = 0;
+                                    layer.photoOrigH = 0;
+                                }
+                            });
+                        }
+                        requestRenderCollage();
+                    }
+
+                    // 5. Render picker & update selected count
+                    renderCollagePhotoPicker();
+                    updateCollageSelectedCount();
+                    if (typeof syncCollageFramePhotoPanel === 'function') {
+                        syncCollageFramePhotoPanel();
+                    }
+
+                    if (picker && localPhotos.length === 0) {
+                        picker.innerHTML = '<div class="text-xs text-gray-400 text-center col-span-4 py-4 italic">Project ini tidak memiliki link Google Drive.</div>';
+                    }
                 }
             } catch (e) {
                 console.error('[Collage] loadCollageProjectData error:', e);
