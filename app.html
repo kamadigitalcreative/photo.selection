@@ -81,7 +81,7 @@
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,700;1,6..96,400;1,6..96,700&family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400;1,700&family=DM+Serif+Display:ital@0;1&family=Great+Vibes&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,700;1,400;1,700&family=Montserrat:ital,wght@0,400;0,700;1,400;1,700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Poppins:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 
         body {
             background-color: #f8fafc;
@@ -2160,6 +2160,118 @@
                                                 Belum ada teks.
                                             </div>
                                         </div>
+
+                                        <!-- Active Text Style Panel -->
+                                        <div id="collageTextStylePanel" class="hidden mt-2.5 pt-2.5 border-t border-gray-200 space-y-2">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-[11px] font-bold tracking-wider text-gray-500 uppercase">Style Teks</span>
+                                            </div>
+
+                                            <!-- Font Family -->
+                                            <div>
+                                                <label class="block text-[11px] font-medium text-gray-600 mb-1">Font</label>
+                                                <select id="collageTextFontSelect" onchange="setActiveCollageTextFont(this.value)"
+                                                    class="w-full bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-gray-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all cursor-pointer">
+                                                    <option value="Inter">Inter (Modern Sans)</option>
+                                                    <option value="Montserrat">Montserrat (Geometric Sans)</option>
+                                                    <option value="Poppins">Poppins (Clean Sans)</option>
+                                                    <option value="Playfair Display">Playfair Display (Editorial Serif)</option>
+                                                    <option value="Cormorant Garamond">Cormorant Garamond (Classic Serif)</option>
+                                                    <option value="Libre Baskerville">Libre Baskerville (Elegant Serif)</option>
+                                                    <option value="Lora">Lora (Contemporary Serif)</option>
+                                                    <option value="DM Serif Display">DM Serif Display (Headline Serif)</option>
+                                                    <option value="Bodoni Moda">Bodoni Moda (Fashion Luxury)</option>
+                                                    <option value="Great Vibes">Great Vibes (Romantic Script)</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- Font Size & Formatting Row -->
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <!-- Ukuran -->
+                                                <div>
+                                                    <label class="block text-[11px] font-medium text-gray-600 mb-1">Ukuran</label>
+                                                    <div class="flex items-center border border-gray-200 rounded-lg bg-white overflow-hidden shadow-sm">
+                                                        <button type="button" onclick="changeActiveCollageTextFontSize(-10)"
+                                                            class="px-2 py-1 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 text-gray-600 text-xs font-bold transition-colors cursor-pointer border-r border-gray-200">−</button>
+                                                        <input type="number" id="collageTextFontSize" min="20" max="600" step="2" value="150"
+                                                            oninput="handleCollageTextFontSizeTyping(this.value)"
+                                                            onblur="commitCollageTextFontSize(this.value)"
+                                                            onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }"
+                                                            class="w-full text-center text-xs font-bold text-gray-800 outline-none bg-transparent py-1">
+                                                        <button type="button" onclick="changeActiveCollageTextFontSize(10)"
+                                                            class="px-2 py-1 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 text-gray-600 text-xs font-bold transition-colors cursor-pointer border-l border-gray-200">+</button>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Gaya (Bold & Italic) -->
+                                                <div>
+                                                    <label class="block text-[11px] font-medium text-gray-600 mb-1">Gaya</label>
+                                                    <div class="flex items-center gap-1">
+                                                        <button type="button" id="btnCollageTextBold" onclick="toggleActiveCollageTextBold()"
+                                                            class="flex-1 py-1 px-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-bold transition-all shadow-sm flex items-center justify-center cursor-pointer"
+                                                            title="Tebal (Bold)">
+                                                            <i class="fa-solid fa-bold text-xs"></i>
+                                                        </button>
+                                                        <button type="button" id="btnCollageTextItalic" onclick="toggleActiveCollageTextItalic()"
+                                                            class="flex-1 py-1 px-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-bold transition-all shadow-sm flex items-center justify-center cursor-pointer"
+                                                            title="Miring (Italic)">
+                                                            <i class="fa-solid fa-italic text-xs"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Text Color & Alignment Row -->
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <!-- Warna Teks -->
+                                                <div>
+                                                    <label class="block text-[11px] font-medium text-gray-600 mb-1">Warna Teks</label>
+                                                    <div class="flex items-center gap-1.5">
+                                                        <input type="color" id="collageTextColorPicker" value="#111827"
+                                                            oninput="handleCollageTextColorPicker(this.value)"
+                                                            class="w-8 h-8 rounded-lg border border-gray-200 cursor-pointer p-0.5 bg-white shrink-0">
+                                                        <input type="text" id="collageTextColorHex" maxlength="7" placeholder="#111827"
+                                                            oninput="handleCollageTextColorHexTyping(this.value)"
+                                                            onblur="handleCollageTextColorHexBlur(this.value)"
+                                                            onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }"
+                                                            class="w-full min-w-0 bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-mono font-bold text-gray-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all uppercase placeholder-gray-400">
+                                                    </div>
+                                                </div>
+
+                                                <!-- Perataan (Alignment) -->
+                                                <div>
+                                                    <label class="block text-[11px] font-medium text-gray-600 mb-1">Perataan</label>
+                                                    <div class="flex items-center gap-1">
+                                                        <button type="button" id="btnCollageTextAlignLeft" onclick="setActiveCollageTextAlign('left')"
+                                                            class="flex-1 py-1 px-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs transition-all shadow-sm flex items-center justify-center cursor-pointer"
+                                                            title="Rata Kiri">
+                                                            <i class="fa-solid fa-align-left text-xs"></i>
+                                                        </button>
+                                                        <button type="button" id="btnCollageTextAlignCenter" onclick="setActiveCollageTextAlign('center')"
+                                                            class="flex-1 py-1 px-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs transition-all shadow-sm flex items-center justify-center cursor-pointer"
+                                                            title="Rata Tengah">
+                                                            <i class="fa-solid fa-align-center text-xs"></i>
+                                                        </button>
+                                                        <button type="button" id="btnCollageTextAlignRight" onclick="setActiveCollageTextAlign('right')"
+                                                            class="flex-1 py-1 px-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs transition-all shadow-sm flex items-center justify-center cursor-pointer"
+                                                            title="Rata Kanan">
+                                                            <i class="fa-solid fa-align-right text-xs"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Opacity Slider -->
+                                            <div>
+                                                <div class="flex items-center justify-between mb-1">
+                                                    <label class="text-[11px] font-medium text-gray-600">Transparansi (Opacity)</label>
+                                                    <span id="collageTextOpacityVal" class="text-[11px] font-mono font-bold text-gray-700">100%</span>
+                                                </div>
+                                                <input type="range" id="collageTextOpacity" min="0" max="100" value="100"
+                                                    oninput="setActiveCollageTextOpacity(this.value)"
+                                                    class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <!-- Gaya & Warna / Background -->
@@ -3603,6 +3715,9 @@ function syncCollageTemplateUI() {
                     if (typeof renderCollageTextLayerList === 'function') {
                         renderCollageTextLayerList();
                     }
+                    if (typeof syncCollageTextStylePanel === 'function') {
+                        syncCollageTextStylePanel();
+                    }
                     requestRenderCollage();
                     return;
                 }
@@ -3732,6 +3847,9 @@ function syncCollageTemplateUI() {
                 normalizeCollageLayerZOrder();
                 if (typeof renderCollageTextLayerList === 'function') {
                     renderCollageTextLayerList();
+                }
+                if (typeof syncCollageTextStylePanel === 'function') {
+                    syncCollageTextStylePanel();
                 }
 
                 requestRenderCollage();
@@ -14062,6 +14180,7 @@ function syncCollageTemplateUI() {
             syncCollageTemplateUI();
             if (typeof syncCollageBackgroundUI === 'function') syncCollageBackgroundUI();
             if (typeof renderCollageTextLayerList === 'function') renderCollageTextLayerList();
+            if (typeof syncCollageTextStylePanel === 'function') syncCollageTextStylePanel();
 
             // Sinkronkan judul dan counter
             let titleInput = document.getElementById('collageTitleInput');
@@ -14436,6 +14555,9 @@ function syncCollageTemplateUI() {
                 if (typeof renderCollageTextLayerList === 'function') {
                     renderCollageTextLayerList();
                 }
+                if (typeof syncCollageTextStylePanel === 'function') {
+                    syncCollageTextStylePanel();
+                }
 
                 // Sinkronkan smartAutoPhotos dan selectedPhotoIds untuk oldUrl jika diganti
                 if (oldUrl && oldUrl !== newUrl) {
@@ -14756,6 +14878,9 @@ function syncCollageTemplateUI() {
             if (typeof renderCollageTextLayerList === 'function') {
                 renderCollageTextLayerList();
             }
+            if (typeof syncCollageTextStylePanel === 'function') {
+                syncCollageTextStylePanel();
+            }
             requestRenderCollage();
             setTimeout(initWorkspace, 50);
 
@@ -14835,6 +14960,9 @@ function syncCollageTemplateUI() {
                     if (typeof renderCollageTextLayerList === 'function') {
                         renderCollageTextLayerList();
                     }
+                    if (typeof syncCollageTextStylePanel === 'function') {
+                        syncCollageTextStylePanel();
+                    }
                 }
                 if (typeof normalizeCollageLayerZOrder === 'function') {
                     normalizeCollageLayerZOrder();
@@ -14856,6 +14984,9 @@ function syncCollageTemplateUI() {
                     collageState.activeLayerId = null;
                     normalizeCollageLayerZOrder();
                     renderCollageTextLayerList();
+                    if (typeof syncCollageTextStylePanel === 'function') {
+                        syncCollageTextStylePanel();
+                    }
                     requestRenderCollage();
                     return;
                 }
@@ -14889,6 +15020,9 @@ function syncCollageTemplateUI() {
 
                     renderCollagePhotoPicker();
                     updateCollageSelectedCount();
+                    if (typeof syncCollageTextStylePanel === 'function') {
+                        syncCollageTextStylePanel();
+                    }
                     requestRenderCollage();
                     return;
                 } else {
@@ -14901,12 +15035,332 @@ function syncCollageTemplateUI() {
                         recalculateSmartAutoLayout();
                         renderCollagePhotoPicker();
                         updateCollageSelectedCount();
+                        if (typeof syncCollageTextStylePanel === 'function') {
+                            syncCollageTextStylePanel();
+                        }
                         return;
                     }
                     collageState.layers.splice(idx, 1);
                     collageState.activeLayerId = null;
                 }
             }
+            if (typeof syncCollageTextStylePanel === 'function') {
+                syncCollageTextStylePanel();
+            }
+            requestRenderCollage();
+        }
+
+        let textMeasurementCanvas = null;
+        let textMeasurementCtx = null;
+
+        function measureCollageTextLayer(layer) {
+            if (!layer || !layer.isText) return;
+
+            if (!textMeasurementCanvas && typeof document !== 'undefined') {
+                textMeasurementCanvas = document.createElement('canvas');
+                textMeasurementCtx = textMeasurementCanvas.getContext('2d');
+            }
+            const ctx = textMeasurementCtx;
+            if (!ctx || typeof ctx.measureText !== 'function') return;
+
+            const fontSize = Number(layer.fontSize) || 150;
+            const fontWeight = layer.fontWeight || 700;
+            const fontStyle = layer.fontStyle || 'normal';
+            const fontFamily = layer.font || 'Inter';
+
+            ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px "${fontFamily}"`;
+
+            const textToMeasure = (layer.text && layer.text.length > 0) ? layer.text : ' ';
+            const metrics = ctx.measureText(textToMeasure);
+
+            const paddingX = 40;
+            let measuredW = (metrics.width || 0) + paddingX;
+
+            let textH = fontSize * 1.15;
+            if (metrics.actualBoundingBoxAscent !== undefined && metrics.actualBoundingBoxDescent !== undefined) {
+                textH = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+            }
+            const paddingY = 24;
+            let measuredH = textH + paddingY;
+
+            layer.w = Math.max(80, measuredW);
+            layer.h = Math.max(fontSize * 1.1, measuredH);
+        }
+
+        async function ensureCollageTextFontLoaded(layer) {
+            if (!layer || !layer.isText || typeof document === 'undefined' || !document.fonts || typeof document.fonts.load !== 'function') {
+                return;
+            }
+
+            const fontSize = Number(layer.fontSize) || 150;
+            const fontWeight = layer.fontWeight || 700;
+            const fontStyle = layer.fontStyle || 'normal';
+            const fontFamily = layer.font || 'Inter';
+
+            const fontSpec = `${fontStyle} ${fontWeight} ${fontSize}px "${fontFamily}"`;
+
+            try {
+                await document.fonts.load(fontSpec, layer.text || 'Sample');
+            } catch (e) {
+                // fallback safely
+            }
+        }
+
+        function getActiveCollageTextLayer() {
+            if (typeof collageState === 'undefined' || !collageState || !Array.isArray(collageState.layers)) return null;
+            return collageState.layers.find(l => l && l.isText && l.id === collageState.activeLayerId) || null;
+        }
+
+        function getCollageTextDrawX(layer) {
+            const padding = Number(layer.textPadding) || 20;
+            const align = layer.align || 'center';
+            if (align === 'left') {
+                return (-layer.w / 2) + padding;
+            }
+            if (align === 'right') {
+                return (layer.w / 2) - padding;
+            }
+            return 0;
+        }
+
+        function syncCollageTextStylePanel() {
+            const panel = document.getElementById('collageTextStylePanel');
+            if (!panel) return;
+
+            const layer = getActiveCollageTextLayer();
+            if (!layer) {
+                panel.classList.add('hidden');
+                return;
+            }
+
+            panel.classList.remove('hidden');
+
+            // Font Select
+            const fontSelect = document.getElementById('collageTextFontSelect');
+            if (fontSelect) {
+                fontSelect.value = layer.font || 'Inter';
+            }
+
+            // Font Size
+            const sizeInput = document.getElementById('collageTextFontSize');
+            if (sizeInput) {
+                sizeInput.value = Number(layer.fontSize) || 150;
+            }
+
+            // Bold
+            const isBold = (layer.fontWeight || 700) >= 700;
+            const boldBtn = document.getElementById('btnCollageTextBold');
+            if (boldBtn) {
+                if (isBold) {
+                    boldBtn.className = 'flex-1 py-1 px-2 rounded-lg border border-blue-600 bg-blue-600 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center cursor-pointer';
+                } else {
+                    boldBtn.className = 'flex-1 py-1 px-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-bold transition-all shadow-sm flex items-center justify-center cursor-pointer';
+                }
+            }
+
+            // Italic
+            const isItalic = (layer.fontStyle || 'normal') === 'italic';
+            const italicBtn = document.getElementById('btnCollageTextItalic');
+            if (italicBtn) {
+                if (isItalic) {
+                    italicBtn.className = 'flex-1 py-1 px-2 rounded-lg border border-blue-600 bg-blue-600 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center cursor-pointer';
+                } else {
+                    italicBtn.className = 'flex-1 py-1 px-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-bold transition-all shadow-sm flex items-center justify-center cursor-pointer';
+                }
+            }
+
+            // Text Color
+            const currentColor = layer.color || '#111827';
+            const colorPicker = document.getElementById('collageTextColorPicker');
+            if (colorPicker && /^#[0-9A-Fa-f]{6}$/.test(currentColor)) {
+                colorPicker.value = currentColor.toLowerCase();
+            }
+            const hexInput = document.getElementById('collageTextColorHex');
+            if (hexInput) {
+                hexInput.value = currentColor.toUpperCase();
+            }
+
+            // Align
+            const currentAlign = layer.align || 'center';
+            const alignBtns = {
+                left: document.getElementById('btnCollageTextAlignLeft'),
+                center: document.getElementById('btnCollageTextAlignCenter'),
+                right: document.getElementById('btnCollageTextAlignRight')
+            };
+            ['left', 'center', 'right'].forEach(a => {
+                const btn = alignBtns[a];
+                if (btn) {
+                    if (currentAlign === a) {
+                        btn.className = 'flex-1 py-1 px-1.5 rounded-lg border border-blue-600 bg-blue-600 text-white text-xs transition-all shadow-sm flex items-center justify-center cursor-pointer';
+                    } else {
+                        btn.className = 'flex-1 py-1 px-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs transition-all shadow-sm flex items-center justify-center cursor-pointer';
+                    }
+                }
+            });
+
+            // Opacity
+            const opacitySlider = document.getElementById('collageTextOpacity');
+            const opacityLabel = document.getElementById('collageTextOpacityVal');
+            const currentOpacity = Number.isFinite(Number(layer.opacity)) ? Number(layer.opacity) : 1;
+            const pct = Math.round(Math.max(0, Math.min(1, currentOpacity)) * 100);
+            if (opacitySlider) opacitySlider.value = pct;
+            if (opacityLabel) opacityLabel.innerText = pct + '%';
+        }
+
+        const COLLAGE_APPROVED_FONTS = [
+            'Inter', 'Montserrat', 'Poppins', 'Playfair Display',
+            'Cormorant Garamond', 'Libre Baskerville', 'Lora',
+            'DM Serif Display', 'Bodoni Moda', 'Great Vibes'
+        ];
+
+        function setActiveCollageTextFont(value) {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            const font = COLLAGE_APPROVED_FONTS.includes(value) ? value : 'Inter';
+            layer.font = font;
+            measureCollageTextLayer(layer);
+            syncCollageTextStylePanel();
+            requestRenderCollage();
+
+            ensureCollageTextFontLoaded(layer).then(() => {
+                measureCollageTextLayer(layer);
+                requestRenderCollage();
+            });
+        }
+
+        function handleCollageTextFontSizeTyping(value) {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            const raw = String(value ?? '').trim();
+            if (raw === '') return;
+
+            const parsed = Number(raw);
+            if (!Number.isFinite(parsed) || parsed < 20 || parsed > 600) {
+                return;
+            }
+
+            layer.fontSize = Math.round(parsed);
+            measureCollageTextLayer(layer);
+            requestRenderCollage();
+        }
+
+        function commitCollageTextFontSize(value) {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            const raw = String(value ?? '').trim();
+            let parsed = raw === '' ? NaN : Number(raw);
+
+            if (!Number.isFinite(parsed)) {
+                parsed = Number(layer.fontSize) || 150;
+            }
+
+            parsed = Math.max(20, Math.min(600, Math.round(parsed)));
+            layer.fontSize = parsed;
+
+            measureCollageTextLayer(layer);
+            syncCollageTextStylePanel();
+            requestRenderCollage();
+        }
+
+        function setActiveCollageTextFontSize(value) {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            const size = Math.max(20, Math.min(600, Math.round(Number(value) || 150)));
+            layer.fontSize = size;
+            measureCollageTextLayer(layer);
+            syncCollageTextStylePanel();
+            requestRenderCollage();
+        }
+
+        function changeActiveCollageTextFontSize(delta) {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            const current = Number(layer.fontSize) || 150;
+            setActiveCollageTextFontSize(current + delta);
+        }
+
+        function toggleActiveCollageTextBold() {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            layer.fontWeight = ((layer.fontWeight || 700) >= 700) ? 400 : 700;
+            measureCollageTextLayer(layer);
+            syncCollageTextStylePanel();
+            requestRenderCollage();
+
+            ensureCollageTextFontLoaded(layer).then(() => {
+                measureCollageTextLayer(layer);
+                requestRenderCollage();
+            });
+        }
+
+        function toggleActiveCollageTextItalic() {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            layer.fontStyle = ((layer.fontStyle || 'normal') === 'italic') ? 'normal' : 'italic';
+            measureCollageTextLayer(layer);
+            syncCollageTextStylePanel();
+            requestRenderCollage();
+
+            ensureCollageTextFontLoaded(layer).then(() => {
+                measureCollageTextLayer(layer);
+                requestRenderCollage();
+            });
+        }
+
+        function setActiveCollageTextAlign(align) {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            if (['left', 'center', 'right'].includes(align)) {
+                layer.align = align;
+            }
+            syncCollageTextStylePanel();
+            requestRenderCollage();
+        }
+
+        function handleCollageTextColorPicker(val) {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            layer.color = val;
+            syncCollageTextStylePanel();
+            requestRenderCollage();
+        }
+
+        function handleCollageTextColorHexTyping(val) {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            let clean = String(val || '').trim();
+            if (!clean.startsWith('#')) clean = '#' + clean;
+
+            if (/^#[0-9A-Fa-f]{6}$/.test(clean)) {
+                layer.color = clean.toUpperCase();
+                const colorPicker = document.getElementById('collageTextColorPicker');
+                if (colorPicker) colorPicker.value = clean.toLowerCase();
+                requestRenderCollage();
+            }
+        }
+
+        function handleCollageTextColorHexBlur(val) {
+            syncCollageTextStylePanel();
+        }
+
+        function setActiveCollageTextOpacity(val) {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            const parsed = Number(val);
+            const pct = Number.isFinite(parsed) ? Math.max(0, Math.min(100, parsed)) : 100;
+            layer.opacity = pct / 100;
+            syncCollageTextStylePanel();
             requestRenderCollage();
         }
 
@@ -14947,18 +15401,20 @@ function syncCollageTemplateUI() {
                 text: val,
                 x: canvasW / 2,
                 y: canvasH / 2,
-                w: Math.min(700, canvasW * 0.75),
+                w: 400,
                 h: 180,
                 scale: 1,
                 rotation: 0,
                 font: 'Inter',
                 fontSize: 150,
                 fontWeight: 700,
+                fontStyle: 'normal',
                 color: '#111827',
                 align: 'center',
                 opacity: 1,
                 zIndex: maxZ + 1
             };
+            measureCollageTextLayer(layer);
 
             if (!Array.isArray(collageState.layers)) collageState.layers = [];
             collageState.layers.push(layer);
@@ -14971,7 +15427,13 @@ function syncCollageTemplateUI() {
             if (input) input.value = '';
 
             renderCollageTextLayerList();
+            syncCollageTextStylePanel();
             requestRenderCollage();
+
+            ensureCollageTextFontLoaded(layer).then(() => {
+                measureCollageTextLayer(layer);
+                requestRenderCollage();
+            });
         }
 
         function addTextLayer() {
@@ -15058,6 +15520,7 @@ function syncCollageTemplateUI() {
                 }
             }
             renderCollageTextLayerList();
+            syncCollageTextStylePanel();
             requestRenderCollage();
         }
 
@@ -15065,7 +15528,12 @@ function syncCollageTemplateUI() {
             let layer = (Array.isArray(collageState.layers) ? collageState.layers : []).find(l => l && l.id === id && l.isText);
             if (layer) {
                 layer.text = String(value || '').slice(0, 80);
+                measureCollageTextLayer(layer);
                 requestRenderCollage();
+                ensureCollageTextFontLoaded(layer).then(() => {
+                    measureCollageTextLayer(layer);
+                    requestRenderCollage();
+                });
             }
         }
 
@@ -15079,6 +15547,7 @@ function syncCollageTemplateUI() {
                 }
                 normalizeCollageLayerZOrder();
                 renderCollageTextLayerList();
+                syncCollageTextStylePanel();
                 requestRenderCollage();
             }
         }
@@ -15087,6 +15556,7 @@ function syncCollageTemplateUI() {
             collageState.layers = [];
             collageState.activeLayerId = null;
             if (typeof renderCollageTextLayerList === 'function') renderCollageTextLayerList();
+            syncCollageTextStylePanel();
             requestRenderCollage();
         }
 
@@ -15283,13 +15753,15 @@ function syncCollageTemplateUI() {
                     // --- TEXT LAYER MODE ---
                     let fontSize = Number(layer.fontSize) || 150;
                     let fontWeight = layer.fontWeight || 700;
+                    let fontStyle = layer.fontStyle || 'normal';
                     let fontFamily = layer.font || 'Inter';
 
+                    ctx.globalAlpha = Math.max(0, Math.min(1, Number.isFinite(Number(layer.opacity)) ? Number(layer.opacity) : 1));
                     ctx.fillStyle = layer.color || '#111827';
                     ctx.textAlign = layer.align || 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.font = `${fontWeight} ${fontSize}px "${fontFamily}"`;
-                    ctx.fillText(layer.text || '', 0, 0);
+                    ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px "${fontFamily}"`;
+                    ctx.fillText(layer.text || '', getCollageTextDrawX(layer), 0);
                 } else if (layer.isFrame) {
                     // --- FRAME / CLIPPING MASK MODE ---
                     let img = imageCache[layer.url];
@@ -15516,6 +15988,7 @@ function syncCollageTemplateUI() {
         function deselectLayers() {
             collageState.activeLayerId = null;
             if (typeof renderCollageTextLayerList === 'function') renderCollageTextLayerList();
+            if (typeof syncCollageTextStylePanel === 'function') syncCollageTextStylePanel();
             requestRenderCollage();
         }
 
@@ -15535,6 +16008,9 @@ function syncCollageTemplateUI() {
 
             if (typeof renderCollageTextLayerList === 'function') {
                 renderCollageTextLayerList();
+            }
+            if (typeof syncCollageTextStylePanel === 'function') {
+                syncCollageTextStylePanel();
             }
 
             // Bring to front within its respective layer group (photo vs text)
@@ -15695,6 +16171,13 @@ function syncCollageTemplateUI() {
 
             // Draw HD Layers
             let sortedLayers = (Array.isArray(collageState.layers) ? collageState.layers : []).filter(l => l).sort((a, b) => a.zIndex - b.zIndex);
+            const hdTextLayers = sortedLayers.filter(l => l && l.isText);
+            if (typeof ensureCollageTextFontLoaded === 'function') {
+                await Promise.all(hdTextLayers.map(layer => ensureCollageTextFontLoaded(layer)));
+            }
+            if (typeof measureCollageTextLayer === 'function') {
+                hdTextLayers.forEach(layer => measureCollageTextLayer(layer));
+            }
             for (let i = 0; i < sortedLayers.length; i++) {
                 let layer = sortedLayers[i];
 
@@ -15710,13 +16193,15 @@ function syncCollageTemplateUI() {
                 } else if (layer.isText) {
                     let fontSize = Number(layer.fontSize) || 150;
                     let fontWeight = layer.fontWeight || 700;
+                    let fontStyle = layer.fontStyle || 'normal';
                     let fontFamily = layer.font || 'Inter';
 
+                    ctx.globalAlpha = Math.max(0, Math.min(1, Number.isFinite(Number(layer.opacity)) ? Number(layer.opacity) : 1));
                     ctx.fillStyle = layer.color || '#111827';
                     ctx.textAlign = layer.align || 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.font = `${fontWeight} ${fontSize}px "${fontFamily}"`;
-                    ctx.fillText(layer.text || '', 0, 0);
+                    ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px "${fontFamily}"`;
+                    ctx.fillText(layer.text || '', getCollageTextDrawX(layer), 0);
                 } else if (layer.isFrame) {
                     let hdUrl = layer.url.includes('blob:') ? layer.url : layer.url.replace(/=w\d+/, '=s0');
                     let hdImg = new Image();
