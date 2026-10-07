@@ -2271,6 +2271,91 @@
                                                     oninput="setActiveCollageTextOpacity(this.value)"
                                                     class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
                                             </div>
+
+                                            <!-- Posisi & Rotasi -->
+                                            <div class="pt-2 border-t border-gray-100 flex flex-col gap-2">
+                                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-gray-500">Posisi & Rotasi</span>
+
+                                                <!-- Koordinat X & Y -->
+                                                <div>
+                                                    <div class="grid grid-cols-2 gap-2 mb-1.5">
+                                                        <div>
+                                                            <label class="block text-[10px] font-medium text-gray-500 mb-0.5">X (px)</label>
+                                                            <input type="number" id="collageTextPositionX" step="1"
+                                                                oninput="setActiveCollageTextPosition('x', this.value)"
+                                                                onblur="commitActiveCollageTextPosition('x', this.value)"
+                                                                onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }"
+                                                                class="w-full bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-mono font-bold text-gray-800 text-center outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all shadow-sm">
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-[10px] font-medium text-gray-500 mb-0.5">Y (px)</label>
+                                                            <input type="number" id="collageTextPositionY" step="1"
+                                                                oninput="setActiveCollageTextPosition('y', this.value)"
+                                                                onblur="commitActiveCollageTextPosition('y', this.value)"
+                                                                onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }"
+                                                                class="w-full bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-mono font-bold text-gray-800 text-center outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all shadow-sm">
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Tombol Quick Center -->
+                                                    <div class="grid grid-cols-3 gap-1">
+                                                        <button type="button" onclick="centerActiveCollageTextHorizontal()"
+                                                            class="py-1 px-1 rounded-md border border-gray-200 bg-white hover:bg-gray-50 active:bg-gray-100 text-[10px] font-semibold text-gray-700 transition-all shadow-sm text-center truncate cursor-pointer"
+                                                            title="Tengah Horizontal">
+                                                            Tengah X
+                                                        </button>
+                                                        <button type="button" onclick="centerActiveCollageTextVertical()"
+                                                            class="py-1 px-1 rounded-md border border-gray-200 bg-white hover:bg-gray-50 active:bg-gray-100 text-[10px] font-semibold text-gray-700 transition-all shadow-sm text-center truncate cursor-pointer"
+                                                            title="Tengah Vertikal">
+                                                            Tengah Y
+                                                        </button>
+                                                        <button type="button" onclick="centerActiveCollageTextCanvas()"
+                                                            class="py-1 px-1 rounded-md border border-blue-200 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-[10px] font-bold text-blue-700 transition-all shadow-sm text-center truncate cursor-pointer"
+                                                            title="Tengah Kanvas">
+                                                            Pusat
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Rotasi -->
+                                                <div>
+                                                    <div class="flex items-center justify-between mb-1">
+                                                        <label class="text-[11px] font-medium text-gray-600">Rotasi</label>
+                                                        <div class="flex items-center gap-1">
+                                                            <input type="number" id="collageTextRotationInput" min="-180" max="180" step="1" value="0"
+                                                                oninput="handleCollageTextRotationTyping(this.value)"
+                                                                onblur="commitCollageTextRotation(this.value)"
+                                                                onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }"
+                                                                class="w-14 bg-white border border-gray-200 rounded px-1 py-0.5 text-[11px] font-mono font-bold text-gray-800 text-center outline-none focus:border-blue-500 shadow-sm">
+                                                            <span class="text-[11px] text-gray-500 font-bold">°</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <input type="range" id="collageTextRotationSlider" min="-180" max="180" step="1" value="0"
+                                                        oninput="setActiveCollageTextRotation(this.value)"
+                                                        onchange="finalizeActiveCollageTextRotation()"
+                                                        class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 mb-1.5">
+
+                                                    <!-- Quick Rotation Presets -->
+                                                    <div class="grid grid-cols-5 gap-1">
+                                                        <button type="button" onclick="setQuickCollageTextRotation(-90)"
+                                                            class="py-0.5 px-1 rounded border border-gray-200 bg-white hover:bg-gray-50 text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center cursor-pointer"
+                                                            title="-90 Derajat">-90°</button>
+                                                        <button type="button" onclick="setQuickCollageTextRotation(-15)"
+                                                            class="py-0.5 px-1 rounded border border-gray-200 bg-white hover:bg-gray-50 text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center cursor-pointer"
+                                                            title="-15 Derajat">-15°</button>
+                                                        <button type="button" onclick="setQuickCollageTextRotation(0)"
+                                                            class="py-0.5 px-1 rounded border border-gray-200 bg-white hover:bg-gray-50 text-[10px] font-mono font-bold text-blue-600 transition-all shadow-sm text-center cursor-pointer"
+                                                            title="Reset 0 Derajat">0°</button>
+                                                        <button type="button" onclick="setQuickCollageTextRotation(15)"
+                                                            class="py-0.5 px-1 rounded border border-gray-200 bg-white hover:bg-gray-50 text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center cursor-pointer"
+                                                            title="+15 Derajat">+15°</button>
+                                                        <button type="button" onclick="setQuickCollageTextRotation(90)"
+                                                            class="py-0.5 px-1 rounded border border-gray-200 bg-white hover:bg-gray-50 text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center cursor-pointer"
+                                                            title="+90 Derajat">+90°</button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -15205,6 +15290,29 @@ function syncCollageTemplateUI() {
             const pct = Math.round(Math.max(0, Math.min(1, currentOpacity)) * 100);
             if (opacitySlider) opacitySlider.value = pct;
             if (opacityLabel) opacityLabel.innerText = pct + '%';
+
+            // Posisi X & Y
+            const posXInput = document.getElementById('collageTextPositionX');
+            if (posXInput && (typeof document === 'undefined' || !document.activeElement || document.activeElement !== posXInput)) {
+                posXInput.value = Math.round(Number(layer.x) || 0);
+            }
+            const posYInput = document.getElementById('collageTextPositionY');
+            if (posYInput && (typeof document === 'undefined' || !document.activeElement || document.activeElement !== posYInput)) {
+                posYInput.value = Math.round(Number(layer.y) || 0);
+            }
+
+            // Rotasi
+            const currentRot = (typeof normalizeCollageRotation === 'function')
+                ? normalizeCollageRotation(layer.rotation)
+                : Math.round(Number(layer.rotation) || 0);
+            const rotSlider = document.getElementById('collageTextRotationSlider');
+            if (rotSlider) {
+                rotSlider.value = currentRot;
+            }
+            const rotInput = document.getElementById('collageTextRotationInput');
+            if (rotInput && (typeof document === 'undefined' || !document.activeElement || document.activeElement !== rotInput)) {
+                rotInput.value = currentRot;
+            }
         }
 
         const COLLAGE_APPROVED_FONTS = [
@@ -15362,6 +15470,252 @@ function syncCollageTemplateUI() {
             layer.opacity = pct / 100;
             syncCollageTextStylePanel();
             requestRenderCollage();
+        }
+
+        function clampActiveCollageTextPosition(layer) {
+            if (!layer || !layer.isText) return;
+
+            const w = Number(collageState.canvasW) || 1080;
+            const h = Number(collageState.canvasH) || 1080;
+
+            layer.x = Math.max(0, Math.min(w, Number(layer.x) || 0));
+            layer.y = Math.max(0, Math.min(h, Number(layer.y) || 0));
+        }
+
+        function setActiveCollageTextPosition(axis, value) {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            const raw = String(value ?? '').trim();
+            if (raw === '') {
+                return;
+            }
+
+            const parsed = Number(raw);
+            if (!Number.isFinite(parsed)) {
+                return;
+            }
+
+            if (axis === 'x') {
+                layer.x = parsed;
+            } else if (axis === 'y') {
+                layer.y = parsed;
+            }
+            clampActiveCollageTextPosition(layer);
+
+            if (typeof syncActiveCollageOverlay === 'function') {
+                syncActiveCollageOverlay(layer);
+            }
+            requestRenderCollage();
+        }
+
+        function commitActiveCollageTextPosition(axis, value) {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            const raw = String(value ?? '').trim();
+            const parsed = Number(raw);
+
+            if (raw !== '' && Number.isFinite(parsed)) {
+                if (axis === 'x') layer.x = parsed;
+                if (axis === 'y') layer.y = parsed;
+                clampActiveCollageTextPosition(layer);
+            }
+
+            syncCollageTextStylePanel();
+            requestRenderCollage();
+        }
+
+        function centerActiveCollageTextHorizontal() {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            layer.x = (Number(collageState.canvasW) || 1080) / 2;
+            clampActiveCollageTextPosition(layer);
+            syncCollageTextStylePanel();
+            requestRenderCollage();
+        }
+
+        function centerActiveCollageTextVertical() {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            layer.y = (Number(collageState.canvasH) || 1080) / 2;
+            clampActiveCollageTextPosition(layer);
+            syncCollageTextStylePanel();
+            requestRenderCollage();
+        }
+
+        function centerActiveCollageTextCanvas() {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            layer.x = (Number(collageState.canvasW) || 1080) / 2;
+            layer.y = (Number(collageState.canvasH) || 1080) / 2;
+            clampActiveCollageTextPosition(layer);
+            syncCollageTextStylePanel();
+            requestRenderCollage();
+        }
+
+        function normalizeCollageRotation(value) {
+            const deg = Number(value);
+
+            if (!Number.isFinite(deg)) {
+                return 0;
+            }
+
+            let normalized =
+                ((deg + 180) % 360 + 360) % 360 - 180;
+
+            // Preserve positive 180 behavior
+            if (normalized === -180 && deg > 0) {
+                normalized = 180;
+            }
+
+            return Math.round(normalized);
+        }
+
+        function setActiveCollageTextRotation(value) {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            layer.rotation = normalizeCollageRotation(value);
+
+            const rotSlider = document.getElementById('collageTextRotationSlider');
+            if (rotSlider) {
+                rotSlider.value = layer.rotation;
+            }
+
+            const rotInput = document.getElementById('collageTextRotationInput');
+            if (rotInput && (typeof document === 'undefined' || !document.activeElement || document.activeElement !== rotInput)) {
+                rotInput.value = layer.rotation;
+            }
+
+            if (typeof syncActiveCollageOverlay === 'function') {
+                syncActiveCollageOverlay(layer);
+            }
+
+            if (typeof requestCollageInteractionRender === 'function') {
+                requestCollageInteractionRender();
+            } else {
+                requestRenderCollage();
+            }
+        }
+
+        function finalizeActiveCollageTextRotation() {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            syncCollageTextStylePanel();
+
+            if (typeof renderCollagePreview === 'function') {
+                renderCollagePreview();
+            } else {
+                requestRenderCollage();
+            }
+        }
+
+        function setQuickCollageTextRotation(deg) {
+            setActiveCollageTextRotation(deg);
+            finalizeActiveCollageTextRotation();
+        }
+
+        function handleCollageTextRotationTyping(value) {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            const raw = String(value ?? '').trim();
+            if (raw === '' || raw === '-') return;
+
+            const parsed = Number(raw);
+            if (!Number.isFinite(parsed) || parsed < -180 || parsed > 180) {
+                return;
+            }
+
+            layer.rotation = Math.round(parsed);
+
+            const rotSlider = document.getElementById('collageTextRotationSlider');
+            if (rotSlider) rotSlider.value = layer.rotation;
+
+            if (typeof syncActiveCollageOverlay === 'function') {
+                syncActiveCollageOverlay(layer);
+            }
+
+            if (typeof requestCollageInteractionRender === 'function') {
+                requestCollageInteractionRender();
+            } else {
+                requestRenderCollage();
+            }
+        }
+
+        function commitCollageTextRotation(value) {
+            const layer = getActiveCollageTextLayer();
+            if (!layer) return;
+
+            const raw = String(value ?? '').trim();
+            let parsed = raw === '' ? NaN : Number(raw);
+            if (!Number.isFinite(parsed)) {
+                parsed = Number(layer.rotation) || 0;
+            }
+
+            layer.rotation = normalizeCollageRotation(parsed);
+            syncCollageTextStylePanel();
+            if (typeof renderCollagePreview === 'function') {
+                renderCollagePreview();
+            } else {
+                requestRenderCollage();
+            }
+        }
+
+        if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+            document.addEventListener('keydown', function (event) {
+                const target = event.target;
+                const isEditable = target && (
+                    target.tagName === 'INPUT' ||
+                    target.tagName === 'TEXTAREA' ||
+                    target.tagName === 'SELECT' ||
+                    target.isContentEditable
+                );
+                if (isEditable) return;
+
+                const collageSection = document.getElementById('section-collage');
+                if (!collageSection || collageSection.classList.contains('hidden')) {
+                    return;
+                }
+
+                const imageViewer = document.getElementById('imageViewerModal');
+                if (imageViewer && !imageViewer.classList.contains('hidden')) {
+                    return;
+                }
+
+                if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+                    if (typeof getActiveCollageTextLayer !== 'function') return;
+                    const layer = getActiveCollageTextLayer();
+                    if (!layer) return;
+
+                    const step = event.shiftKey ? 10 : 1;
+                    if (event.key === 'ArrowLeft') layer.x -= step;
+                    else if (event.key === 'ArrowRight') layer.x += step;
+                    else if (event.key === 'ArrowUp') layer.y -= step;
+                    else if (event.key === 'ArrowDown') layer.y += step;
+
+                    if (typeof clampActiveCollageTextPosition === 'function') {
+                        clampActiveCollageTextPosition(layer);
+                    }
+                    if (typeof syncCollageTextStylePanel === 'function') {
+                        syncCollageTextStylePanel();
+                    }
+                    if (typeof syncActiveCollageOverlay === 'function') {
+                        syncActiveCollageOverlay(layer);
+                    }
+                    if (typeof requestCollageInteractionRender === 'function') {
+                        requestCollageInteractionRender();
+                    } else {
+                        requestRenderCollage();
+                    }
+                    event.preventDefault();
+                }
+            });
         }
 
         function addCollageTextLayer() {
