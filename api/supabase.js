@@ -350,6 +350,158 @@ function error(res, message = 'Error occurred', statusCode = 400, data = null) {
   return sendJSON(res, statusCode, { status: 'error', message: message, data: data });
 }
 
+function extractSessionId(payload, req) {
+  // 1. Authorization: Bearer <sessionId>
+  if (req && req.headers) {
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    if (authHeader && typeof authHeader === 'string') {
+      const match = authHeader.match(/^Bearer\s+(.+)$/i);
+      if (match && match[1].trim()) {
+        return match[1].trim();
+      }
+    }
+  }
+
+  // 2. payload.sessionId
+  if (payload && typeof payload.sessionId === 'string' && payload.sessionId.trim()) {
+    return payload.sessionId.trim();
+  }
+
+  // 3. payload.currentUser.sessionId
+  if (payload && payload.currentUser && typeof payload.currentUser.sessionId === 'string' && payload.currentUser.sessionId.trim()) {
+    return payload.currentUser.sessionId.trim();
+  }
+
+  // Compatibility fallback for formData / data envelopes
+  if (payload && payload.formData) {
+    if (typeof payload.formData.sessionId === 'string' && payload.formData.sessionId.trim()) {
+      return payload.formData.sessionId.trim();
+    }
+    if (payload.formData.currentUser && typeof payload.formData.currentUser.sessionId === 'string' && payload.formData.currentUser.sessionId.trim()) {
+      return payload.formData.currentUser.sessionId.trim();
+    }
+  }
+
+  return '';
+}
+
+async function verifyUserSession(payload, req) {
+  const sessionId = extractSessionId(payload, req);
+  if (!sessionId) {
+    return null;
+  }
+
+  let sessionRows = null;
+  try {
+    sessionRows = await supabaseQuery(`sessions?SessionID=eq.${encodeURIComponent(sessionId)}&select=*&limit=1`);
+  } catch (err) {
+    console.error('Session query error:', err);
+    return null;
+  }
+
+  if (!sessionRows || !Array.isArray(sessionRows) || sessionRows.length === 0) {
+    return null;
+  }
+
+  const sessionRow = sessionRows[0];
+  const sessionUsername = (sessionRow.Username || '').trim();
+  if (!sessionUsername) {
+    return null;
+  }
+
+  let userRows = null;
+  try {
+    userRows = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(sessionUsername)}&select=*&limit=1`);
+  } catch (err) {
+    console.error('User query error for session:', err);
+    return null;
+  }
+
+  if (!userRows || !Array.isArray(userRows) || userRows.length === 0) {
+    return null;
+  }
+
+  const u = userRows[0];
+  const role = u.Role || 'Photographer';
+  const status = u.Status || 'Active';
+
+  return {
+    sessionId: sessionId,
+    username: u.Username,
+    role: role,
+    status: status,
+    expiredAt: u.ExpiredAt || 'Lifetime',
+    paket: u.Paket || '',
+    nama: u.Nama || u.Username,
+    email: u.Email || '',
+    nohp: u['No HP'] || '',
+    brandName: u.BrandName || '',
+    brandLogo: u.BrandLogo || '',
+    watermarkUrl: u.WatermarkUrl || '',
+    bankName: u.BankName || '',
+    bankAccount: u.BankAccount || '',
+    bankAccountName: u.BankAccountName || '',
+    rawUser: u
+  };
+}
+
+function requireAdmin(authUser) {
+  return Boolean(authUser && authUser.role === 'Admin');
+}
+
+const PROTECTED_ACCOUNT_ACTIONS = new Set([
+  'saveBrandSettings',
+  'uploadBrandLogo',
+  'savePaymentSettings',
+  'pingUser',
+  'getUsers',
+  'approveUser',
+  'updateExpiry',
+  'sendExpiryReminder',
+  'deleteUser',
+  'getProjects',
+  'createProject',
+  'updateClientPassword',
+  'updateDeadline',
+  'deleteProject',
+  'reopenProject',
+  'toggleProjectWatermark',
+  'toggleProjectDownload',
+  'updateProjectMaxFoto',
+  'processPayment',
+  'getDashboardStats',
+  'submitFeedback',
+  'getFeedbacks',
+  'replyFeedback',
+  'getAllNotifications',
+  'markFeedbackRead',
+  'syncBackground'
+]);
+
+const ADMIN_ONLY_ACTIONS = new Set([
+  'getUsers',
+  'approveUser',
+  'updateExpiry',
+  'sendExpiryReminder',
+  'deleteUser',
+  'getDashboardStats',
+  'replyFeedback'
+]);
+
+async function handleLogout(payload, req, res) {
+  const sessionId = extractSessionId(payload, req);
+  if (sessionId) {
+    try {
+      await supabaseQuery(`sessions?SessionID=eq.${encodeURIComponent(sessionId)}`, {
+        method: 'DELETE'
+      });
+    } catch (e) {
+      console.error('Error deleting session during logout:', e);
+    }
+  }
+  return success(res, { success: true, message: 'Logout berhasil' });
+}
+
 module.exports = async function handler(req, res) {
   const allowedOrigins = [
     'https://ps.kamacreative.my.id',
@@ -385,8 +537,25 @@ module.exports = async function handler(req, res) {
     const action = payload.action;
     if (!action) return error(res, 'Action is required', 400);
 
+    if (action === 'logout') {
+      return await handleLogout(payload, req, res);
+    }
+
+    if (PROTECTED_ACCOUNT_ACTIONS.has(action)) {
+      const authUser = await verifyUserSession(payload, req);
+      if (!authUser) {
+        return error(res, 'Sesi tidak valid atau telah berakhir. Silakan login kembali.', 401);
+      }
+      payload.authUser = authUser;
+
+      if (ADMIN_ONLY_ACTIONS.has(action) && !requireAdmin(authUser)) {
+        return error(res, 'Akses ditolak. Tindakan ini memerlukan hak akses Admin.', 403);
+      }
+    }
+
     switch (action) {
       case 'mayarWebhook': return await handleMayarWebhook(payload, res);
+      case 'logout': return await handleLogout(payload, req, res);
       case 'login': return await handleLogin(payload, res);
       case 'register': return await handleRegister(payload, res);
       case 'getGlobalBranding': return await handleGetGlobalBranding(payload, res);
@@ -465,11 +634,17 @@ async function handleLogin(payload, res) {
 
   const sessionId = crypto.randomUUID();
   try {
-    await supabaseQuery('sessions', {
+    const sessionRes = await supabaseQuery('sessions', {
       method: 'POST',
       body: { SessionID: sessionId, Username: uName, Role: role, CreatedAt: new Date().toISOString() }
     });
-  } catch (e) { }
+    if (sessionRes && sessionRes.error) {
+      throw new Error(sessionRes.error.message || 'Gagal menyimpan sesi');
+    }
+  } catch (e) {
+    console.error('Session creation failed during login:', e);
+    return error(res, 'Gagal membuat sesi login. Silakan coba lagi.', 500);
+  }
 
   const rawPaket = u.Paket || '';
   const isPro = Boolean(String(u.Akses_Watermark).toUpperCase() === 'TRUE' || rawPaket.toUpperCase().includes('PRO') || rawPaket.toUpperCase().includes('LIFETIME'));
@@ -621,7 +796,8 @@ async function handleGetGlobalBranding(payload, res) {
 }
 
 async function handleSaveBrandSettings(payload, res) {
-  const username = (payload.username || '').trim();
+  const authUser = payload.authUser || {};
+  const username = (authUser.username || payload.username || '').trim();
   const brandName = (payload.brandName || '').trim();
   const brandLogo = (payload.brandLogo || '').trim();
   const watermarkUrl = (payload.watermarkUrl || '').trim();
@@ -646,7 +822,8 @@ async function handleUploadBrandLogo(payload, res) {
 }
 
 async function handleSavePaymentSettings(payload, res) {
-  const username = (payload.username || '').trim();
+  const authUser = payload.authUser || {};
+  const username = (authUser.username || payload.username || '').trim();
   const bankName = (payload.bankName || '').trim();
   const bankAccount = (payload.bankAccount || '').trim();
   const bankAccountName = (payload.bankAccountName || '').trim();
@@ -664,8 +841,8 @@ async function handleUploadPaymentProof(payload, res) {
 }
 
 async function handlePingUser(payload, res) {
-  const user = payload.currentUser || {};
-  const username = (user.username || payload.username || '').trim();
+  const authUser = payload.authUser || {};
+  const username = (authUser.username || (payload.currentUser && payload.currentUser.username) || payload.username || '').trim();
   if (!username) {
     return success(res, { success: true, ok: true });
   }
@@ -710,9 +887,9 @@ async function handlePingUser(payload, res) {
 }
 
 async function handleGetProjects(payload, res) {
-  const user = payload.currentUser || {};
-  const username = user.username || payload.username || '';
-  const role = user.role || payload.role || 'Photographer';
+  const authUser = payload.authUser || {};
+  const username = authUser.username || (payload.currentUser && payload.currentUser.username) || payload.username || '';
+  const role = authUser.role || (payload.currentUser && payload.currentUser.role) || payload.role || 'Photographer';
 
   let endpoint = 'projects?select=*&order=created_at.desc';
   if (role !== 'Admin') {
@@ -808,8 +985,8 @@ async function handleGetProjects(payload, res) {
 
 async function handleCreateProject(payload, res) {
   const d = payload.formData || payload.data || payload || {};
-  const user = payload.currentUser || d.currentUser || {};
-  const username = user.username || d.username || payload.username || 'admin';
+  const authUser = payload.authUser || {};
+  const username = authUser.username || 'admin';
 
   const token = crypto.randomBytes(6).toString('hex');
   const projectId = crypto.randomUUID();
@@ -1183,6 +1360,7 @@ async function handleProcessPayment(payload, res) {
 }
 
 async function handleGetDashboardStats(payload, res) {
+  if (!requireAdmin(payload.authUser)) return error(res, 'Unauthorized', 403);
   const filterRange = payload.filterRange || 'all';
   const startDate = payload.startDate;
   const endDate = payload.endDate;
@@ -1381,8 +1559,8 @@ async function handleLogVisit(payload, res) {
 }
 
 async function handleGetUsers(payload, res) {
-  const user = payload.currentUser || {};
-  if (user.role !== 'Admin') return error(res, 'Unauthorized', 403);
+  const authUser = payload.authUser || {};
+  if (authUser.role !== 'Admin') return error(res, 'Unauthorized', 403);
 
   const rows = await supabaseQuery('users?select=*&order=created_at.desc');
   const now = new Date();
@@ -1437,6 +1615,7 @@ async function handleGetUsers(payload, res) {
 }
 
 async function handleApproveUser(payload, res) {
+  if (!requireAdmin(payload.authUser)) return error(res, 'Unauthorized', 403);
   const username = (payload.username || '').trim();
   const expiredAt = payload.expiredAt || payload.expiryValue || 'Lifetime';
   const role = payload.role || 'Photographer';
@@ -1471,6 +1650,7 @@ async function handleApproveUser(payload, res) {
 }
 
 async function handleUpdateExpiry(payload, res) {
+  if (!requireAdmin(payload.authUser)) return error(res, 'Unauthorized', 403);
   const username = (payload.username || '').trim();
   const expiredAt = payload.expiredAt || payload.expiryValue;
   const paket = payload.paket || '1 Bulan';
@@ -1484,6 +1664,7 @@ async function handleUpdateExpiry(payload, res) {
 }
 
 async function handleSendExpiryReminder(payload, res) {
+  if (!requireAdmin(payload.authUser)) return error(res, 'Unauthorized', 403);
   const targetUsername = (payload.targetUsername || payload.username || '').trim();
   try {
     const users = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(targetUsername)}&select=*`);
@@ -1506,6 +1687,7 @@ async function handleSendExpiryReminder(payload, res) {
 }
 
 async function handleDeleteUser(payload, res) {
+  if (!requireAdmin(payload.authUser)) return error(res, 'Unauthorized', 403);
   const username = (payload.username || '').trim();
   await supabaseQuery(`projects?Owner=ilike.${encodeURIComponent(username)}`, { method: 'DELETE' });
   await supabaseQuery(`users?Username=ilike.${encodeURIComponent(username)}`, { method: 'DELETE' });
@@ -1667,7 +1849,7 @@ async function handleGetAudioData(payload, res) {
 }
 
 async function handleSubmitFeedback(payload, res) {
-  const user = payload.currentUser || {};
+  const authUser = payload.authUser || {};
   const d = payload.data || payload;
   const pesan = (d.pesan || d.feedback || '').trim();
   const lampiranUrl = d.lampiranUrl || d.lampiran || '';
@@ -1678,8 +1860,8 @@ async function handleSubmitFeedback(payload, res) {
     method: 'POST',
     body: {
       ID: fbId,
-      Username: user.username || 'Anonymous',
-      Role: user.role || 'Photographer',
+      Username: authUser.username || 'Anonymous',
+      Role: authUser.role || 'Photographer',
       Pesan: pesan,
       LampiranURL: lampiranUrl,
       Tanggal: new Date().toISOString(),
@@ -1692,16 +1874,17 @@ async function handleSubmitFeedback(payload, res) {
 }
 
 async function handleGetFeedbacks(payload, res) {
-  const user = payload.currentUser || {};
+  const authUser = payload.authUser || {};
   let endpoint = 'feedbacks?select=*&order=created_at.desc';
-  if (user.role !== 'Admin') {
-    endpoint = `feedbacks?Username=eq.${encodeURIComponent(user.username)}&select=*&order=created_at.desc`;
+  if (authUser.role !== 'Admin') {
+    endpoint = `feedbacks?Username=eq.${encodeURIComponent(authUser.username)}&select=*&order=created_at.desc`;
   }
   const rows = await supabaseQuery(endpoint);
   return success(res, { success: true, data: rows || [] });
 }
 
 async function handleReplyFeedback(payload, res) {
+  if (!requireAdmin(payload.authUser)) return error(res, 'Unauthorized', 403);
   const id = payload.id;
   const balasan = payload.reply || payload.balasan || '';
   await supabaseQuery(`feedbacks?ID=eq.${encodeURIComponent(id)}`, {
@@ -1712,10 +1895,10 @@ async function handleReplyFeedback(payload, res) {
 }
 
 async function handleGetAllNotifications(payload, res) {
-  const user = payload.currentUser || {};
+  const authUser = payload.authUser || {};
   let fbEndpoint = 'feedbacks?select=*&order=created_at.desc';
-  if (user.role !== 'Admin') {
-    fbEndpoint = `feedbacks?Username=eq.${encodeURIComponent(user.username)}&select=*&order=created_at.desc`;
+  if (authUser.role !== 'Admin') {
+    fbEndpoint = `feedbacks?Username=eq.${encodeURIComponent(authUser.username)}&select=*&order=created_at.desc`;
   }
   const feedbacks = (await supabaseQuery(fbEndpoint)) || [];
   const systemUpdates = (await supabaseQuery('system_updates?Status=eq.Active&select=*&order=created_at.desc')) || [];
@@ -1724,12 +1907,14 @@ async function handleGetAllNotifications(payload, res) {
 }
 
 async function handleMarkFeedbackRead(payload, res) {
-  const user = payload.currentUser || {};
+  const authUser = payload.authUser || {};
   const type = payload.type || 'user';
   if (type === 'admin') {
-    await supabaseQuery('feedbacks?StatusAdmin=eq.Unread', { method: 'PATCH', body: { StatusAdmin: 'Read' } }).catch(() => { });
-  } else if (user.username) {
-    await supabaseQuery(`feedbacks?Username=eq.${encodeURIComponent(user.username)}&StatusUser=eq.Unread`, { method: 'PATCH', body: { StatusUser: 'Read' } }).catch(() => { });
+    if (requireAdmin(authUser)) {
+      await supabaseQuery('feedbacks?StatusAdmin=eq.Unread', { method: 'PATCH', body: { StatusAdmin: 'Read' } }).catch(() => { });
+    }
+  } else if (authUser.username) {
+    await supabaseQuery(`feedbacks?Username=eq.${encodeURIComponent(authUser.username)}&StatusUser=eq.Unread`, { method: 'PATCH', body: { StatusUser: 'Read' } }).catch(() => { });
   }
   return success(res, { success: true, ok: true });
 }
@@ -1740,9 +1925,9 @@ async function handleGetSystemUpdates(payload, res) {
 }
 
 async function handleSyncBackground(payload, res) {
-  const user = payload.currentUser || {};
-  const username = user.username;
-  const role = user.role || 'Photographer';
+  const authUser = payload.authUser || {};
+  const username = authUser.username;
+  const role = authUser.role || 'Photographer';
   if (!username) return error(res, 'User required');
 
   let endpoint = 'projects?select=*&order=created_at.desc';

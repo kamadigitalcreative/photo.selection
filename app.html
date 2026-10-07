@@ -6548,7 +6548,7 @@ function syncCollageTemplateUI() {
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'savePaymentSettings', username: currentUser.username, bankName: bName, bankAccount: bAcc, bankAccountName: bAccName })
+                    body: JSON.stringify({ action: 'savePaymentSettings', sessionId: (currentUser && currentUser.sessionId) ? currentUser.sessionId : '', currentUser: currentUser, username: currentUser.username, bankName: bName, bankAccount: bAcc, bankAccountName: bAccName })
                 });
                 const res = await response.json();
                 endLoading();
@@ -6557,7 +6557,7 @@ function syncCollageTemplateUI() {
                         currentUser.bankName = res.data.bankName;
                         currentUser.bankAccount = res.data.bankAccount;
                         currentUser.bankAccountName = res.data.bankAccountName;
-                        localStorage.setItem('ps_user', JSON.stringify(currentUser));
+                        persistCurrentUser();
                     }
                     closeModalPayment();
                     Swal.fire({ icon: 'success', title: (localStorage.getItem('ps_lang') === 'en' ? 'Saved' : 'Tersimpan'), timer: 1500, showConfirmButton: false });
@@ -6600,7 +6600,7 @@ function syncCollageTemplateUI() {
                         const response = await fetch(API_ENDPOINT, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'uploadBrandLogo', base64Data: base64Data, filename: file.name })
+                            body: JSON.stringify({ action: 'uploadBrandLogo', sessionId: (currentUser && currentUser.sessionId) ? currentUser.sessionId : '', currentUser: currentUser, base64Data: base64Data, filename: file.name })
                         });
                         const res = await response.json();
                         endLoading();
@@ -6626,7 +6626,7 @@ function syncCollageTemplateUI() {
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'saveBrandSettings', username: currentUser.username, brandName: name, brandLogo: logo })
+                    body: JSON.stringify({ action: 'saveBrandSettings', sessionId: (currentUser && currentUser.sessionId) ? currentUser.sessionId : '', currentUser: currentUser, username: currentUser.username, brandName: name, brandLogo: logo })
                 });
                 const res = await response.json();
                 endLoading();
@@ -6636,7 +6636,7 @@ function syncCollageTemplateUI() {
                     if (currentUser) {
                         currentUser.brandName = res.data.brandName;
                         currentUser.brandLogo = res.data.brandLogo;
-                        localStorage.setItem('ps_user', JSON.stringify(currentUser));
+                        persistCurrentUser();
                     }
                     applyBranding();
                     closeModalSettings();
@@ -6836,6 +6836,22 @@ function syncCollageTemplateUI() {
             }
         }
 
+        function persistCurrentUser() {
+            if (!currentUser) return;
+
+            const serialized = JSON.stringify(currentUser);
+
+            const hasSessionOnly =
+                sessionStorage.getItem('ps_user') &&
+                !localStorage.getItem('ps_user');
+
+            if (hasSessionOnly) {
+                sessionStorage.setItem('ps_user', serialized);
+            } else {
+                localStorage.setItem('ps_user', serialized);
+            }
+        }
+
         function syncCurrentUser(freshUser) {
             if (!currentUser || !freshUser) return;
             var changed = false;
@@ -6871,7 +6887,7 @@ function syncCollageTemplateUI() {
             }
 
             if (changed) {
-                localStorage.setItem('ps_user', JSON.stringify(currentUser));
+                persistCurrentUser();
                 if (typeof updateRenewPackageHeaderButton === 'function') updateRenewPackageHeaderButton();
                 if (typeof checkLoginState === 'function') checkLoginState();
             }
@@ -7207,6 +7223,9 @@ function syncCollageTemplateUI() {
                 setButtonState('btnLogin', false, isEn ? 'Sign In' : 'Masuk');
 
                 if (res.status === 'success') {
+                    localStorage.removeItem('ps_user');
+                    sessionStorage.removeItem('ps_user');
+
                     var remember = document.getElementById('rememberMe');
                     if (remember && remember.checked) {
                         localStorage.setItem('ps_user', JSON.stringify(res.data)); // Ingat permanen
@@ -7234,6 +7253,16 @@ function syncCollageTemplateUI() {
         }
 
         async function handleLogout() {
+            var sId = (currentUser && currentUser.sessionId) ? currentUser.sessionId : '';
+            if (sId) {
+                try {
+                    await fetch(API_ENDPOINT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'logout', sessionId: sId })
+                    }).catch(function () { });
+                } catch (e) { }
+            }
             try { window.history.pushState({ auth: 'login' }, '', '/login'); } catch (e) { }
             localStorage.removeItem('ps_user');
             sessionStorage.removeItem('ps_user');
@@ -9080,19 +9109,20 @@ function syncCollageTemplateUI() {
                 currentUser.bankName = bankName;
                 currentUser.bankAccount = bankAccount;
                 currentUser.bankAccountName = bankOwner;
+                persistCurrentUser();
 
                 // Save payment and brand to DB
                 if (typeof API_ENDPOINT !== 'undefined') {
                     fetch(API_ENDPOINT, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'savePaymentSettings', username: currentUser.username, bankName: bankName, bankAccount: bankAccount, bankAccountName: bankOwner })
+                        body: JSON.stringify({ action: 'savePaymentSettings', sessionId: (currentUser && currentUser.sessionId) ? currentUser.sessionId : '', currentUser: currentUser, username: currentUser.username, bankName: bankName, bankAccount: bankAccount, bankAccountName: bankOwner })
                     }).catch(() => { });
 
                     fetch(API_ENDPOINT, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'saveBrandSettings', username: currentUser.username, brandName: brandName, brandLogo: logoUrl, watermarkUrl: watermarkUrl })
+                        body: JSON.stringify({ action: 'saveBrandSettings', sessionId: (currentUser && currentUser.sessionId) ? currentUser.sessionId : '', currentUser: currentUser, username: currentUser.username, brandName: brandName, brandLogo: logoUrl, watermarkUrl: watermarkUrl })
                     }).catch(() => { });
                 }
             }
@@ -9442,6 +9472,7 @@ function syncCollageTemplateUI() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         action: 'createProject',
+                        sessionId: (currentUser && currentUser.sessionId) ? currentUser.sessionId : '',
                         formData: formData,
                         currentUser: currentUser,
                         appConfig: { brandName: appBranding.name, baseUrl: "https://ps.kamacreative.my.id" }
@@ -13554,9 +13585,12 @@ function syncCollageTemplateUI() {
                         if (res.data.userData && currentUser) {
                             let isBrandChanged = (currentUser.brandName !== res.data.userData.brandName) || (currentUser.brandLogo !== res.data.userData.brandLogo);
 
-                            // Timpa data memori lama di HP/Laptop dengan data terbaru dari Server
-                            currentUser = res.data.userData;
-                            localStorage.setItem('ps_user', JSON.stringify(currentUser));
+                            const existingSessionId = currentUser.sessionId || '';
+                            currentUser = Object.assign({}, currentUser, res.data.userData);
+                            if (existingSessionId) {
+                                currentUser.sessionId = existingSessionId;
+                            }
+                            persistCurrentUser();
 
                             // Terapkan logo baru ke tampilan seketika jika terdeteksi perubahan
                             if (isBrandChanged) {
