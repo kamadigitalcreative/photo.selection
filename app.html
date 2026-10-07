@@ -729,12 +729,22 @@
             background-color: #334155 !important;
         }
 
+        html.dark .bg-gray-50\/60,
+        html.dark .bg-gray-50\/70,
+        html.dark .bg-gray-50\/80 {
+            background-color: #334155 !important;
+        }
+
         html.dark .bg-gray-100 {
             background-color: #475569 !important;
             border-color: #475569 !important;
         }
 
         html.dark .hover\:bg-gray-50:hover {
+            background-color: #334155 !important;
+        }
+
+        html.dark .hover\:bg-gray-50\/80:hover {
             background-color: #334155 !important;
         }
 
@@ -1864,17 +1874,25 @@
 
                         <!-- Kolase Top Header -->
                         <div class="mb-5">
-                            <div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
-                                <h2 id="tx-kl-h2" class="text-2xl font-bold text-gray-900 tracking-tight">Kolase Cepat</h2>
-                                <span class="text-xs text-gray-400 font-medium">Pilih format &rarr; pilih foto &rarr; pilih template &rarr; atur &rarr; download</span>
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div>
+                                    <h2 id="tx-kl-h2" class="text-2xl font-bold text-gray-900 tracking-tight">Kolase Cepat</h2>
+                                    <p id="tx-kl-p1" class="text-xs sm:text-sm text-gray-500 mt-0.5">Buat dan atur kolase profesional langsung dari browser.</p>
+                                </div>
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-600"><span class="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] font-bold">1</span> Format</span>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-600"><span class="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] font-bold">2</span> Template</span>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-600"><span class="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] font-bold">3</span> Foto</span>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-600"><span class="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] font-bold">4</span> Atur</span>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-600"><span class="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] font-bold">5</span> Export</span>
+                                </div>
                             </div>
-                            <p id="tx-kl-p1" class="text-sm text-gray-500 mt-1">Buat kolase profesional dalam hitungan detik untuk media sosial, portofolio, atau presentasi klien.</p>
                         </div>
 
-                        <!-- Main Grid: Left (Templates + Preview), Right (Settings) -->
-                        <div class="flex flex-col lg:flex-row gap-5 items-start pb-10 w-full">
+                        <!-- Main Grid: Left (Templates + Sumber Foto + Preview), Right (Settings) -->
+                        <div class="flex flex-col xl:flex-row gap-5 items-start pb-10 w-full">
 
-                            <!-- Left Column: Templates and Preview -->
+                            <!-- Left Column: Templates, Sumber Foto, and Preview -->
                             <div class="flex-1 min-w-0 flex flex-col w-full space-y-5">
 
                                 <!-- Format Kanvas & Template Library Card -->
@@ -1961,6 +1979,42 @@
                                     </div>
                                 </div>
 
+                                <!-- B. Sumber Foto Card (Moved to Left Column for visual balance) -->
+                                <div class="bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+                                                <i class="fa-solid fa-images"></i>
+                                            </div>
+                                            <h3 class="text-xs font-bold text-gray-800 uppercase tracking-wider text-[11px]">Sumber Foto</h3>
+                                        </div>
+                                        <span id="collagePhotoLibraryCount" class="text-[11px] font-bold text-gray-500 bg-gray-100 px-2.5 py-0.5 rounded-full border border-gray-200">0 foto</span>
+                                    </div>
+
+                                    <!-- Google Drive Project Selector & Local Upload -->
+                                    <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_180px] gap-2">
+                                        <select id="collageProjectSelector" onchange="loadCollageProjectData()"
+                                            class="w-full py-2 px-3 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:outline-none focus:border-blue-500 shadow-sm cursor-pointer">
+                                            <option value="">-- Pilih Project Klien --</option>
+                                        </select>
+
+                                        <button onclick="document.getElementById('cLocalUploader').click()"
+                                            class="w-full py-2 bg-gray-50 border border-dashed border-gray-300 hover:border-blue-500 rounded-xl text-xs font-bold text-gray-600 hover:text-blue-600 transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload Foto Lokal
+                                        </button>
+                                        <input type="file" id="cLocalUploader" accept="image/*" multiple class="hidden"
+                                            onchange="handleLocalPhotosUpload(event)">
+                                    </div>
+
+                                    <!-- Area Thumbnails (Photo Pool) -->
+                                    <div class="bg-gray-50/70 border border-gray-100 rounded-xl p-2.5 min-h-[80px] max-h-[220px] overflow-y-auto custom-scrollbar">
+                                        <div class="grid grid-cols-4 sm:grid-cols-6 2xl:grid-cols-8 gap-2" id="collagePhotoPicker">
+                                            <div class="text-[10px] text-gray-400 italic col-span-4 sm:col-span-6 2xl:col-span-8 text-center py-3">
+                                                Belum ada foto yang dipilih.</div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Preview Kolase (Dominant but Compact Height) -->
                                 <div
                                     class="bg-white border border-gray-100 rounded-2xl flex-1 flex flex-col overflow-hidden min-h-[480px] lg:min-h-[560px] xl:min-h-[620px] shadow-sm">
@@ -2021,68 +2075,36 @@
 
                             <!-- Right Column: Settings Sidebar (Compact, Grouped, No Blank Space) -->
                             <div
-                                class="w-full lg:w-[340px] bg-white border border-gray-100 shadow-sm rounded-2xl p-4 sm:p-5 shrink-0 self-start flex flex-col gap-4">
+                                class="w-full xl:w-[360px] 2xl:w-[380px] bg-white border border-gray-100 shadow-sm rounded-2xl p-4 sm:p-5 shrink-0 self-start xl:sticky xl:top-4 flex flex-col gap-4">
                                 <div class="flex items-center justify-between border-b border-gray-100 pb-3">
-                                    <h3 id="tx-kl-pengaturan"
-                                        class="text-sm font-bold text-gray-900">Pengaturan Kolase</h3>
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-6 h-6 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+                                            <i class="fa-solid fa-sliders"></i>
+                                        </div>
+                                        <h3 id="tx-kl-pengaturan"
+                                            class="text-sm font-bold text-gray-900">Pengaturan Kolase</h3>
+                                    </div>
                                 </div>
 
-                                <!-- A. SUMBER FOTO -->
-                                <div>
-                                    <div class="flex items-center justify-between mb-2">
-                                        <label class="text-xs font-bold text-gray-700 uppercase tracking-wider text-[11px]">Sumber Foto</label>
-                                        <span id="collagePhotoLibraryCount" class="text-[10px] text-gray-400 font-medium">0 foto</span>
+                                <!-- 1. LAYOUT (Template Terpilih & Spacing) -->
+                                <div class="space-y-3">
+                                    <div class="flex items-center gap-1.5">
+                                        <i class="fa-solid fa-table-cells-large text-xs text-gray-400"></i>
+                                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider text-[11px]">Layout</label>
                                     </div>
-                                    <div class="flex flex-col gap-2">
-                                        <!-- Google Drive project selector -->
-                                        <select id="collageProjectSelector" onchange="loadCollageProjectData()"
-                                            class="w-full py-2 px-3 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:outline-none focus:border-blue-500 shadow-sm cursor-pointer">
-                                            <option value="">-- Pilih Project Klien --</option>
-                                        </select>
-
-                                        <div class="flex items-center gap-2 my-0.5">
-                                            <div class="h-px bg-gray-200 flex-1"></div>
-                                            <span class="text-[10px] text-gray-400 font-medium">atau</span>
-                                            <div class="h-px bg-gray-200 flex-1"></div>
-                                        </div>
-
-                                        <button onclick="document.getElementById('cLocalUploader').click()"
-                                            class="w-full py-2 bg-gray-50 border border-dashed border-gray-300 hover:border-blue-500 rounded-xl text-xs font-bold text-gray-600 hover:text-blue-600 transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer">
-                                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload Foto Lokal
-                                        </button>
-                                        <input type="file" id="cLocalUploader" accept="image/*" multiple class="hidden"
-                                            onchange="handleLocalPhotosUpload(event)">
-
-                                        <!-- Area Thumbnails (Photo Pool) -->
-                                        <div
-                                            class="bg-gray-50 border border-gray-100 rounded-xl p-2 min-h-[80px] max-h-[220px] lg:max-h-[240px] overflow-y-auto custom-scrollbar">
-                                            <div class="grid grid-cols-4 gap-1.5" id="collagePhotoPicker">
-                                                <div
-                                                    class="text-[10px] text-gray-400 italic col-span-4 text-center py-3">
-                                                    Belum ada foto yang dipilih.</div>
+                                    <!-- Template Selection Card -->
+                                    <div
+                                        class="w-full flex items-center justify-between border border-gray-200 rounded-xl p-2.5 bg-gray-50/50">
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            <div class="w-6 h-8 bg-blue-50 border border-blue-200 rounded flex items-center justify-center text-blue-600 overflow-hidden shrink-0"
+                                                id="selectedTemplatePreview">
+                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- B. LAYOUT (Template Terpilih & Spacing) -->
-                                <div class="border-t border-gray-100 pt-3.5 space-y-3">
-                                    <div>
-                                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider text-[11px] mb-2">Layout</label>
-                                        <!-- Template Selection Card -->
-                                        <div
-                                            class="w-full flex items-center justify-between border border-gray-200 rounded-xl p-2.5 bg-gray-50/50">
-                                            <div class="flex items-center gap-2.5 min-w-0">
-                                                <div class="w-6 h-8 bg-blue-50 border border-blue-200 rounded flex items-center justify-center text-blue-600 overflow-hidden shrink-0"
-                                                    id="selectedTemplatePreview">
-                                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                                                </div>
-                                                <div class="min-w-0">
-                                                    <div class="text-xs font-bold text-gray-800 truncate" id="selectedTemplateName">
-                                                        Smart Auto</div>
-                                                    <div class="text-[10px] text-gray-400 font-mono mt-0.5 truncate"
-                                                        id="selectedTemplateDims">1080 &times; 1920 &bull; Otomatis</div>
-                                                </div>
+                                            <div class="min-w-0">
+                                                <div class="text-xs font-bold text-gray-800 truncate" id="selectedTemplateName">
+                                                    Smart Auto</div>
+                                                <div class="text-[10px] text-gray-400 font-mono mt-0.5 truncate"
+                                                    id="selectedTemplateDims">1080 &times; 1920 &bull; Otomatis</div>
                                             </div>
                                         </div>
                                     </div>
@@ -2127,15 +2149,15 @@
                                     </div>
                                 </div>
 
-                                <!-- C. TAMPILAN (Judul & Warna) -->
+                                <!-- 2. TEKS (Multi Text Layer & Style Panel) -->
                                 <div class="border-t border-gray-100 pt-3.5 space-y-3">
-                                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider text-[11px]">Tampilan</label>
-
-                                    <!-- TEKS (Multi Text Layer) -->
                                     <div>
                                         <div class="flex justify-between items-center mb-1.5">
-                                            <label class="text-xs font-bold text-gray-700">Teks <span
-                                                    class="text-gray-400 font-normal text-[11px]">(Opsional)</span></label>
+                                            <div class="flex items-center gap-1.5">
+                                                <i class="fa-solid fa-font text-xs text-gray-400"></i>
+                                                <label class="text-xs font-bold text-gray-700 uppercase tracking-wider text-[11px]">Teks <span
+                                                        class="text-gray-400 font-normal lowercase text-[11px]">(opsional)</span></label>
+                                            </div>
                                             <span id="collageTextLayerCount" class="text-[10px] font-bold text-gray-400">0 / 10</span>
                                         </div>
                                         <!-- Hidden compatibility input for collageTitleInput -->
@@ -2150,28 +2172,28 @@
                                             <button type="button" onclick="addCollageTextLayer()"
                                                 class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-sm transition-all whitespace-nowrap flex items-center gap-1 shrink-0 cursor-pointer">
                                                 <i class="fa-solid fa-plus text-[10px]"></i>
-                                                <span>Tambah Teks</span>
+                                                <span>Tambah</span>
                                             </button>
                                         </div>
 
                                         <!-- Text Layer List -->
-                                        <div id="collageTextLayerList" class="space-y-1.5 max-h-48 overflow-y-auto pr-0.5">
+                                        <div id="collageTextLayerList" class="space-y-1.5 max-h-48 overflow-y-auto pr-0.5 custom-scrollbar">
                                             <div class="text-[11px] text-gray-400 italic py-2 text-center bg-gray-50 rounded-lg border border-dashed border-gray-200">
                                                 Belum ada teks.
                                             </div>
                                         </div>
 
                                         <!-- Active Text Style Panel -->
-                                        <div id="collageTextStylePanel" class="hidden mt-2.5 pt-2.5 border-t border-gray-200 space-y-2">
+                                        <div id="collageTextStylePanel" class="hidden mt-2.5 p-3 rounded-xl bg-gray-50/60 border border-gray-200 space-y-2.5">
                                             <div class="flex items-center justify-between">
-                                                <span class="text-[11px] font-bold tracking-wider text-gray-500 uppercase">Style Teks</span>
+                                                <span class="text-[10px] font-extrabold tracking-wider text-gray-500 uppercase">Style Teks</span>
                                             </div>
 
                                             <!-- Font Family -->
                                             <div>
                                                 <label class="block text-[11px] font-medium text-gray-600 mb-1">Font</label>
                                                 <select id="collageTextFontSelect" onchange="setActiveCollageTextFont(this.value)"
-                                                    class="w-full bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-gray-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all cursor-pointer">
+                                                    class="w-full bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-gray-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all cursor-pointer shadow-sm">
                                                     <option value="Inter">Inter (Modern Sans)</option>
                                                     <option value="Montserrat">Montserrat (Geometric Sans)</option>
                                                     <option value="Poppins">Poppins (Clean Sans)</option>
@@ -2229,12 +2251,12 @@
                                                     <div class="flex items-center gap-1.5">
                                                         <input type="color" id="collageTextColorPicker" value="#111827"
                                                             oninput="handleCollageTextColorPicker(this.value)"
-                                                            class="w-8 h-8 rounded-lg border border-gray-200 cursor-pointer p-0.5 bg-white shrink-0">
+                                                            class="w-8 h-8 rounded-lg border border-gray-200 cursor-pointer p-0.5 bg-white shrink-0 shadow-sm">
                                                         <input type="text" id="collageTextColorHex" maxlength="7" placeholder="#111827"
                                                             oninput="handleCollageTextColorHexTyping(this.value)"
                                                             onblur="handleCollageTextColorHexBlur(this.value)"
                                                             onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }"
-                                                            class="w-full min-w-0 bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-mono font-bold text-gray-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all uppercase placeholder-gray-400">
+                                                            class="w-full min-w-0 bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-mono font-bold text-gray-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all uppercase placeholder-gray-400 shadow-sm">
                                                     </div>
                                                 </div>
 
@@ -2273,7 +2295,7 @@
                                             </div>
 
                                             <!-- Posisi & Rotasi -->
-                                            <div class="pt-2 border-t border-gray-100 flex flex-col gap-3">
+                                            <div class="pt-2 border-t border-gray-200 flex flex-col gap-3">
                                                 <span class="text-[10px] font-extrabold uppercase tracking-wider text-gray-500">Posisi & Rotasi</span>
 
                                                 <!-- Subbagian Posisi -->
@@ -2285,7 +2307,7 @@
                                                     <!-- Koordinat X & Y Grid -->
                                                     <div class="grid grid-cols-2 gap-2">
                                                         <div class="flex items-center border border-gray-200 rounded-lg bg-white overflow-hidden shadow-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-100 transition-all">
-                                                            <span class="px-2 py-1 bg-gray-50 text-[10px] font-bold text-gray-500 border-r border-gray-200 select-none">X</span>
+                                                            <span class="w-6 py-1 bg-gray-50 text-[10px] font-bold text-gray-500 border-r border-gray-200 select-none text-center shrink-0">X</span>
                                                             <input type="number" id="collageTextPositionX" step="1"
                                                                 oninput="setActiveCollageTextPosition('x', this.value)"
                                                                 onblur="commitActiveCollageTextPosition('x', this.value)"
@@ -2293,7 +2315,7 @@
                                                                 class="w-full bg-transparent px-2 py-1 text-xs font-mono font-bold text-gray-800 text-center outline-none">
                                                         </div>
                                                         <div class="flex items-center border border-gray-200 rounded-lg bg-white overflow-hidden shadow-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-100 transition-all">
-                                                            <span class="px-2 py-1 bg-gray-50 text-[10px] font-bold text-gray-500 border-r border-gray-200 select-none">Y</span>
+                                                            <span class="w-6 py-1 bg-gray-50 text-[10px] font-bold text-gray-500 border-r border-gray-200 select-none text-center shrink-0">Y</span>
                                                             <input type="number" id="collageTextPositionY" step="1"
                                                                 oninput="setActiveCollageTextPosition('y', this.value)"
                                                                 onblur="commitActiveCollageTextPosition('y', this.value)"
@@ -2306,23 +2328,23 @@
                                                     <div class="grid grid-cols-3 gap-1.5 pt-0.5">
                                                         <button type="button"
                                                             onclick="event.preventDefault(); event.stopPropagation(); centerActiveCollageTextHorizontal();"
-                                                            class="py-1.5 px-1.5 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 active:bg-blue-100 active:scale-[0.98] text-[10px] font-semibold text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer truncate"
+                                                            class="min-h-[34px] py-1.5 px-1 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 active:bg-blue-100 active:scale-[0.98] text-[10px] font-semibold text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer"
                                                             title="Tengah Horizontal">
-                                                            <i class="fa-solid fa-arrows-left-right text-[10px]"></i>
+                                                            <i class="fa-solid fa-arrows-left-right text-[10px] shrink-0"></i>
                                                             <span>Tengah X</span>
                                                         </button>
                                                         <button type="button"
                                                             onclick="event.preventDefault(); event.stopPropagation(); centerActiveCollageTextVertical();"
-                                                            class="py-1.5 px-1.5 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 active:bg-blue-100 active:scale-[0.98] text-[10px] font-semibold text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer truncate"
+                                                            class="min-h-[34px] py-1.5 px-1 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 active:bg-blue-100 active:scale-[0.98] text-[10px] font-semibold text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer"
                                                             title="Tengah Vertikal">
-                                                            <i class="fa-solid fa-arrows-up-down text-[10px]"></i>
+                                                            <i class="fa-solid fa-arrows-up-down text-[10px] shrink-0"></i>
                                                             <span>Tengah Y</span>
                                                         </button>
                                                         <button type="button"
                                                             onclick="event.preventDefault(); event.stopPropagation(); centerActiveCollageTextCanvas();"
-                                                            class="py-1.5 px-1.5 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 active:bg-blue-100 active:scale-[0.98] text-[10px] font-semibold text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer truncate"
+                                                            class="min-h-[34px] py-1.5 px-1 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 active:bg-blue-100 active:scale-[0.98] text-[10px] font-semibold text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer"
                                                             title="Tengah Kanvas">
-                                                            <i class="fa-solid fa-crosshairs text-[10px]"></i>
+                                                            <i class="fa-solid fa-crosshairs text-[10px] shrink-0"></i>
                                                             <span>Pusat</span>
                                                         </button>
                                                     </div>
@@ -2350,152 +2372,155 @@
                                                     <!-- Quick Rotation Presets -->
                                                     <div class="grid grid-cols-5 gap-1 pt-0.5">
                                                         <button type="button" onclick="setQuickCollageTextRotation(-90)"
-                                                            class="py-1 px-1 rounded-md border border-gray-200 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 active:bg-blue-100 active:scale-[0.98] text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center cursor-pointer"
+                                                            class="min-h-[28px] py-1 px-1 rounded-md border border-gray-200 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 active:bg-blue-100 active:scale-[0.98] text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center flex items-center justify-center cursor-pointer"
                                                             title="-90 Derajat">-90°</button>
                                                         <button type="button" onclick="setQuickCollageTextRotation(-15)"
-                                                            class="py-1 px-1 rounded-md border border-gray-200 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 active:bg-blue-100 active:scale-[0.98] text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center cursor-pointer"
+                                                            class="min-h-[28px] py-1 px-1 rounded-md border border-gray-200 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 active:bg-blue-100 active:scale-[0.98] text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center flex items-center justify-center cursor-pointer"
                                                             title="-15 Derajat">-15°</button>
                                                         <button type="button" onclick="setQuickCollageTextRotation(0)"
-                                                            class="py-1 px-1 rounded-md border border-gray-200 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 active:bg-blue-100 active:scale-[0.98] text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center cursor-pointer"
+                                                            class="min-h-[28px] py-1 px-1 rounded-md border border-gray-200 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 active:bg-blue-100 active:scale-[0.98] text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center flex items-center justify-center cursor-pointer"
                                                             title="Reset 0 Derajat">0°</button>
                                                         <button type="button" onclick="setQuickCollageTextRotation(15)"
-                                                            class="py-1 px-1 rounded-md border border-gray-200 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 active:bg-blue-100 active:scale-[0.98] text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center cursor-pointer"
+                                                            class="min-h-[28px] py-1 px-1 rounded-md border border-gray-200 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 active:bg-blue-100 active:scale-[0.98] text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center flex items-center justify-center cursor-pointer"
                                                             title="+15 Derajat">+15°</button>
                                                         <button type="button" onclick="setQuickCollageTextRotation(90)"
-                                                            class="py-1 px-1 rounded-md border border-gray-200 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 active:bg-blue-100 active:scale-[0.98] text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center cursor-pointer"
+                                                            class="min-h-[28px] py-1 px-1 rounded-md border border-gray-200 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 active:bg-blue-100 active:scale-[0.98] text-[10px] font-mono font-semibold text-gray-700 transition-all shadow-sm text-center flex items-center justify-center cursor-pointer"
                                                             title="+90 Derajat">+90°</button>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                </div>
 
-                                    <!-- Panel Atur Foto Frame (Fixed Template) -->
-                                    <div id="collageFramePhotoPanel" class="hidden p-3 bg-gray-50/80 rounded-xl border border-gray-200 flex flex-col gap-2.5 transition-all">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-gray-500">Atur Foto</span>
-                                            <span id="collageFramePhotoZoomVal" class="text-[11px] font-mono font-bold text-gray-700">100%</span>
+                                <!-- 3. ATUR FOTO PANEL (Fixed Template) -->
+                                <div id="collageFramePhotoPanel" class="hidden p-3 bg-gray-50/80 rounded-xl border border-gray-200 flex flex-col gap-2.5 transition-all">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-1.5">
+                                            <i class="fa-solid fa-crop-simple text-xs text-gray-500"></i>
+                                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-gray-600">Atur Foto</span>
                                         </div>
-
-                                        <!-- Zoom Slider & Buttons -->
-                                        <div class="flex flex-col gap-1.5">
-                                            <div class="flex items-center gap-1.5">
-                                                <button type="button" onclick="changeActiveCollageFramePhotoZoom(-10)"
-                                                    class="w-7 h-7 bg-white hover:bg-gray-100 active:bg-gray-200 border border-gray-200 rounded-lg text-gray-700 text-xs font-bold transition-all shadow-sm flex items-center justify-center cursor-pointer shrink-0"
-                                                    title="Perkecil Zoom">−</button>
-                                                <input type="range" id="collageFramePhotoZoom" min="100" max="400" step="1" value="100"
-                                                    oninput="setActiveCollageFramePhotoZoom(this.value)"
-                                                    onchange="finalizeActiveCollageFramePhotoAdjustment()"
-                                                    class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
-                                                <button type="button" onclick="changeActiveCollageFramePhotoZoom(10)"
-                                                    class="w-7 h-7 bg-white hover:bg-gray-100 active:bg-gray-200 border border-gray-200 rounded-lg text-gray-700 text-xs font-bold transition-all shadow-sm flex items-center justify-center cursor-pointer shrink-0"
-                                                    title="Perbesar Zoom">+</button>
-                                            </div>
-                                        </div>
-
-                                        <!-- Quick Action Buttons: Reset Posisi & Isi Frame -->
-                                        <div class="grid grid-cols-2 gap-1.5">
-                                            <button type="button" onclick="resetActiveCollageFramePhotoPosition()"
-                                                class="py-1.5 px-2 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 active:bg-blue-100 active:scale-[0.98] text-[10px] font-semibold text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer truncate"
-                                                title="Reset Posisi (Pusatkan Foto)">
-                                                <i class="fa-solid fa-arrows-to-dot text-[10px]"></i>
-                                                <span>Reset Posisi</span>
-                                            </button>
-                                            <button type="button" onclick="fillActiveCollageFramePhoto()"
-                                                class="py-1.5 px-2 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 active:bg-blue-100 active:scale-[0.98] text-[10px] font-semibold text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer truncate"
-                                                title="Isi Frame (100% Cover)">
-                                                <i class="fa-solid fa-expand text-[10px]"></i>
-                                                <span>Isi Frame</span>
-                                            </button>
-                                        </div>
-
-                                        <p class="text-[10px] text-gray-400 italic text-center leading-tight">Drag foto di kanvas untuk mengatur posisi.</p>
+                                        <span id="collageFramePhotoZoomVal" class="text-[11px] font-mono font-bold text-gray-700">100%</span>
                                     </div>
 
-                                    <!-- Gaya & Warna / Background -->
-                                    <div>
-                                        <div class="flex items-center justify-between mb-1.5">
-                                            <label class="block text-xs font-medium text-gray-600">Warna Latar (Background)</label>
+                                    <!-- Zoom Slider & Buttons -->
+                                    <div class="flex flex-col gap-1.5">
+                                        <div class="flex items-center gap-1.5">
+                                            <button type="button" onclick="changeActiveCollageFramePhotoZoom(-10)"
+                                                class="w-7 h-7 bg-white hover:bg-gray-100 active:bg-gray-200 border border-gray-200 rounded-lg text-gray-700 text-xs font-bold transition-all shadow-sm flex items-center justify-center cursor-pointer shrink-0"
+                                                title="Perkecil Zoom">−</button>
+                                            <input type="range" id="collageFramePhotoZoom" min="100" max="400" step="1" value="100"
+                                                oninput="setActiveCollageFramePhotoZoom(this.value)"
+                                                onchange="finalizeActiveCollageFramePhotoAdjustment()"
+                                                class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                                            <button type="button" onclick="changeActiveCollageFramePhotoZoom(10)"
+                                                class="w-7 h-7 bg-white hover:bg-gray-100 active:bg-gray-200 border border-gray-200 rounded-lg text-gray-700 text-xs font-bold transition-all shadow-sm flex items-center justify-center cursor-pointer shrink-0"
+                                                title="Perbesar Zoom">+</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Quick Action Buttons: Reset Posisi & Isi Frame -->
+                                    <div class="grid grid-cols-2 gap-1.5">
+                                        <button type="button" onclick="resetActiveCollageFramePhotoPosition()"
+                                            class="min-h-[32px] py-1.5 px-2 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 active:bg-blue-100 active:scale-[0.98] text-[10px] font-semibold text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer"
+                                            title="Reset Posisi (Pusatkan Foto)">
+                                            <i class="fa-solid fa-arrows-to-dot text-[10px]"></i>
+                                            <span>Reset Posisi</span>
+                                        </button>
+                                        <button type="button" onclick="fillActiveCollageFramePhoto()"
+                                            class="min-h-[32px] py-1.5 px-2 rounded-lg border border-gray-200 bg-white hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 active:bg-blue-100 active:scale-[0.98] text-[10px] font-semibold text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer"
+                                            title="Isi Frame (100% Cover)">
+                                            <i class="fa-solid fa-expand text-[10px]"></i>
+                                            <span>Isi Frame</span>
+                                        </button>
+                                    </div>
+
+                                    <p class="text-[10px] text-gray-400 italic text-center leading-tight">Drag foto di kanvas untuk mengatur posisi.</p>
+                                </div>
+
+                                <!-- 4. BACKGROUND -->
+                                <div class="border-t border-gray-100 pt-3.5 space-y-2.5">
+                                    <div class="flex items-center gap-1.5">
+                                        <i class="fa-solid fa-palette text-xs text-gray-400"></i>
+                                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider text-[11px]">Background</label>
+                                    </div>
+
+                                    <!-- Hidden compatibility select for collageBgSelect -->
+                                    <select id="collageBgSelect" onchange="updateCollageBgColor()" class="hidden">
+                                        <option value="#ffffff">Putih Bersih</option>
+                                        <option value="#1a1a1a">Hitam Elegan</option>
+                                        <option value="#f8ede3">Pastel Hangat</option>
+                                        <option value="transparent">Transparan (PNG)</option>
+                                    </select>
+
+                                    <!-- Quick Presets Swatches -->
+                                    <div class="grid grid-cols-4 gap-1.5">
+                                        <!-- Putih -->
+                                        <button type="button" id="btn_bg_white" onclick="setCollageBackgroundColor('#ffffff')"
+                                            class="min-h-[32px] flex items-center justify-center gap-1 py-1.5 px-1 rounded-lg border border-gray-200 text-xs font-bold transition-all bg-white hover:bg-gray-50 text-gray-700 cursor-pointer shadow-sm"
+                                            title="Putih (#FFFFFF)">
+                                            <span class="w-3.5 h-3.5 rounded-full border border-gray-300 bg-white shrink-0"></span>
+                                            <span class="text-[10px] sm:text-[11px]">Putih</span>
+                                        </button>
+
+                                        <!-- Hitam -->
+                                        <button type="button" id="btn_bg_black" onclick="setCollageBackgroundColor('#1a1a1a')"
+                                            class="min-h-[32px] flex items-center justify-center gap-1 py-1.5 px-1 rounded-lg border border-gray-200 text-xs font-bold transition-all bg-white hover:bg-gray-50 text-gray-700 cursor-pointer shadow-sm"
+                                            title="Hitam (#1A1A1A)">
+                                            <span class="w-3.5 h-3.5 rounded-full border border-gray-900 bg-[#1a1a1a] shrink-0"></span>
+                                            <span class="text-[10px] sm:text-[11px]">Hitam</span>
+                                        </button>
+
+                                        <!-- Cream / Pastel -->
+                                        <button type="button" id="btn_bg_cream" onclick="setCollageBackgroundColor('#f8ede3')"
+                                            class="min-h-[32px] flex items-center justify-center gap-1 py-1.5 px-1 rounded-lg border border-gray-200 text-xs font-bold transition-all bg-white hover:bg-gray-50 text-gray-700 cursor-pointer shadow-sm"
+                                            title="Cream (#F8EDE3)">
+                                            <span class="w-3.5 h-3.5 rounded-full border border-[#e5d5c5] bg-[#f8ede3] shrink-0"></span>
+                                            <span class="text-[10px] sm:text-[11px]">Cream</span>
+                                        </button>
+
+                                        <!-- Transparan -->
+                                        <button type="button" id="btn_bg_transparent" onclick="setCollageBackgroundColor('transparent')"
+                                            class="min-h-[32px] flex items-center justify-center gap-1 py-1.5 px-1 rounded-lg border border-gray-200 text-xs font-bold transition-all bg-white hover:bg-gray-50 text-gray-700 cursor-pointer shadow-sm"
+                                            title="Transparan (PNG)">
+                                            <span class="w-3.5 h-3.5 rounded-full border border-gray-300 bg-[linear-gradient(45deg,#ccc_25%,transparent_25%),linear-gradient(-45deg,#ccc_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#ccc_75%),linear-gradient(-45deg,transparent_75%,#ccc_75%)] bg-[size:6px_6px] bg-[position:0_0,0_3px,3px_-3px,-3px_0] shrink-0"></span>
+                                            <span class="text-[10px] sm:text-[11px]">Transparan</span>
+                                        </button>
+                                    </div>
+
+                                    <!-- Custom Color Controls (Color Picker + HEX Input) -->
+                                    <div class="flex items-center gap-2 bg-gray-50/70 border border-gray-200 rounded-xl p-1.5 pr-2.5 shadow-sm">
+                                        <!-- Native Color Picker with visual preview swatch -->
+                                        <div class="relative w-7 h-7 rounded-lg overflow-hidden border border-gray-300 shadow-sm shrink-0 cursor-pointer group" title="Pilih warna custom">
+                                            <input type="color" id="collageBgColorPicker" oninput="handleCollageBgColorPicker(this.value)"
+                                                class="absolute -inset-2 w-12 h-12 cursor-pointer border-0 p-0 opacity-0">
+                                            <div id="collageBgPreviewBox" class="w-full h-full bg-white flex items-center justify-center pointer-events-none transition-colors">
+                                                <i class="fa-solid fa-eye-dropper text-[10px] text-gray-400 group-hover:text-gray-700"></i>
+                                            </div>
                                         </div>
 
-                                        <!-- Hidden compatibility select for collageBgSelect -->
-                                        <select id="collageBgSelect" onchange="updateCollageBgColor()" class="hidden">
-                                            <option value="#ffffff">Putih Bersih</option>
-                                            <option value="#1a1a1a">Hitam Elegan</option>
-                                            <option value="#f8ede3">Pastel Hangat</option>
-                                            <option value="transparent">Transparan (PNG)</option>
-                                        </select>
-
-                                        <!-- Quick Presets Swatches -->
-                                        <div class="grid grid-cols-4 gap-1.5 mb-2.5">
-                                            <!-- Putih -->
-                                            <button type="button" id="btn_bg_white" onclick="setCollageBackgroundColor('#ffffff')"
-                                                class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-gray-200 text-xs font-bold transition-all bg-white hover:bg-gray-50 text-gray-700 cursor-pointer shadow-sm"
-                                                title="Putih (#FFFFFF)">
-                                                <span class="w-3.5 h-3.5 rounded-full border border-gray-300 bg-white shrink-0"></span>
-                                                <span class="text-[11px]">Putih</span>
-                                            </button>
-
-                                            <!-- Hitam -->
-                                            <button type="button" id="btn_bg_black" onclick="setCollageBackgroundColor('#1a1a1a')"
-                                                class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-gray-200 text-xs font-bold transition-all bg-white hover:bg-gray-50 text-gray-700 cursor-pointer shadow-sm"
-                                                title="Hitam (#1A1A1A)">
-                                                <span class="w-3.5 h-3.5 rounded-full border border-gray-900 bg-[#1a1a1a] shrink-0"></span>
-                                                <span class="text-[11px]">Hitam</span>
-                                            </button>
-
-                                            <!-- Cream / Pastel -->
-                                            <button type="button" id="btn_bg_cream" onclick="setCollageBackgroundColor('#f8ede3')"
-                                                class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-gray-200 text-xs font-bold transition-all bg-white hover:bg-gray-50 text-gray-700 cursor-pointer shadow-sm"
-                                                title="Cream (#F8EDE3)">
-                                                <span class="w-3.5 h-3.5 rounded-full border border-[#e5d5c5] bg-[#f8ede3] shrink-0"></span>
-                                                <span class="text-[11px]">Cream</span>
-                                            </button>
-
-                                            <!-- Transparan -->
-                                            <button type="button" id="btn_bg_transparent" onclick="setCollageBackgroundColor('transparent')"
-                                                class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-gray-200 text-xs font-bold transition-all bg-white hover:bg-gray-50 text-gray-700 cursor-pointer shadow-sm"
-                                                title="Transparan (PNG)">
-                                                <span class="w-3.5 h-3.5 rounded-full border border-gray-300 bg-[linear-gradient(45deg,#ccc_25%,transparent_25%),linear-gradient(-45deg,#ccc_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#ccc_75%),linear-gradient(-45deg,transparent_75%,#ccc_75%)] bg-[size:6px_6px] bg-[position:0_0,0_3px,3px_-3px,-3px_0] shrink-0"></span>
-                                                <span class="text-[11px]">Transparan</span>
-                                            </button>
-                                        </div>
-
-                                        <!-- Custom Color Controls (Color Picker + HEX Input) -->
-                                        <div class="flex items-center gap-2 bg-gray-50/70 border border-gray-200 rounded-xl p-1.5 pr-2.5 shadow-sm">
-                                            <!-- Native Color Picker with visual preview swatch -->
-                                            <div class="relative w-7 h-7 rounded-lg overflow-hidden border border-gray-300 shadow-sm shrink-0 cursor-pointer group" title="Pilih warna custom">
-                                                <input type="color" id="collageBgColorPicker" oninput="handleCollageBgColorPicker(this.value)"
-                                                    class="absolute -inset-2 w-12 h-12 cursor-pointer border-0 p-0 opacity-0">
-                                                <div id="collageBgPreviewBox" class="w-full h-full bg-white flex items-center justify-center pointer-events-none transition-colors">
-                                                    <i class="fa-solid fa-eye-dropper text-[10px] text-gray-400 group-hover:text-gray-700"></i>
-                                                </div>
-                                            </div>
-
-                                            <div class="flex-1 flex items-center gap-1.5 min-w-0">
-                                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0">HEX</span>
-                                                <input type="text" id="collageBgHexInput" maxlength="7" placeholder="#FFFFFF"
-                                                    oninput="handleCollageBgHexTyping(this.value)"
-                                                    onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }"
-                                                    onblur="handleCollageBgHexInput(this.value)"
-                                                    class="w-full bg-white border border-gray-200 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-gray-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all uppercase placeholder-gray-300">
-                                            </div>
+                                        <div class="flex-1 flex items-center gap-1.5 min-w-0">
+                                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0">HEX</span>
+                                            <input type="text" id="collageBgHexInput" maxlength="7" placeholder="#FFFFFF"
+                                                oninput="handleCollageBgHexTyping(this.value)"
+                                                onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }"
+                                                onblur="handleCollageBgHexInput(this.value)"
+                                                class="w-full bg-white border border-gray-200 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-gray-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all uppercase placeholder-gray-300">
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- D. ACTION (Generate HD) -->
-                                <div class="pt-3 border-t border-gray-100">
+                                <!-- 5. ACTION (Generate HD) -->
+                                <div class="pt-4 border-t border-gray-100 mt-1">
                                     <button
                                         id="btnGenerateCollageHD"
-                                        class="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-bold text-xs transition-all shadow-[0_4px_15px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] flex justify-center items-center gap-2 cursor-pointer active:scale-[0.99]"
+                                        class="w-full py-3 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] rounded-xl text-white font-bold text-xs transition-all shadow-[0_4px_15px_rgba(37,99,235,0.3)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] flex justify-center items-center gap-2 cursor-pointer"
                                         onclick="downloadCollage()">
                                         <i class="fa-solid fa-wand-magic-sparkles"></i>
                                         <span class="tx-kl-gen">Generate Kolase HD</span>
                                     </button>
-                                    <p
-                                        class="text-[9px] text-gray-400 text-center mt-2 flex items-center justify-center gap-1">
-                                        <i class="fa-solid fa-bolt text-amber-500"></i> Render secepat kilat.
+                                    <p class="text-[10px] text-gray-400 text-center mt-2 flex items-center justify-center gap-1 font-medium">
+                                        <i class="fa-solid fa-sparkles text-blue-500 text-[10px]"></i> HD &bull; PNG/JPG &bull; resolusi adaptif
                                     </p>
                                 </div>
 
