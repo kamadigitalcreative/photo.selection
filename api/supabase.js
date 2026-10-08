@@ -8,7 +8,7 @@ const { URL } = require('url');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jqptagcbkyxxqqmxqusf.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_TL_Et1x8IlEwxKASjF0K8Q_t72R3f_9';
-const KAMA_SALT = "KamaSecretSalt";
+const LEGACY_KAMA_SALT = "KamaSecretSalt";
 const GAS_MAILER_URL = process.env.GAS_MAILER_URL || 'https://script.google.com/macros/s/AKfycbwzw3k--HOqHS0As2PCrz6m7c3VKqKlifdJVrb9Cy15ScvmHNB5lFFDNTRR5xfmzf4/exec';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'kamabalicreative@gmail.com';
 const APP_URL = process.env.APP_URL || 'https://ps.kamacreative.my.id';
@@ -45,9 +45,213 @@ async function supabaseQuery(endpoint, options = {}) {
   return data;
 }
 
-function hashPassword(password) {
+// Phase 4.5 Security Constants
+const OTP_TTL_MS = 10 * 60 * 1000; // 10 menit
+const OTP_RESEND_COOLDOWN_MS = 60 * 1000; // 60 detik
+const SCRYPT_N = 16384;
+const SCRYPT_R = 8;
+const SCRYPT_P = 1;
+const SCRYPT_MAXMEM = 64 * 1024 * 1024;
+const SCRYPT_KEYLEN = 64; // 64 bytes = 128 hex characters
+const OTP_SCRYPT_KEYLEN = 32; // 32 bytes = 64 hex characters
+
+function timingSafeStringEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const bufA = Buffer.from(a, 'utf8');
+  const bufB = Buffer.from(b, 'utf8');
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
+function legacyHashPassword(password) {
   if (!password) return '';
-  return crypto.createHash('sha256').update(password + KAMA_SALT).digest('hex');
+  return crypto.createHash('sha256').update(password + LEGACY_KAMA_SALT).digest('hex');
+}
+
+
+function createPasswordHash(password) {
+  if (typeof password !== 'string' || !password) {
+    throw new Error('Password must be a non-empty string');
+  }
+  const salt = crypto.randomBytes(16);
+  const derivedKey = crypto.scryptSync(password, salt, SCRYPT_KEYLEN, {
+    N: SCRYPT_N,
+    r: SCRYPT_R,
+    p: SCRYPT_P,
+    maxmem: SCRYPT_MAXMEM
+  });
+  return `scrypt$v1$${salt.toString('hex')}$${derivedKey.toString('hex')}`;
+}
+
+function verifyModernPassword(password, storedHash) {
+  if (typeof password !== 'string' || typeof storedHash !== 'string') return false;
+  const parts = storedHash.split('$');
+  if (parts.length !== 4 || parts[0] !== 'scrypt' || parts[1] !== 'v1') {
+    return false;
+  }
+  const saltHex = parts[2];
+  const hashHex = parts[3];
+  if (!/^[0-9a-f]{32}$/i.test(saltHex) || !/^[0-9a-f]{128}$/i.test(hashHex)) {
+    return false;
+  }
+  try {
+    const saltBuf = Buffer.from(saltHex, 'hex');
+    const expectedHashBuf = Buffer.from(hashHex, 'hex');
+    const derivedKey = crypto.scryptSync(password, saltBuf, SCRYPT_KEYLEN, {
+      N: SCRYPT_N,
+      r: SCRYPT_R,
+      p: SCRYPT_P,
+      maxmem: SCRYPT_MAXMEM
+    });
+    if (derivedKey.length !== expectedHashBuf.length) return false;
+    return crypto.timingSafeEqual(derivedKey, expectedHashBuf);
+  } catch (e) {
+    return false;
+  }
+}
+
+function verifyAccountPassword(password, storedPassword) {
+  if (typeof password !== 'string' || typeof storedPassword !== 'string' || !storedPassword) {
+    return { valid: false, scheme: null, needsMigration: false };
+  }
+
+  // 1. Modern scrypt format
+  if (storedPassword.startsWith('scrypt$v1$')) {
+    const isValid = verifyModernPassword(password, storedPassword);
+    return { valid: isValid, scheme: 'scrypt', needsMigration: false };
+  }
+
+  // 2. Legacy SHA-256 hash (64 hex characters)
+  if (/^[0-9a-f]{64}$/i.test(storedPassword)) {
+    const legacyCalculated = legacyHashPassword(password);
+    const isValid = timingSafeStringEqual(legacyCalculated, storedPassword);
+    return { valid: isValid, scheme: 'legacy_sha', needsMigration: isValid };
+  }
+
+  // 3. Legacy plaintext fallback (strict migration-only)
+  const isPlaintextMatch = timingSafeStringEqual(password, storedPassword);
+  return { valid: isPlaintextMatch, scheme: 'plaintext', needsMigration: isPlaintextMatch };
+}
+
+function validatePasswordPolicy(password) {
+  if (typeof password !== 'string') return false;
+  return password.length >= 8 && password.length <= 128;
+}
+
+function createOtpHash(otp) {
+  if (typeof otp !== 'string' || !otp) {
+    throw new Error('OTP must be a non-empty string');
+  }
+  const salt = crypto.randomBytes(16);
+  const derivedKey = crypto.scryptSync(otp, salt, OTP_SCRYPT_KEYLEN, {
+    N: SCRYPT_N,
+    r: SCRYPT_R,
+    p: SCRYPT_P,
+    maxmem: SCRYPT_MAXMEM
+  });
+  return `otp-scrypt$v1$${salt.toString('hex')}$${derivedKey.toString('hex')}`;
+}
+
+function verifyModernOtp(otp, storedOtpHash) {
+  if (typeof otp !== 'string' || typeof storedOtpHash !== 'string') return false;
+  const parts = storedOtpHash.split('$');
+  if (parts.length !== 4 || parts[0] !== 'otp-scrypt' || parts[1] !== 'v1') {
+    return false;
+  }
+  const saltHex = parts[2];
+  const hashHex = parts[3];
+  if (!/^[0-9a-f]{32}$/i.test(saltHex) || !/^[0-9a-f]{64}$/i.test(hashHex)) {
+    return false;
+  }
+  try {
+    const saltBuf = Buffer.from(saltHex, 'hex');
+    const expectedHashBuf = Buffer.from(hashHex, 'hex');
+    const derivedKey = crypto.scryptSync(otp, saltBuf, OTP_SCRYPT_KEYLEN, {
+      N: SCRYPT_N,
+      r: SCRYPT_R,
+      p: SCRYPT_P,
+      maxmem: SCRYPT_MAXMEM
+    });
+    if (derivedKey.length !== expectedHashBuf.length) return false;
+    return crypto.timingSafeEqual(derivedKey, expectedHashBuf);
+  } catch (e) {
+    return false;
+  }
+}
+
+function verifyOtp(submittedOtp, storedOtp, createdAt) {
+  if (typeof submittedOtp !== 'string' || !submittedOtp) return false;
+  if (typeof storedOtp !== 'string' || !storedOtp) return false;
+
+  const createdDate = parseSafeDate(createdAt);
+  if (!createdDate) return false;
+  const age = Date.now() - createdDate.getTime();
+  if (age < -60000 || age > OTP_TTL_MS) return false;
+
+  if (storedOtp.startsWith('otp-scrypt$v1$')) {
+    return verifyModernOtp(submittedOtp, storedOtp);
+  }
+
+  // Legacy plaintext 6-digit OTP
+  if (/^\d{6}$/.test(storedOtp)) {
+    return timingSafeStringEqual(submittedOtp, storedOtp);
+  }
+
+  return false;
+}
+
+async function getRecentOtpFailedAttempts(username) {
+  if (!username) return 0;
+  const marker = '__RESET_OTP_ATTEMPT__:' + username.toLowerCase().trim();
+  const rows = await supabaseQuery(`sessions?Username=eq.${encodeURIComponent(marker)}&select=*`);
+  if (!Array.isArray(rows) || rows.length === 0) return 0;
+  const now = Date.now();
+  const recent = rows.filter(r => {
+    const dt = parseSafeDate(r.CreatedAt);
+    if (!dt) return false;
+    const age = now - dt.getTime();
+    return age >= -60000 && age <= OTP_TTL_MS;
+  });
+  return recent.length;
+}
+
+async function recordOtpFailedAttempt(username) {
+  if (!username) return;
+  const marker = '__RESET_OTP_ATTEMPT__:' + username.toLowerCase().trim();
+  await supabaseQuery('sessions', {
+    method: 'POST',
+    body: {
+      SessionID: crypto.randomUUID(),
+      Username: marker,
+      Role: 'ResetOTPAttempt',
+      CreatedAt: new Date().toISOString()
+    }
+  });
+}
+
+async function clearOtpFailedAttempts(username) {
+  if (!username) return;
+  const marker = '__RESET_OTP_ATTEMPT__:' + username.toLowerCase().trim();
+  try {
+    await supabaseQuery(`sessions?Username=eq.${encodeURIComponent(marker)}`, {
+      method: 'DELETE'
+    });
+  } catch (err) {
+    console.error('Error clearing OTP failed attempts:', err);
+  }
+}
+
+async function revokeAccountSessionsOrThrow(username) {
+  if (!username) {
+    throw new Error('Username wajib diisi untuk pencabutan sesi');
+  }
+  const cleanUser = String(username).trim();
+  if (cleanUser.startsWith('__CLIENT_GALLERY__') || cleanUser.startsWith('__RESET_OTP_ATTEMPT__')) {
+    throw new Error('Invalid account username for session revocation');
+  }
+  await supabaseQuery(`sessions?Username=ilike.${encodeURIComponent(cleanUser)}`, {
+    method: 'DELETE'
+  });
 }
 
 function parseSafeDate(dateInput) {
@@ -327,7 +531,7 @@ function buildOtpResetPasswordEmail({ nama, username, otp }) {
       
       <div style="background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 10px; padding: 20px; text-align: center; margin: 24px 0;">
         <span style="font-family: 'Courier New', Courier, monospace; font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #1e40af; display: inline-block;">${otp}</span>
-        <p style="margin: 8px 0 0 0; font-size: 12px; color: #64748b;">Kode OTP ini berlaku selama 15 menit. Jangan berikan kode ini kepada siapa pun.</p>
+        <p style="margin: 8px 0 0 0; font-size: 12px; color: #64748b;">Kode OTP ini berlaku selama 10 menit. Jangan berikan kode ini kepada siapa pun.</p>
       </div>
 
       <p style="font-size: 13px; color: #64748b;">Jika Anda tidak merasa meminta reset password, silakan abaikan email ini. Akun Anda tetap aman.</p>
@@ -408,8 +612,8 @@ async function verifyUserSession(payload, req) {
   const sessionRole = (sessionRow.Role || '').trim();
   const sessionUsername = (sessionRow.Username || '').trim();
 
-  // Cross-auth isolation: Client Gallery sessions must NEVER authenticate account actions
-  if (sessionRole === 'ClientGallery' || sessionUsername.startsWith('__CLIENT_GALLERY__')) {
+  // Cross-auth isolation: Client Gallery sessions & OTP attempt markers must NEVER authenticate account actions
+  if (sessionRole === 'ClientGallery' || sessionUsername.startsWith('__CLIENT_GALLERY__') || sessionRole === 'ResetOTPAttempt' || sessionUsername.startsWith('__RESET_OTP_ATTEMPT__')) {
     return null;
   }
 
@@ -789,15 +993,33 @@ async function handleLogin(payload, res) {
   const password = (payload.password || '').trim();
   if (!username || !password) return error(res, 'Username dan Password wajib diisi.');
 
+  if (password.length > 256) {
+    return error(res, 'Username atau password salah.');
+  }
+
   const users = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(username)}&select=*`);
   if (!users || users.length === 0) return error(res, 'Username atau password salah.');
 
   const u = users[0];
   const storedPass = u.Password || '';
-  const inputHash = hashPassword(password);
+  const authCheck = verifyAccountPassword(password, storedPass);
 
-  const isMatch = (storedPass === inputHash) || (storedPass === password);
-  if (!isMatch) return error(res, 'Username atau password salah.');
+  if (!authCheck.valid) return error(res, 'Username atau password salah.');
+
+  // Phase 4.5: Migrate legacy credentials to scrypt on successful login
+  if (authCheck.needsMigration) {
+    try {
+      const upgradedHash = createPasswordHash(password);
+      await supabaseQuery(`users?Username=ilike.${encodeURIComponent(u.Username)}`, {
+        method: 'PATCH',
+        body: { Password: upgradedHash }
+      });
+      u.Password = upgradedHash;
+    } catch (migErr) {
+      console.error('Password migration failed during login for user:', u.Username, migErr);
+      return error(res, 'Terjadi kendala saat memperbarui keamanan akun. Silakan coba login kembali beberapa saat lagi.', 500);
+    }
+  }
 
   const status = u.Status || 'Active';
   const role = u.Role || 'Photographer';
@@ -856,11 +1078,14 @@ async function handleRegister(payload, res) {
   const paket = d.paket || '1 Bulan';
 
   if (!nama || !email || !username || !password) return error(res, 'Lengkapi semua isian pendaftaran.');
+  if (!validatePasswordPolicy(password)) {
+    return error(res, 'Password minimal 8 karakter dan maksimal 128 karakter.');
+  }
 
   const existing = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(username)}&select=id`);
   if (existing && existing.length > 0) return error(res, 'Username sudah digunakan.');
 
-  const passHash = hashPassword(password);
+  const passHash = createPasswordHash(password);
   const confirmToken = crypto.randomUUID();
   const isDemo = (paket.toUpperCase().includes('DEMO') || paket === 'Free');
   const refCode = (d.refCode || d.ref || '').trim().toUpperCase();
@@ -2146,18 +2371,37 @@ async function handleRequestOTP(payload, res) {
     return error(res, 'Akun ini tidak memiliki email yang tersimpan. Hubungi Admin.');
   }
 
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  
-  // Simpan OTP ke tabel reset_tokens
+  // Phase 4.5: OTP Resend cooldown (60 detik)
+  const existingTokens = await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}&order=id.desc&limit=1`);
+  if (Array.isArray(existingTokens) && existingTokens.length > 0) {
+    const latestTok = existingTokens[0];
+    const tokDate = parseSafeDate(latestTok.CreatedAt);
+    if (tokDate) {
+      const timeSince = Date.now() - tokDate.getTime();
+      if (timeSince >= 0 && timeSince < OTP_RESEND_COOLDOWN_MS) {
+        return error(res, 'Harap tunggu 60 detik sebelum meminta kode OTP baru.');
+      }
+    }
+  }
+
+  // Invalidate old tokens & reset attempt counter for this user
+  await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}`, { method: 'DELETE' }).catch(() => {});
+  await clearOtpFailedAttempts(uName);
+
+  // Generate 6-digit OTP using crypto.randomInt
+  const otp = crypto.randomInt(100000, 1000000).toString();
+  const otpHash = createOtpHash(otp);
+
+  // Simpan OTP ter-hash ke tabel reset_tokens
   await supabaseQuery('reset_tokens', {
     method: 'POST',
-    body: { Username: uName, OTP: otp, CreatedAt: new Date().toISOString() }
+    body: { Username: uName, OTP: otpHash, CreatedAt: new Date().toISOString() }
   });
 
   // Kirim email OTP ke fotografer
   sendEmailViaGAS({
     to: userEmail,
-    subject: `Kode Keamanan Reset Password (${otp}) - Photo Selection`,
+    subject: 'Kode Keamanan Reset Password - Photo Selection',
     htmlBody: buildOtpResetPasswordEmail({
       nama: user.Nama || uName,
       username: uName,
@@ -2191,17 +2435,95 @@ async function handleResetPasswordWithOTP(payload, res) {
   if (!users || users.length === 0) return error(res, 'User tidak ditemukan.');
 
   const uName = users[0].Username;
-  const tokens = await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}&OTP=eq.${encodeURIComponent(otp)}&order=id.desc&limit=1`);
+
+  // Query latest reset token by Username only (DO NOT query by OTP)
+  const tokens = await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}&order=id.desc&limit=1`);
   if (!tokens || tokens.length === 0) return error(res, 'Kode OTP salah atau sudah kedaluwarsa.');
 
-  const newHash = hashPassword(newPassword);
-  await supabaseQuery(`users?Username=ilike.${encodeURIComponent(uName)}`, {
-    method: 'PATCH',
-    body: { Password: newHash }
-  });
+  const tokenRow = tokens[0];
 
-  // Bersihkan token yang sudah digunakan
-  await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}`, { method: 'DELETE' }).catch(() => {});
+  // Fail-closed attempt count query
+  let failedAttempts = 0;
+  try {
+    failedAttempts = await getRecentOtpFailedAttempts(uName);
+  } catch (attemptErr) {
+    console.error('Error checking OTP attempt security:', attemptErr);
+    return error(res, 'Keamanan reset password sedang tidak dapat diverifikasi. Silakan coba beberapa saat lagi.', 500);
+  }
+
+  // Check attempt lockout: maximum 5 failed attempts
+  // DO NOT delete reset_tokens row so 60-second cooldown is preserved in requestOTP
+  if (failedAttempts >= 5) {
+    return error(res, 'Terlalu banyak percobaan salah. Silakan minta kode OTP baru.');
+  }
+
+  // Check OTP expiration (10 minutes TTL)
+  const createdAt = tokenRow.CreatedAt;
+  const createdDate = parseSafeDate(createdAt);
+  if (!createdDate) {
+    await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}`, { method: 'DELETE' }).catch(() => {});
+    await clearOtpFailedAttempts(uName);
+    return error(res, 'Kode OTP salah atau sudah kedaluwarsa.');
+  }
+
+  const now = Date.now();
+  const tokenAge = now - createdDate.getTime();
+  if (tokenAge < -60000 || tokenAge > OTP_TTL_MS) {
+    await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}`, { method: 'DELETE' }).catch(() => {});
+    await clearOtpFailedAttempts(uName);
+    return error(res, 'Kode OTP salah atau sudah kedaluwarsa.');
+  }
+
+  // Verify OTP
+  const isOtpValid = verifyOtp(otp, tokenRow.OTP, createdAt);
+  if (!isOtpValid) {
+    try {
+      await recordOtpFailedAttempt(uName);
+    } catch (recErr) {
+      console.error('Failed to persist OTP attempt record:', recErr);
+      return error(res, 'Keamanan reset password sedang tidak dapat diverifikasi. Silakan coba beberapa saat lagi.', 500);
+    }
+    const newAttemptCount = failedAttempts + 1;
+    if (newAttemptCount >= 5) {
+      // Logically locked, DO NOT physically delete token so 60-sec cooldown is preserved
+      return error(res, 'Terlalu banyak percobaan salah. Silakan minta kode OTP baru.');
+    }
+    return error(res, 'Kode OTP salah atau sudah kedaluwarsa.');
+  }
+
+  // Password Policy check (8 - 128 characters)
+  if (!validatePasswordPolicy(newPassword)) {
+    return error(res, 'Password baru minimal 8 karakter dan maksimal 128 karakter.');
+  }
+
+  // Hash new password using modern scrypt
+  const newHash = createPasswordHash(newPassword);
+
+  // Safe fail-closed sequence:
+  // A. Revoke existing normal account sessions (MUST succeed)
+  // B. PATCH users.Password with new scrypt hash (MUST succeed)
+  // C. Revoke normal account sessions AGAIN (MUST succeed)
+  // D. Delete reset_tokens for Username (MUST succeed, single-use enforcement)
+  try {
+    await revokeAccountSessionsOrThrow(uName);
+
+    await supabaseQuery(`users?Username=ilike.${encodeURIComponent(uName)}`, {
+      method: 'PATCH',
+      body: { Password: newHash }
+    });
+
+    await revokeAccountSessionsOrThrow(uName);
+
+    await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}`, {
+      method: 'DELETE'
+    });
+  } catch (resetErr) {
+    console.error('Critical failure during password reset sequence for user:', uName, resetErr);
+    return error(res, 'Terjadi kendala saat memperbarui kata sandi akun. Silakan coba beberapa saat lagi.', 500);
+  }
+
+  // E. Clear ResetOTPAttempt rows (best-effort only after A-D succeed)
+  await clearOtpFailedAttempts(uName).catch(() => {});
 
   return success(res, { success: true, message: 'Password Anda berhasil direset! Silakan login dengan password baru.' });
 }
@@ -2759,9 +3081,9 @@ async function handleMayarWebhook(payload, req, res) {
       newUsername = `${baseUser}_${Math.floor(100 + Math.random() * 900)}`;
     }
 
-    // Buat password default yang mudah & aman
-    temporaryPassword = 'Kama' + Math.floor(1000 + Math.random() * 9000);
-    const passHash = hashPassword(temporaryPassword);
+    // Buat password default yang aman menggunakan crypto
+    temporaryPassword = 'Kama-' + crypto.randomBytes(6).toString('base64url');
+    const passHash = createPasswordHash(temporaryPassword);
 
     const autoUser = {
       Username: newUsername,
