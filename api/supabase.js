@@ -328,7 +328,7 @@ async function sendMetaCAPIEvent(eventName, eventData = {}) {
 async function sendEmailViaGAS({ to, subject, htmlBody, textBody }) {
   const mailerUrl = process.env.GAS_MAILER_URL || GAS_MAILER_URL;
   if (!mailerUrl) {
-    console.warn('[MAILER] GAS_MAILER_URL belum diatur di Environment Variables. Email ke', to, 'tidak dapat dikirim.');
+    console.warn('[MAILER] GAS_MAILER_URL belum diatur di Environment Variables. Email tidak dapat dikirim.');
     return false;
   }
   try {
@@ -342,9 +342,18 @@ async function sendEmailViaGAS({ to, subject, htmlBody, textBody }) {
         textBody: textBody || ''
       })
     });
-    return res.ok;
+    if (!res.ok) {
+      let safeResponseText = '';
+      try {
+        const text = await res.text();
+        safeResponseText = text ? text.slice(0, 200).replace(/[\r\n]+/g, ' ') : '';
+      } catch (_) {}
+      console.error('[MAILER] GAS returned non-success status:', res.status, safeResponseText);
+      return false;
+    }
+    return true;
   } catch (err) {
-    console.error('[MAILER] Gagal mengirim email via GAS:', err);
+    console.error('[MAILER] Gagal mengirim email via GAS:', err && err.message ? err.message : err);
     return false;
   }
 }
@@ -2398,16 +2407,32 @@ async function handleRequestOTP(payload, res) {
     body: { Username: uName, OTP: otpHash, CreatedAt: new Date().toISOString() }
   });
 
-  // Kirim email OTP ke fotografer
-  sendEmailViaGAS({
-    to: userEmail,
-    subject: 'Kode Keamanan Reset Password - Photo Selection',
-    htmlBody: buildOtpResetPasswordEmail({
-      nama: user.Nama || uName,
-      username: uName,
-      otp: otp
-    })
-  }).catch(e => console.error('[MAILER] Error kirim email OTP:', e));
+  // Kirim email OTP ke fotografer (harus diawait dan dicek hasilnya)
+  let mailSent = false;
+  try {
+    mailSent = await sendEmailViaGAS({
+      to: userEmail,
+      subject: 'Kode Keamanan Reset Password - Photo Selection',
+      htmlBody: buildOtpResetPasswordEmail({
+        nama: user.Nama || uName,
+        username: uName,
+        otp: otp
+      })
+    });
+  } catch (mailErr) {
+    console.error('[MAILER] Error kirim email OTP via GAS:', mailErr && mailErr.message ? mailErr.message : mailErr);
+    mailSent = false;
+  }
+
+  // Jika pengiriman email gagal, bersihkan token agar tidak menghalangi retry dan jangan berikan respon sukses palsu
+  if (!mailSent) {
+    try {
+      await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}`, { method: 'DELETE' });
+    } catch (cleanupErr) {
+      console.error('[MAILER] Gagal menghapus reset token setelah pengiriman email gagal:', cleanupErr && cleanupErr.message ? cleanupErr.message : cleanupErr);
+    }
+    return error(res, 'Gagal mengirim kode OTP. Silakan coba kembali beberapa saat lagi.', 500);
+  }
 
   // Sensor email untuk keamanan (contoh: pu***15@gmail.com)
   const parts = userEmail.split('@');
