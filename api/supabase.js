@@ -55,6 +55,19 @@ const SCRYPT_MAXMEM = 64 * 1024 * 1024;
 const SCRYPT_KEYLEN = 64; // 64 bytes = 128 hex characters
 const OTP_SCRYPT_KEYLEN = 32; // 32 bytes = 64 hex characters
 
+// Quota Contract
+const MAX_PHOTO_QUOTA = 999999;
+
+function validatePhotoQuota(value, maxLimit = MAX_PHOTO_QUOTA) {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== 'number' && typeof value !== 'string') return null;
+  const str = String(value).trim();
+  if (!/^\d+$/.test(str)) return null;
+  const num = Number(str);
+  if (!Number.isSafeInteger(num) || num < 0 || num > maxLimit) return null;
+  return num;
+}
+
 function timingSafeStringEqual(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string') return false;
   const bufA = Buffer.from(a, 'utf8');
@@ -347,7 +360,7 @@ async function sendEmailViaGAS({ to, subject, htmlBody, textBody }) {
       try {
         const text = await res.text();
         safeResponseText = text ? text.slice(0, 200).replace(/[\r\n]+/g, ' ') : '';
-      } catch (_) {}
+      } catch (_) { }
       console.error('[MAILER] GAS returned non-success status:', res.status, safeResponseText);
       return false;
     }
@@ -358,8 +371,26 @@ async function sendEmailViaGAS({ to, subject, htmlBody, textBody }) {
   }
 }
 
+function escapeEmailHtml(value) {
+  if (value === undefined || value === null) return '';
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function buildAdminNewUserEmail({ nama, username, email, nohp, paket, status }) {
   const isPending = status === 'Pending';
+  const safeNama = escapeEmailHtml(nama);
+  const safeUsername = escapeEmailHtml(username);
+  const safeEmail = escapeEmailHtml(email);
+  const safeNohp = escapeEmailHtml(nohp || '-');
+  const safeWaHref = (nohp || '').replace(/[^0-9]/g, '');
+  const safePaket = escapeEmailHtml(paket);
+  const safeStatus = escapeEmailHtml(status);
+  const mailtoHref = encodeURI(email || '');
   return `
   <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
     <div style="background: #1e3a8a; padding: 24px; color: #ffffff;">
@@ -371,27 +402,27 @@ function buildAdminNewUserEmail({ nama, username, email, nohp, paket, status }) 
       <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
         <tr style="border-bottom: 1px solid #f1f5f9;">
           <td style="padding: 10px 0; font-weight: 600; color: #64748b; width: 140px;">Nama Studio / User</td>
-          <td style="padding: 10px 0; color: #0f172a; font-weight: 500;">${nama}</td>
+          <td style="padding: 10px 0; color: #0f172a; font-weight: 500;">${safeNama}</td>
         </tr>
         <tr style="border-bottom: 1px solid #f1f5f9;">
           <td style="padding: 10px 0; font-weight: 600; color: #64748b;">Username</td>
-          <td style="padding: 10px 0; color: #0f172a;"><code>@${username}</code></td>
+          <td style="padding: 10px 0; color: #0f172a;"><code>@${safeUsername}</code></td>
         </tr>
         <tr style="border-bottom: 1px solid #f1f5f9;">
           <td style="padding: 10px 0; font-weight: 600; color: #64748b;">Email</td>
-          <td style="padding: 10px 0;"><a href="mailto:${email}" style="color: #2563eb; text-decoration: none;">${email}</a></td>
+          <td style="padding: 10px 0;"><a href="mailto:${mailtoHref}" style="color: #2563eb; text-decoration: none;">${safeEmail}</a></td>
         </tr>
         <tr style="border-bottom: 1px solid #f1f5f9;">
           <td style="padding: 10px 0; font-weight: 600; color: #64748b;">No HP / WA</td>
-          <td style="padding: 10px 0;"><a href="https://wa.me/${(nohp || '').replace(/[^0-9]/g, '')}" style="color: #059669; text-decoration: none; font-weight: 600;">${nohp || '-'}</a></td>
+          <td style="padding: 10px 0;"><a href="https://wa.me/${safeWaHref}" style="color: #059669; text-decoration: none; font-weight: 600;">${safeNohp}</a></td>
         </tr>
         <tr style="border-bottom: 1px solid #f1f5f9;">
           <td style="padding: 10px 0; font-weight: 600; color: #64748b;">Pilihan Paket</td>
-          <td style="padding: 10px 0;"><span style="display: inline-block; background: #dbeafe; color: #1e40af; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 6px;">${paket}</span></td>
+          <td style="padding: 10px 0;"><span style="display: inline-block; background: #dbeafe; color: #1e40af; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 6px;">${safePaket}</span></td>
         </tr>
         <tr>
           <td style="padding: 10px 0; font-weight: 600; color: #64748b;">Status Akun</td>
-          <td style="padding: 10px 0;"><span style="display: inline-block; background: ${isPending ? '#fef3c7; color: #92400e;' : '#d1fae5; color: #065f46;'} font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 6px;">${status}</span></td>
+          <td style="padding: 10px 0;"><span style="display: inline-block; background: ${isPending ? '#fef3c7; color: #92400e;' : '#d1fae5; color: #065f46;'} font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 6px;">${safeStatus}</span></td>
         </tr>
       </table>
       <p style="color: #64748b; font-size: 13px; margin: 20px 0;">
@@ -409,6 +440,11 @@ function buildAdminNewUserEmail({ nama, username, email, nohp, paket, status }) 
 
 function buildPhotographerWelcomeEmail({ nama, username, email, paket, status, paymentUrl }) {
   const isPending = status === 'Pending';
+  const safeNama = escapeEmailHtml(nama);
+  const safeUsername = escapeEmailHtml(username);
+  const safeEmail = escapeEmailHtml(email);
+  const safePaket = escapeEmailHtml(paket);
+  const safePaymentUrl = (paymentUrl && isSafeHttpsUrl(paymentUrl)) ? encodeURI(paymentUrl) : '';
   return `
   <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
     <div style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); padding: 26px; color: #ffffff;">
@@ -416,21 +452,21 @@ function buildPhotographerWelcomeEmail({ nama, username, email, paket, status, p
       <p style="margin: 6px 0 0 0; font-size: 13px; color: #bfdbfe;">Aplikasi Galeri &amp; Seleksi Foto Klien Praktis</p>
     </div>
     <div style="padding: 24px; color: #334155; font-size: 14px; line-height: 1.6;">
-      <p style="margin-top: 0;">Halo <strong>${nama}</strong>,</p>
+      <p style="margin-top: 0;">Halo <strong>${safeNama}</strong>,</p>
       <p>Terima kasih telah mendaftar di <strong>Photo Selection</strong>. Akun Anda berhasil dicatat dengan rincian:</p>
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
         <table style="width: 100%; font-size: 14px;">
-          <tr><td style="padding: 6px 0; color: #64748b; width: 130px;"><strong>Username:</strong></td><td style="color: #0f172a; font-weight: 600;">@${username}</td></tr>
-          <tr><td style="padding: 6px 0; color: #64748b;"><strong>Email:</strong></td><td style="color: #0f172a;">${email}</td></tr>
-          <tr><td style="padding: 6px 0; color: #64748b;"><strong>Paket:</strong></td><td style="color: #0f172a;"><span style="background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">${paket}</span></td></tr>
+          <tr><td style="padding: 6px 0; color: #64748b; width: 130px;"><strong>Username:</strong></td><td style="color: #0f172a; font-weight: 600;">@${safeUsername}</td></tr>
+          <tr><td style="padding: 6px 0; color: #64748b;"><strong>Email:</strong></td><td style="color: #0f172a;">${safeEmail}</td></tr>
+          <tr><td style="padding: 6px 0; color: #64748b;"><strong>Paket:</strong></td><td style="color: #0f172a;"><span style="background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">${safePaket}</span></td></tr>
           <tr><td style="padding: 6px 0; color: #64748b;"><strong>Status Akun:</strong></td><td><span style="background: ${isPending ? '#fef3c7; color: #b45309;' : '#dcfce7; color: #15803d;'} padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">${isPending ? 'Menunggu Pembayaran' : 'Aktif'}</span></td></tr>
         </table>
       </div>
-      ${isPending && paymentUrl ? `
+      ${isPending && safePaymentUrl ? `
         <div style="background: #eff6ff; border-left: 4px solid #2563eb; padding: 14px; margin: 18px 0; border-radius: 0 8px 8px 0;">
           <strong style="color: #1e40af; font-size: 14px;">Langkah Aktivasi Otomatis:</strong>
           <p style="margin: 6px 0 12px 0; font-size: 13px; color: #1e3a8a;">Selesaikan pembayaran Anda untuk langsung mengaktifkan akun secara otomatis tanpa perlu konfirmasi:</p>
-          <a href="${paymentUrl}" style="background: #2563eb; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; display: inline-block; font-size: 13px;">Bayar Sekarang via Mayar &rarr;</a>
+          <a href="${safePaymentUrl}" style="background: #2563eb; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; display: inline-block; font-size: 13px;">Bayar Sekarang via Mayar &rarr;</a>
         </div>
       ` : `
         <p style="font-size: 13px; color: #4b5563;">Akun Anda sudah aktif dan dapat langsung digunakan untuk mengunggah dan membagikan galeri foto klien.</p>
@@ -447,6 +483,12 @@ function buildPhotographerWelcomeEmail({ nama, username, email, paket, status, p
 }
 
 function buildPhotographerActivatedEmail({ nama, username, email, paket, expiredAt, tempPassword }) {
+  const safeNama = escapeEmailHtml(nama);
+  const safeUsername = escapeEmailHtml(username);
+  const safeEmail = escapeEmailHtml(email);
+  const safePaket = escapeEmailHtml(paket);
+  const safeExpiredAt = escapeEmailHtml(expiredAt || 'Lifetime');
+  const safeTempPassword = tempPassword ? escapeEmailHtml(tempPassword) : '';
   return `
   <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
     <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 26px; color: #ffffff;">
@@ -454,15 +496,15 @@ function buildPhotographerActivatedEmail({ nama, username, email, paket, expired
       <p style="margin: 6px 0 0 0; font-size: 13px; color: #d1fae5;">Selamat berkarya dan selamat menikmati alur kerja seleksi foto otomatis</p>
     </div>
     <div style="padding: 24px; color: #334155; font-size: 14px; line-height: 1.6;">
-      <p style="margin-top: 0;">Halo <strong>${nama}</strong>,</p>
+      <p style="margin-top: 0;">Halo <strong>${safeNama}</strong>,</p>
       <p>Kabar gembira! Akun <strong>Photo Selection</strong> Anda telah resmi <strong>diaktifkan</strong>.</p>
       <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin: 16px 0;">
         <table style="width: 100%; font-size: 14px;">
-          <tr><td style="padding: 6px 0; color: #166534; width: 140px;"><strong>Username:</strong></td><td style="color: #0f172a; font-weight: 600;">@${username}</td></tr>
-          <tr><td style="padding: 6px 0; color: #166534;"><strong>Email:</strong></td><td style="color: #0f172a;">${email}</td></tr>
-          ${tempPassword ? `<tr><td style="padding: 6px 0; color: #166534;"><strong>Password Login:</strong></td><td style="color: #b91c1c; font-weight: 700;"><code>${tempPassword}</code></td></tr>` : ''}
-          <tr><td style="padding: 6px 0; color: #166534;"><strong>Paket:</strong></td><td style="color: #0f172a;"><span style="background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">${paket}</span></td></tr>
-          <tr><td style="padding: 6px 0; color: #166534;"><strong>Masa Aktif Sampai:</strong></td><td style="color: #0f172a; font-weight: 600;">${expiredAt || 'Lifetime'}</td></tr>
+          <tr><td style="padding: 6px 0; color: #166534; width: 140px;"><strong>Username:</strong></td><td style="color: #0f172a; font-weight: 600;">@${safeUsername}</td></tr>
+          <tr><td style="padding: 6px 0; color: #166534;"><strong>Email:</strong></td><td style="color: #0f172a;">${safeEmail}</td></tr>
+          ${safeTempPassword ? `<tr><td style="padding: 6px 0; color: #166534;"><strong>Password Login:</strong></td><td style="color: #b91c1c; font-weight: 700;"><code>${safeTempPassword}</code></td></tr>` : ''}
+          <tr><td style="padding: 6px 0; color: #166534;"><strong>Paket:</strong></td><td style="color: #0f172a;"><span style="background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">${safePaket}</span></td></tr>
+          <tr><td style="padding: 6px 0; color: #166534;"><strong>Masa Aktif Sampai:</strong></td><td style="color: #0f172a; font-weight: 600;">${safeExpiredAt}</td></tr>
         </table>
       </div>
       <div style="text-align: center; margin: 24px 0 14px 0;">
@@ -479,6 +521,15 @@ function buildPhotographerActivatedEmail({ nama, username, email, paket, expired
 }
 
 function buildAdminPaymentSuccessEmail({ nama, username, email, nohp, paket, amount, expiredAt }) {
+  const safeNama = escapeEmailHtml(nama);
+  const safeUsername = escapeEmailHtml(username);
+  const safeEmail = escapeEmailHtml(email);
+  const safeNohp = escapeEmailHtml(nohp || '-');
+  const safeWaHref = (nohp || '').replace(/[^0-9]/g, '');
+  const safePaket = escapeEmailHtml(paket);
+  const safeExpiredAt = escapeEmailHtml(expiredAt || 'Lifetime');
+  const mailtoHref = encodeURI(email || '');
+  const formattedAmount = (Number(amount) || 0).toLocaleString('id-ID');
   return `
   <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
     <div style="background: #065f46; padding: 24px; color: #ffffff;">
@@ -488,13 +539,13 @@ function buildAdminPaymentSuccessEmail({ nama, username, email, nohp, paket, amo
     <div style="padding: 24px; color: #334155; font-size: 14px; line-height: 1.6;">
       <p style="margin-top: 0;">Halo <strong>Admin Kama Creative</strong>, pembayaran baru telah sukses diterima melalui Mayar:</p>
       <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
-        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; font-weight: 600; color: #64748b; width: 140px;">Nama Customer</td><td style="padding: 8px 0; color: #0f172a; font-weight: 500;">${nama}</td></tr>
-        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; font-weight: 600; color: #64748b;">Username</td><td style="padding: 8px 0; color: #0f172a;">@${username}</td></tr>
-        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; font-weight: 600; color: #64748b;">Email</td><td style="padding: 8px 0;"><a href="mailto:${email}" style="color: #2563eb; text-decoration: none;">${email}</a></td></tr>
-        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; font-weight: 600; color: #64748b;">No HP / WA</td><td style="padding: 8px 0;"><a href="https://wa.me/${(nohp || '').replace(/[^0-9]/g, '')}" style="color: #059669; text-decoration: none; font-weight: 600;">${nohp || '-'}</a></td></tr>
-        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; font-weight: 600; color: #64748b;">Paket</td><td style="padding: 8px 0; color: #065f46; font-weight: 700;">${paket}</td></tr>
-        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; font-weight: 600; color: #64748b;">Nominal</td><td style="padding: 8px 0; color: #0f172a; font-weight: 600;">Rp ${(amount || 0).toLocaleString('id-ID')}</td></tr>
-        <tr><td style="padding: 8px 0; font-weight: 600; color: #64748b;">Masa Aktif</td><td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${expiredAt || 'Lifetime'}</td></tr>
+        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; font-weight: 600; color: #64748b; width: 140px;">Nama Customer</td><td style="padding: 8px 0; color: #0f172a; font-weight: 500;">${safeNama}</td></tr>
+        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; font-weight: 600; color: #64748b;">Username</td><td style="padding: 8px 0; color: #0f172a;">@${safeUsername}</td></tr>
+        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; font-weight: 600; color: #64748b;">Email</td><td style="padding: 8px 0;"><a href="mailto:${mailtoHref}" style="color: #2563eb; text-decoration: none;">${safeEmail}</a></td></tr>
+        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; font-weight: 600; color: #64748b;">No HP / WA</td><td style="padding: 8px 0;"><a href="https://wa.me/${safeWaHref}" style="color: #059669; text-decoration: none; font-weight: 600;">${safeNohp}</a></td></tr>
+        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; font-weight: 600; color: #64748b;">Paket</td><td style="padding: 8px 0; color: #065f46; font-weight: 700;">${safePaket}</td></tr>
+        <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; font-weight: 600; color: #64748b;">Nominal</td><td style="padding: 8px 0; color: #0f172a; font-weight: 600;">Rp ${formattedAmount}</td></tr>
+        <tr><td style="padding: 8px 0; font-weight: 600; color: #64748b;">Masa Aktif</td><td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${safeExpiredAt}</td></tr>
       </table>
       <div style="text-align: center; margin: 20px 0 10px 0;">
         <a href="${APP_URL}/login" style="background: #059669; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; display: inline-block;">Lihat di Dashboard Admin</a>
@@ -507,6 +558,9 @@ function buildAdminPaymentSuccessEmail({ nama, username, email, nohp, paket, amo
 }
 
 function buildExpiryReminderEmail({ nama, username, expiredAt }) {
+  const safeNama = escapeEmailHtml(nama);
+  const safeUsername = escapeEmailHtml(username);
+  const safeExpiredAt = escapeEmailHtml(expiredAt || '');
   return `
   <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
     <div style="background: #d97706; padding: 24px; color: #ffffff;">
@@ -514,8 +568,8 @@ function buildExpiryReminderEmail({ nama, username, expiredAt }) {
       <p style="margin: 6px 0 0 0; font-size: 13px; color: #fef3c7;">Perpanjang masa aktif untuk menjaga galeri klien tetap dapat diakses</p>
     </div>
     <div style="padding: 24px; color: #334155; font-size: 14px; line-height: 1.6;">
-      <p style="margin-top: 0;">Halo <strong>${nama}</strong> (<code>@${username}</code>),</p>
-      <p>Masa aktif akun Photo Selection Anda akan segera berakhir pada: <strong style="color: #b45309;">${expiredAt}</strong>.</p>
+      <p style="margin-top: 0;">Halo <strong>${safeNama}</strong> (<code>@${safeUsername}</code>),</p>
+      <p>Masa aktif akun Photo Selection Anda akan segera berakhir pada: <strong style="color: #b45309;">${safeExpiredAt}</strong>.</p>
       <p>Agar klien tetap dapat memilih dan mengunduh foto tanpa hambatan, segera perpanjang langganan akun Anda.</p>
       <div style="text-align: center; margin: 24px 0 10px 0;">
         <a href="${APP_URL}/login" style="background: #d97706; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; display: inline-block;">Perpanjang Langganan Sekarang &rarr;</a>
@@ -528,6 +582,9 @@ function buildExpiryReminderEmail({ nama, username, expiredAt }) {
 }
 
 function buildOtpResetPasswordEmail({ nama, username, otp }) {
+  const safeNama = escapeEmailHtml(nama || username);
+  const safeUsername = escapeEmailHtml(username);
+  const safeOtp = escapeEmailHtml(otp);
   return `
   <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
     <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 26px; color: #ffffff;">
@@ -535,11 +592,11 @@ function buildOtpResetPasswordEmail({ nama, username, otp }) {
       <p style="margin: 6px 0 0 0; font-size: 13px; color: #94a3b8;">Permintaan Pengaturan Ulang Kata Sandi Akun</p>
     </div>
     <div style="padding: 24px; color: #334155; font-size: 14px; line-height: 1.6;">
-      <p style="margin-top: 0;">Halo <strong>${nama || username}</strong> (<code>@${username}</code>),</p>
+      <p style="margin-top: 0;">Halo <strong>${safeNama}</strong> (<code>@${safeUsername}</code>),</p>
       <p>Kami menerima permintaan untuk mereset kata sandi akun <strong>Photo Selection</strong> Anda. Gunakan 6 digit Kode OTP berikut untuk memverifikasi akun Anda:</p>
       
       <div style="background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 10px; padding: 20px; text-align: center; margin: 24px 0;">
-        <span style="font-family: 'Courier New', Courier, monospace; font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #1e40af; display: inline-block;">${otp}</span>
+        <span style="font-family: 'Courier New', Courier, monospace; font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #1e40af; display: inline-block;">${safeOtp}</span>
         <p style="margin: 8px 0 0 0; font-size: 12px; color: #64748b;">Kode OTP ini berlaku selama 10 menit. Jangan berikan kode ini kepada siapa pun.</p>
       </div>
 
@@ -563,6 +620,172 @@ function success(res, data, message = 'Success') {
 function error(res, message = 'Error occurred', statusCode = 400, data = null) {
   return sendJSON(res, statusCode, { status: 'error', message: message, data: data });
 }
+
+// =========================================================================
+// PHASE 4.6X SECURITY & VALIDATION HELPERS
+// =========================================================================
+
+function stripDangerousControlChars(str, allowNewlines = true) {
+  if (typeof str !== 'string') return '';
+  if (allowNewlines) {
+    return str.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '');
+  }
+  return str.replace(/[\u0000-\u001F\u007F]/g, '');
+}
+
+function cleanPlainString(value, allowNewlines = false) {
+  if (value === undefined || value === null) return '';
+  const str = String(value).trim();
+  return stripDangerousControlChars(str, allowNewlines);
+}
+
+function toSafeString(value, maxLength = 255, allowNewlines = false) {
+  const clean = cleanPlainString(value, allowNewlines);
+  return typeof maxLength === 'number' && maxLength > 0 ? clean.slice(0, maxLength) : clean;
+}
+
+function isSafeHttpsUrl(value) {
+  if (!value || typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  if (trimmed.length > 4096) return false;
+  if (/[\u0000-\u001F\u007F]/.test(trimmed)) return false;
+  try {
+    const u = new URL(trimmed);
+    return u.protocol === 'https:';
+  } catch (_) {
+    return false;
+  }
+}
+
+function estimateBase64DecodedBytes(base64Str) {
+  if (typeof base64Str !== 'string') return 0;
+  const commaIdx = base64Str.indexOf(',');
+  const raw = (commaIdx !== -1 ? base64Str.slice(commaIdx + 1) : base64Str).trim();
+  if (!raw || raw.length % 4 !== 0) return 0;
+  if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(raw)) return 0;
+  let padding = 0;
+  if (raw.endsWith('==')) padding = 2;
+  else if (raw.endsWith('=')) padding = 1;
+  return (raw.length / 4) * 3 - padding;
+}
+
+function isSafeDataImage(value, maxDecodedBytes = 2 * 1024 * 1024, allowedTypes = ['jpeg', 'jpg', 'png', 'webp', 'gif']) {
+  if (!value || typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  if (/[\u0000-\u001F\u007F]/.test(trimmed)) return false;
+  const match = trimmed.match(/^data:image\/(jpeg|jpg|png|webp|gif);base64,([A-Za-z0-9+/=]+)$/i);
+  if (!match) return false;
+
+  const declaredType = match[1].toLowerCase();
+  const normalizedType = declaredType === 'jpg' ? 'jpeg' : declaredType;
+  const normalizedAllowed = allowedTypes.map(t => (t.toLowerCase() === 'jpg' ? 'jpeg' : t.toLowerCase()));
+  if (!normalizedAllowed.includes(normalizedType)) return false;
+
+  const rawBase64 = match[2];
+  if (rawBase64.length === 0 || rawBase64.length % 4 !== 0) return false;
+  if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(rawBase64)) {
+    return false;
+  }
+
+  const decodedBytes = estimateBase64DecodedBytes(rawBase64);
+  if (decodedBytes < 12 || decodedBytes > maxDecodedBytes) return false;
+
+  try {
+    const fullBuf = Buffer.from(rawBase64, 'base64');
+    if (fullBuf.length < 12) return false;
+
+    let detectedType = null;
+
+    if (normalizedType === 'jpeg') {
+      // JPEG must start with SOI (FF D8 FF) and terminate with EOI (FF D9)
+      if (fullBuf.length >= 64 &&
+        fullBuf[0] === 0xFF && fullBuf[1] === 0xD8 && fullBuf[2] === 0xFF) {
+        const tail = fullBuf.slice(Math.max(0, fullBuf.length - 16));
+        if (tail.includes(Buffer.from([0xFF, 0xD9]))) {
+          detectedType = 'jpeg';
+        }
+      }
+    } else if (normalizedType === 'png') {
+      // PNG must have 8-byte signature, IHDR chunk at offset 12, and IEND chunk at EOF
+      if (fullBuf.length >= 45 &&
+        fullBuf[0] === 0x89 && fullBuf[1] === 0x50 && fullBuf[2] === 0x4E && fullBuf[3] === 0x47 &&
+        fullBuf[4] === 0x0D && fullBuf[5] === 0x0A && fullBuf[6] === 0x1A && fullBuf[7] === 0x0A &&
+        fullBuf.slice(12, 16).toString('ascii') === 'IHDR') {
+        const tail = fullBuf.slice(Math.max(0, fullBuf.length - 16));
+        if (tail.includes(Buffer.from('IEND'))) {
+          detectedType = 'png';
+        }
+      }
+    } else if (normalizedType === 'gif') {
+      // GIF must start with GIF87a or GIF89a and terminate with trailer byte 0x3B
+      if (fullBuf.length >= 26 &&
+        (fullBuf.slice(0, 6).toString('ascii') === 'GIF87a' || fullBuf.slice(0, 6).toString('ascii') === 'GIF89a') &&
+        fullBuf[fullBuf.length - 1] === 0x3B) {
+        detectedType = 'gif';
+      }
+    } else if (normalizedType === 'webp') {
+      // WebP must start with RIFF...WEBP with valid size and VP8/VP8L/VP8X container
+      if (fullBuf.length >= 24 &&
+        fullBuf.slice(0, 4).toString('ascii') === 'RIFF' &&
+        fullBuf.slice(8, 12).toString('ascii') === 'WEBP') {
+        const riffSize = fullBuf.readUInt32LE(4);
+        const chunkType = fullBuf.slice(12, 16).toString('ascii');
+        if (['VP8 ', 'VP8L', 'VP8X'].includes(chunkType) && Math.abs(fullBuf.length - (riffSize + 8)) <= 2) {
+          detectedType = 'webp';
+        }
+      }
+    }
+
+    if (!detectedType || detectedType !== normalizedType) return false;
+  } catch (_) {
+    return false;
+  }
+
+  return true;
+}
+
+function isSafeImageReference(value, maxDecodedBytes = 2 * 1024 * 1024) {
+  if (!value || typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  return isSafeHttpsUrl(trimmed) || isSafeDataImage(trimmed, maxDecodedBytes);
+}
+
+function isSafeFeedbackImageReference(value, maxDecodedBytes = 5 * 1024 * 1024) {
+  if (!value || typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  return isSafeHttpsUrl(trimmed) || isSafeDataImage(trimmed, maxDecodedBytes, ['jpeg', 'jpg', 'png', 'webp']);
+}
+
+const ALLOWED_DRIVE_HOSTS = new Set(['drive.google.com']);
+
+function isAllowedDriveHost(hostname) {
+  if (!hostname || typeof hostname !== 'string') return false;
+  return ALLOWED_DRIVE_HOSTS.has(hostname.toLowerCase());
+}
+
+function validateDriveReference(value) {
+  if (!value || typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  if (trimmed.length > 500) return false;
+  if (/[\u0000-\u001F\u007F]/.test(trimmed)) return false;
+  if (isSafeHttpsUrl(trimmed)) {
+    try {
+      const u = new URL(trimmed);
+      return isAllowedDriveHost(u.hostname);
+    } catch (_) {
+      return false;
+    }
+  }
+  return /^[a-zA-Z0-9_-]{10,128}$/.test(trimmed);
+}
+
+function validateSafeIdentifier(value, maxLength = 128) {
+  if (!value || typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  if (trimmed.length > maxLength) return false;
+  return /^[A-Za-z0-9_.:-]+$/.test(trimmed);
+}
+
 
 function extractSessionId(payload, req) {
   // 1. Authorization: Bearer <sessionId>
@@ -815,10 +1038,10 @@ function verifyWebhookAuthenticity(req) {
 function isNewMembershipEvent(rawEvent) {
   const ev = String(rawEvent || '').trim().toLowerCase();
   return ev === 'new membership' ||
-         ev === 'new_membership' ||
-         ev === 'membership.created' ||
-         ev === 'membership.new' ||
-         ev.includes('membership');
+    ev === 'new_membership' ||
+    ev === 'membership.created' ||
+    ev === 'membership.new' ||
+    ev.includes('membership');
 }
 
 function isConfirmedPaymentSuccess(rawEvent, data, payload) {
@@ -838,12 +1061,12 @@ function isConfirmedPaymentSuccess(rawEvent, data, payload) {
   }
 
   const isPaymentEvent = ev === 'purchase' ||
-                         ev === 'payment.received' ||
-                         ev === 'payment.success' ||
-                         ev === 'transaction.success' ||
-                         ev === 'payment.paid' ||
-                         ev === 'invoice.paid' ||
-                         ev === 'invoice.settled';
+    ev === 'payment.received' ||
+    ev === 'payment.success' ||
+    ev === 'transaction.success' ||
+    ev === 'payment.paid' ||
+    ev === 'invoice.paid' ||
+    ev === 'invoice.settled';
 
   if (!isPaymentEvent) {
     return false;
@@ -989,7 +1212,7 @@ module.exports = async function handler(req, res) {
     }
   } catch (err) {
     console.error('Supabase API Handler Error:', err);
-    return error(res, err.message || 'Internal Server Error', 500);
+    return error(res, 'Terjadi kesalahan pada server.', 500);
   }
 };
 
@@ -1001,6 +1224,10 @@ async function handleLogin(payload, res) {
   const username = (payload.username || '').trim();
   const password = (payload.password || '').trim();
   if (!username || !password) return error(res, 'Username dan Password wajib diisi.');
+
+  if (username.length > 254) {
+    return error(res, 'Username atau password salah.');
+  }
 
   if (password.length > 256) {
     return error(res, 'Username atau password salah.');
@@ -1079,14 +1306,24 @@ async function handleLogin(payload, res) {
 
 async function handleRegister(payload, res) {
   const d = payload.formData || payload.data || payload || {};
-  const nama = (d.nama || '').trim();
+  const nama = cleanPlainString(d.nama || '', false);
   const email = (d.email || '').trim().toLowerCase();
-  const nohp = (d.nohp || '').trim();
+  const nohp = cleanPlainString(d.nohp || '', false);
   const username = (d.username || '').trim().toLowerCase().replace(/\s+/g, '');
   const password = (d.password || '').trim();
-  const paket = d.paket || '1 Bulan';
+  const paket = (d.paket || '1 Bulan').trim();
 
   if (!nama || !email || !username || !password) return error(res, 'Lengkapi semua isian pendaftaran.');
+  if (nama.length > 120) return error(res, 'Nama maksimal 120 karakter.');
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return error(res, 'Format email tidak valid.');
+  }
+  if (!/^[a-z0-9._-]{3,50}$/.test(username)) {
+    return error(res, 'Username harus berupa 3-50 karakter (huruf kecil, angka, titik, strip, garis bawah).');
+  }
+  if (nohp.length > 32) return error(res, 'Nomor HP maksimal 32 karakter.');
+  const VALID_PAKETS = new Set(['1 Bulan', '6 Bulan', '1 Tahun', 'Lifetime', 'Demo', 'Demo 7 Hari', 'Free']);
+  if (!VALID_PAKETS.has(paket)) return error(res, 'Pilihan paket tidak valid.');
   if (!validatePasswordPolicy(password)) {
     return error(res, 'Password minimal 8 karakter dan maksimal 128 karakter.');
   }
@@ -1097,7 +1334,18 @@ async function handleRegister(payload, res) {
   const passHash = createPasswordHash(password);
   const confirmToken = crypto.randomUUID();
   const isDemo = (paket.toUpperCase().includes('DEMO') || paket === 'Free');
-  const refCode = (d.refCode || d.ref || '').trim().toUpperCase();
+  let refCode = '';
+  const rawRef = d.refCode !== undefined ? d.refCode : (d.ref !== undefined ? d.ref : '');
+  if (rawRef !== null && rawRef !== undefined && String(rawRef).trim() !== '') {
+    if (typeof rawRef !== 'string') {
+      return error(res, 'Format kode referral tidak valid.', 400);
+    }
+    const trimmedRef = rawRef.trim();
+    if (trimmedRef.length > 32 || !/^[A-Za-z0-9_-]{1,32}$/.test(trimmedRef)) {
+      return error(res, 'Kode referral tidak valid (hanya alfanumerik, tanda hubung, atau garis bawah maks 32 karakter).', 400);
+    }
+    refCode = trimmedRef.toUpperCase();
+  }
   const tokenPayload = refCode ? `REF:${refCode}` : confirmToken;
 
   let expiredAt = 'Lifetime';
@@ -1206,11 +1454,19 @@ async function handleGetGlobalBranding(payload, res) {
 async function handleSaveBrandSettings(payload, res) {
   const authUser = payload.authUser || {};
   const username = (authUser.username || payload.username || '').trim();
-  const brandName = (payload.brandName || '').trim();
+  const brandName = cleanPlainString(payload.brandName || '', false);
   const brandLogo = (payload.brandLogo || '').trim();
   const watermarkUrl = (payload.watermarkUrl || '').trim();
 
   if (!username) return error(res, 'Username required');
+  if (brandName.length > 100) return error(res, 'Nama brand maksimal 100 karakter.');
+
+  if (brandLogo && !isSafeImageReference(brandLogo, 2 * 1024 * 1024)) {
+    return error(res, 'Format URL atau data gambar logo brand tidak valid.');
+  }
+  if (watermarkUrl && !isSafeImageReference(watermarkUrl, 2 * 1024 * 1024)) {
+    return error(res, 'Format URL atau data gambar watermark tidak valid.');
+  }
 
   const updateBody = { BrandName: brandName, BrandLogo: brandLogo };
   if (watermarkUrl !== undefined) updateBody.WatermarkUrl = watermarkUrl;
@@ -1224,8 +1480,13 @@ async function handleSaveBrandSettings(payload, res) {
 }
 
 async function handleUploadBrandLogo(payload, res) {
-  const base64Data = payload.base64Data || '';
+  const base64Data = (payload.base64Data || '').trim();
+  const filename = cleanPlainString(payload.filename || '', false);
   if (!base64Data) return error(res, 'File gambar tidak ditemukan');
+  if (filename.length > 255) return error(res, 'Nama file maksimal 255 karakter.');
+  if (!isSafeDataImage(base64Data, 2 * 1024 * 1024)) {
+    return error(res, 'Format gambar harus berupa JPG, PNG, WebP, atau GIF dengan ukuran maksimal 2 MB.');
+  }
   return success(res, { success: true, url: base64Data });
 }
 
@@ -1235,9 +1496,13 @@ async function handleSavePaymentSettings(payload, res) {
   if (!username) {
     return error(res, 'Sesi tidak valid atau telah berakhir. Silakan login kembali.', 401);
   }
-  const bankName = (payload.bankName || '').trim();
-  const bankAccount = (payload.bankAccount || '').trim();
-  const bankAccountName = (payload.bankAccountName || '').trim();
+  const bankName = cleanPlainString(payload.bankName || '', false);
+  const bankAccount = cleanPlainString(payload.bankAccount || '', false);
+  const bankAccountName = cleanPlainString(payload.bankAccountName || '', false);
+
+  if (bankName.length > 80) return error(res, 'Nama bank maksimal 80 karakter.');
+  if (bankAccount.length > 64) return error(res, 'Nomor rekening maksimal 64 karakter.');
+  if (bankAccountName.length > 120) return error(res, 'Nama pemilik rekening maksimal 120 karakter.');
 
   await supabaseQuery(`users?Username=eq.${encodeURIComponent(username)}`, {
     method: 'PATCH',
@@ -1419,9 +1684,69 @@ async function handleCreateProject(payload, res) {
     return error(res, 'Sesi tidak valid atau telah berakhir. Silakan login kembali.', 401);
   }
 
+  const clientName = cleanPlainString(d.namaClient || d.nama || d['Nama Client'] || '', false);
+  if (!clientName) return error(res, 'Nama client wajib diisi.');
+  if (clientName.length > 150) return error(res, 'Nama client maksimal 150 karakter.');
+
+  const nomorWA = cleanPlainString(d.nomorWA || d.wa || d['Nomor WA'] || '', false);
+  if (nomorWA.length > 32) return error(res, 'Nomor WA maksimal 32 karakter.');
+
+  const passwordClient = cleanPlainString(d.passwordClient || d.pass || d['Password Client'] || '', false);
+  if (passwordClient.length > 128) return error(res, 'Password client maksimal 128 karakter.');
+
+  const rawMax = d.maxFoto !== undefined ? d.maxFoto : (d.max !== undefined ? d.max : (d['Max Foto'] !== undefined ? d['Max Foto'] : 50));
+  const maxFotoNum = validatePhotoQuota(rawMax, MAX_PHOTO_QUOTA);
+  if (maxFotoNum === null) {
+    return error(res, `Batas maksimal foto harus berupa bilangan bulat (0 - ${MAX_PHOTO_QUOTA}).`, 400);
+  }
+
+  const clientLayout = String(d.clientLayout || d.layout || 'masonry').toLowerCase();
+  const VALID_LAYOUTS = new Set(['masonry', 'adaptive', 'horizontal', 'slideshow']);
+  if (!VALID_LAYOUTS.has(clientLayout)) {
+    return error(res, 'Pilihan tata letak galeri tidak valid.');
+  }
+
+  const extraPriceNum = Number(d.extraPrice || d.extra || 0);
+  if (isNaN(extraPriceNum) || extraPriceNum < 0 || extraPriceNum > 1000000000) {
+    return error(res, 'Harga foto ekstra tidak valid.');
+  }
+
+  let categoriesArr = [];
+  if (Array.isArray(d.categories)) {
+    categoriesArr = d.categories;
+  } else if (typeof d.categories === 'string' && d.categories.trim()) {
+    try {
+      const parsed = JSON.parse(d.categories);
+      if (Array.isArray(parsed)) categoriesArr = parsed;
+    } catch (_) {
+      return error(res, 'Format kategori tidak valid.');
+    }
+  }
+  if (categoriesArr.length > 50) return error(res, 'Jumlah kategori maksimal 50.');
+  const sanitizedCategories = [];
+  for (const cat of categoriesArr) {
+    if (!cat || typeof cat !== 'object') return error(res, 'Format kategori tidak valid.');
+    const catName = cleanPlainString(cat.name || '', false);
+    if (!catName || catName.length > 80) return error(res, 'Nama kategori harus 1-80 karakter.');
+    const catMax = Number(cat.max);
+    if (!Number.isInteger(catMax) || catMax < 1 || catMax > 99999) {
+      return error(res, 'Kuota kategori harus berupa bilangan bulat (1 - 99999).');
+    }
+    sanitizedCategories.push({ name: catName, max: catMax });
+  }
+
+  const driveLink = (d.driveLink || d.link || d['Drive Link'] || '').trim();
+  if (driveLink && !validateDriveReference(driveLink)) {
+    return error(res, 'Format link atau ID Google Drive tidak valid.');
+  }
+
+  const musicUrl = (d.musicUrl || d.music || '').trim();
+  if (musicUrl && !isSafeHttpsUrl(musicUrl)) {
+    return error(res, 'Music URL harus berupa link HTTPS yang valid.');
+  }
+
   const token = crypto.randomBytes(6).toString('hex');
   const projectId = crypto.randomUUID();
-  const clientName = d.namaClient || d.nama || d['Nama Client'] || 'Untitled Client';
   const baseSlug = clientName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'client';
   let shortSlug = baseSlug;
   try {
@@ -1434,12 +1759,22 @@ async function handleCreateProject(payload, res) {
   }
   const shortLink = `https://ps.kamacreative.my.id/app?c=${shortSlug}`;
 
-  let deadline = d.deadline || '';
-  if (!deadline && d.durasiPilih && d.durasiPilih !== 'Selamanya') {
-    const days = parseInt(d.durasiPilih) || 7;
-    const dlDate = new Date();
-    dlDate.setDate(dlDate.getDate() + days);
-    deadline = dlDate.toISOString();
+  const rawDurasiPilih = d.durasiPilih !== undefined ? d.durasiPilih : 'Selamanya';
+  const rawDurasiDownload = d.durasiDownload !== undefined ? d.durasiDownload : 'Selamanya';
+  const durasiPilih = cleanPlainString(rawDurasiPilih, false);
+  const durasiDownload = cleanPlainString(rawDurasiDownload, false);
+  if (durasiPilih.length > 64) return error(res, 'Durasi pilih maksimal 64 karakter.');
+  if (durasiDownload.length > 64) return error(res, 'Durasi download maksimal 64 karakter.');
+
+  let deadline = cleanPlainString(d.deadline || '', false);
+  if (deadline.length > 64) return error(res, 'Deadline maksimal 64 karakter.');
+  if (!deadline && durasiPilih && durasiPilih !== 'Selamanya') {
+    const days = parseInt(durasiPilih);
+    if (!isNaN(days) && days > 0) {
+      const dlDate = new Date();
+      dlDate.setDate(dlDate.getDate() + days);
+      deadline = dlDate.toISOString();
+    }
   }
 
   const newProject = {
@@ -1449,27 +1784,27 @@ async function handleCreateProject(payload, res) {
     Slug: shortSlug,
     'Short Slug': shortSlug,
     'Nama Client': clientName,
-    'Nomor WA': d.nomorWA || d.wa || d['Nomor WA'] || '',
-    'Password Client': d.passwordClient || d.pass || d['Password Client'] || '',
-    'Max Foto': String(d.maxFoto || d.max || d['Max Foto'] || 50),
-    'Drive Link': d.driveLink || d.link || d['Drive Link'] || '',
+    'Nomor WA': nomorWA,
+    'Password Client': passwordClient,
+    'Max Foto': String(maxFotoNum),
+    'Drive Link': driveLink,
     Owner: username,
     'Short Link': shortLink,
-    Kategori: typeof d.categories === 'string' ? d.categories : JSON.stringify(d.categories || []),
+    Kategori: JSON.stringify(sanitizedCategories),
     UseWatermark: String(Boolean(d.useWatermark)).toUpperCase(),
     UseWatermarkTiled: String(Boolean(d.useWatermarkTiled)).toUpperCase(),
-    ClientLayout: d.clientLayout || d.layout || 'masonry',
-    ExtraPrice: String(d.extraPrice || d.extra || 0),
-    MusicUrl: d.musicUrl || d.music || '',
-    MusicURL: d.musicUrl || d.music || '',
+    ClientLayout: clientLayout,
+    ExtraPrice: String(extraPriceNum),
+    MusicUrl: musicUrl,
+    MusicURL: musicUrl,
     AksesPilih: String(d.aksesPilih !== false).toUpperCase(),
     AksesDownload: String(d.aksesDownload !== false).toUpperCase(),
     'Akses_Pilih': String(d.aksesPilih !== false).toUpperCase(),
     'Akses_Download': String(d.aksesDownload !== false).toUpperCase(),
-    DurasiPilih: d.durasiPilih || 'Selamanya',
-    DurasiDownload: d.durasiDownload || 'Selamanya',
-    'Durasi_Pilih': d.durasiPilih || 'Selamanya',
-    'Durasi_Download': d.durasiDownload || 'Selamanya',
+    DurasiPilih: durasiPilih || 'Selamanya',
+    DurasiDownload: durasiDownload || 'Selamanya',
+    'Durasi_Pilih': durasiPilih || 'Selamanya',
+    'Durasi_Download': durasiDownload || 'Selamanya',
     Deadline: deadline,
     Status: 'Belum Memilih',
     'Status Client': 'Belum Memilih',
@@ -1845,36 +2180,125 @@ async function handleUpdateClientStatus(payload, res) {
   let currentMax = Number(project['Max Foto']) || Number(project.MaxFoto) || 50;
   let isDownloadActive = String(project.AksesDownload || project.Akses_Download).toUpperCase() !== 'FALSE';
 
+  const ALLOWED_CLIENT_STATUSES = new Set([
+    'Belum Memilih',
+    'Sedang Memilih',
+    'Dalam Proses',
+    'Selesai',
+    'Menunggu Konfirmasi Pembayaran'
+  ]);
+  if (payload.status !== undefined) {
+    if (typeof payload.status !== 'string' || !ALLOWED_CLIENT_STATUSES.has(payload.status.trim())) {
+      return error(res, 'Status client tidak valid.', 400);
+    }
+  }
+
   const isAlreadyDone = (curStatus === 'Selesai' || curStatus === 'Menunggu Konfirmasi Pembayaran');
   const isIncomingDraft = (payload.status === 'Sedang Memilih' || payload.status === 'Dalam Proses' || payload.status === 'Belum Memilih');
 
   if (isAlreadyDone && isIncomingDraft) {
     // Tetap pertahankan status Selesai, jangan ditimpa status draft/heartbeat
   } else if (payload.status) {
-    updateBody.Status = payload.status;
-    updateBody['Status Client'] = payload.status;
-    currentStatus = payload.status;
+    const cleanStatus = payload.status.trim();
+    updateBody.Status = cleanStatus;
+    updateBody['Status Client'] = cleanStatus;
+    currentStatus = cleanStatus;
   }
 
-  if (payload.selectedCount !== undefined) {
-    updateBody['Foto Terpilih'] = String(payload.selectedCount);
-  } else if (payload.fotoTerpilih !== undefined) {
-    updateBody['Foto Terpilih'] = String(payload.fotoTerpilih);
+  if (payload.selectedCount !== undefined || payload.fotoTerpilih !== undefined) {
+    const rawCount = payload.selectedCount !== undefined ? payload.selectedCount : payload.fotoTerpilih;
+    const countNum = Number(rawCount);
+    if (!Number.isInteger(countNum) || countNum < 0 || countNum > 10000) {
+      return error(res, 'Jumlah foto terpilih tidak valid (harus bilangan bulat 0 - 10000).', 400);
+    }
+    updateBody['Foto Terpilih'] = String(countNum);
   }
 
-  if (payload.selectedFiles !== undefined) {
-    updateBody['Daftar Pilihan'] = typeof payload.selectedFiles === 'string' ? payload.selectedFiles : JSON.stringify(payload.selectedFiles);
-  } else if (payload.daftarPilihan !== undefined) {
-    updateBody['Daftar Pilihan'] = typeof payload.daftarPilihan === 'string' ? payload.daftarPilihan : JSON.stringify(payload.daftarPilihan);
+  if (payload.selectedFiles !== undefined || payload.daftarPilihan !== undefined) {
+    let files = payload.selectedFiles !== undefined ? payload.selectedFiles : payload.daftarPilihan;
+    if (typeof files === 'string') {
+      try { files = JSON.parse(files); } catch (_) { return error(res, 'Format daftar pilihan tidak valid.', 400); }
+    }
+    if (!Array.isArray(files)) return error(res, 'Daftar pilihan harus berupa array.', 400);
+    if (files.length > 10000) return error(res, 'Daftar pilihan melebihi batas maksimal 10.000 foto.', 400);
+
+    const cleanFiles = [];
+    for (const f of files) {
+      if (!f || typeof f !== 'object' || Array.isArray(f)) {
+        return error(res, 'Item daftar pilihan tidak valid.', 400);
+      }
+      const rawName = f.name !== undefined && f.name !== null ? f.name : (f.n !== undefined && f.n !== null ? f.n : (f.filename || f.fileName || ''));
+      const rawFolder = f.folder !== undefined && f.folder !== null ? f.folder : (f.f !== undefined && f.f !== null ? f.f : '');
+      const rawRef = f.url !== undefined && f.url !== null ? f.url : (f.u !== undefined && f.u !== null ? f.u : (f.id !== undefined && f.id !== null ? f.id : ''));
+      const rawCat = f.category !== undefined && f.category !== null ? f.category : (f.c !== undefined && f.c !== null ? f.c : (f.kategori !== undefined && f.kategori !== null ? f.kategori : ''));
+
+      const name = cleanPlainString(String(rawName), false);
+      const folder = cleanPlainString(String(rawFolder), false);
+      const category = cleanPlainString(String(rawCat), false);
+
+      if (name.length > 500) return error(res, 'Nama file dalam daftar pilihan maksimal 500 karakter.', 400);
+      if (folder.length > 500) return error(res, 'Nama folder dalam daftar pilihan maksimal 500 karakter.', 400);
+      if (category.length > 500) return error(res, 'Nama kategori dalam daftar pilihan maksimal 500 karakter.', 400);
+
+      let cleanRef = '';
+      if (rawRef !== undefined && rawRef !== null && String(rawRef).trim() !== '') {
+        const refStr = String(rawRef).trim();
+        if (refStr.length > 2048) return error(res, 'URL atau ID file foto maksimal 2048 karakter.', 400);
+        if (/[\u0000-\u001F\u007F]/.test(refStr)) {
+          return error(res, 'URL atau ID file foto mengandung karakter kontrol tidak valid.', 400);
+        }
+        if (/^[a-zA-Z0-9_-]{10,128}$/.test(refStr)) {
+          cleanRef = refStr;
+        } else if (isSafeHttpsUrl(refStr)) {
+          cleanRef = refStr;
+        } else {
+          return error(res, 'URL file foto tidak aman atau tidak valid (harus berupa HTTPS atau ID Google Drive yang valid).', 400);
+        }
+      }
+
+      cleanFiles.push({
+        n: name,
+        f: folder,
+        u: cleanRef,
+        c: category
+      });
+    }
+    updateBody['Daftar Pilihan'] = JSON.stringify(cleanFiles);
   }
 
   if (payload.notes !== undefined) {
-    updateBody.Notes = typeof payload.notes === 'string' ? payload.notes : JSON.stringify(payload.notes);
+    let rawNotes = payload.notes;
+    if (typeof rawNotes === 'string') {
+      try { rawNotes = JSON.parse(rawNotes); } catch (_) { return error(res, 'Format catatan tidak valid.', 400); }
+    }
+    if (!rawNotes || typeof rawNotes !== 'object' || Array.isArray(rawNotes) || rawNotes instanceof Date) {
+      return error(res, 'Format catatan tidak valid.', 400);
+    }
+    const cleanNotes = Object.create(null);
+    const keys = Object.keys(rawNotes);
+    if (keys.length > 10000) return error(res, 'Jumlah catatan melebihi batas maksimal.', 400);
+    for (const k of keys) {
+      if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+      const rawKey = String(k);
+      const rawVal = rawNotes[k] !== undefined && rawNotes[k] !== null ? String(rawNotes[k]) : '';
+      const safeKey = cleanPlainString(rawKey, false);
+      const safeVal = cleanPlainString(rawVal, true);
+      if (safeKey.length > 500) return error(res, 'Kunci catatan maksimal 500 karakter.', 400);
+      if (safeVal.length > 2000) return error(res, 'Isi catatan maksimal 2000 karakter.', 400);
+      cleanNotes[safeKey] = safeVal;
+    }
+    const serializedNotes = JSON.stringify(cleanNotes);
+    if (serializedNotes.length > 2 * 1024 * 1024) return error(res, 'Ukuran catatan melebihi batas maksimal 2 MB.', 400);
+    updateBody.Notes = serializedNotes;
   }
 
   if (payload.paymentProof) {
-    updateBody.PaymentProof = payload.paymentProof;
-    updateBody['Payment Proof'] = payload.paymentProof;
+    const proof = String(payload.paymentProof).trim();
+    if (!isSafeImageReference(proof, 2 * 1024 * 1024)) {
+      return error(res, 'Format bukti pembayaran tidak valid.');
+    }
+    updateBody.PaymentProof = proof;
+    updateBody['Payment Proof'] = proof;
   }
 
   const nowIso = new Date().toISOString();
@@ -1915,12 +2339,88 @@ async function handleUpdateDeadline(payload, res) {
   const project = await requireProjectAccess(payload.authUser, idOrToken, res);
   if (!project) return;
 
-  const newDeadline = payload.newDeadline || '';
+  const rawDeadline = payload.newDeadline !== undefined ? payload.newDeadline : (payload.deadline !== undefined ? payload.deadline : '');
+  let cleanedDeadline = '';
+  if (rawDeadline !== null && rawDeadline !== undefined && rawDeadline !== '') {
+    if (typeof rawDeadline !== 'string') {
+      return error(res, 'Format batas waktu tidak valid (harus berupa string tanggal).', 400);
+    }
+    const trimmed = rawDeadline.trim();
+    if (trimmed !== '') {
+      if (trimmed.length > 50) {
+        return error(res, 'Nilai batas waktu melebihi batas panjang maksimum (maks 50 karakter).', 400);
+      }
+      if (/[\u0000-\u001F\u007F]/.test(trimmed)) {
+        return error(res, 'Batas waktu mengandung karakter kontrol tidak valid.', 400);
+      }
+      const match = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?(Z|[+-]\d{2}:?\d{2})?)?$/);
+      if (!match) {
+        return error(res, 'Format batas waktu tidak didukung. Gunakan format ISO atau datetime-local yang valid.', 400);
+      }
+
+      const year = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10);
+      const day = parseInt(match[3], 10);
+
+      if (year < 2000 || year > 2100) {
+        return error(res, 'Tahun batas waktu di luar rentang yang diizinkan (2000-2100).', 400);
+      }
+      if (month < 1 || month > 12) {
+        return error(res, 'Bulan batas waktu tidak valid (1-12).', 400);
+      }
+
+      const isLeapYear = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+      const daysInMonth = [0, 31, isLeapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+      if (day < 1 || day > daysInMonth[month]) {
+        return error(res, `Tanggal ${day} tidak valid untuk bulan ${month} tahun ${year}.`, 400);
+      }
+
+      if (match[4] !== undefined && match[5] !== undefined) {
+        const hour = parseInt(match[4], 10);
+        const minute = parseInt(match[5], 10);
+        if (hour < 0 || hour > 23) {
+          return error(res, 'Jam batas waktu tidak valid (0-23).', 400);
+        }
+        if (minute < 0 || minute > 59) {
+          return error(res, 'Menit batas waktu tidak valid (0-59).', 400);
+        }
+        if (match[6] !== undefined) {
+          const second = parseInt(match[6], 10);
+          if (second < 0 || second > 59) {
+            return error(res, 'Detik batas waktu tidak valid (0-59).', 400);
+          }
+        }
+      }
+
+      if (match[7] && match[7].toUpperCase() !== 'Z') {
+        const tzMatch = match[7].match(/^([+-])(\d{2}):?(\d{2})$/);
+        if (!tzMatch) {
+          return error(res, 'Format timezone offset tidak valid.', 400);
+        }
+        const tzHours = parseInt(tzMatch[2], 10);
+        const tzMinutes = parseInt(tzMatch[3], 10);
+        if (tzHours > 14 || (tzHours === 14 && tzMinutes !== 0)) {
+          return error(res, 'Timezone offset di luar rentang yang diizinkan (-14:00 sampai +14:00).', 400);
+        }
+        if (tzMinutes < 0 || tzMinutes > 59) {
+          return error(res, 'Menit timezone offset tidak valid (00-59).', 400);
+        }
+      }
+
+      const parsedDate = new Date(trimmed);
+      if (isNaN(parsedDate.getTime())) {
+        return error(res, 'Nilai tanggal tidak valid.', 400);
+      }
+
+      cleanedDeadline = trimmed;
+    }
+  }
+
   const filter = getProjectMutationFilter(project);
 
   await supabaseQuery(`projects?${filter}`, {
     method: 'PATCH',
-    body: { Deadline: newDeadline }
+    body: { Deadline: cleanedDeadline }
   });
 
   return success(res, { success: true, message: 'Deadline berhasil diperbarui' });
@@ -1942,8 +2442,12 @@ async function handleReopenProject(payload, res) {
   if (!project) return;
 
   const updateBody = { Status: 'Sedang Memilih', 'Status Client': 'Sedang Memilih' };
-  if (payload.newMax) {
-    updateBody['Max Foto'] = String(payload.newMax);
+  if (payload.newMax !== undefined && payload.newMax !== null && String(payload.newMax).trim() !== '') {
+    const validMax = validatePhotoQuota(payload.newMax, MAX_PHOTO_QUOTA);
+    if (validMax === null) {
+      return error(res, `Batas maksimal foto harus berupa bilangan bulat (0 - ${MAX_PHOTO_QUOTA}).`, 400);
+    }
+    updateBody['Max Foto'] = String(validMax);
   }
 
   const filter = getProjectMutationFilter(project);
@@ -1994,21 +2498,23 @@ async function handleToggleProjectDownload(payload, res) {
 
 async function handleUpdateProjectMaxFoto(payload, res) {
   const idOrToken = (payload.id || payload.token || payload.projectId || '').trim();
-  const newMax = parseInt(payload.newMax);
-  if (isNaN(newMax) || newMax < 0) return error(res, 'Batas maksimal foto tidak valid');
-
   const project = await requireProjectAccess(payload.authUser, idOrToken, res);
   if (!project) return;
+
+  const validMax = validatePhotoQuota(payload.newMax, MAX_PHOTO_QUOTA);
+  if (validMax === null) {
+    return error(res, `Batas maksimal foto harus berupa bilangan bulat (0 - ${MAX_PHOTO_QUOTA}).`, 400);
+  }
 
   const filter = getProjectMutationFilter(project);
   await supabaseQuery(`projects?${filter}`, {
     method: 'PATCH',
     body: {
-      'Max Foto': String(newMax)
+      'Max Foto': String(validMax)
     }
   });
 
-  return success(res, { success: true, newMax: newMax, message: 'Batas maksimal foto berhasil diperbarui' });
+  return success(res, { success: true, newMax: validMax, message: 'Batas maksimal foto berhasil diperbarui' });
 }
 
 async function handleProcessPayment(payload, res) {
@@ -2016,12 +2522,17 @@ async function handleProcessPayment(payload, res) {
   const project = await requireProjectAccess(payload.authUser, projectId, res);
   if (!project) return;
 
-  const status = payload.status || 'Selesai';
+  const ALLOWED_PAYMENT_STATUSES = new Set(['Selesai', 'Sedang Memilih']);
+  const rawStatus = (payload.status !== undefined && payload.status !== null ? String(payload.status) : 'Selesai').trim();
+  if (!ALLOWED_PAYMENT_STATUSES.has(rawStatus)) {
+    return error(res, 'Status pembayaran tidak valid. Hanya status Selesai atau Sedang Memilih yang didukung.', 400);
+  }
+
   const filter = getProjectMutationFilter(project);
 
   await supabaseQuery(`projects?${filter}`, {
     method: 'PATCH',
-    body: { Status: status, 'Status Client': status }
+    body: { Status: rawStatus, 'Status Client': rawStatus }
   });
 
   return success(res, { success: true, message: 'Pembayaran berhasil diproses' });
@@ -2365,6 +2876,7 @@ async function handleDeleteUser(payload, res) {
 async function handleRequestOTP(payload, res) {
   const emailOrUser = (payload.email || payload.username || '').trim().toLowerCase();
   if (!emailOrUser) return error(res, 'Masukkan Username atau Email Anda.');
+  if (emailOrUser.length > 254) return error(res, 'Email atau Username tidak terdaftar.');
 
   let users = await supabaseQuery(`users?Email=ilike.${encodeURIComponent(emailOrUser)}&select=*`);
   if (!users || users.length === 0) {
@@ -2394,7 +2906,7 @@ async function handleRequestOTP(payload, res) {
   }
 
   // Invalidate old tokens & reset attempt counter for this user
-  await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}`, { method: 'DELETE' }).catch(() => {});
+  await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}`, { method: 'DELETE' }).catch(() => { });
   await clearOtpFailedAttempts(uName);
 
   // Generate 6-digit OTP using crypto.randomInt
@@ -2452,6 +2964,9 @@ async function handleResetPasswordWithOTP(payload, res) {
   const newPassword = (payload.newPassword || '').trim();
 
   if (!emailOrUser || !otp || !newPassword) return error(res, 'Lengkapi semua isian form.');
+  if (emailOrUser.length > 254) return error(res, 'User tidak ditemukan.');
+  if (!/^\d{6}$/.test(otp)) return error(res, 'Kode OTP salah atau sudah kedaluwarsa.');
+  if (newPassword.length > 128) return error(res, 'Password baru minimal 8 karakter dan maksimal 128 karakter.');
 
   let users = await supabaseQuery(`users?Email=ilike.${encodeURIComponent(emailOrUser)}&select=*`);
   if (!users || users.length === 0) {
@@ -2486,7 +3001,7 @@ async function handleResetPasswordWithOTP(payload, res) {
   const createdAt = tokenRow.CreatedAt;
   const createdDate = parseSafeDate(createdAt);
   if (!createdDate) {
-    await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}`, { method: 'DELETE' }).catch(() => {});
+    await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}`, { method: 'DELETE' }).catch(() => { });
     await clearOtpFailedAttempts(uName);
     return error(res, 'Kode OTP salah atau sudah kedaluwarsa.');
   }
@@ -2494,7 +3009,7 @@ async function handleResetPasswordWithOTP(payload, res) {
   const now = Date.now();
   const tokenAge = now - createdDate.getTime();
   if (tokenAge < -60000 || tokenAge > OTP_TTL_MS) {
-    await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}`, { method: 'DELETE' }).catch(() => {});
+    await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}`, { method: 'DELETE' }).catch(() => { });
     await clearOtpFailedAttempts(uName);
     return error(res, 'Kode OTP salah atau sudah kedaluwarsa.');
   }
@@ -2548,7 +3063,7 @@ async function handleResetPasswordWithOTP(payload, res) {
   }
 
   // E. Clear ResetOTPAttempt rows (best-effort only after A-D succeed)
-  await clearOtpFailedAttempts(uName).catch(() => {});
+  await clearOtpFailedAttempts(uName).catch(() => { });
 
   return success(res, { success: true, message: 'Password Anda berhasil direset! Silakan login dengan password baru.' });
 }
@@ -2566,15 +3081,33 @@ async function handleGetDriveContent(payload, res) {
   const folderUrlOrId = payload.folder_id || payload.folderId || payload.driveLink || payload.link;
   if (!folderUrlOrId) return error(res, 'ID Folder tidak ditemukan.');
 
-  function extractFolderId(url) {
-    if (!url) return null;
-    if (!url.includes('http')) return url;
-    const match = url.match(/[-\w]{25,}/);
-    return match ? match[0] : null;
+  function extractFolderId(input) {
+    if (!input || typeof input !== 'string') return null;
+    const str = input.trim();
+    if (/[\u0000-\u001F\u007F]/.test(str)) return null;
+
+    if (str.startsWith('http://') || str.startsWith('https://')) {
+      if (!isSafeHttpsUrl(str)) return null;
+      try {
+        const u = new URL(str);
+        if (!isAllowedDriveHost(u.hostname)) return null;
+        const match = str.match(/[-\w]{25,}/);
+        return match ? match[0] : null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    if (/^[a-zA-Z0-9_-]{10,128}$/.test(str)) {
+      return str;
+    }
+    return null;
   }
 
   const folderId = extractFolderId(folderUrlOrId);
-  if (!folderId) return error(res, 'Format link/ID Google Drive tidak valid.');
+  if (!folderId || !/^[a-zA-Z0-9_-]{10,128}$/.test(folderId)) {
+    return error(res, 'Format link/ID Google Drive tidak valid.');
+  }
 
   try {
     const url = `https://drive.google.com/embeddedfolderview?id=${folderId}#list`;
@@ -2620,21 +3153,28 @@ async function handleGetDriveContent(payload, res) {
     });
   } catch (err) {
     console.error('Drive fetch error:', err);
-    return error(res, 'Gagal memuat isi Google Drive: ' + err.message);
+    return error(res, 'Gagal memuat isi Google Drive.', 500);
   }
 }
 
 async function handleGetAudioData(payload, res) {
-  const musicUrl = payload.musicUrl || payload.url || '';
+  const musicUrl = (payload.musicUrl || payload.url || '').trim();
+  if (musicUrl && !isSafeHttpsUrl(musicUrl)) {
+    return error(res, 'URL audio tidak valid. Hanya URL HTTPS yang diizinkan.', 400);
+  }
   return success(res, { success: true, url: musicUrl });
 }
 
 async function handleSubmitFeedback(payload, res) {
   const authUser = payload.authUser || {};
   const d = payload.data || payload;
-  const pesan = (d.pesan || d.feedback || '').trim();
-  const lampiranUrl = d.lampiranUrl || d.lampiran || '';
+  const pesan = cleanPlainString(d.pesan || d.feedback || '', true);
+  const lampiranUrl = (d.lampiranUrl || d.lampiran || d.base64Data || '').trim();
   if (!pesan) return error(res, 'Pesan feedback tidak boleh kosong.');
+  if (pesan.length > 5000) return error(res, 'Pesan feedback maksimal 5000 karakter.');
+  if (lampiranUrl && !isSafeFeedbackImageReference(lampiranUrl, 5 * 1024 * 1024)) {
+    return error(res, 'Lampiran bukti harus berupa URL HTTPS atau data gambar (JPEG, PNG, WebP) yang valid (maks 5MB).');
+  }
 
   const fbId = 'fb_' + Date.now();
   await supabaseQuery('feedbacks', {
@@ -2666,8 +3206,13 @@ async function handleGetFeedbacks(payload, res) {
 
 async function handleReplyFeedback(payload, res) {
   if (!requireAdmin(payload.authUser)) return error(res, 'Unauthorized', 403);
-  const id = payload.id;
-  const balasan = payload.reply || payload.balasan || '';
+  const id = (payload.id || '').trim();
+  const balasan = cleanPlainString(payload.reply || payload.balasan || '', true);
+  if (!id) return error(res, 'ID feedback wajib diisi.');
+  if (!validateSafeIdentifier(id, 128)) return error(res, 'Format ID feedback tidak valid.');
+  if (!balasan) return error(res, 'Balasan tidak boleh kosong.');
+  if (balasan.length > 5000) return error(res, 'Balasan maksimal 5000 karakter.');
+
   await supabaseQuery(`feedbacks?ID=eq.${encodeURIComponent(id)}`, {
     method: 'PATCH',
     body: { Balasan: balasan, TglBalas: new Date().toISOString(), StatusUser: 'Unread' }
@@ -2917,16 +3462,16 @@ async function handleMayarWebhook(payload, req, res) {
     return success(res, { success: true, status: 'ignored', result: `Webhook event acknowledged without mutation: ${rawEvent}` });
   }
 
-  const isPhotoSelection = productUpper.includes('PHOTO') || 
-                           productUpper.includes('SELECTION') || 
-                           productUpper.includes('PAKET') ||
-                           productUpper.includes('BULAN') ||
-                           productUpper.includes('TAHUN') ||
-                           productUpper.includes('LIFETIME') ||
-                           productUpper.includes('PRO') ||
-                           productUpper.includes('PERPANJANG') ||
-                           productUpper.includes('RENEW') ||
-                           productUpper.includes('LANGGANAN');
+  const isPhotoSelection = productUpper.includes('PHOTO') ||
+    productUpper.includes('SELECTION') ||
+    productUpper.includes('PAKET') ||
+    productUpper.includes('BULAN') ||
+    productUpper.includes('TAHUN') ||
+    productUpper.includes('LIFETIME') ||
+    productUpper.includes('PRO') ||
+    productUpper.includes('PERPANJANG') ||
+    productUpper.includes('RENEW') ||
+    productUpper.includes('LANGGANAN');
 
   // Helper ekstraksi kode referral dari Mayar
   function extractMayarRefCode(payloadData, userObj = null) {
@@ -3029,17 +3574,17 @@ async function handleMayarWebhook(payload, req, res) {
 
   let addDays = 30;
   let paketName = '1 Bulan';
-  if (productUpper.includes('6 BULAN') || productUpper.includes('6-BULAN') || productUpper.includes('6BULAN') || productUpper.includes('SEMESTER')) { 
-    addDays = 180; 
-    paketName = '6 Bulan'; 
+  if (productUpper.includes('6 BULAN') || productUpper.includes('6-BULAN') || productUpper.includes('6BULAN') || productUpper.includes('SEMESTER')) {
+    addDays = 180;
+    paketName = '6 Bulan';
   }
-  else if (productUpper.includes('1 TAHUN') || productUpper.includes('1-TAHUN') || productUpper.includes('TAHUNN') || productUpper.includes('TAHUN') || productUpper.includes('ANNUAL') || productUpper.includes('YEAR')) { 
-    addDays = 365; 
-    paketName = '1 Tahun'; 
+  else if (productUpper.includes('1 TAHUN') || productUpper.includes('1-TAHUN') || productUpper.includes('TAHUNN') || productUpper.includes('TAHUN') || productUpper.includes('ANNUAL') || productUpper.includes('YEAR')) {
+    addDays = 365;
+    paketName = '1 Tahun';
   }
-  else if (productUpper.includes('LIFETIME') || productUpper.includes('SELAMANYA') || productUpper.includes('PERMANEN')) { 
-    addDays = 36500; 
-    paketName = 'Lifetime'; 
+  else if (productUpper.includes('LIFETIME') || productUpper.includes('SELAMANYA') || productUpper.includes('PERMANEN')) {
+    addDays = 36500;
+    paketName = 'Lifetime';
   }
 
   // Hitung Masa Aktif Bertingkat (Akumulasi jika masa aktif sebelumnya belum habis)
