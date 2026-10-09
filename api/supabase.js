@@ -1100,26 +1100,130 @@ function isConfirmedPaymentSuccess(rawEvent, data, payload) {
   return true;
 }
 
-module.exports = async function handler(req, res) {
-  const allowedOrigins = [
-    'https://ps.kamacreative.my.id',
-    'https://photo-selector.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:5500',
-    'http://127.0.0.1:5500'
-  ];
+// =========================================================================
+// PHASE 4.7.1 CORS & STRICT API ORIGIN VALIDATION
+// =========================================================================
 
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin) || (origin && origin.endsWith('.vercel.app')) || (origin && origin.includes('mayar.id'))) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  } else {
-    res.setHeader('Access-Control-Allow-Origin', '*');
+function parseAndValidateOrigin(rawOrigin) {
+  if (!rawOrigin || typeof rawOrigin !== 'string') return null;
+  const trimmed = rawOrigin.trim();
+  if (!trimmed || trimmed === 'null') return null;
+
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+    if (parsed.pathname !== '/' && parsed.pathname !== '') return null;
+    if (parsed.search !== '' || parsed.hash !== '') return null;
+    if (parsed.username !== '' || parsed.password !== '') return null;
+
+    if (trimmed.toLowerCase() !== parsed.origin.toLowerCase()) return null;
+
+    return parsed.origin;
+  } catch (_) {
+    return null;
+  }
+}
+
+function getAllowedOrigins() {
+  const allowed = new Set([
+    'https://ps.kamacreative.my.id',
+    'https://photo-selector.vercel.app'
+  ]);
+
+  // Vercel deployment URL (Preview or Production deployment)
+  if (process.env.VERCEL_URL && typeof process.env.VERCEL_URL === 'string') {
+    const vUrl = process.env.VERCEL_URL.trim();
+    if (vUrl) {
+      const parsed = parseAndValidateOrigin(vUrl.startsWith('http://') || vUrl.startsWith('https://') ? vUrl : `https://${vUrl}`);
+      if (parsed) allowed.add(parsed);
+    }
   }
 
-  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  // Vercel branch deployment URL
+  if (process.env.VERCEL_BRANCH_URL && typeof process.env.VERCEL_BRANCH_URL === 'string') {
+    const vbUrl = process.env.VERCEL_BRANCH_URL.trim();
+    if (vbUrl) {
+      const parsed = parseAndValidateOrigin(vbUrl.startsWith('http://') || vbUrl.startsWith('https://') ? vbUrl : `https://${vbUrl}`);
+      if (parsed) allowed.add(parsed);
+    }
+  }
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  // Configurable allowed origins via environment variable (comma-separated exact origins)
+  if (process.env.CORS_ALLOWED_ORIGINS && typeof process.env.CORS_ALLOWED_ORIGINS === 'string') {
+    const items = process.env.CORS_ALLOWED_ORIGINS.split(',');
+    for (const item of items) {
+      const parsed = parseAndValidateOrigin(item);
+      if (parsed) allowed.add(parsed);
+    }
+  }
+
+  // Localhost origins allowed only under development configuration
+  const isDevelopment = process.env.NODE_ENV === 'development' ||
+    process.env.VERCEL_ENV === 'development' ||
+    (!process.env.VERCEL && process.env.NODE_ENV !== 'production');
+
+  if (isDevelopment) {
+    allowed.add('http://localhost:3000');
+    allowed.add('http://localhost:5500');
+    allowed.add('http://127.0.0.1:5500');
+    allowed.add('http://localhost:5173');
+    allowed.add('http://localhost:8080');
+  }
+
+  return allowed;
+}
+
+function handleCors(req, res) {
+  // Always include Vary: Origin for CDN/edge cache correctness
+  res.setHeader('Vary', 'Origin');
+
+  const headers = (req && req.headers && typeof req.headers === 'object') ? req.headers : {};
+  let hasOriginHeader = false;
+  let rawOrigin = undefined;
+
+  for (const key of Object.keys(headers)) {
+    if (key.toLowerCase() === 'origin') {
+      hasOriginHeader = true;
+      rawOrigin = headers[key];
+      break;
+    }
+  }
+
+  // Requests without an Origin header (server-to-server, Mayar webhooks, curl, same-origin direct calls)
+  if (!hasOriginHeader) {
+    if (req && req.method === 'OPTIONS') {
+      return res.status(204).end();
+    }
+    return true;
+  }
+
+  const validatedOrigin = parseAndValidateOrigin(rawOrigin);
+  const allowedOrigins = getAllowedOrigins();
+
+  if (validatedOrigin && allowedOrigins.has(validatedOrigin)) {
+    res.setHeader('Access-Control-Allow-Origin', validatedOrigin);
+    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.setHeader('Access-Control-Max-Age', '86400');
+
+    if (req.method === 'OPTIONS') {
+      return res.status(204).end();
+    }
+    return true;
+  }
+
+  // Unauthorized browser origin
+  if (req && req.method === 'OPTIONS') {
+    return error(res, 'CORS preflight forbidden', 403);
+  }
+
+  return error(res, 'Cross-origin request forbidden', 403);
+}
+
+async function handler(req, res) {
+  if (handleCors(req, res) !== true) {
+    return;
+  }
 
   try {
     let payload = req.body;
@@ -1214,7 +1318,12 @@ module.exports = async function handler(req, res) {
     console.error('Supabase API Handler Error:', err);
     return error(res, 'Terjadi kesalahan pada server.', 500);
   }
-};
+}
+
+module.exports = handler;
+module.exports.parseAndValidateOrigin = parseAndValidateOrigin;
+module.exports.getAllowedOrigins = getAllowedOrigins;
+module.exports.handleCors = handleCors;
 
 // =========================================================================
 // CONTROLLERS
