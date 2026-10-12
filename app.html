@@ -53,16 +53,16 @@
             }
         });
 
-        // Anti-DevTools Loop (Memperlambat/Menjebak DevTools jika dipaksa buka)
-        setInterval(function () {
-            var before = new Date().getTime();
-            debugger;
-            var after = new Date().getTime();
-            if (after - before > 100) {
-                // DevTools terbuka (script berhenti sejenak di debugger)
-                document.body.innerHTML = "<div style='display:flex;justify-content:center;align-items:center;height:100vh;background:#f8f9fa;font-family:sans-serif;color:#333;text-align:center;padding:20px;'><div><h1 style='font-size:24px;margin-bottom:10px;'>Akses Ditolak</h1><p>Developer Tools tidak diizinkan di halaman ini demi keamanan.</p></div></div>";
-            }
-        }, 2000);
+        // Phase 4.7.4: Legacy Anti-DevTools timing loop disabled for browser compatibility.
+        // Aggressive setInterval debugger trap caused false-positive lockout on slow devices,
+        // background tab throttling, GC pauses, mobile browsers, and low-power states.
+        // Security invariants are enforced at API level (Phase 4.7.1 - 4.7.3).
+        // Lightweight UX deterrents (contextmenu & keydown shortcuts) remain active above.
+        /*
+         * Anti-DevTools timing loop permanently retired in Phase 4.7.4.
+         * Eliminates destructive document.body wipeouts and improves mobile compatibility.
+         */
+        // Hardened for cross-browser stability.
     </script>
 
     <script>

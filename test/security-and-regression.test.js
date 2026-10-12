@@ -655,6 +655,41 @@ async function runTestSuite() {
     recordTest('REG-7', 'API exports and bridge integration', 'FAIL', e.message);
   }
 
+  // Gate 8 (Phase 4.7.4): Browser Compatibility & Anti-DevTools Hardening
+  try {
+    const appHtml = fs.readFileSync(path.join(__dirname, '../app.html'), 'utf8');
+    const indexHtml = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+
+    const appHasDebugger = /\bdebugger\s*;/.test(appHtml);
+    const indexHasDebugger = /\bdebugger\s*;/.test(indexHtml);
+    const appHasBodyWipe = /document\.body\.innerHTML\s*=/.test(appHtml);
+    const indexHasBodyWipe = /document\.body\.innerHTML\s*=/.test(indexHtml);
+    const appHasContextProtection = appHtml.includes("addEventListener('contextmenu'") && appHtml.includes("addEventListener('keydown'");
+    const indexHasContextProtection = indexHtml.includes("addEventListener('contextmenu'") && indexHtml.includes("addEventListener('keydown'");
+
+    // Validate index.html inline scripts syntax
+    const indexScriptRegex = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
+    let indexMatch;
+    let indexSyntaxErrors = 0;
+    while ((indexMatch = indexScriptRegex.exec(indexHtml)) !== null) {
+      if (!/src\s*=/i.test(indexMatch[1])) {
+        try {
+          new Function(indexMatch[2]);
+        } catch (_) {
+          indexSyntaxErrors++;
+        }
+      }
+    }
+
+    if (!appHasDebugger && !indexHasDebugger && !appHasBodyWipe && !indexHasBodyWipe && appHasContextProtection && indexHasContextProtection && indexSyntaxErrors === 0) {
+      recordTest('REG-8', 'Phase 4.7.4 Anti-DevTools hardening & false-positive elimination', 'PASS', 'Zero debugger traps, zero body-wipes, UX deterrents intact');
+    } else {
+      recordTest('REG-8', 'Phase 4.7.4 Anti-DevTools hardening & false-positive elimination', 'FAIL', `appDebugger: ${appHasDebugger}, idxDebugger: ${indexHasDebugger}, appWipe: ${appHasBodyWipe}, idxWipe: ${indexHasBodyWipe}, idxSyntaxErrors: ${indexSyntaxErrors}`);
+    }
+  } catch (e) {
+    recordTest('REG-8', 'Phase 4.7.4 Anti-DevTools hardening & false-positive elimination', 'FAIL', e.message);
+  }
+
   console.log('\n======================================================');
   console.log(`TEST SUMMARY: ${passCount} PASSED | ${failCount} FAILED | ${notRunCount} NOT RUN`);
   console.log('======================================================\n');
