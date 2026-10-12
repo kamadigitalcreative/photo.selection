@@ -1228,9 +1228,20 @@ async function handler(req, res) {
   try {
     let payload = req.body;
     if (typeof payload === 'string') {
-      try { payload = JSON.parse(payload); } catch (e) { }
+      const trimmed = payload.trim();
+      if (trimmed === '') {
+        payload = {};
+      } else {
+        try {
+          payload = JSON.parse(trimmed);
+        } catch (e) {
+          return error(res, 'Format payload JSON tidak valid.', 400);
+        }
+      }
     }
-    payload = payload || {};
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+      payload = {};
+    }
 
     let isWebhookRequest = false;
     if (payload.action === 'mayarWebhook') {
@@ -1248,7 +1259,7 @@ async function handler(req, res) {
       return await handleMayarWebhook(payload, req, res);
     }
 
-    const action = payload.action;
+    const action = (payload && typeof payload.action === 'string') ? payload.action.trim() : '';
     if (!action) return error(res, 'Action is required', 400);
 
     if (action === 'logout') {
