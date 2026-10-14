@@ -141,6 +141,19 @@ function setupMockFetch() {
       }
 
       if (method === 'POST') {
+        if (tablePart === 'rpc/process_mayar_payment') {
+          return {
+            ok: true,
+            status: 200,
+            text: async () => JSON.stringify({
+              success: true,
+              status: 'processed',
+              action_type: 'USER_UPDATED',
+              account_username: 'client',
+              result_message: 'Perpanjangan 1 Bulan berhasil untuk @client'
+            })
+          };
+        }
         if (!mockDb[tablePart]) mockDb[tablePart] = [];
         const newRow = { id: 'mock_' + Date.now(), ...(body || {}) };
         mockDb[tablePart].push(newRow);
@@ -465,7 +478,7 @@ async function runTestSuite() {
       body: {
         action: 'mayarWebhook',
         event: 'payment.success',
-        data: { status: 'PAID', amount: 50000, customer: { email: 'client@example.com', name: 'Client' }, productName: '1 Bulan' }
+        data: { id: 'reg_pay_15', status: 'PAID', amount: 50000, customer: { email: 'client@example.com', name: 'Client' }, productName: '1 Bulan' }
       }
     };
     const resGood = createMockRes();
@@ -603,17 +616,26 @@ async function runTestSuite() {
       recordTest('REG-3', 'app.html inline scripts syntax', 'FAIL', `${inlineSyntaxErrors} inline scripts had syntax errors`);
     }
 
-    // Gate 4: Exactly 29 Collage template definitions
-    const lines = html.split('\n');
+    // Gate 4: Exactly 29 Collage template definitions (Structural detection with fallback)
     const collageKeys = [];
-    for (let i = 14884; i < 15231; i++) {
-      const l = lines[i];
-      const m = l.match(/^\s*['"]?([a-zA-Z0-9_-]+)['"]?:\s*\{/);
-      if (m) collageKeys.push(m[1]);
+    const tplMatch = html.match(/const\s+collageTemplates\s*=\s*\{([\s\S]*?)\n\s*\};/);
+    if (tplMatch) {
+      const keyRegex = /^\s*['"]?([a-zA-Z0-9_-]+)['"]?:\s*\{/gm;
+      let km;
+      while ((km = keyRegex.exec(tplMatch[1])) !== null) {
+        collageKeys.push(km[1]);
+      }
+    } else {
+      const lines = html.split('\n');
+      for (let i = 14884; i < 15231 && i < lines.length; i++) {
+        const l = lines[i];
+        const m = l.match(/^\s*['"]?([a-zA-Z0-9_-]+)['"]?:\s*\{/);
+        if (m) collageKeys.push(m[1]);
+      }
     }
 
     if (collageKeys.length === 29) {
-      recordTest('REG-4', 'Collage templates count invariant', 'PASS', 'Exactly 29 Collage templates verified');
+      recordTest('REG-4', 'Collage templates count invariant', 'PASS', 'Exactly 29 Collage templates verified (structural)');
     } else {
       recordTest('REG-4', 'Collage templates count invariant', 'FAIL', `Found ${collageKeys.length} templates instead of 29`);
     }

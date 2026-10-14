@@ -1011,21 +1011,29 @@ function verifyWebhookAuthenticity(req) {
     return { configured: false, valid: false };
   }
 
-  let queryToken = '';
+  let token = '';
   if (req && req.url) {
     try {
       const parsedUrl = new URL(req.url, 'http://localhost');
-      queryToken = parsedUrl.searchParams.get('token') || '';
+      token = parsedUrl.searchParams.get('token') || '';
     } catch (e) { }
   }
 
-  queryToken = String(queryToken || '').trim();
-  if (!queryToken) {
+  // Also accept header token fallback (e.g. x-mayar-token, authorization, x-callback-token)
+  if (!token && req && req.headers) {
+    const rawHeader = req.headers['x-mayar-token'] || req.headers['x-callback-token'] || req.headers['authorization'] || '';
+    if (typeof rawHeader === 'string') {
+      token = rawHeader.startsWith('Bearer ') ? rawHeader.slice(7).trim() : rawHeader.trim();
+    }
+  }
+
+  token = String(token || '').trim();
+  if (!token) {
     return { configured: true, valid: false };
   }
 
   const secretBuf = Buffer.from(configuredSecret);
-  const tokenBuf = Buffer.from(queryToken);
+  const tokenBuf = Buffer.from(token);
 
   if (secretBuf.length !== tokenBuf.length) {
     return { configured: true, valid: false };
@@ -1033,6 +1041,13 @@ function verifyWebhookAuthenticity(req) {
 
   const isMatch = crypto.timingSafeEqual(secretBuf, tokenBuf);
   return { configured: true, valid: isMatch };
+}
+
+function extractMayarTransactionId(data, payload) {
+  const d = data || {};
+  const p = payload || {};
+  const rawId = d.id || d.paymentId || d.transactionId || d.invoiceId || p.id || '';
+  return String(rawId || '').trim();
 }
 
 function isNewMembershipEvent(rawEvent) {
@@ -1054,7 +1069,9 @@ function isConfirmedPaymentSuccess(rawEvent, data, payload) {
     'payment.cancelled',
     'payment.canceled',
     'payment.unpaid',
-    'payment.pending'
+    'payment.pending',
+    'payment.refunded',
+    'payment.disputed'
   ]);
   if (nonSuccessEvents.has(ev)) {
     return false;
@@ -1075,6 +1092,11 @@ function isConfirmedPaymentSuccess(rawEvent, data, payload) {
   const d = data || {};
   const rawStatus = String(d.status || (payload && payload.status) || '').trim().toUpperCase();
 
+  // Status must be explicitly present and confirmed as settled/paid by provider
+  if (!rawStatus) {
+    return false;
+  }
+
   const nonSuccessStatuses = new Set([
     'PENDING',
     'UNPAID',
@@ -1086,18 +1108,357 @@ function isConfirmedPaymentSuccess(rawEvent, data, payload) {
     'CLOSED'
   ]);
 
-  if (rawStatus && nonSuccessStatuses.has(rawStatus)) {
+  if (nonSuccessStatuses.has(rawStatus)) {
     return false;
   }
 
-  if (rawStatus) {
-    const successStatuses = new Set(['PAID', 'SUCCESS', 'SETTLED', 'COMPLETED']);
-    if (!successStatuses.has(rawStatus)) {
-      return false;
-    }
+  const successStatuses = new Set(['PAID', 'SUCCESS', 'SETTLED', 'COMPLETED']);
+  if (!successStatuses.has(rawStatus)) {
+    return false;
   }
 
   return true;
+}
+
+const MAYAR_CATALOG = {
+  SUBSCRIPTION_1_BULAN: {
+    sku: 'SUBSCRIPTION_1_BULAN',
+    plan_kind: 'SUBSCRIPTION',
+    paketName: '1 Bulan',
+    addDays: 30,
+    standardPrice: 25000,
+    isProAddon: false,
+    slug: 'paket-1-bulan-photo-selection',
+    verifiedDisplayName: 'Paket 1 Bulan - Photo Selection' // Confirmed from real settled Mayar transaction
+  },
+  SUBSCRIPTION_6_BULAN: {
+    sku: 'SUBSCRIPTION_6_BULAN',
+    plan_kind: 'SUBSCRIPTION',
+    paketName: '6 Bulan',
+    addDays: 180,
+    standardPrice: 120000,
+    isProAddon: false,
+    slug: 'paket-6-bulan-photo-selection',
+    verifiedDisplayName: null // Needs verification for exact display name string
+  },
+  SUBSCRIPTION_1_TAHUN: {
+    sku: 'SUBSCRIPTION_1_TAHUN',
+    plan_kind: 'SUBSCRIPTION',
+    paketName: '1 Tahun',
+    addDays: 365,
+    standardPrice: 199000,
+    isProAddon: false,
+    slug: 'paket-1-tahunn-photo-selection', // Verified slug spelling in app.html ('tahunn')
+    verifiedDisplayName: null // Needs verification
+  },
+  PRO_ADDON_1_TAHUN: {
+    sku: 'PRO_ADDON_1_TAHUN',
+    plan_kind: 'PRO_ADDON',
+    paketName: 'PRO Add-On 1 Tahun',
+    addDays: 365,
+    standardPrice: 149000,
+    isProAddon: true,
+    isLifetime: false,
+    slug: 'add-on-pro-photo-selection-1-tahun',
+    verifiedDisplayName: null // Needs verification
+  },
+  PRO_ADDON_LIFETIME: {
+    sku: 'PRO_ADDON_LIFETIME',
+    plan_kind: 'PRO_ADDON',
+    paketName: 'PRO Add-On Lifetime',
+    addDays: 0,
+    standardPrice: 649000,
+    isProAddon: true,
+    isLifetime: true,
+    slug: 'add-on-pro-photo-selection-lifetime',
+    verifiedDisplayName: null // Needs verification
+  }
+};
+
+function classifyMayarProduct(rawProductName) {
+  if (!rawProductName || typeof rawProductName !== 'string') {
+    return { isPhotoSelection: false, isProAddon: false, paketName: null, addDays: 0, reason: 'Empty product name' };
+  }
+
+  const p = rawProductName.trim().toUpperCase();
+
+  // 1. Blacklist unrelated products from Kama Creative store:
+  // e.g. KURSUS, EDITING, CANVA, NETFLIX, SPOTIFY, PRESET, LIGHTROOM, WEBSITE, JASA, DESIGN, DESAIN
+  const unrelatedKeywords = [
+    'KURSUS', 'EDITING', 'CANVA', 'NETFLIX', 'SPOTIFY',
+    'PRESET', 'LIGHTROOM', 'WEBSITE', 'JASA', 'DESIGN', 'DESAIN',
+    'SERTIFIKASI', 'MEMBERSHIP LAIN', 'PRODUK LAIN'
+  ];
+  for (const kw of unrelatedKeywords) {
+    if (p.includes(kw)) {
+      return { isPhotoSelection: false, isProAddon: false, paketName: null, addDays: 0, isStoreSale: true, reason: `Unrelated product keyword: ${kw}` };
+    }
+  }
+
+  // 2. Default DENY: Must explicitly prove Photo Selection identity.
+  // Unrelated items like 'Paket 1 Bulan Membership Lain', 'Paket 6 Bulan Sertifikasi Non-Fotografi',
+  // 'Add-on Lifetime Produk Lain' do NOT belong to Photo Selection and must NEVER activate accounts.
+  const hasPhotoSelectionBrand = p.includes('PHOTO SELECTION') || 
+                                 p.includes('PHOTO-SELECTION') || 
+                                 p.includes('PHOTO_SELECTION') || 
+                                 p.includes('PHOTOSELECTOR') || 
+                                 p.includes('PHOTO SELECTOR') || 
+                                 p.includes('KMBC');
+
+  const hasVerifiedSlug = p.includes('PAKET-1-BULAN-PHOTO-SELECTION') ||
+                          p.includes('PAKET-6-BULAN-PHOTO-SELECTION') ||
+                          p.includes('PAKET-1-TAHUNN-PHOTO-SELECTION') ||
+                          p.includes('PAKET-1-TAHUN-PHOTO-SELECTION') ||
+                          p.includes('ADD-ON-PRO-PHOTO-SELECTION-1-TAHUN') ||
+                          p.includes('ADD-ON-PRO-PHOTO-SELECTION-LIFETIME');
+
+  if (!hasPhotoSelectionBrand && !hasVerifiedSlug) {
+    return {
+      isPhotoSelection: false,
+      isProAddon: false,
+      paketName: null,
+      addDays: 0,
+      isStoreSale: true,
+      reason: 'Not a Photo Selection product: missing Photo Selection brand identifier'
+    };
+  }
+
+  // 3. Check for standalone PRO Add-On
+  const isAddonKeyword = p.includes('ADD-ON') || p.includes('ADDON') || p.includes('PRO ADD-ON') || p.includes('WATERMARK');
+  if (isAddonKeyword) {
+    if (p.includes('LIFETIME') || p.includes('SELAMANYA') || p.includes('PERMANEN')) {
+      const cat = MAYAR_CATALOG.PRO_ADDON_LIFETIME;
+      return {
+        isPhotoSelection: true,
+        isProAddon: true,
+        isLifetime: true,
+        paketName: cat.paketName,
+        addDays: cat.addDays,
+        standardPrice: cat.standardPrice,
+        sku: cat.sku
+      };
+    }
+    if (p.includes('1 TAHUN') || p.includes('1-TAHUN') || p.includes('TAHUNN') || p.includes('TAHUN') || p.includes('ANNUAL') || p.includes('YEAR')) {
+      const cat = MAYAR_CATALOG.PRO_ADDON_1_TAHUN;
+      return {
+        isPhotoSelection: true,
+        isProAddon: true,
+        isLifetime: false,
+        paketName: cat.paketName,
+        addDays: cat.addDays,
+        standardPrice: cat.standardPrice,
+        sku: cat.sku
+      };
+    }
+    // Business rule: There is NO 1-Month PRO Add-on and unspecific periods are not accepted
+    if (p.includes('1 BULAN') || p.includes('1-BULAN') || p.includes('MONTHLY') || p.includes('BULANAN')) {
+      return {
+        isPhotoSelection: true,
+        isProAddon: true,
+        isUnverifiedProduct: true,
+        paketName: null,
+        addDays: 0,
+        reason: 'Invalid SKU: No 1-month PRO Add-On exists'
+      };
+    }
+    return {
+      isPhotoSelection: true,
+      isProAddon: true,
+      isUnverifiedProduct: true,
+      paketName: null,
+      addDays: 0,
+      reason: 'Unverified or ambiguous PRO Add-On duration'
+    };
+  }
+
+  // 4. Check for Subscriptions (Only 3 confirmed products: 1 Bulan, 6 Bulan, 1 Tahun)
+  // 1 Tahun (365 days, IDR 199,000)
+  if (p.includes('1 TAHUN') || p.includes('1-TAHUN') || p.includes('TAHUNN') || p.includes('12 BULAN') || p.includes('ANNUAL') || p.includes('YEAR')) {
+    const cat = MAYAR_CATALOG.SUBSCRIPTION_1_TAHUN;
+    return {
+      isPhotoSelection: true,
+      isProAddon: false,
+      paketName: cat.paketName,
+      addDays: cat.addDays,
+      standardPrice: cat.standardPrice,
+      sku: cat.sku
+    };
+  }
+
+  // 6 Bulan (180 days, IDR 120,000)
+  if (p.includes('6 BULAN') || p.includes('6-BULAN') || p.includes('6BULAN') || p.includes('SEMESTER')) {
+    const cat = MAYAR_CATALOG.SUBSCRIPTION_6_BULAN;
+    return {
+      isPhotoSelection: true,
+      isProAddon: false,
+      paketName: cat.paketName,
+      addDays: cat.addDays,
+      standardPrice: cat.standardPrice,
+      sku: cat.sku
+    };
+  }
+
+  // 1 Bulan (30 days, IDR 25,000 - exact settled label 'Paket 1 Bulan - Photo Selection')
+  if (p.includes('1 BULAN') || p.includes('1-BULAN') || p.includes('1BULAN') || p.includes('BULANAN') || p.includes('MONTHLY') || p.includes('1 MONTH')) {
+    const cat = MAYAR_CATALOG.SUBSCRIPTION_1_BULAN;
+    return {
+      isPhotoSelection: true,
+      isProAddon: false,
+      paketName: cat.paketName,
+      addDays: cat.addDays,
+      standardPrice: cat.standardPrice,
+      sku: cat.sku,
+      verifiedDisplayName: 'Paket 1 Bulan - Photo Selection'
+    };
+  }
+
+  // Subscription Lifetime: Business rule states NO currently verified new-subscription Lifetime product exists
+  if (p.includes('LIFETIME') || p.includes('SELAMANYA') || p.includes('PERMANEN')) {
+    return {
+      isPhotoSelection: true,
+      isProAddon: false,
+      isUnverifiedProduct: true,
+      paketName: 'Lifetime',
+      addDays: 0,
+      standardPrice: null,
+      reason: 'Unverified new subscription Lifetime product'
+    };
+  }
+
+  // Other Photo Selection branded item not matching verified 5 SKUs (e.g. merchandise, unknown duration)
+  return {
+    isPhotoSelection: true,
+    isProAddon: false,
+    isUnverifiedProduct: true,
+    paketName: null,
+    addDays: 0,
+    reason: 'Unrecognized Photo Selection SKU'
+  };
+}
+
+function isPhotoSelectionProduct(rawProductName) {
+  const result = classifyMayarProduct(rawProductName);
+  return result.isPhotoSelection;
+}
+
+/**
+ * Unified Server-Side PRO Entitlement Resolver.
+ * Resolves whether a user holds active PRO capabilities across all 5 features:
+ * 1. Automated Upsell System
+ * 2. Dynamic Watermark
+ * 3. 1-Click Premium Collage (29 templates)
+ * 4. Multi-Category
+ * 5. Gallery Music
+ */
+function resolveUserProEntitlement(user, proRow, options = {}) {
+  if (!user) return { isPro: false, isLifetime: false, expiresAt: null, reason: 'No user' };
+
+  if (String(user.Role).toLowerCase() === 'admin') {
+    return { isPro: true, isLifetime: true, expiresAt: null, reason: 'Admin role' };
+  }
+
+  // 1. Transient DB / Read Error: Fail closed immediately (DO NOT fall back to legacy flags)
+  if (options.lookupError) {
+    return {
+      isPro: false,
+      isLifetime: false,
+      expiresAt: null,
+      lookupError: true,
+      errorReason: options.errorReason || 'Database lookup error',
+      source: 'error_fail_closed'
+    };
+  }
+
+  // 2. Authoritative pro_entitlements record found
+  if (proRow) {
+    if (proRow.is_lifetime === true || String(proRow.is_lifetime).toUpperCase() === 'TRUE') {
+      return { isPro: true, isLifetime: true, expiresAt: null, source: proRow.source || 'payment' };
+    }
+    if (proRow.expires_at) {
+      const expDate = new Date(proRow.expires_at);
+      const isStillValid = !isNaN(expDate.getTime()) && expDate.getTime() > Date.now();
+      return {
+        isPro: isStillValid,
+        isLifetime: false,
+        expiresAt: isStillValid ? expDate.toISOString() : null,
+        expiredAtRaw: proRow.expires_at,
+        isExpired: !isStillValid,
+        source: proRow.source || 'payment'
+      };
+    }
+    // Entitlement row exists but has no valid future date
+    return { isPro: false, isLifetime: false, expiresAt: null, isExpired: true, source: proRow.source || 'payment' };
+  }
+
+  // 3. Authoritative check: table exists and user has NO entitlement row
+  // Crucial: Must NEVER grant PRO or PRO Lifetime from users.Paket='Lifetime' or users.Akses_Watermark='TRUE'
+  if (options.tableChecked === true && !options.tableAbsent) {
+    return { isPro: false, isLifetime: false, expiresAt: null, source: 'no_entitlement_record' };
+  }
+
+  // 4. Pre-migration compatibility window ONLY (when table does not exist in DB yet)
+  if (options.tableAbsent === true) {
+    const rawPaket = String(user.Paket || '').toUpperCase();
+    const hasLegacyWatermark = String(user.Akses_Watermark || '').toUpperCase() === 'TRUE';
+    const hasLegacyPro = rawPaket.includes('PRO');
+    const hasLegacyLifetime = rawPaket.includes('LIFETIME') || String(user.ExpiredAt || '').toLowerCase() === 'lifetime';
+
+    if (hasLegacyLifetime && (hasLegacyWatermark || hasLegacyPro)) {
+      return { isPro: true, isLifetime: true, expiresAt: null, source: 'pre_migration_legacy_fallback' };
+    }
+    if (hasLegacyWatermark || hasLegacyPro) {
+      const userExp = String(user.ExpiredAt || '');
+      if (/^\d{4}-\d{2}-\d{2}/.test(userExp)) {
+        const expDate = new Date(userExp + 'T23:59:59Z');
+        const isStillValid = !isNaN(expDate.getTime()) && expDate.getTime() > Date.now();
+        return {
+          isPro: isStillValid,
+          isLifetime: false,
+          expiresAt: isStillValid ? expDate.toISOString() : null,
+          isExpired: !isStillValid,
+          source: 'pre_migration_legacy_fallback'
+        };
+      }
+    }
+  }
+
+  return { isPro: false, isLifetime: false, expiresAt: null, source: 'default_deny' };
+}
+
+async function getUserProEntitlement(username) {
+  if (!username) return { isPro: false, isLifetime: false, expiresAt: null };
+  const userRows = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(username)}&select=*`);
+  if (!userRows || userRows.length === 0) return { isPro: false, isLifetime: false, expiresAt: null };
+  const u = userRows[0];
+  if (String(u.Role).toLowerCase() === 'admin') {
+    return { isPro: true, isLifetime: true, expiresAt: null, user: u };
+  }
+
+  let proRow = null;
+  let tableChecked = false;
+  let tableAbsent = false;
+  let lookupError = false;
+  let errorReason = '';
+
+  try {
+    const proRows = await supabaseQuery(`pro_entitlements?user_id=eq.${encodeURIComponent(u.id)}&select=*`);
+    tableChecked = true;
+    if (Array.isArray(proRows) && proRows.length > 0) {
+      proRow = proRows[0];
+    }
+  } catch (err) {
+    const errMsg = String((err && err.message) || '');
+    if (errMsg.includes('404') || errMsg.includes('relation "public.pro_entitlements" does not exist') || errMsg.includes('does not exist')) {
+      tableAbsent = true;
+    } else {
+      lookupError = true;
+      errorReason = errMsg || 'Database error querying pro_entitlements';
+    }
+  }
+
+  const resolved = resolveUserProEntitlement(u, proRow, { tableChecked, tableAbsent, lookupError, errorReason });
+  resolved.user = u;
+  return resolved;
 }
 
 // =========================================================================
@@ -1335,6 +1696,18 @@ module.exports = handler;
 module.exports.parseAndValidateOrigin = parseAndValidateOrigin;
 module.exports.getAllowedOrigins = getAllowedOrigins;
 module.exports.handleCors = handleCors;
+module.exports.verifyWebhookAuthenticity = verifyWebhookAuthenticity;
+module.exports.isConfirmedPaymentSuccess = isConfirmedPaymentSuccess;
+module.exports.isNewMembershipEvent = isNewMembershipEvent;
+module.exports.extractMayarTransactionId = extractMayarTransactionId;
+module.exports.classifyMayarProduct = classifyMayarProduct;
+module.exports.isPhotoSelectionProduct = isPhotoSelectionProduct;
+module.exports.handleMayarWebhook = handleMayarWebhook;
+module.exports.createPasswordHash = createPasswordHash;
+module.exports.verifyModernPassword = verifyModernPassword;
+module.exports.MAYAR_CATALOG = MAYAR_CATALOG;
+module.exports.resolveUserProEntitlement = resolveUserProEntitlement;
+module.exports.getUserProEntitlement = getUserProEntitlement;
 
 // =========================================================================
 // CONTROLLERS
@@ -1398,8 +1771,9 @@ async function handleLogin(payload, res) {
     return error(res, 'Gagal membuat sesi login. Silakan coba lagi.', 500);
   }
 
+  const proStatus = await getUserProEntitlement(uName);
   const rawPaket = u.Paket || '';
-  const isPro = Boolean(String(u.Akses_Watermark).toUpperCase() === 'TRUE' || rawPaket.toUpperCase().includes('PRO') || rawPaket.toUpperCase().includes('LIFETIME'));
+  const isPro = proStatus.isPro;
 
   const userData = {
     success: true,
@@ -1418,6 +1792,9 @@ async function handleLogin(payload, res) {
     paket: rawPaket || '1 Bulan',
     expiredAt: u.ExpiredAt || 'Lifetime',
     isPremiumAddon: isPro,
+    isProLifetime: proStatus.isLifetime,
+    proExpiredAt: proStatus.expiresAt ? proStatus.expiresAt.substring(0, 10) : (proStatus.isLifetime ? 'Lifetime' : null),
+    proIsActive: isPro,
     sessionId: sessionId
   };
 
@@ -1442,8 +1819,15 @@ async function handleRegister(payload, res) {
     return error(res, 'Username harus berupa 3-50 karakter (huruf kecil, angka, titik, strip, garis bawah).');
   }
   if (nohp.length > 32) return error(res, 'Nomor HP maksimal 32 karakter.');
-  const VALID_PAKETS = new Set(['1 Bulan', '6 Bulan', '1 Tahun', 'Lifetime', 'Demo', 'Demo 7 Hari', 'Free']);
-  if (!VALID_PAKETS.has(paket)) return error(res, 'Pilihan paket tidak valid.');
+  // Only self-service subscription catalog packages and demo are valid for public registration.
+  // Lifetime is reserved for direct administrative/operator assignment and cannot be chosen publicly.
+  const VALID_PAKETS = new Set(['1 Bulan', '6 Bulan', '1 Tahun', 'Demo', 'Demo 7 Hari', 'Free']);
+  if (!VALID_PAKETS.has(paket)) {
+    if (paket === 'Lifetime') {
+      return error(res, 'Paket Lifetime tidak tersedia untuk pendaftaran publik.', 400);
+    }
+    return error(res, 'Pilihan paket tidak valid.');
+  }
   if (!validatePasswordPolicy(password)) {
     return error(res, 'Password minimal 8 karakter dan maksimal 128 karakter.');
   }
@@ -1468,7 +1852,8 @@ async function handleRegister(payload, res) {
   }
   const tokenPayload = refCode ? `REF:${refCode}` : confirmToken;
 
-  let expiredAt = 'Lifetime';
+  // Pending paid users must NOT be initialized with Lifetime entitlement (Release Blocker Fix)
+  let expiredAt = null;
   let initialStatus = 'Pending';
 
   if (isDemo) {
@@ -1671,8 +2056,9 @@ async function handlePingUser(payload, res) {
     const rows = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(username)}&select=*`);
     if (rows && rows.length > 0) {
       const u = rows[0];
+      const proStatus = await getUserProEntitlement(username);
       const rawPaket = u.Paket || '';
-      const isPro = Boolean(String(u.Akses_Watermark).toUpperCase() === 'TRUE' || rawPaket.toUpperCase().includes('PRO') || rawPaket.toUpperCase().includes('LIFETIME'));
+      const isPro = proStatus.isPro;
 
       const freshUserData = {
         username: u.Username,
@@ -1689,7 +2075,10 @@ async function handlePingUser(payload, res) {
         nohp: u['No HP'] || '',
         paket: rawPaket || '1 Bulan',
         expiredAt: u.ExpiredAt || 'Lifetime',
-        isPremiumAddon: isPro
+        isPremiumAddon: isPro,
+        isProLifetime: proStatus.isLifetime,
+        proExpiredAt: proStatus.expiresAt ? proStatus.expiresAt.substring(0, 10) : (proStatus.isLifetime ? 'Lifetime' : null),
+        proIsActive: isPro
       };
 
       return success(res, { success: true, ok: true, user: freshUserData });
@@ -1863,6 +2252,30 @@ async function handleCreateProject(payload, res) {
   const musicUrl = (d.musicUrl || d.music || '').trim();
   if (musicUrl && !isSafeHttpsUrl(musicUrl)) {
     return error(res, 'Music URL harus berupa link HTTPS yang valid.');
+  }
+
+  // Server-side enforcement of PRO features (Unified Entitlement Resolver):
+  const hasWatermarkRequested = Boolean(d.useWatermark || d.useWatermarkTiled);
+  const hasUpsellRequested = extraPriceNum > 0;
+  const hasCategoriesRequested = sanitizedCategories.length > 0;
+  const hasMusicRequested = Boolean(musicUrl);
+
+  if (hasWatermarkRequested || hasUpsellRequested || hasCategoriesRequested || hasMusicRequested) {
+    const userPro = await getUserProEntitlement(username);
+    if (!userPro.isPro) {
+      if (hasWatermarkRequested) {
+        return error(res, 'Fitur Watermark membutuhkan Add-On PRO yang aktif. Silakan aktifkan Add-On PRO.', 403);
+      }
+      if (hasUpsellRequested) {
+        return error(res, 'Fitur Sistem Upsell membutuhkan Add-On PRO yang aktif. Silakan aktifkan Add-On PRO.', 403);
+      }
+      if (hasCategoriesRequested) {
+        return error(res, 'Fitur Multi-Kategori membutuhkan Add-On PRO yang aktif. Silakan aktifkan Add-On PRO.', 403);
+      }
+      if (hasMusicRequested) {
+        return error(res, 'Fitur Musik Galeri membutuhkan Add-On PRO yang aktif. Silakan aktifkan Add-On PRO.', 403);
+      }
+    }
   }
 
   const token = crypto.randomBytes(6).toString('hex');
@@ -2134,6 +2547,7 @@ async function handleGetProjectForClient(payload, res) {
       const owners = await supabaseQuery(`users?Username=eq.${encodeURIComponent(ownerName)}&select=*`);
       if (owners && owners.length > 0) {
         const o = owners[0];
+        const ownerPro = await getUserProEntitlement(ownerName);
         ownerBrand = {
           brandName: o.BrandName || 'Photo Selection',
           brandLogo: o.BrandLogo || '',
@@ -2141,7 +2555,7 @@ async function handleGetProjectForClient(payload, res) {
           bankName: o.BankName || '',
           bankAccount: o.BankAccount || '',
           bankAccountName: o.BankAccountName || '',
-          isPremiumAddon: Boolean(String(o.Akses_Watermark).toUpperCase() === 'TRUE')
+          isPremiumAddon: ownerPro.isPro
         };
       }
     } catch (e) { }
@@ -2236,6 +2650,7 @@ async function handleVerifyClientPassword(payload, res) {
       const owners = await supabaseQuery(`users?Username=eq.${encodeURIComponent(ownerName)}&select=*`);
       if (owners && owners.length > 0) {
         const o = owners[0];
+        const ownerPro = await getUserProEntitlement(ownerName);
         ownerBrand = {
           brandName: o.BrandName || 'Photo Selection',
           brandLogo: o.BrandLogo || '',
@@ -2243,7 +2658,7 @@ async function handleVerifyClientPassword(payload, res) {
           bankName: o.BankName || '',
           bankAccount: o.BankAccount || '',
           bankAccountName: o.BankAccountName || '',
-          isPremiumAddon: Boolean(String(o.Akses_Watermark).toUpperCase() === 'TRUE')
+          isPremiumAddon: ownerPro.isPro
         };
       }
     } catch (e) { }
@@ -2586,6 +3001,14 @@ async function handleToggleProjectWatermark(payload, res) {
 
   const currentVal = String(project.UseWatermark).toUpperCase() === 'TRUE';
   const newVal = !currentVal;
+
+  if (newVal === true) {
+    const userPro = await getUserProEntitlement(payload.authUser.username);
+    if (!userPro.isPro) {
+      return error(res, 'Fitur Watermark membutuhkan Add-On PRO yang aktif. Silakan aktifkan Add-On PRO.', 403);
+    }
+  }
+
   const filter = getProjectMutationFilter(project);
 
   await supabaseQuery(`projects?${filter}`, {
@@ -2995,18 +3418,43 @@ async function handleDeleteUser(payload, res) {
 
 async function handleRequestOTP(payload, res) {
   const emailOrUser = (payload.email || payload.username || '').trim().toLowerCase();
+  const explicitUsername = (payload.username || '').trim().toLowerCase();
   if (!emailOrUser) return error(res, 'Masukkan Username atau Email Anda.');
   if (emailOrUser.length > 254) return error(res, 'Email atau Username tidak terdaftar.');
 
-  let users = await supabaseQuery(`users?Email=ilike.${encodeURIComponent(emailOrUser)}&select=*`);
-  if (!users || users.length === 0) {
-    users = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(emailOrUser)}&select=*`);
-  }
-  if (!users || users.length === 0) return error(res, 'Email atau Username tidak terdaftar.');
+  let targetUser = null;
 
-  const user = users[0];
-  const uName = user.Username;
-  const userEmail = user.Email;
+  // 1. Try finding by exact Username first (Username is unique)
+  const byUsername = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(emailOrUser)}&select=*`);
+  if (byUsername && byUsername.length === 1) {
+    targetUser = byUsername[0];
+  }
+
+  // 2. If not found by Username, check by Email
+  if (!targetUser) {
+    const byEmail = await supabaseQuery(`users?Email=ilike.${encodeURIComponent(emailOrUser)}&select=*`);
+    if (byEmail && byEmail.length > 0) {
+      if (byEmail.length === 1) {
+        // Single account matching this email -> unambiguous
+        targetUser = byEmail[0];
+      } else {
+        // Blocker 3: Shared-email accounts (e.g. adminps & kamavisual)
+        // Check if explicit username was also provided to identify the target account
+        if (explicitUsername && explicitUsername !== emailOrUser) {
+          targetUser = byEmail.find(u => String(u.Username || '').trim().toLowerCase() === explicitUsername);
+        }
+        if (!targetUser) {
+          // Ambiguous shared-email: DO NOT arbitrarily pick users[0]!
+          return error(res, 'Email ini terhubung dengan beberapa akun. Masukkan Username Anda untuk melanjutkan reset password.', 400);
+        }
+      }
+    }
+  }
+
+  if (!targetUser) return error(res, 'Email atau Username tidak terdaftar.');
+
+  const uName = targetUser.Username;
+  const userEmail = targetUser.Email;
 
   if (!userEmail) {
     return error(res, 'Akun ini tidak memiliki email yang tersimpan. Hubungi Admin.');
@@ -3046,7 +3494,7 @@ async function handleRequestOTP(payload, res) {
       to: userEmail,
       subject: 'Kode Keamanan Reset Password - Photo Selection',
       htmlBody: buildOtpResetPasswordEmail({
-        nama: user.Nama || uName,
+        nama: targetUser.Nama || uName,
         username: uName,
         otp: otp
       })
@@ -3080,6 +3528,7 @@ async function handleRequestOTP(payload, res) {
 
 async function handleResetPasswordWithOTP(payload, res) {
   const emailOrUser = (payload.email || payload.username || '').trim().toLowerCase();
+  const explicitUsername = (payload.username || '').trim().toLowerCase();
   const otp = (payload.otp || '').trim();
   const newPassword = (payload.newPassword || '').trim();
 
@@ -3088,13 +3537,34 @@ async function handleResetPasswordWithOTP(payload, res) {
   if (!/^\d{6}$/.test(otp)) return error(res, 'Kode OTP salah atau sudah kedaluwarsa.');
   if (newPassword.length > 128) return error(res, 'Password baru minimal 8 karakter dan maksimal 128 karakter.');
 
-  let users = await supabaseQuery(`users?Email=ilike.${encodeURIComponent(emailOrUser)}&select=*`);
-  if (!users || users.length === 0) {
-    users = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(emailOrUser)}&select=*`);
-  }
-  if (!users || users.length === 0) return error(res, 'User tidak ditemukan.');
+  let targetUser = null;
 
-  const uName = users[0].Username;
+  // 1. Try finding by exact Username first
+  const byUsername = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(emailOrUser)}&select=*`);
+  if (byUsername && byUsername.length === 1) {
+    targetUser = byUsername[0];
+  }
+
+  // 2. Check by Email
+  if (!targetUser) {
+    const byEmail = await supabaseQuery(`users?Email=ilike.${encodeURIComponent(emailOrUser)}&select=*`);
+    if (byEmail && byEmail.length > 0) {
+      if (byEmail.length === 1) {
+        targetUser = byEmail[0];
+      } else {
+        if (explicitUsername && explicitUsername !== emailOrUser) {
+          targetUser = byEmail.find(u => String(u.Username || '').trim().toLowerCase() === explicitUsername);
+        }
+        if (!targetUser) {
+          return error(res, 'Email ini terhubung dengan beberapa akun. Masukkan Username Anda untuk mereset password.', 400);
+        }
+      }
+    }
+  }
+
+  if (!targetUser) return error(res, 'User tidak ditemukan.');
+
+  const uName = targetUser.Username;
 
   // Query latest reset token by Username only (DO NOT query by OTP)
   const tokens = await supabaseQuery(`reset_tokens?Username=ilike.${encodeURIComponent(uName)}&order=id.desc&limit=1`);
@@ -3485,7 +3955,11 @@ async function handleSyncBackground(payload, res) {
 
   const u = (users && users.length > 0) ? users[0] : null;
   const rawPaket = u ? (u.Paket || '') : '';
-  const isPro = u ? Boolean(String(u.Akses_Watermark).toUpperCase() === 'TRUE' || rawPaket.toUpperCase().includes('PRO') || rawPaket.toUpperCase().includes('LIFETIME')) : false;
+  let proStatus = { isPro: false, isLifetime: false, expiresAt: null };
+  if (u) {
+    proStatus = await getUserProEntitlement(u.Username);
+  }
+  const isPro = proStatus.isPro;
 
   const userData = u ? {
     success: true,
@@ -3503,7 +3977,10 @@ async function handleSyncBackground(payload, res) {
     nohp: u['No HP'] || '',
     paket: rawPaket || '1 Bulan',
     expiredAt: u.ExpiredAt || 'Lifetime',
-    isPremiumAddon: isPro
+    isPremiumAddon: isPro,
+    isProLifetime: proStatus.isLifetime,
+    proExpiredAt: proStatus.expiresAt ? proStatus.expiresAt.substring(0, 10) : (proStatus.isLifetime ? 'Lifetime' : null),
+    proIsActive: isPro
   } : null;
 
   return success(res, {
@@ -3582,16 +4059,30 @@ async function handleMayarWebhook(payload, req, res) {
     return success(res, { success: true, status: 'ignored', result: `Webhook event acknowledged without mutation: ${rawEvent}` });
   }
 
-  const isPhotoSelection = productUpper.includes('PHOTO') ||
-    productUpper.includes('SELECTION') ||
-    productUpper.includes('PAKET') ||
-    productUpper.includes('BULAN') ||
-    productUpper.includes('TAHUN') ||
-    productUpper.includes('LIFETIME') ||
-    productUpper.includes('PRO') ||
-    productUpper.includes('PERPANJANG') ||
-    productUpper.includes('RENEW') ||
-    productUpper.includes('LANGGANAN');
+  // 1. Validasi Identitas Transaksi Wajib (F3 Fix)
+  // Webhook event tanpa stable transaction ID DILARANG mengaktifkan akun secara otomatis
+  const transactionId = extractMayarTransactionId(d, payload);
+  if (!transactionId) {
+    await supabaseQuery('mayar_logs', {
+      method: 'POST',
+      body: {
+        Event: event,
+        'Customer Email': email,
+        'Customer Name': name,
+        'Status/Product': rawProductName,
+        'Hasil Aktivasi': 'MANUAL_REVIEW_REQUIRED: Missing stable transaction ID',
+        'Raw JSON Payload': JSON.stringify(payload),
+        Timestamp: new Date().toISOString()
+      }
+    }).catch(() => { });
+
+    return error(res, 'Missing stable transaction ID. Payment cannot be verified for automatic activation.', 422);
+  }
+
+  // 2. Klasifikasi Produk Eksplisit (F5 Fix)
+  // Menolak produk non-Photo-Selection seperti "Paket 1 Bulan Kursus Editing" atau "Canva Pro 1 Bulan"
+  const productInfo = classifyMayarProduct(rawProductName);
+  const isPhotoSelection = productInfo.isPhotoSelection;
 
   // Helper ekstraksi kode referral dari Mayar
   function extractMayarRefCode(payloadData, userObj = null) {
@@ -3611,14 +4102,14 @@ async function handleMayarWebhook(payload, req, res) {
   }
 
   // ============================================================
-  // KASUS A: PRODUK BUKAN PHOTO SELECTION (NETFLIX, CANVA, DLL)
+  // KASUS A: PRODUK BUKAN PHOTO SELECTION (KURSUS, CANVA, DLL)
   // ============================================================
   if (!isPhotoSelection) {
     const userRefCode = extractMayarRefCode(d, null);
     const paidAmount = Number(d.amount || d.netAmount || 0);
     const qty = Number(d.qty || 1);
 
-    // Catat log transaksi langsung ke Supabase
+    // Catat log transaksi langsung ke Supabase tanpa mutasi akun fotografer
     await supabaseQuery('mayar_logs', {
       method: 'POST',
       body: {
@@ -3626,20 +4117,20 @@ async function handleMayarWebhook(payload, req, res) {
         'Customer Email': email,
         'Customer Name': name,
         'Status/Product': rawProductName,
-        'Hasil Aktivasi': `Transaksi dicatat (${rawProductName}) - Ref: ${userRefCode} - Rp ${paidAmount} (Qty: ${qty})`,
+        'Hasil Aktivasi': `[TX:${transactionId}] Transaksi dicatat (${rawProductName}) - Ref: ${userRefCode} - Rp ${paidAmount} (Qty: ${qty}) - Tanpa aktivasi Photo Selection`,
         'Raw JSON Payload': JSON.stringify(payload),
         Timestamp: new Date().toISOString()
       }
-    }).catch(() => { });
+    });
 
-    return success(res, { success: true, status: 'processed', result: `Store sale tracked to Supabase: ${rawProductName}` });
+    return success(res, { success: true, status: 'processed', result: `Store sale tracked without subscription mutation: ${rawProductName}` });
   }
 
   // ============================================================
-  // KASUS B: PRODUK PHOTO SELECTION (AKTIVASI AKUN + TRACK STORE)
+  // KASUS B: PRODUK PHOTO SELECTION (IDEMPOTENSI ATOMIK + AKTIVASI)
   // ============================================================
 
-  // Fungsi Normalisasi Nomor HP (menghilangkan awalan 0 / 62 / +62 / spasi / strip)
+  // Normalisasi Nomor HP
   function normalizePhone(phoneStr) {
     if (!phoneStr) return '';
     let num = String(phoneStr).replace(/[^0-9]/g, '');
@@ -3650,201 +4141,247 @@ async function handleMayarWebhook(payload, req, res) {
 
   const cleanIncomingPhone = normalizePhone(mobile);
 
-  // Layer 1: Cocokkan via Email
-  let targetUser = null;
-  if (email) {
-    const byEmail = await supabaseQuery(`users?Email=ilike.${encodeURIComponent(email)}&select=*`);
-    if (byEmail && byEmail.length > 0) targetUser = byEmail[0];
-  }
-
-  // Layer 2: Cocokkan via Nomor HP / WhatsApp (kebal format 0 / 62 / +62)
-  if (!targetUser && cleanIncomingPhone.length >= 7) {
-    const byPhone = await supabaseQuery(`users?No%20HP=like.*${encodeURIComponent(cleanIncomingPhone)}*&select=*`);
-    if (byPhone && byPhone.length > 0) {
-      targetUser = byPhone[0];
-    } else {
-      const allUsers = await supabaseQuery('users?select=*').catch(() => []);
-      if (allUsers && allUsers.length > 0) {
-        targetUser = allUsers.find(u => {
-          const uPhoneNorm = normalizePhone(u['No HP']);
-          return uPhoneNorm && (uPhoneNorm === cleanIncomingPhone || uPhoneNorm.endsWith(cleanIncomingPhone) || cleanIncomingPhone.endsWith(uPhoneNorm));
+  // 3. Cek Idempotensi Pembayaran (F2 Fix: TIDAK PERNAH menelan error dengan .catch(() => []))
+  try {
+    const existingLedger = await supabaseQuery(`processed_payments?payment_id=eq.${encodeURIComponent(transactionId)}&select=payment_id,status`);
+    if (existingLedger && existingLedger.length > 0) {
+      const st = existingLedger[0].status;
+      if (st === 'SUCCESS' || st === 'STORE_SALE' || st === 'HISTORICAL_SETTLED' || st === 'ALREADY_PROCESSED_LEGACY') {
+        return success(res, {
+          success: true,
+          status: 'already_processed',
+          result: `Payment ${transactionId} already processed (idempotent duplicate skipped)`
+        });
+      }
+      if (st === 'MANUAL_RECONCILIATION_REQUIRED') {
+        return success(res, {
+          success: false,
+          status: 'manual_reconciliation_needed',
+          code: 'MANUAL_RECONCILIATION_REQUIRED',
+          result: `Payment ${transactionId} requires manual reconciliation and was not auto-processed`
         });
       }
     }
-  }
-
-  // Layer 3: Cocokkan via Username / Nama Studio jika email & no hp tidak sama
-  if (!targetUser && name) {
-    const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (cleanName.length >= 3) {
-      const byName = await supabaseQuery(`users?or=(Username.ilike.${encodeURIComponent(cleanName)},Nama.ilike.*${encodeURIComponent(name)}*)&select=*`);
-      if (byName && byName.length > 0) targetUser = byName[0];
+  } catch (ledgerCheckErr) {
+    const msg = String(ledgerCheckErr.message || '');
+    if (!msg.includes('404') && !msg.includes('relation "public.processed_payments" does not exist') && !msg.includes('does not exist')) {
+      throw ledgerCheckErr; // Lempar jika error koneksi / DB asli
     }
   }
 
-  // Layer 4: Cek jika ada customField / notes yang mengandung username
-  if (!targetUser) {
-    const combinedNotes = `${d.notes || ''} ${d.description || ''} ${d.customField || ''} ${d.extra || ''}`;
-    const userMatch = combinedNotes.match(/@([a-zA-Z0-9_\-\.]+)/);
-    if (userMatch && userMatch[1]) {
-      const byUsername = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(userMatch[1].trim())}&select=*`);
-      if (byUsername && byUsername.length > 0) targetUser = byUsername[0];
-    }
+
+  if (productInfo.isUnverifiedProduct) {
+    await supabaseQuery('mayar_logs', {
+      method: 'POST',
+      body: {
+        Event: event,
+        'Customer Email': email,
+        'Customer Name': name,
+        'Status/Product': rawProductName,
+        'Hasil Aktivasi': `[TX:${transactionId}] MANUAL_RECONCILIATION_REQUIRED - Unverified product catalog: ${rawProductName}`,
+        'Raw JSON Payload': JSON.stringify(payload),
+        Timestamp: new Date().toISOString()
+      }
+    }).catch(() => { });
+
+    return success(res, {
+      success: true,
+      status: 'manual_reconciliation_needed',
+      code: 'UNVERIFIED_PRODUCT_CATALOG',
+      result: `Unverified product catalog: ${rawProductName}. Held for manual reconciliation.`
+    });
   }
 
-  let addDays = 30;
-  let paketName = '1 Bulan';
-  if (productUpper.includes('6 BULAN') || productUpper.includes('6-BULAN') || productUpper.includes('6BULAN') || productUpper.includes('SEMESTER')) {
-    addDays = 180;
-    paketName = '6 Bulan';
-  }
-  else if (productUpper.includes('1 TAHUN') || productUpper.includes('1-TAHUN') || productUpper.includes('TAHUNN') || productUpper.includes('TAHUN') || productUpper.includes('ANNUAL') || productUpper.includes('YEAR')) {
-    addDays = 365;
-    paketName = '1 Tahun';
-  }
-  else if (productUpper.includes('LIFETIME') || productUpper.includes('SELAMANYA') || productUpper.includes('PERMANEN')) {
-    addDays = 36500;
-    paketName = 'Lifetime';
+  const paketName = productInfo.paketName || '1 Bulan';
+  const addDays = typeof productInfo.addDays === 'number' ? productInfo.addDays : 30;
+  const isProAddon = Boolean(productInfo.isProAddon);
+
+  // Validate Currency (Mayar operates in IDR)
+  const rawCurrency = String(d.currency || payload.currency || 'IDR').trim().toUpperCase();
+  if (rawCurrency !== 'IDR') {
+    await supabaseQuery('mayar_logs', {
+      method: 'POST',
+      body: {
+        Event: event,
+        'Customer Email': email,
+        'Customer Name': name,
+        'Status/Product': rawProductName || paketName,
+        'Hasil Aktivasi': `[TX:${transactionId}] MANUAL_RECONCILIATION_REQUIRED - Mata uang tidak didukung: ${rawCurrency}`,
+        'Raw JSON Payload': JSON.stringify(payload),
+        Timestamp: new Date().toISOString()
+      }
+    }).catch(() => { });
+
+    return success(res, {
+      success: true,
+      status: 'manual_reconciliation_needed',
+      code: 'INVALID_CURRENCY',
+      result: `Unsupported currency: ${rawCurrency}. Held for manual reconciliation.`
+    });
   }
 
-  // Hitung Masa Aktif Bertingkat (Akumulasi jika masa aktif sebelumnya belum habis)
-  let baseDate = new Date();
-  if (targetUser && targetUser.ExpiredAt && targetUser.ExpiredAt !== 'Lifetime') {
-    const currExp = parseSafeDate(targetUser.ExpiredAt);
-    if (currExp && currExp.getTime() > baseDate.getTime()) {
-      baseDate = new Date(currExp.getTime()); // Perpanjang dari tanggal berakhir yang sekarang
-    }
-  }
-  baseDate.setDate(baseDate.getDate() + addDays);
-  const expiredAt = (paketName === 'Lifetime') ? 'Lifetime' : baseDate.toISOString().split('T')[0];
+  // Validate Payment Amount: Provider amount cannot be fabricated or assumed
+  const rawAmountVal = d.amount !== undefined ? d.amount : (d.netAmount !== undefined ? d.netAmount : (payload.amount !== undefined ? payload.amount : undefined));
+  const hasRawAmount = (rawAmountVal !== undefined && rawAmountVal !== null && String(rawAmountVal).trim() !== '');
+  const parsedAmount = hasRawAmount ? Number(rawAmountVal) : NaN;
 
-  let hasilAktivasi = 'User tidak ditemukan';
-  let userActivatedName = name;
-  let userActivatedUsername = '';
-  let userActivatedEmail = email;
-  let userActivatedPhone = mobile;
+  if (!hasRawAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
+    const reasonMsg = !hasRawAmount
+      ? 'Missing payment amount from provider'
+      : (parsedAmount === 0 ? 'Zero payment amount without verified promotion' : 'Invalid payment amount');
+
+    await supabaseQuery('mayar_logs', {
+      method: 'POST',
+      body: {
+        Event: event,
+        'Customer Email': email,
+        'Customer Name': name,
+        'Status/Product': rawProductName || paketName,
+        'Hasil Aktivasi': `[TX:${transactionId}] MANUAL_RECONCILIATION_REQUIRED - ${reasonMsg} (${rawAmountVal})`,
+        'Raw JSON Payload': JSON.stringify(payload),
+        Timestamp: new Date().toISOString()
+      }
+    }).catch(() => { });
+
+    return success(res, {
+      success: true,
+      status: 'manual_reconciliation_needed',
+      code: 'INVALID_PAYMENT_AMOUNT',
+      result: `${reasonMsg}. Held for manual reconciliation without mutating account.`
+    });
+  }
+
+  // Exact verified price match check:
+  // Prevents arbitrary positive amounts (e.g. IDR 1) or unverified discount amounts from granting entitlement
+  if (productInfo.standardPrice && parsedAmount !== productInfo.standardPrice) {
+    await supabaseQuery('mayar_logs', {
+      method: 'POST',
+      body: {
+        Event: event,
+        'Customer Email': email,
+        'Customer Name': name,
+        'Status/Product': rawProductName || paketName,
+        'Hasil Aktivasi': `[TX:${transactionId}] MANUAL_RECONCILIATION_REQUIRED - Price mismatch: expected ${productInfo.standardPrice}, received ${parsedAmount}`,
+        'Raw JSON Payload': JSON.stringify(payload),
+        Timestamp: new Date().toISOString()
+      }
+    }).catch(() => { });
+
+    return success(res, {
+      success: true,
+      status: 'manual_reconciliation_needed',
+      code: 'PRICE_MISMATCH_RECONCILIATION',
+      result: `Payment amount (${parsedAmount} IDR) does not match catalog price (${productInfo.standardPrice} IDR). Held for manual reconciliation.`
+    });
+  }
+
+  const paidAmount = parsedAmount;
+
+  // Extract explicit @username hint from notes / description / customField if available
+  let explicitUsernameHint = null;
+  const combinedNotes = `${d.notes || ''} ${d.description || ''} ${d.customField || ''} ${d.extra || ''}`;
+  const userMatch = combinedNotes.match(/@([a-zA-Z0-9_\-\.]+)/);
+  if (userMatch && userMatch[1]) {
+    explicitUsernameHint = userMatch[1].trim();
+  }
+
+  // Generate secure candidate credentials for atomic new-account creation inside the database transaction
   let temporaryPassword = '';
+  let candidateUsername = null;
+  let passHash = null;
 
-  if (targetUser) {
-    const uName = targetUser.Username;
-    userActivatedName = targetUser.Nama || name;
-    userActivatedUsername = uName;
-    userActivatedEmail = targetUser.Email || email;
-    userActivatedPhone = targetUser['No HP'] || mobile;
-
-    const isProAddon = productUpper.includes('ADD-ON') || productUpper.includes('PRO');
-
-    if (isProAddon) {
-      await supabaseQuery(`users?Username=eq.${encodeURIComponent(uName)}`, {
-        method: 'PATCH',
-        body: { Akses_Watermark: 'TRUE' }
-      });
-      hasilAktivasi = `Aktivasi PRO Add-on untuk ${uName}`;
-    } else {
-      await supabaseQuery(`users?Username=eq.${encodeURIComponent(uName)}`, {
-        method: 'PATCH',
-        body: { Status: 'Active', Paket: paketName, ExpiredAt: expiredAt }
-      });
-      hasilAktivasi = `Perpanjangan ${paketName} berhasil untuk @${uName} (s/d ${expiredAt})`;
-    }
-
-    // Trigger Meta CAPI Purchase
-    const purEventId = d.id || ('pur_' + uName + '_' + Date.now());
-    const purAmount = Number(d.amount || d.netAmount || 100000);
-    sendMetaCAPIEvent('Purchase', {
-      eventId: purEventId,
-      email: userActivatedEmail,
-      phone: userActivatedPhone,
-      customData: {
-        content_name: rawProductName || paketName,
-        value: purAmount,
-        currency: 'IDR'
-      }
-    }).catch(() => { });
-
-  } else if (email) {
-    // KASUS: Fotografer membayar langsung di Mayar sebelum membuat akun di app.html
-    const baseUser = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '') || 'photographer';
-    let newUsername = baseUser;
-    const existingCheck = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(newUsername)}&select=id`);
-    if (existingCheck && existingCheck.length > 0) {
-      newUsername = `${baseUser}_${Math.floor(100 + Math.random() * 900)}`;
-    }
-
-    // Buat password default yang aman menggunakan crypto
+  if (email && !isProAddon) {
+    const baseClean = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '') || 'photographer';
+    candidateUsername = `${baseClean}_${crypto.randomBytes(3).toString('hex')}`;
     temporaryPassword = 'Kama-' + crypto.randomBytes(6).toString('base64url');
-    const passHash = createPasswordHash(temporaryPassword);
+    passHash = createPasswordHash(temporaryPassword);
+  }
 
-    const autoUser = {
-      Username: newUsername,
-      Password: passHash,
-      Nama: name || baseUser,
-      Role: 'Photographer',
-      Status: 'Active',
-      Email: email,
-      'No HP': mobile,
-      Paket: paketName,
-      ExpiredAt: expiredAt,
-      ConfirmToken: '',
-      ProjectCreated: '0',
-      Akses_Watermark: productUpper.includes('ADD-ON') || productUpper.includes('PRO') ? 'TRUE' : 'FALSE'
-    };
+  // 4. ATOMIC RPC EXECUTION (STRICT FAIL-CLOSED — ZERO REST MUTATION FALLBACK)
+  // Per Phase 4.7.5 Blocker Resolution: All financial activations and account creations
+  // MUST execute atomically inside process_mayar_payment. If the RPC is unavailable,
+  // the handler fails closed with HTTP 500 so Mayar can retry safely without double-extension.
+  let rpcResponse = null;
+  try {
+    rpcResponse = await supabaseQuery('rpc/process_mayar_payment', {
+      method: 'POST',
+      body: {
+        p_payment_id: transactionId,
+        p_email: email,
+        p_phone: mobile,
+        p_username_hint: explicitUsernameHint,
+        p_product_name: rawProductName,
+        p_is_pro_addon: isProAddon,
+        p_add_days: addDays,
+        p_plan_name: paketName,
+        p_amount: paidAmount,
+        p_currency: 'IDR',
+        p_create_new_user: Boolean(email && !isProAddon),
+        p_new_username: candidateUsername,
+        p_new_password_hash: passHash,
+        p_customer_name: name || (email ? email.split('@')[0] : 'Photographer')
+      }
+    });
+  } catch (rpcErr) {
+    console.error('[MAYAR_WEBHOOK] Atomic RPC execution failed or unavailable:', rpcErr);
+    // FAIL CLOSED: Do NOT perform non-atomic REST fallback!
+    return error(res, 'Payment processing engine unavailable. Transaction deferred for retry.', 500);
+  }
 
-    await supabaseQuery('users', { method: 'POST', body: autoUser });
-    userActivatedName = name || baseUser;
-    userActivatedUsername = newUsername;
-    hasilAktivasi = `Akun baru otomatis dibuat & diaktifkan: ${newUsername} (${paketName})`;
+  if (!rpcResponse || typeof rpcResponse !== 'object') {
+    return error(res, 'Unexpected response from atomic payment processing engine.', 500);
+  }
 
-    // Meta CAPI Purchase Event
-    const purEventId = d.id || ('pur_' + newUsername + '_' + Date.now());
-    const purAmount = Number(d.amount || d.netAmount || 100000);
-    sendMetaCAPIEvent('Purchase', {
-      eventId: purEventId,
-      email: email,
-      phone: mobile,
-      customData: {
-        content_name: rawProductName || paketName,
-        value: purAmount,
-        currency: 'IDR'
+  // Handle idempotent duplicate delivery
+  if (rpcResponse.status === 'already_processed') {
+    return success(res, {
+      success: true,
+      status: 'already_processed',
+      result: rpcResponse.message || `Payment ${transactionId} already processed (idempotent duplicate skipped)`
+    });
+  }
+
+  // Handle manual reconciliation required (ambiguous identity / duplicate conflict / incomplete data)
+  if (rpcResponse.status === 'manual_reconciliation_needed') {
+    const reconMsg = rpcResponse.message || 'Payment held for manual reconciliation; no user mutated.';
+    await supabaseQuery('mayar_logs', {
+      method: 'POST',
+      body: {
+        Event: event,
+        'Customer Email': email,
+        'Customer Name': name,
+        'Status/Product': rawProductName || paketName,
+        'Hasil Aktivasi': `[TX:${transactionId}] MANUAL_RECONCILIATION_REQUIRED - ${reconMsg}`,
+        'Raw JSON Payload': JSON.stringify(payload),
+        Timestamp: new Date().toISOString()
       }
     }).catch(() => { });
+
+    return success(res, {
+      success: true,
+      status: 'manual_reconciliation_needed',
+      code: rpcResponse.code,
+      result: reconMsg
+    });
   }
 
-  // Ekstrak Kode Referal dari profil user atau payload Mayar
-  const userRefCode = extractMayarRefCode(d, targetUser);
-
-  const paidAmount = Number(d.amount || d.netAmount || (paketName === '1 Bulan' ? 50000 : (paketName === '6 Bulan' ? 250000 : (paketName === '1 Tahun' ? 450000 : 750000))));
-
-  // Kirim email notifikasi aktivasi ke Fotografer
-  if (userActivatedEmail) {
-    sendEmailViaGAS({
-      to: userActivatedEmail,
-      subject: `Pembayaran Diterima - Akun Photo Selection Anda Telah Aktif!`,
-      htmlBody: buildPhotographerActivatedEmail({
-        nama: userActivatedName,
-        username: userActivatedUsername,
-        email: userActivatedEmail,
-        paket: paketName,
-        expiredAt: expiredAt,
-        tempPassword: temporaryPassword || undefined
-      })
-    }).catch(e => console.error('[MAILER] Error kirim email aktivasi Mayar ke fotografer:', e));
+  // If status is not processed, fail closed
+  if (rpcResponse.status !== 'processed') {
+    return error(res, rpcResponse.message || 'Payment could not be processed atomically.', 500);
   }
 
-  // Kirim email notifikasi pembayaran sukses ke Admin
-  sendEmailViaGAS({
-    to: ADMIN_EMAIL,
-    subject: `Pembayaran Mayar Diterima: ${userActivatedName} (@${userActivatedUsername}) - ${paketName}`,
-    htmlBody: buildAdminPaymentSuccessEmail({
-      nama: userActivatedName,
-      username: userActivatedUsername,
-      email: userActivatedEmail,
-      nohp: userActivatedPhone,
-      paket: paketName,
-      amount: paidAmount,
-      expiredAt: expiredAt
-    })
-  }).catch(e => console.error('[MAILER] Error kirim email pembayaran ke Admin:', e));
+  // At this point, PostgreSQL has atomically committed the mutation and ledger!
+  const userActivatedName = rpcResponse.account_name || name || 'Photographer';
+  const userActivatedUsername = rpcResponse.account_username || '';
+  const userActivatedEmail = rpcResponse.account_email || email;
+  const userActivatedPhone = rpcResponse.account_phone || mobile;
+  const expiredAt = rpcResponse.expired_at || 'Active';
+  const hasilAktivasi = rpcResponse.result_message || `Aktivasi berhasil untuk @${userActivatedUsername}`;
+  const isNewUser = (rpcResponse.action_type === 'NEW_USER_CREATED');
+
+  // 5. Catat log mayar_logs (Audit trail)
+  const txPrefix = `[TX:${transactionId}] `;
+  const finalLogHasil = `${txPrefix}SUKSES - ${hasilAktivasi}`;
 
   await supabaseQuery('mayar_logs', {
     method: 'POST',
@@ -3853,11 +4390,65 @@ async function handleMayarWebhook(payload, req, res) {
       'Customer Email': email,
       'Customer Name': name,
       'Status/Product': rawProductName || paketName,
-      'Hasil Aktivasi': hasilAktivasi,
+      'Hasil Aktivasi': finalLogHasil,
       'Raw JSON Payload': JSON.stringify(payload),
       Timestamp: new Date().toISOString()
     }
   }).catch(() => { });
 
+  // 6. Side Effects: Meta CAPI & Email
+  const purEventId = 'pur_' + transactionId;
+  sendMetaCAPIEvent('Purchase', {
+    eventId: purEventId,
+    email: userActivatedEmail,
+    phone: userActivatedPhone,
+    customData: {
+      content_name: rawProductName || paketName,
+      value: paidAmount,
+      currency: 'IDR'
+    }
+  }).catch(() => { });
+
+  // Fix C: Await GAS email delivery to prevent Vercel Serverless early process freeze.
+  // If email fails or times out, account is already safely Active in DB.
+  // The customer can recover immediately via 'Lupa Password' (requestOTP) workflow.
+  if (userActivatedEmail) {
+    try {
+      await sendEmailViaGAS({
+        to: userActivatedEmail,
+        subject: `Pembayaran Diterima - Akun Photo Selection Anda Telah Aktif!`,
+        htmlBody: buildPhotographerActivatedEmail({
+          nama: userActivatedName,
+          username: userActivatedUsername,
+          email: userActivatedEmail,
+          paket: paketName,
+          expiredAt: expiredAt,
+          tempPassword: isNewUser ? temporaryPassword : undefined
+        })
+      });
+    } catch (mailErr) {
+      console.error('[MAILER] Gagal mengirim email aktivasi Mayar ke fotografer (user dapat login/reset via OTP):', mailErr);
+    }
+  }
+
+  try {
+    await sendEmailViaGAS({
+      to: ADMIN_EMAIL,
+      subject: `Pembayaran Mayar Diterima: ${userActivatedName} (@${userActivatedUsername}) - ${paketName}`,
+      htmlBody: buildAdminPaymentSuccessEmail({
+        nama: userActivatedName,
+        username: userActivatedUsername,
+        email: userActivatedEmail,
+        nohp: userActivatedPhone,
+        paket: paketName,
+        amount: paidAmount,
+        expiredAt: expiredAt
+      })
+    });
+  } catch (adminMailErr) {
+    console.error('[MAILER] Gagal mengirim email notifikasi pembayaran ke Admin:', adminMailErr);
+  }
+
   return success(res, { success: true, status: 'processed', result: hasilAktivasi });
 }
+

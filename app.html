@@ -7261,14 +7261,15 @@
                         badgeEl.innerHTML = '<i class="fa-solid fa-user-shield"></i> ADMIN';
                     } else {
                         var rawPaket = currentUser.paket || '';
-                        var isDemo = (!rawPaket || rawPaket === '-' || rawPaket === '' || rawPaket.toUpperCase().includes('DEMO') || currentUser.role === 'Demo' || rawPaket.toUpperCase().includes('FREE PLAN'));
-                        var isPro = currentUser.isPremiumAddon || rawPaket.toUpperCase().includes('PRO');
+                        var isPro = typeof isPremiumAddon === 'function' ? isPremiumAddon() : Boolean(currentUser.isPremiumAddon);
                         var expStr = currentUser.expiredAt === 'Lifetime' ? 'Lifetime' : (currentUser.expiredAt ? currentUser.expiredAt.substring(0, 10) : '-');
                         var safeExpStr = typeof escapeHTML === 'function' ? escapeHTML(String(expStr)) : String(expStr);
+                        var proExpStr = currentUser.isProLifetime || currentUser.proExpiredAt === 'Lifetime' ? 'Lifetime' : (currentUser.proExpiredAt ? currentUser.proExpiredAt.substring(0, 10) : safeExpStr);
+                        var safeProExpStr = typeof escapeHTML === 'function' ? escapeHTML(String(proExpStr)) : String(proExpStr);
 
                         if (isPro) {
                             badgeEl.className = "hidden sm:flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full text-amber-700 font-bold text-[10px] tracking-wide uppercase shadow-sm";
-                            badgeEl.innerHTML = '<i class="fa-solid fa-crown"></i> PRO PLAN (EXP: ' + safeExpStr + ')';
+                            badgeEl.innerHTML = '<i class="fa-solid fa-crown"></i> PRO PLAN (EXP: ' + safeProExpStr + ')';
                         } else if (!isDemo) {
                             var displayPaket = rawPaket ? (typeof escapeHTML === 'function' ? escapeHTML(String(rawPaket).toUpperCase()) : String(rawPaket).toUpperCase()) : 'BERLANGGANAN';
                             badgeEl.className = "hidden sm:flex items-center gap-1.5 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-full text-blue-700 font-bold text-[10px] tracking-wide uppercase shadow-sm";
@@ -13763,7 +13764,7 @@
                         `<div class="text-left mb-1 text-xs font-bold text-gray-500 uppercase tracking-wide">1. Masukkan 6 Digit OTP:</div>` +
                         `<input id="swal-otp" type="number" class="w-full px-4 py-3 mb-4 bg-gray-50 border border-gray-200 rounded-xl outline-none text-center tracking-widest font-bold text-xl text-blue-600 focus:border-blue-500" placeholder="• • • • • •">` +
                         `<div class="text-left mb-1 text-xs font-bold text-gray-500 uppercase tracking-wide">2. Buat Password Baru Anda:</div>` +
-                        `<input id="swal-newpass" type="password" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-center focus:border-blue-500" placeholder="Ketik sandi rahasia baru...">`,
+                        `<input id="swal-newpass" type="password" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-center focus:border-blue-500" placeholder="Ketik sandi baru (min. 8 karakter)...">`,
                     focusConfirm: false,
                     showCancelButton: true,
                     confirmButtonText: 'Simpan Password Baru',
@@ -13775,7 +13776,7 @@
                         const newpass = document.getElementById('swal-newpass').value.trim();
 
                         if (!otp || !newpass) { Swal.showValidationMessage('Kolom OTP dan Password Baru wajib diisi!'); return false; }
-                        if (newpass.length < 5) { Swal.showValidationMessage('Password terlalu pendek (Minimal 5 karakter).'); return false; }
+                        if (newpass.length < 8 || newpass.length > 128) { Swal.showValidationMessage('Password minimal 8 karakter dan maksimal 128 karakter.'); return false; }
 
                         try {
                             const response = await fetch(API_ENDPOINT, {
