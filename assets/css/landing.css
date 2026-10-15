@@ -1,0 +1,39 @@
+/* Photo Selection - Landing Page Stylesheet */
+/* Extracted from index.html (Phase 5.0C) */
+
+html {
+    scroll-behavior: smooth;
+}
+
+.hero-pattern {
+    background-color: #f8fafc;
+    background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+    background-size: 32px 32px;
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* WA Chat Background Pattern */
+.wa-pattern {
+    background-color: #efeae2;
+    background-image: radial-gradient(#d1cdc7 1px, transparent 1px);
+    background-size: 12px 12px;
+}
+
+/* Hide scrollbar for carousel but keep functionality */
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.faq-content {
+    transition: max-height 0.3s ease-out;
+}
