@@ -7261,6 +7261,7 @@
                         badgeEl.innerHTML = '<i class="fa-solid fa-user-shield"></i> ADMIN';
                     } else {
                         var rawPaket = currentUser.paket || '';
+                        var isDemo = (!rawPaket || rawPaket === '-' || rawPaket === '' || String(rawPaket).toUpperCase().includes('DEMO') || currentUser.role === 'Demo' || String(rawPaket).toUpperCase().includes('FREE PLAN'));
                         var isPro = typeof isPremiumAddon === 'function' ? isPremiumAddon() : Boolean(currentUser.isPremiumAddon);
                         var expStr = currentUser.expiredAt === 'Lifetime' ? 'Lifetime' : (currentUser.expiredAt ? currentUser.expiredAt.substring(0, 10) : '-');
                         var safeExpStr = typeof escapeHTML === 'function' ? escapeHTML(String(expStr)) : String(expStr);
