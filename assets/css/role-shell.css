@@ -276,12 +276,12 @@ html.dark #admin-view #section-status .grid>div {
 }
 
 /* Project Filter Tabs */
-#admin-view #section-projects .flex.bg-gray-100\\/80 {
+#admin-view #section-projects .flex[class~="bg-gray-100/80"] {
     background-color: rgba(0, 0, 0, 0.04);
     border-color: rgba(0, 0, 0, 0.06);
 }
 
-html.dark #admin-view #section-projects .flex.bg-gray-100\\/80 {
+html.dark #admin-view #section-projects .flex[class~="bg-gray-100/80"] {
     background-color: rgba(255, 255, 255, 0.05);
     border-color: rgba(255, 255, 255, 0.08);
 }

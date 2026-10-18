@@ -1,0 +1,308 @@
+/**
+ * Photo Selection — The Atelier Collection
+ * Luxury Authentication Stylesheet (Phase 5.3)
+ * Scoped strictly to #auth-view
+ */
+
+/* ==========================================================================
+   1. AUTHENTICATION CONTAINER & BACKGROUND
+   ========================================================================== */
+
+#auth-view {
+    background: radial-gradient(circle at 50% 20%, rgba(216, 186, 131, 0.08) 0%, transparent 60%),
+        linear-gradient(145deg, #0e0f14 0%, #16171e 50%, #101115 100%) !important;
+    position: relative;
+    min-height: 100vh;
+    overflow-y: auto;
+}
+
+/* Atmospheric subtle vignette */
+#auth-view::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(0, 0, 0, 0.5) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ==========================================================================
+   2. LUXURY CARD ELEVATION & STRUCTURE
+   ========================================================================== */
+
+#auth-view>div>div {
+    background: rgba(24, 26, 34, 0.92) !important;
+    border: 1px solid rgba(216, 186, 131, 0.28) !important;
+    border-radius: var(--radius-xl, 24px) !important;
+    box-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.7),
+        0 0 35px -10px rgba(216, 186, 131, 0.15) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    color: #f8fafc;
+    position: relative;
+    z-index: 10;
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+/* Subtle gold accent top highlight line */
+#auth-view>div>div::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 15%;
+    right: 15%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(216, 186, 131, 0.6), transparent);
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   3. LANGUAGE SELECTOR
+   ========================================================================== */
+
+#auth-view #langSelector {
+    background-color: #101115 !important;
+    border: 1px solid rgba(216, 186, 131, 0.3) !important;
+    color: var(--color-champagne-light, #E6CF9F) !important;
+    border-radius: var(--radius-full, 9999px) !important;
+    padding: 6px 24px 6px 12px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#auth-view #langSelector:focus {
+    border-color: var(--color-champagne-primary, #D8BA83) !important;
+    box-shadow: 0 0 0 2px rgba(216, 186, 131, 0.2) !important;
+    outline: none;
+}
+
+#auth-view select#langSelector option {
+    background-color: #16171e;
+    color: #f8fafc;
+}
+
+/* ==========================================================================
+   4. BRAND IDENTITY & TYPOGRAPHY
+   ========================================================================== */
+
+#auth-view .brand-logo-container {
+    width: 64px !important;
+    height: 64px !important;
+    border-radius: var(--radius-lg, 16px) !important;
+    background: linear-gradient(135deg, rgba(216, 186, 131, 0.2) 0%, rgba(216, 186, 131, 0.05) 100%) !important;
+    border: 1px solid rgba(216, 186, 131, 0.45) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    color: var(--color-champagne-primary, #D8BA83) !important;
+}
+
+#auth-view .brand-logo-container i {
+    font-size: 26px !important;
+    color: var(--color-champagne-primary, #D8BA83) !important;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+#auth-view h2,
+#auth-view .brand-name-text {
+    font-family: var(--font-serif, 'Playfair Display', Georgia, serif) !important;
+    color: #ffffff !important;
+    letter-spacing: 0.02em;
+}
+
+#auth-view #login-form-wrapper p,
+#auth-view #register-form-wrapper p {
+    color: #94a3b8 !important;
+    letter-spacing: 0.01em;
+}
+
+/* ==========================================================================
+   5. INPUT FIELDS & FORM CONTROLS
+   ========================================================================== */
+
+#auth-view input[type="text"],
+#auth-view input[type="password"],
+#auth-view input[type="email"],
+#auth-view input[type="tel"],
+#auth-view select#reg_paket {
+    background-color: #101115 !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    border-radius: var(--radius-md, 12px) !important;
+    font-size: 14px !important;
+    min-height: 48px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#auth-view input::placeholder {
+    color: #64748b !important;
+}
+
+#auth-view input:focus,
+#auth-view select#reg_paket:focus {
+    background-color: #14161f !important;
+    border-color: var(--color-champagne-primary, #D8BA83) !important;
+    box-shadow: 0 0 0 3px rgba(216, 186, 131, 0.22) !important;
+    outline: none !important;
+}
+
+#auth-view select#reg_paket option {
+    background-color: #16171e;
+    color: #ffffff;
+}
+
+#auth-view .password-toggle-icon {
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 8px;
+    transition: color 0.2s ease, transform 0.15s ease;
+}
+
+#auth-view .password-toggle-icon:hover {
+    color: var(--color-champagne-light, #E6CF9F);
+    transform: scale(1.1);
+}
+
+/* Checkbox Styling */
+#auth-view #rememberMe {
+    accent-color: var(--color-champagne-primary, #D8BA83);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+#auth-view #lbl-remember {
+    color: #cbd5e1 !important;
+    user-select: none;
+}
+
+/* Forgot Password Link */
+#auth-view #lbl-forgot {
+    color: var(--color-champagne-primary, #D8BA83) !important;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+#auth-view #lbl-forgot:hover {
+    color: var(--color-champagne-light, #E6CF9F) !important;
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   6. PRIMARY & SECONDARY ACTION BUTTONS
+   ========================================================================== */
+
+#auth-view #btnLogin,
+#auth-view #btnRegister {
+    background: linear-gradient(135deg, var(--color-champagne-light, #E6CF9F) 0%, var(--color-champagne-primary, #D8BA83) 50%, var(--color-champagne-dark, #B9995B) 100%) !important;
+    color: #101115 !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: var(--radius-md, 12px) !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    min-height: 48px;
+    box-shadow: 0 4px 18px rgba(216, 186, 131, 0.28) !important;
+    cursor: pointer;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease !important;
+}
+
+#auth-view #btnLogin:hover,
+#auth-view #btnRegister:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px rgba(216, 186, 131, 0.42) !important;
+}
+
+#auth-view #btnLogin:active,
+#auth-view #btnRegister:active {
+    transform: translateY(0) !important;
+}
+
+/* Switch Auth Mode Button (Register / Login) */
+#auth-view #lbl-no-account,
+#auth-view #lbl-has-account {
+    color: #94a3b8 !important;
+    font-size: 12px !important;
+    transition: color 0.2s ease;
+}
+
+#auth-view #lbl-no-account span,
+#auth-view #lbl-has-account span {
+    color: var(--color-champagne-light, #E6CF9F) !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    border-bottom: 1px dotted rgba(216, 186, 131, 0.6);
+    padding-bottom: 1px;
+}
+
+#auth-view #lbl-no-account:hover span,
+#auth-view #lbl-has-account:hover span {
+    color: #ffffff !important;
+    border-bottom-color: #ffffff;
+}
+
+/* ==========================================================================
+   7. EMAIL VERIFICATION PRESENTATION
+   ========================================================================== */
+
+#auth-view #verify-email-wrapper .w-20.h-20 {
+    background: rgba(216, 186, 131, 0.12) !important;
+    border: 1px solid rgba(216, 186, 131, 0.35) !important;
+}
+
+#auth-view #verify-email-wrapper i.fa-envelope-open {
+    color: var(--color-champagne-primary, #D8BA83) !important;
+}
+
+#auth-view #verify-email-wrapper button {
+    background: #101115 !important;
+    border: 1px solid rgba(216, 186, 131, 0.35) !important;
+    color: var(--color-champagne-light, #E6CF9F) !important;
+    border-radius: var(--radius-md, 12px) !important;
+    font-weight: 600 !important;
+    min-height: 48px;
+    transition: all 0.2s ease;
+}
+
+#auth-view #verify-email-wrapper button:hover {
+    background: rgba(216, 186, 131, 0.15) !important;
+    border-color: var(--color-champagne-primary, #D8BA83) !important;
+}
+
+/* ==========================================================================
+   8. FOOTER PRESENTATION
+   ========================================================================== */
+
+#auth-view footer {
+    color: #64748b !important;
+    position: relative;
+    z-index: 10;
+}
+
+#auth-view footer a {
+    color: var(--color-champagne-primary, #D8BA83) !important;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+#auth-view footer a:hover {
+    color: var(--color-champagne-light, #E6CF9F) !important;
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   9. MOBILE RESPONSIVE TUNING
+   ========================================================================== */
+
+@media (max-width: 480px) {
+    #auth-view>div>div {
+        padding: 24px 20px !important;
+        border-radius: var(--radius-lg, 16px) !important;
+    }
+
+    #auth-view h2 {
+        font-size: 20px !important;
+    }
+}
