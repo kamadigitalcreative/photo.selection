@@ -1,39 +1,229 @@
-/* Photo Selection - Landing Page Stylesheet */
-/* Extracted from index.html (Phase 5.0C) */
+/**
+ * Photo Selection — The Atelier Collection
+ * Luxury Landing Page Stylesheet
+ * Phase 5.1 Architecture
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,600;0,6..96,700;1,6..96,400;1,6..96,600&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
+@import url('./design-tokens.css');
 
 html {
     scroll-behavior: smooth;
+    background-color: var(--color-noir-deep);
+    color: var(--text-secondary-on-dark);
 }
 
-.hero-pattern {
-    background-color: #f8fafc;
-    background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-    background-size: 32px 32px;
+body {
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-.glass-card {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+/* --- EDITORIAL TYPOGRAPHY --- */
+.font-serif-luxury {
+    font-family: var(--font-serif);
+    letter-spacing: -0.015em;
 }
 
-/* WA Chat Background Pattern */
-.wa-pattern {
-    background-color: #efeae2;
-    background-image: radial-gradient(#d1cdc7 1px, transparent 1px);
-    background-size: 12px 12px;
+.font-sans-luxury {
+    font-family: var(--font-sans);
 }
 
-/* Hide scrollbar for carousel but keep functionality */
+/* --- THEME SECTIONS --- */
+.theme-noir {
+    background-color: var(--color-noir-deep);
+    color: var(--text-secondary-on-dark);
+}
+
+.theme-noir-elevated {
+    background-color: var(--color-noir-surface);
+    color: var(--text-secondary-on-dark);
+}
+
+.theme-ivory {
+    background-color: var(--color-ivory-bg);
+    color: var(--text-secondary-on-light);
+}
+
+.theme-ivory-surface {
+    background-color: var(--color-ivory-surface);
+    color: var(--text-secondary-on-light);
+}
+
+/* --- LUXURY BUTTONS --- */
+.btn-champagne {
+    background: linear-gradient(135deg, var(--color-champagne-light) 0%, var(--color-champagne-primary) 100%);
+    color: #0f1014;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 4px 15px rgba(216, 186, 131, 0.25);
+    transition: all var(--transition-base);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-champagne:hover {
+    background: linear-gradient(135deg, #FFF0D0 0%, var(--color-champagne-light) 100%);
+    box-shadow: 0 8px 25px rgba(216, 186, 131, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-champagne:active {
+    transform: translateY(0);
+}
+
+.btn-outline-champagne {
+    background: rgba(28, 30, 38, 0.6);
+    color: var(--color-champagne-light);
+    border: 1px solid var(--color-champagne-border);
+    backdrop-filter: blur(8px);
+    transition: all var(--transition-base);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-outline-champagne:hover {
+    background: var(--color-champagne-tint);
+    border-color: var(--color-champagne-light);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.btn-ivory-dark {
+    background: var(--color-noir-deep);
+    color: #ffffff;
+    font-weight: 600;
+    transition: all var(--transition-base);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid var(--color-noir-border);
+}
+
+.btn-ivory-dark:hover {
+    background: #1c1e26;
+    color: var(--color-champagne-light);
+    transform: translateY(-1px);
+}
+
+/* --- LUXURY CARDS --- */
+.card-noir {
+    background-color: var(--color-noir-card);
+    border: 1px solid var(--color-noir-border);
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-base);
+}
+
+.card-noir:hover {
+    border-color: rgba(216, 186, 131, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.5);
+}
+
+.card-noir-featured {
+    background: linear-gradient(180deg, rgba(28, 30, 38, 0.95) 0%, rgba(22, 23, 30, 0.95) 100%);
+    border: 1px solid var(--color-champagne-primary);
+    box-shadow: 0 10px 40px -10px rgba(216, 186, 131, 0.25);
+    border-radius: var(--radius-lg);
+}
+
+.card-ivory {
+    background-color: var(--color-ivory-surface);
+    border: 1px solid var(--color-ivory-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-ivory);
+    transition: all var(--transition-base);
+}
+
+.card-ivory:hover {
+    border-color: rgba(216, 186, 131, 0.6);
+    transform: translateY(-3px);
+    box-shadow: 0 20px 40px -10px rgba(16, 17, 21, 0.1);
+}
+
+/* --- BADGES --- */
+.badge-champagne {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: var(--color-champagne-tint);
+    border: 1px solid var(--color-champagne-border);
+    color: var(--color-champagne-light);
+}
+
+.badge-ivory {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: var(--color-ivory-subtle);
+    border: 1px solid var(--color-ivory-border);
+    color: var(--color-noir-deep);
+}
+
+/* --- BACKGROUND PATTERNS & GRADIENTS --- */
+.noir-pattern {
+    background-color: var(--color-noir-deep);
+    background-image: 
+        radial-gradient(circle at 50% 0%, rgba(216, 186, 131, 0.08) 0%, transparent 60%),
+        radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 100% 100%, 36px 36px;
+}
+
+.ivory-pattern {
+    background-color: var(--color-ivory-bg);
+    background-image: radial-gradient(rgba(16, 17, 21, 0.05) 1px, transparent 1px);
+    background-size: 28px 28px;
+}
+
+/* --- DIVIDERS --- */
+.hairline-champagne {
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--color-champagne-primary) 50%, transparent 100%);
+    opacity: 0.4;
+}
+
+/* --- ACCORDION FAQ --- */
+.faq-content {
+    transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+/* --- UTILITIES --- */
 .hide-scrollbar::-webkit-scrollbar {
     display: none;
 }
-
 .hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
 
-.faq-content {
-    transition: max-height 0.3s ease-out;
+/* --- ACCESSIBILITY FOCUS --- */
+a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible {
+    outline: 2px solid var(--color-champagne-primary);
+    outline-offset: 2px;
+}
+
+/* --- COMPATIBILITY STYLES --- */
+.glass-card {
+    background: rgba(28, 30, 38, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
