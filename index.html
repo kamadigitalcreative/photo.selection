@@ -187,123 +187,147 @@
     </header>
 
     <!-- ======================================================== -->
-    <!-- SECTION 2: CINEMATIC HERO                                -->
+    <!-- SECTION 2: HERO C — CINEMATIC + PRODUCT                   -->
     <!-- ======================================================== -->
-    <section class="relative pt-16 pb-24 lg:pt-28 lg:pb-36 noir-pattern overflow-hidden">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-            <!-- Luxury Eyebrow Badge -->
-            <div class="inline-flex items-center justify-center mb-6">
-                <div class="badge-champagne">
-                    <i class="fa-solid fa-gem text-xs text-champagne"></i>
-                    <span data-i18n="hero.badge">The Atelier Collection • Platform Kurasi Studio Fotografi</span>
-                </div>
-            </div>
-
-            <!-- Headline -->
-            <h1 data-i18n="hero.title" data-i18n-html="true" class="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-[1.15] max-w-4xl mx-auto mb-6">
-                Your Photography. <br class="hidden sm:inline">
-                <span class="italic font-normal text-champagne-light">Beautifully Selected.</span>
-            </h1>
-
-            <!-- Subheadline -->
-            <p data-i18n="hero.subtitle" class="text-base sm:text-lg lg:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed mb-10">
-                Tingkatkan pengalaman klien studio Anda dengan galeri pemilihan foto berstandar editorial. Klien memilih foto favorit secara interaktif, file RAW siap disortir ke komputer kerja Anda.
-            </p>
-
-            <!-- Hero CTAs -->
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto mb-16">
-                <a href="app.html?auth=register" class="btn-champagne w-full sm:w-auto py-3.5 px-8 rounded-full text-xs uppercase tracking-wider font-bold">
-                    <i class="fa-solid fa-sparkles text-xs"></i>
-                    <span data-i18n="hero.cta_primary">Mulai 1 Project Gratis</span>
-                </a>
-                <a href="#fitur" class="btn-outline-champagne w-full sm:w-auto py-3.5 px-8 rounded-full text-xs uppercase tracking-wider font-semibold">
-                    <i class="fa-solid fa-circle-down text-xs"></i>
-                    <span data-i18n="hero.cta_secondary">Pelajari Fitur</span>
-                </a>
-            </div>
-
-            <!-- Luxury Interface Preview Mockup -->
-            <div class="max-w-5xl mx-auto rounded-2xl border border-champagne/30 bg-noir-card/90 shadow-2xl p-4 sm:p-6 backdrop-blur-xl relative">
-                <!-- Window Controls & Gallery Header -->
-                <div class="flex items-center justify-between pb-4 border-b border-white/5 mb-6 text-left">
-                    <div class="flex items-center gap-2">
-                        <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block"></span>
-                        <span class="w-3 h-3 rounded-full bg-amber-500/80 inline-block"></span>
-                        <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
-                        <span data-i18n="hero.mock_url" class="ml-3 text-xs text-slate-400 font-mono hidden sm:inline">client-gallery.kama.id/sel/e92a4f</span>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <span data-i18n="hero.mock_selected" class="text-xs text-champagne bg-champagne/10 border border-champagne/30 px-3 py-1 rounded-full font-semibold">
-                            48 / 50 Foto Dipilih
-                        </span>
-                        <span data-i18n="hero.mock_studio" class="text-xs text-slate-400 hidden sm:inline">Studio: Kama Creative</span>
-                    </div>
-                </div>
-
-                <!-- Gallery Photo Grid Simulation -->
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 text-left">
-                    <!-- Photo Card 1 (Selected) -->
-                    <div class="group relative rounded-xl overflow-hidden aspect-[4/5] bg-noir-surface border-2 border-champagne shadow-lg">
-                        <img src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80" alt="Wedding Portrait" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                        <div class="absolute inset-0 bg-gradient-to-t from-noir-base/80 via-transparent to-transparent"></div>
-                        <div class="absolute top-2.5 right-2.5 bg-champagne text-noir-base w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shadow-md">
-                            <i class="fa-solid fa-check"></i>
-                        </div>
-                        <div class="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between text-[11px] text-white font-mono">
-                            <span>IMG_0412.JPG</span>
-                            <span class="text-champagne font-bold">Terpilih</span>
+    <section class="relative pt-12 pb-20 lg:pt-20 lg:pb-28 noir-pattern overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+                <!-- Left Column: Editorial Copy & Core CTAs (lg:col-span-5) -->
+                <div class="lg:col-span-5 text-center lg:text-left">
+                    <!-- Luxury Eyebrow Badge -->
+                    <div class="inline-flex items-center justify-center lg:justify-start mb-5">
+                        <div class="badge-champagne">
+                            <i class="fa-solid fa-gem text-xs text-champagne"></i>
+                            <span data-i18n="hero.badge">The Atelier Collection • Platform Kurasi Studio Fotografi</span>
                         </div>
                     </div>
 
-                    <!-- Photo Card 2 (Selected) -->
-                    <div class="group relative rounded-xl overflow-hidden aspect-[4/5] bg-noir-surface border-2 border-champagne shadow-lg">
-                        <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=600&q=80" alt="Editorial Bride" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                        <div class="absolute inset-0 bg-gradient-to-t from-noir-base/80 via-transparent to-transparent"></div>
-                        <div class="absolute top-2.5 right-2.5 bg-champagne text-noir-base w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shadow-md">
-                            <i class="fa-solid fa-check"></i>
-                        </div>
-                        <div class="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between text-[11px] text-white font-mono">
-                            <span>IMG_0418.JPG</span>
-                            <span class="text-champagne font-bold">Terpilih</span>
-                        </div>
+                    <!-- Grand Serif Headline -->
+                    <h1 data-i18n="hero.title" data-i18n-html="true" class="font-serif text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-white tracking-tight leading-[1.12] mb-5">
+                        Your Photography. <br class="hidden sm:inline">
+                        <span class="italic font-normal text-champagne-light">Beautifully Selected.</span>
+                    </h1>
+
+                    <!-- Editorial Subheadline -->
+                    <p data-i18n="hero.subtitle" class="text-sm sm:text-base lg:text-lg text-slate-300 leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0">
+                        Tingkatkan pengalaman klien studio Anda dengan galeri pemilihan foto berstandar editorial. Klien memilih foto favorit secara interaktif, file RAW siap disortir ke komputer kerja Anda.
+                    </p>
+
+                    <!-- Hero CTAs -->
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4 mb-8">
+                        <a href="app.html?auth=register" class="btn-champagne py-3.5 px-7 rounded-full text-xs uppercase tracking-wider font-bold shadow-lg">
+                            <i class="fa-solid fa-sparkles text-xs"></i>
+                            <span data-i18n="hero.cta_primary">Mulai 1 Project Gratis</span>
+                        </a>
+                        <a href="#fitur" class="btn-outline-champagne py-3.5 px-6 rounded-full text-xs uppercase tracking-wider font-semibold">
+                            <i class="fa-solid fa-circle-down text-xs"></i>
+                            <span data-i18n="hero.cta_secondary">Pelajari Fitur</span>
+                        </a>
                     </div>
 
-                    <!-- Photo Card 3 (Unselected) -->
-                    <div class="group relative rounded-xl overflow-hidden aspect-[4/5] bg-noir-surface border border-white/10 opacity-75 hover:opacity-100 transition-opacity">
-                        <img src="https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=600&q=80" alt="Atmospheric Scene" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                        <div class="absolute inset-0 bg-gradient-to-t from-noir-base/80 via-transparent to-transparent"></div>
-                        <div class="absolute top-2.5 right-2.5 bg-white/20 text-white w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs">
-                            <i class="fa-regular fa-circle"></i>
+                    <!-- Editorial Trust & Feature Badges -->
+                    <div class="pt-6 border-t border-white/10 flex flex-wrap items-center justify-center lg:justify-start gap-4 text-xs text-slate-400">
+                        <div class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-bolt text-champagne"></i>
+                            <span data-i18n="hero.pill_sorter">Sortir RAW Otomatis</span>
                         </div>
-                        <div class="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between text-[11px] text-slate-300 font-mono">
-                            <span>IMG_0423.JPG</span>
-                            <span class="text-slate-400">Pilih Foto</span>
+                        <div class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-shield-check text-champagne"></i>
+                            <span data-i18n="hero.pill_pin">Proteksi Kode PIN</span>
                         </div>
-                    </div>
-
-                    <!-- Photo Card 4 (Selected with Comment) -->
-                    <div class="hidden lg:block group relative rounded-xl overflow-hidden aspect-[4/5] bg-noir-surface border-2 border-champagne shadow-lg">
-                        <img src="https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=600&q=80" alt="Couple Portrait" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                        <div class="absolute inset-0 bg-gradient-to-t from-noir-base/80 via-transparent to-transparent"></div>
-                        <div class="absolute top-2.5 right-2.5 bg-champagne text-noir-base w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shadow-md">
-                            <i class="fa-solid fa-check"></i>
-                        </div>
-                        <div class="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between text-[11px] text-white font-mono">
-                            <span>IMG_0435.JPG</span>
-                            <span class="text-amber-400"><i class="fa-solid fa-message mr-1"></i>Catatan</span>
+                        <div class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-mobile-screen text-champagne"></i>
+                            <span data-i18n="hero.pill_noinstall">Tanpa Instal Aplikasi</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Sorter Status Banner -->
-                <div class="mt-6 pt-4 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-3">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-bolt-lightning text-champagne"></i>
-                        <span data-i18n="hero.mock_sorter">Local Sorter: Siap duplikasi 48 file RAW ke folder studio</span>
-                    </div>
-                    <div class="text-champagne font-semibold flex items-center gap-2">
-                        <i class="fa-solid fa-shield-check"></i>
-                        <span data-i18n="hero.mock_pin">Akses PIN Terproteksi</span>
+                <!-- Right Column: Hero C Cinematic Visual + Gallery Mockup (lg:col-span-7) -->
+                <div class="lg:col-span-7 relative">
+                    <!-- Luxury Interface Preview Mockup -->
+                    <div class="rounded-2xl border border-champagne/40 bg-noir-card/95 shadow-2xl p-4 sm:p-5 backdrop-blur-xl relative">
+                        <!-- Window Controls & Gallery Header -->
+                        <div class="flex items-center justify-between pb-3.5 border-b border-white/10 mb-4 text-left">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block"></span>
+                                <span class="w-3 h-3 rounded-full bg-amber-500/80 inline-block"></span>
+                                <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
+                                <span data-i18n="hero.mock_url" class="ml-2.5 text-xs text-slate-400 font-mono hidden sm:inline">client-gallery.kama.id/sel/e92a4f</span>
+                            </div>
+                            <div class="flex items-center gap-2.5">
+                                <span data-i18n="hero.mock_selected" class="text-xs text-champagne bg-champagne/10 border border-champagne/30 px-3 py-1 rounded-full font-semibold">
+                                    48 / 50 Foto Dipilih
+                                </span>
+                                <span data-i18n="hero.mock_studio" class="text-xs text-slate-400 hidden sm:inline">Studio: Kama Creative</span>
+                            </div>
+                        </div>
+
+                        <!-- Gallery Photo Grid Simulation (Cinematic Featured + Grid) -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 text-left">
+                            <!-- Photo Card 1 (Cinematic Highlight - Selected) -->
+                            <div class="group relative rounded-xl overflow-hidden aspect-[4/5] bg-noir-surface border-2 border-champagne shadow-lg">
+                                <img src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80" alt="Wedding Portrait" width="300" height="375" loading="eager" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute inset-0 bg-gradient-to-t from-noir-base/80 via-transparent to-transparent"></div>
+                                <div class="absolute top-2 right-2 bg-champagne text-noir-base w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shadow-md">
+                                    <i class="fa-solid fa-check text-[11px]"></i>
+                                </div>
+                                <div class="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[10px] sm:text-[11px] text-white font-mono">
+                                    <span>IMG_0412.JPG</span>
+                                    <span class="text-champagne font-bold" data-i18n="hero.mock_status_selected">Terpilih</span>
+                                </div>
+                            </div>
+
+                            <!-- Photo Card 2 (Editorial Bride - Selected) -->
+                            <div class="group relative rounded-xl overflow-hidden aspect-[4/5] bg-noir-surface border-2 border-champagne shadow-lg">
+                                <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=600&q=80" alt="Editorial Bride" width="300" height="375" loading="eager" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute inset-0 bg-gradient-to-t from-noir-base/80 via-transparent to-transparent"></div>
+                                <div class="absolute top-2 right-2 bg-champagne text-noir-base w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shadow-md">
+                                    <i class="fa-solid fa-check text-[11px]"></i>
+                                </div>
+                                <div class="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[10px] sm:text-[11px] text-white font-mono">
+                                    <span>IMG_0418.JPG</span>
+                                    <span class="text-champagne font-bold" data-i18n="hero.mock_status_selected">Terpilih</span>
+                                </div>
+                            </div>
+
+                            <!-- Photo Card 3 (Atmospheric Scene - Unselected) -->
+                            <div class="group relative rounded-xl overflow-hidden aspect-[4/5] bg-noir-surface border border-white/10 opacity-75 hover:opacity-100 transition-opacity">
+                                <img src="https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=600&q=80" alt="Atmospheric Scene" width="300" height="375" loading="eager" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute inset-0 bg-gradient-to-t from-noir-base/80 via-transparent to-transparent"></div>
+                                <div class="absolute top-2 right-2 bg-white/20 text-white w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs">
+                                    <i class="fa-regular fa-circle text-[11px]"></i>
+                                </div>
+                                <div class="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[10px] sm:text-[11px] text-slate-300 font-mono">
+                                    <span>IMG_0423.JPG</span>
+                                    <span class="text-slate-400" data-i18n="hero.mock_status_unselected">Pilih Foto</span>
+                                </div>
+                            </div>
+
+                            <!-- Photo Card 4 (Couple Portrait - Note) -->
+                            <div class="group relative rounded-xl overflow-hidden aspect-[4/5] bg-noir-surface border-2 border-champagne shadow-lg">
+                                <img src="https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=600&q=80" alt="Couple Portrait" width="300" height="375" loading="eager" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute inset-0 bg-gradient-to-t from-noir-base/80 via-transparent to-transparent"></div>
+                                <div class="absolute top-2 right-2 bg-champagne text-noir-base w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shadow-md">
+                                    <i class="fa-solid fa-check text-[11px]"></i>
+                                </div>
+                                <div class="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[10px] sm:text-[11px] text-white font-mono">
+                                    <span>IMG_0435.JPG</span>
+                                    <span class="text-amber-400 flex items-center"><i class="fa-solid fa-message mr-1 text-[10px]"></i><span data-i18n="hero.mock_status_note">Catatan</span></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sorter Status Banner -->
+                        <div class="mt-4 pt-3.5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2.5">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-bolt-lightning text-champagne"></i>
+                                <span data-i18n="hero.mock_sorter">Local Sorter: Siap duplikasi 48 file RAW ke folder studio</span>
+                            </div>
+                            <div class="text-champagne font-semibold flex items-center gap-2">
+                                <i class="fa-solid fa-shield-check"></i>
+                                <span data-i18n="hero.mock_pin">Akses PIN Terproteksi</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -418,8 +442,8 @@
                     <p data-i18n="workflow.step1.desc" class="text-slate-600 text-sm leading-relaxed mb-4">
                         Unggah preview foto proyek, tentukan kuota pilihan foto (misal max 50), dan pasang proteksi PIN jika dibutuhkan.
                     </p>
-                    <div data-i18n="workflow.step1.note" class="text-xs text-champagne font-semibold flex items-center gap-1.5">
-                        <i class="fa-solid fa-arrow-right"></i> Link unik siap dibagikan
+                    <div class="text-xs text-champagne font-semibold flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrow-right"></i> <span data-i18n="workflow.step1.note">Link unik siap dibagikan</span>
                     </div>
                 </div>
 
@@ -430,8 +454,8 @@
                     <p data-i18n="workflow.step2.desc" class="text-slate-600 text-sm leading-relaxed mb-4">
                         Klien membuka galeri di browser ponsel atau laptop, menandai foto favorit dan catatan tanpa perlu membuat akun atau unduh app.
                     </p>
-                    <div data-i18n="workflow.step2.note" class="text-xs text-champagne font-semibold flex items-center gap-1.5">
-                        <i class="fa-solid fa-arrow-right"></i> Pengalaman klien responsif
+                    <div class="text-xs text-champagne font-semibold flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrow-right"></i> <span data-i18n="workflow.step2.note">Pengalaman klien responsif</span>
                     </div>
                 </div>
 
@@ -442,8 +466,8 @@
                     <p data-i18n="workflow.step3.desc" class="text-slate-600 text-sm leading-relaxed mb-4">
                         Saat klien mengirim pilihan, dashboard fotografer mencatat daftar nama file secara akurat tanpa risiko kesalahan pengetikan.
                     </p>
-                    <div data-i18n="workflow.step3.note" class="text-xs text-champagne font-semibold flex items-center gap-1.5">
-                        <i class="fa-solid fa-arrow-right"></i> Status proyek terpantau
+                    <div class="text-xs text-champagne font-semibold flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrow-right"></i> <span data-i18n="workflow.step3.note">Status proyek terpantau</span>
                     </div>
                 </div>
 
@@ -454,8 +478,8 @@
                     <p data-i18n="workflow.step4.desc" class="text-slate-600 text-sm leading-relaxed mb-4">
                         Gunakan fitur Sortir Lokal di dashboard. Sistem membaca folder RAW di laptop dan menyalin file pilihan ke folder terpisah.
                     </p>
-                    <div data-i18n="workflow.step4.note" class="text-xs text-champagne font-semibold flex items-center gap-1.5">
-                        <i class="fa-solid fa-check-double"></i> Siap masuk tahap retouching
+                    <div class="text-xs text-champagne font-semibold flex items-center gap-1.5">
+                        <i class="fa-solid fa-check-double"></i> <span data-i18n="workflow.step4.note">Siap masuk tahap retouching</span>
                     </div>
                 </div>
             </div>
@@ -853,7 +877,7 @@
                             <i class="fa-solid fa-camera"></i>
                         </div>
                         <div>
-                            <div class="text-xs font-bold text-white">Alur Kurasi Wedding</div>
+                            <div data-i18n="usecases.c1.title" class="text-xs font-bold text-white">Alur Kurasi Wedding</div>
                             <div data-i18n="usecases.c1.cat" class="text-[11px] text-slate-400">Spesialisasi Wedding & Dokumentasi</div>
                         </div>
                     </div>
@@ -875,7 +899,7 @@
                             <i class="fa-solid fa-palette"></i>
                         </div>
                         <div>
-                            <div class="text-xs font-bold text-white">Alur Kurasi Portrait</div>
+                            <div data-i18n="usecases.c2.title" class="text-xs font-bold text-white">Alur Kurasi Portrait</div>
                             <div data-i18n="usecases.c2.cat" class="text-[11px] text-slate-400">Spesialisasi Portrait & Fashion</div>
                         </div>
                     </div>
@@ -897,7 +921,7 @@
                             <i class="fa-solid fa-briefcase"></i>
                         </div>
                         <div>
-                            <div class="text-xs font-bold text-white">Alur Kurasi Komersial</div>
+                            <div data-i18n="usecases.c3.title" class="text-xs font-bold text-white">Alur Kurasi Komersial</div>
                             <div data-i18n="usecases.c3.cat" class="text-[11px] text-slate-400">Spesialisasi Corporate & Komersial</div>
                         </div>
                     </div>
@@ -1314,6 +1338,12 @@
                 'hero.mock_studio': 'Studio: Kama Creative',
                 'hero.mock_sorter': 'Local Sorter: Siap duplikasi 48 file RAW ke folder studio',
                 'hero.mock_pin': 'Akses PIN Terproteksi',
+                'hero.pill_sorter': 'Sortir RAW Otomatis',
+                'hero.pill_pin': 'Proteksi Kode PIN',
+                'hero.pill_noinstall': 'Tanpa Instal Aplikasi',
+                'hero.mock_status_selected': 'Terpilih',
+                'hero.mock_status_unselected': 'Pilih Foto',
+                'hero.mock_status_note': 'Catatan',
 
                 'problem.badge': 'Tantangan Alur Kerja',
                 'problem.title': 'Kendala Seleksi Foto yang Sering Dihadapi Studio',
@@ -1436,11 +1466,14 @@
                 'usecases.subtitle': 'Ilustrasi bagaimana alur kurasi Photo Selection mempermudah operasional berbagai jenis pemotretan:',
                 'usecases.c1.tag': 'Studi Kasus 1: Wedding & Prewedding',
                 'usecases.c1.desc': 'Kurasi ratusan foto momen pernikahan menjadi teratur. Klien memilih foto terbaik bersama pasangan di smartphone dengan batas kuota yang jelas, tanpa saling kirim puluhan screenshot chat yang membingungkan.',
+                'usecases.c1.title': 'Alur Kurasi Wedding',
                 'usecases.c1.cat': 'Spesialisasi Wedding & Dokumentasi',
                 'usecases.c2.tag': 'Studi Kasus 2: Portrait & Editorial Studio',
+                'usecases.c2.title': 'Alur Kurasi Portrait',
                 'usecases.c2.desc': 'Sesi foto studio dengan variasi pose dan ekspresi mendetail. Klien menandai nomor frame pilihan secara presisi, lalu fotografer menyortir file RAW secara otomatis ke folder laptop dalam hitungan detik.',
                 'usecases.c2.cat': 'Spesialisasi Portrait & Fashion',
                 'usecases.c3.tag': 'Studi Kasus 3: Commercial & Corporate Event',
+                'usecases.c3.title': 'Alur Kurasi Komersial',
                 'usecases.c3.desc': 'Klien korporat dapat meninjau galeri dokumentasi menggunakan proteksi kode PIN khusus. Galeri yang bersih dan terstruktur mempermudah PIC perusahaan memilih foto publikasi secara cepat.',
                 'usecases.c3.cat': 'Spesialisasi Corporate & Komersial',
 
@@ -1505,6 +1538,12 @@
                 'hero.mock_studio': 'Studio: Kama Creative',
                 'hero.mock_sorter': 'Local Sorter: Ready to duplicate 48 RAW files to studio folder',
                 'hero.mock_pin': 'PIN Protected Access',
+                'hero.pill_sorter': 'Auto RAW Sorting',
+                'hero.pill_pin': 'PIN Protected Gallery',
+                'hero.pill_noinstall': 'Zero Client Installation',
+                'hero.mock_status_selected': 'Selected',
+                'hero.mock_status_unselected': 'Select Photo',
+                'hero.mock_status_note': 'Client Note',
 
                 'problem.badge': 'Workflow Challenges',
                 'problem.title': 'Common Photo Selection Bottlenecks in Studio Workflows',
@@ -1627,11 +1666,14 @@
                 'usecases.subtitle': 'Illustrating how Photo Selection simplifies curation operations for different shoot types:',
                 'usecases.c1.tag': 'Use Case 1: Wedding & Prewedding',
                 'usecases.c1.desc': 'Curating hundreds of wedding captures stays organized. Clients select favorite photos together on smartphones within defined quotas, without sending dozens of confusing chat screenshots.',
+                'usecases.c1.title': 'Wedding Curation Flow',
                 'usecases.c1.cat': 'Wedding & Event Documentation',
                 'usecases.c2.tag': 'Use Case 2: Portrait & Editorial Studio',
+                'usecases.c2.title': 'Portrait Curation Flow',
                 'usecases.c2.desc': 'Studio shoots with detailed pose and expression variations. Clients accurately select frame numbers, then photographers automatically sort RAW files to their laptop directory in seconds.',
                 'usecases.c2.cat': 'Portrait & Fashion Specialty',
                 'usecases.c3.tag': 'Use Case 3: Commercial & Corporate Event',
+                'usecases.c3.title': 'Commercial Curation Flow',
                 'usecases.c3.desc': 'Corporate clients review documentation galleries using dedicated PIN security. A clean, structured gallery allows company PICs to select publication photos swiftly.',
                 'usecases.c3.cat': 'Corporate & Commercial Specialty',
 
@@ -1697,6 +1739,16 @@
                     else el.textContent = dict[key];
                 }
             });
+
+            var extraFaq = document.getElementById('extraFaq');
+            var btnMoreFaq = document.getElementById('btnMoreFaq');
+            if (btnMoreFaq && extraFaq) {
+                var btnSpan = btnMoreFaq.querySelector('span');
+                var isExpanded = !extraFaq.classList.contains('hidden');
+                if (btnSpan && isExpanded) {
+                    btnSpan.textContent = dict['faq.less'] || (selectedLang === 'en' ? 'Hide' : 'Sembunyikan');
+                }
+            }
         }
 
         document.addEventListener('DOMContentLoaded', function () {
