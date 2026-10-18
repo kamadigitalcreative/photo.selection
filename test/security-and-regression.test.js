@@ -584,23 +584,37 @@ async function runTestSuite() {
     let inlineScripts = 0;
     const inlineContents = [];
 
+    const externalSrcs = [];
     while ((match = scriptRegex.exec(html)) !== null) {
       totalScripts++;
-      if (/src\s*=/i.test(match[1])) {
+      const srcMatch = match[1].match(/src=["']([^"']+)["']/i);
+      if (srcMatch) {
         externalScripts++;
+        externalSrcs.push(srcMatch[1]);
       } else {
         inlineScripts++;
         inlineContents.push(match[2]);
       }
     }
 
-    if (totalScripts === 12 && externalScripts === 6 && inlineScripts === 6) {
-      recordTest('REG-2', 'app.html script counts invariant', 'PASS', 'Exactly 12 script tags: 6 external, 6 inline');
-    } else {
-      recordTest('REG-2', 'app.html script counts invariant', 'FAIL', `Total: ${totalScripts}, Ext: ${externalScripts}, Inline: ${inlineScripts}`);
+    const hasDashboardCharts = externalSrcs.some(s => s.includes('assets/js/admin/dashboard-charts.js'));
+    const chartsScriptPath = path.join(__dirname, '../assets/js/admin/dashboard-charts.js');
+    const chartsFileExists = fs.existsSync(chartsScriptPath);
+    let chartsExportsValid = false;
+    if (chartsFileExists) {
+      const chartsCode = fs.readFileSync(chartsScriptPath, 'utf8');
+      chartsExportsValid = chartsCode.includes('function loadDashboardData') &&
+                           chartsCode.includes('function renderCharts') &&
+                           chartsCode.includes('function trackVisit');
     }
 
-    // Gate 3: All 6 inline scripts parse without syntax errors
+    if (totalScripts === 12 && externalScripts === 7 && inlineScripts === 5 && hasDashboardCharts && chartsFileExists && chartsExportsValid) {
+      recordTest('REG-2', 'app.html script counts invariant', 'PASS', 'Exactly 12 script tags: 7 external, 5 inline (Phase 5.0D dashboard-charts.js verified)');
+    } else {
+      recordTest('REG-2', 'app.html script counts invariant', 'FAIL', `Total: ${totalScripts}, Ext: ${externalScripts}, Inline: ${inlineScripts}, ChartsScript: ${hasDashboardCharts}, Exists: ${chartsFileExists}`);
+    }
+
+    // Gate 3: All 5 inline scripts and extracted script parse without syntax errors
     let inlineSyntaxErrors = 0;
     inlineContents.forEach((c, idx) => {
       try {
@@ -610,10 +624,21 @@ async function runTestSuite() {
       }
     });
 
-    if (inlineSyntaxErrors === 0) {
-      recordTest('REG-3', 'app.html inline scripts syntax', 'PASS', 'All 6 inline scripts parse cleanly without errors');
+    let extractedSyntaxValid = false;
+    if (chartsFileExists) {
+      try {
+        const chartsCode = fs.readFileSync(chartsScriptPath, 'utf8');
+        new Function(chartsCode);
+        extractedSyntaxValid = true;
+      } catch (err) {
+        inlineSyntaxErrors++;
+      }
+    }
+
+    if (inlineSyntaxErrors === 0 && extractedSyntaxValid && inlineContents.length === 5) {
+      recordTest('REG-3', 'app.html inline scripts syntax', 'PASS', 'All 5 inline scripts and extracted dashboard-charts.js parse cleanly without errors');
     } else {
-      recordTest('REG-3', 'app.html inline scripts syntax', 'FAIL', `${inlineSyntaxErrors} inline scripts had syntax errors`);
+      recordTest('REG-3', 'app.html inline scripts syntax', 'FAIL', `${inlineSyntaxErrors} script syntax errors (ExtractedValid: ${extractedSyntaxValid})`);
     }
 
     // Gate 4: Exactly 29 Collage template definitions (Structural detection with fallback)
