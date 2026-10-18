@@ -244,7 +244,7 @@
             <!-- Brand Logo & Name -->
             <div class="p-6 flex items-center gap-3">
                 <div
-                    class="w-10 h-10 rounded-full border border-gray-600 bg-gradient-to-br from-kama-800 to-kama-900 flex items-center justify-center shrink-0 overflow-hidden relative">
+                    class="sidebar-mark w-10 h-10 rounded-full border border-gray-600 bg-gradient-to-br from-kama-800 to-kama-900 flex items-center justify-center shrink-0 overflow-hidden relative">
                     <i id="sidebar-icon" class="fa-solid fa-camera-retro text-white text-sm"></i>
                     <img id="sidebar-logo" src="" class="absolute inset-0 w-full h-full object-cover hidden">
                 </div>
@@ -399,7 +399,7 @@
                 <div class="p-4 flex justify-between items-center border-b border-white/10">
                     <div class="flex items-center gap-3">
                         <div
-                            class="w-8 h-8 rounded-full border border-gray-600 bg-gradient-to-br from-kama-800 to-kama-900 flex items-center justify-center shrink-0 overflow-hidden relative">
+                            class="sidebar-mark w-8 h-8 rounded-full border border-gray-600 bg-gradient-to-br from-kama-800 to-kama-900 flex items-center justify-center shrink-0 overflow-hidden relative">
                             <i id="sidebar-icon-m" class="fa-solid fa-camera-retro text-white text-xs"></i>
                             <img id="sidebar-logo-m" src="" class="absolute inset-0 w-full h-full object-cover hidden">
                         </div>
@@ -479,6 +479,23 @@
                 <div class="max-w-[1400px] mx-auto min-h-full flex flex-col">
 
                     <div id="section-dashboard" class="hidden flex-1 flex-col">
+                        <!-- ADMIN LUXURY HERO (PROTOTYPE PARITY) -->
+                        <section class="admin-hero mb-6">
+                            <div class="admin-hc">
+                                <div class="eyebrow">♛ ADMIN CONSOLE</div>
+                                <h1 class="hero-title">Studio Governance & Analytics<br><em>Photo Selection.</em></h1>
+                                <p class="hero-desc">Pantau fotografer, proyek, performa langganan, dan integritas sistem dalam satu ruang kendali elegan.</p>
+                                <div class="hero-buttons">
+                                    <button type="button" onclick="switchAdminTab('users')" class="primary-hero-btn">
+                                        <i class="fa-solid fa-users-gear mr-1.5"></i> Kelola Fotografer
+                                    </button>
+                                    <button type="button" onclick="switchAdminTab('premium-addon')" class="secondary-hero-btn">
+                                        <i class="fa-solid fa-crown mr-1.5"></i> Status PRO & Add-on
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
+
                         <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
                             <div>
                                 <h2 class="text-2xl font-bold text-kama-800 tracking-tight">Overview Analytics</h2>
@@ -738,6 +755,22 @@
                     </div>
 
                     <div id="section-projects" class="hidden flex-1 flex-col">
+                        <!-- PHOTOGRAPHER EDITORIAL HERO (PROTOTYPE PARITY) -->
+                        <section class="photographer-hero mb-6">
+                            <div class="photographer-hc">
+                                <div class="eyebrow">CURATED PORTFOLIO</div>
+                                <h1 class="hero-title">The Atelier Collection<br><em>Sistem Kurasi Foto Mewah.</em></h1>
+                                <p class="hero-desc">Kelola proyek kurasi, pantau pemilihan foto klien secara real-time, dan berikan pengalaman visual eksklusif bagi klien Anda.</p>
+                                <div class="hero-buttons">
+                                    <button type="button" onclick="openModalCreate()" class="primary-hero-btn">
+                                        <i class="fa-solid fa-plus mr-1.5"></i> Buat Project Baru
+                                    </button>
+                                    <button type="button" onclick="switchAdminTab('status')" class="secondary-hero-btn">
+                                        <i class="fa-solid fa-eye mr-1.5"></i> Pantau Klien
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
 
                         <!-- 4 Metric Cards di Menu Daftar Project -->
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
@@ -4289,6 +4322,21 @@
                 onclick="scrollGallery(1)">
                 <i class="fa-solid fa-chevron-right"></i>
             </button>
+            <!-- CLIENT EDITORIAL BANNER & 3-STEP GUIDE (PROTOTYPE PARITY) -->
+            <section class="client-banner-luxury max-w-[1600px] mx-auto">
+                <div class="client-text">
+                    <div class="eyebrow">THE ATELIER COLLECTION · PRIVATE COLLECTION</div>
+                    <h1>Curated Moments<br><em>The Final Selection.</em></h1>
+                    <p>Silakan pilih foto-foto terbaik Anda dengan menyentuh foto atau tombol hati pada setiap foto.</p>
+                </div>
+            </section>
+            <div class="client-simple-steps max-w-[1600px] mx-auto px-4">
+                <div class="client-step active"><b>01</b> <span>Eksplorasi Galeri</span></div>
+                <span class="step-arrow">→</span>
+                <div class="client-step"><b>02</b> <span>Pilih Favorit</span></div>
+                <span class="step-arrow">→</span>
+                <div class="client-step"><b>03</b> <span>Kirim & Konfirmasi</span></div>
+            </div>
 
             <div id="gallery-container" class="gallery-grid max-w-[1600px] mx-auto scroll-smooth"></div>
             <div id="gallery-empty"
@@ -11452,17 +11500,36 @@
                             : '<i class="fa-regular fa-square-check mr-2"></i> ' + (isEn ? 'Select' : 'Pilih');
                     }
 
-                    var safeUrl = safeImageUrl(imgData.url, 'https://placehold.co/400x400?text=Error');
+                    var localPlaceholderSvg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'><rect width='400' height='400' fill='%23161719'/><text x='50%' y='48%' dominant-baseline='middle' text-anchor='middle' fill='%23dfba7b' font-family='sans-serif' font-size='15' letter-spacing='2'>PHOTO SELECTION</text><text x='50%' y='56%' dominant-baseline='middle' text-anchor='middle' fill='%239e9a93' font-family='sans-serif' font-size='11'>Preview Unavailable</text></svg>";
+                    var safeUrl = safeImageUrl(imgData.url, localPlaceholderSvg);
                     card.innerHTML =
                         '<div class="number-badge">' + (index + 1) + '</div>' +
-                        '<div class="check-badge"><i class="fa-solid fa-check"></i></div>';
+                        '<button type="button" class="check-badge heart-btn" role="checkbox" aria-checked="' + (isSelected ? 'true' : 'false') + '" aria-label="' + (isSelected ? (isEn ? 'Deselect photo ' + (index + 1) : 'Batalkan pilihan foto ' + (index + 1)) : (isEn ? 'Select photo ' + (index + 1) : 'Pilih foto ' + (index + 1))) + '" title="' + (isSelected ? (isEn ? 'Deselect photo' : 'Batalkan pilihan') : (isEn ? 'Select photo' : 'Pilih foto ini')) + '"><i class="fa-solid fa-heart"></i></button>';
+
+                    var heartBadge = card.querySelector('.heart-btn');
+                    if (heartBadge) {
+                        heartBadge.onclick = function (e) {
+                            e.stopPropagation();
+                            toggleSelection(card, imgData.name, imgData.url);
+                        };
+                        heartBadge.onkeydown = function (e) {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleSelection(card, imgData.name, imgData.url);
+                            }
+                        };
+                    }
 
                     var imgEl = document.createElement('img');
                     imgEl.src = safeUrl;
                     imgEl.alt = imgData.name || '';
                     imgEl.loading = 'lazy';
                     imgEl.referrerPolicy = 'no-referrer';
-                    imgEl.onerror = function () { this.src = 'https://placehold.co/400x400?text=Error'; };
+                    imgEl.onerror = function () {
+                        this.onerror = null; // Single-attempt guard prevents repeated onerror loops
+                        this.src = localPlaceholderSvg;
+                    };
                     imgEl.onclick = function (event) {
                         openImageViewer(imgData.url, imgData.name, event, index);
                     };
@@ -11478,7 +11545,8 @@
                     overlay.appendChild(nameSpan);
 
                     var btnPilih = document.createElement('button');
-                    btnPilih.className = 'w-full bg-white/20 hover:bg-white/40 backdrop-blur-md border border-white/40 text-white rounded-lg py-1.5 sm:py-2 text-[10px] sm:text-sm font-semibold transition-colors flex items-center justify-center shadow-sm btn-pilih-foto';
+                    btnPilih.type = 'button';
+                    btnPilih.className = 'btn-pilih-foto w-full bg-white/20 hover:bg-white/40 backdrop-blur-md border border-white/40 text-white rounded-lg py-1.5 sm:py-2 text-[10px] sm:text-sm font-semibold transition-colors flex items-center justify-center shadow-sm';
                     btnPilih.innerHTML = btnText;
                     btnPilih.onclick = function (e) {
                         e.stopPropagation();
@@ -11591,9 +11659,18 @@
                 performSelectionData(cardElement, filename, url, 'Default', btnPilih, isEn);
             } else {
                 // DESELECT
-                clientState.selectedImages.splice(index, 1);
+                clientState.selectedImages = clientState.selectedImages.filter(function (sel) {
+                    return !(sel.name === filename && (sel.folder === clientState.currentFolderName || !sel.folder || !clientState.currentFolderName));
+                });
                 if (cardElement && cardElement.classList) cardElement.classList.remove('selected');
-                if (btnPilih && clientState.galleryMode !== 'download') btnPilih.innerHTML = '<i class="fa-regular fa-square-check mr-2"></i> ' + (isEn ? 'Select' : 'Pilih');
+                var targetBtn = btnPilih || (cardElement ? cardElement.querySelector('.btn-pilih-foto') : null);
+                if (targetBtn && clientState.galleryMode !== 'download') targetBtn.innerHTML = '<i class="fa-regular fa-square-check mr-2"></i> ' + (isEn ? 'Select' : 'Pilih');
+                var heartBtn = cardElement ? cardElement.querySelector('.heart-btn') : null;
+                if (heartBtn) {
+                    heartBtn.setAttribute('aria-checked', 'false');
+                    heartBtn.setAttribute('title', isEn ? 'Select photo' : 'Pilih foto ini');
+                    heartBtn.setAttribute('aria-label', isEn ? 'Select photo' : 'Pilih foto ini');
+                }
                 if (clientState.token) {
                     try { localStorage.setItem('ps_client_selected_' + clientState.token, JSON.stringify(clientState.selectedImages)); } catch (e) { }
                 }
@@ -11654,12 +11731,27 @@
         };
 
         function performSelectionData(cardElement, filename, url, category, btnPilih, isEn) {
+            // Guard against duplicate selection events
+            var alreadySelected = clientState.selectedImages.some(function (sel) {
+                return sel.name === filename && (sel.folder === clientState.currentFolderName || !sel.folder || !clientState.currentFolderName);
+            });
+            if (alreadySelected) return;
+
             clientState.selectedImages.push({ name: filename, folder: clientState.currentFolderName, url: url, category: category });
             if (clientState.token) {
                 try { localStorage.setItem('ps_client_selected_' + clientState.token, JSON.stringify(clientState.selectedImages)); } catch (e) { }
             }
             if (cardElement && cardElement.classList) cardElement.classList.add('selected');
-            if (btnPilih && clientState.galleryMode !== 'download') btnPilih.innerHTML = '<i class="fa-solid fa-check mr-2"></i> ' + (isEn ? 'Deselect' : 'Batal');
+            var targetBtn = btnPilih || (cardElement ? cardElement.querySelector('.btn-pilih-foto') : null);
+            if (targetBtn && clientState.galleryMode !== 'download') {
+                targetBtn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> ' + (isEn ? 'Deselect' : 'Batal');
+            }
+            var heartBtn = cardElement ? cardElement.querySelector('.heart-btn') : null;
+            if (heartBtn) {
+                heartBtn.setAttribute('aria-checked', 'true');
+                heartBtn.setAttribute('title', isEn ? 'Deselect photo' : 'Batalkan pilihan');
+                heartBtn.setAttribute('aria-label', isEn ? 'Deselect photo' : 'Batalkan pilihan');
+            }
             updateClientCounterUI();
             var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
             if (!isSubmitted && clientState.galleryMode !== 'download') {

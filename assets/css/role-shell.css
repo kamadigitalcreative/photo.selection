@@ -1,35 +1,83 @@
 /**
  * Photo Selection — The Atelier Collection
- * Luxury Workspace & Role Shell Stylesheet (Phase 5.2)
+ * Luxury Workspace & Role Shell Stylesheet (Phase 5.6 Parity)
  *
  * Scoped strictly to #admin-view and #mobile-sidebar.
- * Complete isolation: DOES NOT affect client gallery views, client auth, or auth-view.
+ * Full visual parity with the Approved Luxury Prototype v2.
+ * DOES NOT affect client gallery views, client auth, or auth-view.
  */
 
 /* ==========================================================================
    1. APP WORKSPACE CONTAINER & SCROLL CANVAS
-   ========================================================================= */
+   ========================================================================== */
 
 #admin-view {
-    background-color: #F8F9FA;
-    font-family: var(--font-sans, 'Inter', sans-serif);
-    color: #1e293b;
+    background-color: var(--bg, #0e0f10);
+    font-family: var(--font-sans, 'Manrope', system-ui, sans-serif);
+    color: var(--text, #f9f3ea);
+    min-height: 100vh;
 }
 
-html.dark #admin-view {
-    background-color: var(--color-noir-deep, #101115);
-    color: #f1f5f9;
+html:not(.dark) #admin-view {
+    background-color: var(--bg, #f5f1e9);
+    color: var(--text, #27231e);
 }
 
 #admin-view main.scrollable-content {
-    background-color: transparent;
+    background-color: transparent !important;
     scroll-behavior: smooth;
+    padding: 24px 20px 48px;
 }
 
-/* Editorial Serif Headings for Section Titles */
-#admin-view h2 {
+@media (min-width: 640px) {
+    #admin-view main.scrollable-content {
+        padding: 32px 32px 56px;
+    }
+}
+
+/* Editorial Serif Headings */
+#admin-view h1,
+#admin-view h2,
+#admin-view h3,
+#admin-view .serif {
     font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
-    letter-spacing: -0.015em;
+    letter-spacing: -0.02em;
+    font-weight: 500;
+}
+
+/* Common Eyebrow / Micro Text */
+#admin-view .eyebrow,
+#admin-view .micro {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    color: var(--gold, #dfba7b);
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+/* Pill Badges */
+#admin-view .pill {
+    font-size: 9px;
+    border-radius: 99px;
+    padding: 4px 9px;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.115));
+    color: var(--muted2, #c5bdb1);
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+#admin-view .pill.gold {
+    color: var(--gold, #dfba7b);
+    background: var(--accentwash, rgba(223, 186, 123, 0.095));
+    border-color: var(--stroke, rgba(239, 215, 174, 0.18));
+}
+
+#admin-view .pill.green {
+    color: #89cba1;
+    background: rgba(45, 140, 82, 0.12);
+    border-color: rgba(60, 186, 113, 0.2);
 }
 
 /* ==========================================================================
@@ -38,110 +86,163 @@ html.dark #admin-view {
 
 #admin-view #sidebar-desktop,
 #mobile-sidebar {
-    background-color: var(--color-noir-deep, #101115);
-    border-right: 1px solid rgba(216, 186, 131, 0.15);
-    transition: all 0.3s ease;
+    background-color: var(--side, #0a0b0c) !important;
+    border-right: 1px solid var(--stroke, rgba(239, 215, 174, 0.115));
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    color: var(--text, #f9f3ea);
 }
 
 #admin-view #sidebar-desktop .p-6,
 #mobile-sidebar .p-4 {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid var(--stroke, rgba(239, 215, 174, 0.115));
 }
 
-/* Brand Identity */
+/* Prototype Brand Mark & Header */
+#admin-view .brand-logo-container,
+#mobile-sidebar .brand-logo-container {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+}
+
+#admin-view .sidebar-mark,
+#mobile-sidebar .sidebar-mark {
+    width: 35px;
+    height: 35px;
+    background: linear-gradient(135deg, #ffe4b4, #a9763d);
+    color: #191511;
+    font: 700 19px 'Playfair Display', Georgia, serif;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(186, 138, 78, 0.25);
+    flex-shrink: 0;
+}
+
 #admin-view .brand-name-text,
 #mobile-sidebar .brand-name-text {
     font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
-    letter-spacing: 0.03em;
-    color: #ffffff;
+    letter-spacing: 0.04em;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text, #f9f3ea);
+    line-height: 1.15;
 }
 
-#admin-view #sidebar-icon,
-#mobile-sidebar #sidebar-icon-m {
-    color: var(--color-champagne-primary, #D8BA83);
+#admin-view .brand-name-text small,
+#mobile-sidebar .brand-name-text small {
+    display: block;
+    color: var(--gold, #dfba7b);
+    font-size: 8px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin-top: 2px;
+    font-family: var(--font-sans);
+    font-weight: 600;
+}
+
+/* Category Caption */
+#admin-view .nav-cap,
+#mobile-sidebar .nav-cap {
+    padding: 0 14px;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.19em;
+    color: var(--muted, #9e9a93);
+    margin: 12px 0 6px;
+    font-weight: 700;
 }
 
 /* Navigation Tabs */
 #admin-view .nav-tab,
 #mobile-sidebar .nav-tab {
-    padding: 10px 14px;
-    border-radius: 10px;
+    padding: 11px 14px;
+    border-radius: 9px;
     font-weight: 500;
-    font-size: 0.84rem;
+    font-size: 11px;
+    letter-spacing: 0.01em;
     white-space: nowrap;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 11px;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    color: #94a3b8;
+    color: var(--muted2, #c5bdb1);
     width: 100%;
-    border-left: 3px solid transparent;
+    border-left: 2px solid transparent;
     background: transparent;
     cursor: pointer;
 }
 
 #admin-view .nav-tab i,
 #mobile-sidebar .nav-tab i {
-    font-size: 0.95rem;
-    width: 20px;
+    font-size: 14px;
+    width: 18px;
     text-align: center;
     color: inherit;
     transition: color 0.2s ease;
+    flex-shrink: 0;
 }
 
 #admin-view .nav-tab:hover,
 #mobile-sidebar .nav-tab:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.05);
+    color: var(--text, #f9f3ea);
+    background: var(--accentwash, rgba(223, 186, 123, 0.095));
     transform: translateX(2px);
 }
 
 #admin-view .nav-tab.active,
 #mobile-sidebar .nav-tab.active {
-    background: linear-gradient(135deg, rgba(216, 186, 131, 0.22) 0%, rgba(216, 186, 131, 0.08) 100%);
-    color: var(--color-champagne-light, #E6CF9F);
+    background: linear-gradient(90deg, var(--accentwash, rgba(223, 186, 123, 0.12)), transparent);
+    color: var(--text, #f9f3ea);
     font-weight: 600;
-    border-left: 3px solid var(--color-champagne-primary, #D8BA83);
-    box-shadow: 0 4px 14px rgba(216, 186, 131, 0.12);
+    border-left: 2px solid var(--gold, #dfba7b);
 }
 
 #admin-view .nav-tab.active i,
 #mobile-sidebar .nav-tab.active i {
-    color: var(--color-champagne-primary, #D8BA83);
+    color: var(--gold, #dfba7b);
 }
 
-/* Admin-Only Tabs Subtle Differentiation */
+/* Admin-Only Navigation Tab Styling */
 #admin-view .nav-tab.admin-only-col:not(.active),
 #mobile-sidebar .nav-tab.admin-only-col:not(.active) {
-    color: #93c5fd;
+    color: #9ab9fc;
 }
 
 #admin-view .nav-tab.admin-only-col:not(.active):hover,
 #mobile-sidebar .nav-tab.admin-only-col:not(.active):hover {
-    color: #bfdbfe;
-    background: rgba(59, 130, 246, 0.12);
+    color: #c6d9ff;
+    background: rgba(151, 186, 255, 0.1);
 }
 
-/* Sidebar PRO Upgrade Card */
+/* Sidebar PRO Upgrade Box */
 #admin-view #sidebar-desktop .p-4.mt-auto>div {
-    background: linear-gradient(145deg, #181a22 0%, var(--color-noir-deep, #101115) 100%);
-    border: 1px solid rgba(216, 186, 131, 0.25);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    background: linear-gradient(135deg, var(--panel2, #1b1c1e), var(--accentwash, rgba(223, 186, 123, 0.12))) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.15)) !important;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    padding: 16px;
 }
 
 #admin-view #sidebar-desktop .p-4.mt-auto>div i.fa-crown {
-    color: var(--color-champagne-primary, #D8BA83);
+    color: var(--gold, #dfba7b) !important;
 }
 
 #admin-view #sidebar-desktop .p-4.mt-auto button {
-    border-color: rgba(216, 186, 131, 0.35);
-    color: var(--color-champagne-light, #E6CF9F);
+    border-radius: 8px;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.18));
+    background: var(--accentwash, rgba(223, 186, 123, 0.095));
+    color: var(--text, #f9f3ea);
+    font-size: 11px;
     font-weight: 600;
+    padding: 9px 12px;
+    transition: all 0.2s ease;
 }
 
 #admin-view #sidebar-desktop .p-4.mt-auto button:hover {
-    background: rgba(216, 186, 131, 0.12);
-    border-color: var(--color-champagne-primary, #D8BA83);
+    background: var(--gold, #dfba7b);
+    color: var(--goldtxt, #22180e);
+    border-color: var(--gold, #dfba7b);
 }
 
 /* ==========================================================================
@@ -149,86 +250,89 @@ html.dark #admin-view {
    ========================================================================== */
 
 #admin-view header {
-    background: rgba(255, 255, 255, 0.94);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    background: var(--panel, #161719) !important;
+    border-bottom: 1px solid var(--stroke, rgba(239, 215, 174, 0.115)) !important;
+    height: 70px;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
-html.dark #admin-view header {
-    background: rgba(22, 23, 30, 0.94);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+html:not(.dark) #admin-view header {
+    background: var(--panel, #fffdf9) !important;
+    border-bottom: 1px solid var(--stroke, rgba(65, 45, 21, 0.125)) !important;
 }
 
-/* Status Badge in Header (Task A Fix: distinguish Admin, PRO, Regular, Demo) */
+/* Search Bar in Header / Projects */
+#admin-view #search-project-input,
+#admin-view .searchwrap input {
+    background: var(--panel2, #1b1c1e) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.15)) !important;
+    color: var(--text, #f9f3ea) !important;
+    border-radius: 9px;
+    font-size: 11px;
+    transition: all 0.2s ease;
+}
+
+#admin-view #search-project-input:focus,
+#admin-view .searchwrap input:focus {
+    border-color: var(--gold, #dfba7b) !important;
+    outline: none;
+    box-shadow: 0 0 0 2px var(--accentwash, rgba(223, 186, 123, 0.2)) !important;
+}
+
+/* Status Badges in Header */
 #admin-view #badge-pro-status {
-    letter-spacing: 0.04em;
-    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    letter-spacing: 0.06em;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 99px;
+    padding: 5px 11px;
+    transition: all 0.2s ease;
 }
 
-/* 1. PRO Subscription Badge (Champagne / Gold) */
+/* PRO Subscription Badge (Champagne Gold) */
 #admin-view #badge-pro-status.bg-amber-50 {
-    background: rgba(216, 186, 131, 0.12);
-    border: 1px solid rgba(216, 186, 131, 0.40);
-    color: #9b7a3e;
+    background: var(--accentwash, rgba(223, 186, 123, 0.15)) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.35)) !important;
+    color: var(--gold, #dfba7b) !important;
 }
 
-html.dark #admin-view #badge-pro-status.bg-amber-50 {
-    background: rgba(216, 186, 131, 0.18);
-    border: 1px solid rgba(216, 186, 131, 0.50);
-    color: var(--color-champagne-light, #E6CF9F);
-}
-
-/* 2. Admin Badge (Distinct Royal Indigo) */
+/* Admin Badge (Indigo / Sapphire) */
 #admin-view #badge-pro-status.bg-indigo-50 {
-    background: rgba(99, 102, 241, 0.10);
-    border: 1px solid rgba(99, 102, 241, 0.35);
-    color: #4338ca;
+    background: rgba(99, 102, 241, 0.15) !important;
+    border: 1px solid rgba(129, 140, 248, 0.45) !important;
+    color: #abc7fa !important;
 }
 
-html.dark #admin-view #badge-pro-status.bg-indigo-50 {
-    background: rgba(99, 102, 241, 0.18);
-    border: 1px solid rgba(129, 140, 248, 0.45);
-    color: #a5b4fc;
-}
-
-/* 3. Regular Paid Subscription Badge (Distinct Non-PRO Blue) */
+/* Regular Paid Badge */
 #admin-view #badge-pro-status.bg-blue-50 {
-    background: rgba(59, 130, 246, 0.10);
-    border: 1px solid rgba(59, 130, 246, 0.35);
-    color: #1d4ed8;
+    background: rgba(59, 130, 246, 0.15) !important;
+    border: 1px solid rgba(96, 165, 250, 0.45) !important;
+    color: #93c5fd !important;
 }
 
-html.dark #admin-view #badge-pro-status.bg-blue-50 {
-    background: rgba(59, 130, 246, 0.18);
-    border: 1px solid rgba(96, 165, 250, 0.45);
-    color: #93c5fd;
-}
-
-/* 4. Demo Subscription Badge (Neutral Slate) */
+/* Demo Badge */
 #admin-view #badge-pro-status.bg-slate-100 {
-    background: rgba(100, 116, 139, 0.08);
-    border: 1px solid rgba(100, 116, 139, 0.25);
-    color: #475569;
-}
-
-html.dark #admin-view #badge-pro-status.bg-slate-100 {
-    background: rgba(148, 163, 184, 0.14);
-    border: 1px solid rgba(148, 163, 184, 0.30);
-    color: #94a3b8;
+    background: rgba(148, 163, 184, 0.14) !important;
+    border: 1px solid rgba(148, 163, 184, 0.30) !important;
+    color: #94a3b8 !important;
 }
 
 /* Renew Package Button */
 #admin-view #btn-renew-package-header {
-    background: linear-gradient(135deg, var(--color-champagne-light, #E6CF9F) 0%, var(--color-champagne-primary, #D8BA83) 100%);
-    color: #101115;
+    background: linear-gradient(120deg, var(--goldhi, #ffdfaa), var(--gold, #dfba7b)) !important;
+    color: var(--goldtxt, #22180e) !important;
+    font-weight: 800;
     border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 2px 8px rgba(216, 186, 131, 0.25);
+    box-shadow: 0 4px 14px rgba(223, 186, 123, 0.25);
+    border-radius: 99px;
 }
 
 #admin-view #btn-renew-package-header:hover {
-    box-shadow: 0 4px 12px rgba(216, 186, 131, 0.4);
+    box-shadow: 0 6px 18px rgba(223, 186, 123, 0.4);
     transform: translateY(-1px);
 }
 
@@ -236,187 +340,373 @@ html.dark #admin-view #badge-pro-status.bg-slate-100 {
    4. PHOTOGRAPHER WORKSPACE (#section-projects & #section-status)
    ========================================================================== */
 
-/* Metric Cards in Projects & Client Monitoring */
+/* Metric Cards */
 #admin-view #section-projects .grid>div,
 #admin-view #section-status .grid>div {
-    border-radius: var(--radius-md, 12px);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    background: #ffffff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+    border-radius: 12px !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.115)) !important;
+    background: var(--panel, #161719) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    padding: 16px 14px !important;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.25s ease;
 }
 
 #admin-view #section-projects .grid>div:hover,
 #admin-view #section-status .grid>div:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    border-color: color-mix(in srgb, var(--gold, #dfba7b) 50%, transparent) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
-html.dark #admin-view #section-projects .grid>div,
-html.dark #admin-view #section-status .grid>div {
-    background: var(--color-noir-card, #1c1e26);
-    border-color: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+/* Metric Card Icon Container */
+#admin-view #section-projects .grid>div>div:first-child,
+#admin-view #section-status .grid>div>div:first-child {
+    background: var(--accentwash, rgba(223, 186, 123, 0.095)) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.15)) !important;
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 9px !important;
+    display: grid;
+    place-items: center;
+    color: var(--gold, #dfba7b) !important;
+    flex-shrink: 0;
 }
 
-/* Create Project Button (Champagne Luxury Elevation) */
-#admin-view #section-projects button[onclick="openModalCreate()"] {
-    background: linear-gradient(135deg, var(--color-champagne-light, #E6CF9F) 0%, var(--color-champagne-primary, #D8BA83) 100%) !important;
-    color: #101115 !important;
-    font-weight: 700;
+#admin-view #section-projects .grid>div>div:first-child i,
+#admin-view #section-status .grid>div>div:first-child i {
+    font-size: 16px;
+    color: var(--gold, #dfba7b) !important;
+}
+
+/* Metric Values (Large Serif Numbers) */
+#admin-view #section-projects h4,
+#admin-view #section-status h4 {
+    font-family: var(--font-serif, 'Playfair Display', Georgia, serif) !important;
+    font-size: 26px !important;
+    line-height: 1.1 !important;
+    color: var(--text, #f9f3ea) !important;
+    margin-top: 2px;
+}
+
+/* Create Project Button (Canonical Prototype Primary Elevation) */
+#admin-view button[onclick="openModalCreate()"] {
+    background: linear-gradient(120deg, var(--goldhi, #ffdfaa), var(--gold, #dfba7b)) !important;
+    color: var(--goldtxt, #22180e) !important;
+    font-weight: 800 !important;
     letter-spacing: 0.02em;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 4px 14px rgba(216, 186, 131, 0.3);
-    transition: all 0.2s ease;
+    border-radius: 9px !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 6px 20px rgba(223, 186, 123, 0.25) !important;
+    padding: 11px 18px !important;
+    font-size: 11px !important;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-#admin-view #section-projects button[onclick="openModalCreate()"]:hover {
-    box-shadow: 0 6px 20px rgba(216, 186, 131, 0.45);
+#admin-view button[onclick="openModalCreate()"]:hover {
+    box-shadow: 0 8px 24px rgba(223, 186, 123, 0.45) !important;
     transform: translateY(-1px);
+    filter: brightness(1.06);
 }
 
 /* Project Filter Tabs */
 #admin-view #section-projects .flex[class~="bg-gray-100/80"] {
-    background-color: rgba(0, 0, 0, 0.04);
-    border-color: rgba(0, 0, 0, 0.06);
+    background: var(--panel2, #1b1c1e) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.115)) !important;
+    border-radius: 10px;
+    padding: 3px;
 }
 
-html.dark #admin-view #section-projects .flex[class~="bg-gray-100/80"] {
-    background-color: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.08);
-}
-
-/* Project Cards Injected into #projectTableBody */
-#admin-view #projectTableBody>div {
-    border-radius: var(--radius-md, 12px);
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    background: #ffffff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+#admin-view #section-projects .flex[class~="bg-gray-100/80"] button {
+    border-radius: 7px;
+    padding: 7px 12px;
+    font-size: 11px;
+    color: var(--muted2, #c5bdb1);
     transition: all 0.2s ease;
 }
 
+#admin-view #section-projects .flex[class~="bg-gray-100/80"] button.bg-white {
+    background: var(--accentwash, rgba(223, 186, 123, 0.15)) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.3)) !important;
+    color: var(--gold, #dfba7b) !important;
+    font-weight: 700;
+}
+
+/* Project Cards in #projectTableBody */
+#admin-view #projectTableBody>div {
+    border-radius: 12px !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.115)) !important;
+    background: var(--panel, #161719) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+}
+
 #admin-view #projectTableBody>div:hover {
-    border-color: rgba(216, 186, 131, 0.35);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+    border-color: color-mix(in srgb, var(--gold, #dfba7b) 50%, transparent) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
 }
 
-html.dark #admin-view #projectTableBody>div {
-    background: var(--color-noir-card, #1c1e26);
-    border-color: rgba(255, 255, 255, 0.08);
+/* Project Card Heading */
+#admin-view #projectTableBody h3,
+#admin-view #projectTableBody h4 {
+    color: var(--text, #f9f3ea) !important;
+    font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
 }
 
-html.dark #admin-view #projectTableBody>div:hover {
-    border-color: rgba(216, 186, 131, 0.4);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+/* Quick Start & Help Right Column Box */
+#admin-view #section-projects .lg\:w-\[320px\]>div,
+#admin-view #section-projects [class*="lg:w-[320px]"]>div {
+    background: var(--panel, #161719) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.115)) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* ==========================================================================
    5. ADMIN WORKSPACE (#section-dashboard & #section-users)
    ========================================================================== */
 
-/* Overview Metric Cards */
+/* Overview Metric Cards in Admin Dashboard */
 #admin-view #section-dashboard .grid>div {
-    border-radius: var(--radius-lg, 16px);
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+    border-radius: 12px !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.115)) !important;
+    background: var(--panel, #161719) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
 }
 
 #admin-view #section-dashboard .grid>div:hover {
     transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--gold, #dfba7b) 50%, transparent) !important;
+}
+
+#admin-view #section-dashboard h3 {
+    font-family: var(--font-serif, 'Playfair Display', Georgia, serif) !important;
+    color: var(--text, #f9f3ea) !important;
 }
 
 /* Analytics Chart Containers */
-#admin-view #section-dashboard .grid-cols-1.lg\\:grid-cols-3>div {
-    border-radius: var(--radius-lg, 16px);
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
-}
-
-html.dark #admin-view #section-dashboard .grid-cols-1.lg\\:grid-cols-3>div {
-    background: var(--color-noir-card, #1c1e26);
-    border-color: rgba(255, 255, 255, 0.08);
+#admin-view #section-dashboard .grid-cols-1.lg\:grid-cols-3>div,
+#admin-view #section-dashboard [class*="lg:grid-cols-3"]>div {
+    border-radius: 12px !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.115)) !important;
+    background: var(--panel, #161719) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    padding: 20px;
 }
 
 /* Meta Ads & Attribution Card */
 #admin-view #section-dashboard .bg-white.p-6.rounded-2xl {
-    border-radius: var(--radius-lg, 16px);
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 12px !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.115)) !important;
+    background: var(--panel, #161719) !important;
 }
 
-html.dark #admin-view #section-dashboard .bg-white.p-6.rounded-2xl {
-    background: var(--color-noir-card, #1c1e26);
-    border-color: rgba(255, 255, 255, 0.08);
+#admin-view #section-dashboard .bg-slate-50 {
+    background: var(--panel2, #1b1c1e) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.115)) !important;
+    border-radius: 10px;
+}
+
+#admin-view #section-dashboard .bg-slate-50:hover {
+    border-color: var(--gold, #dfba7b) !important;
+}
+
+#admin-view #section-dashboard .bg-slate-50 h4 {
+    color: var(--text, #f9f3ea) !important;
 }
 
 /* Expiring Accounts Widget Container */
 #admin-view #expiring-widget-container {
-    border-radius: var(--radius-lg, 16px);
-    border: 1px solid rgba(245, 158, 11, 0.35);
-    background: #ffffff;
-}
-
-html.dark #admin-view #expiring-widget-container {
-    background: var(--color-noir-card, #1c1e26);
-    border-color: rgba(245, 158, 11, 0.4);
+    border-radius: 12px !important;
+    border: 1px solid rgba(223, 186, 123, 0.35) !important;
+    background: var(--panel, #161719) !important;
 }
 
 /* Users & Team Management Table */
 #admin-view #section-users table {
-    border-collapse: separate;
-    border-spacing: 0;
+    border-collapse: collapse;
+    width: 100%;
+    background: var(--panel, #161719);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.115));
 }
 
 #admin-view #section-users thead th {
-    background-color: #F8F9FA !important;
-    color: #475569 !important;
+    background-color: var(--panel2, #1b1c1e) !important;
+    color: var(--gold, #dfba7b) !important;
     font-weight: 700 !important;
-    letter-spacing: 0.04em;
-    font-size: 0.72rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 9px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--stroke, rgba(239, 215, 174, 0.115));
 }
 
-html.dark #admin-view #section-users thead th {
-    background-color: var(--color-noir-surface, #16171e) !important;
-    color: #94a3b8 !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+#admin-view #section-users tbody td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--stroke, rgba(239, 215, 174, 0.08));
+    color: var(--muted2, #c5bdb1);
+    font-size: 11px;
 }
 
-html.dark #admin-view #section-users tbody tr:hover {
-    background-color: rgba(255, 255, 255, 0.02);
+#admin-view #section-users tbody tr:hover {
+    background-color: var(--accentwash, rgba(223, 186, 123, 0.05));
 }
 
 /* ==========================================================================
-   6. DARK MODE OVERRIDES FOR CARDS & SURFACES
+   6. GLOBAL DARK / LUXURY OVERRIDES FOR #admin-view
    ========================================================================== */
 
-html.dark #admin-view .bg-white {
-    background-color: var(--color-noir-card, #1c1e26) !important;
-    border-color: rgba(255, 255, 255, 0.08) !important;
-    color: #f1f5f9;
+#admin-view .bg-white {
+    background-color: var(--panel, #161719) !important;
+    border-color: var(--stroke, rgba(239, 215, 174, 0.115)) !important;
+    color: var(--text, #f9f3ea);
 }
 
-html.dark #admin-view .text-gray-800 {
-    color: #f8fafc !important;
+#admin-view .bg-white\/80,
+#admin-view [class*="bg-white/80"] {
+    background-color: var(--panel, #161719) !important;
+    border-color: var(--stroke, rgba(239, 215, 174, 0.115)) !important;
 }
 
-html.dark #admin-view .text-gray-600 {
-    color: #cbd5e1 !important;
+#admin-view .text-gray-800,
+#admin-view .text-kama-800 {
+    color: var(--text, #f9f3ea) !important;
 }
 
-html.dark #admin-view .text-gray-500 {
-    color: #94a3b8 !important;
+#admin-view .text-gray-600 {
+    color: var(--muted2, #c5bdb1) !important;
 }
 
-html.dark #admin-view .text-kama-800 {
-    color: #f8fafc !important;
+#admin-view .text-gray-500,
+#admin-view .text-gray-400 {
+    color: var(--muted, #9e9a93) !important;
 }
 
-html.dark #admin-view .border-gray-100,
-html.dark #admin-view .border-gray-200 {
-    border-color: rgba(255, 255, 255, 0.08) !important;
+#admin-view .border-gray-100,
+#admin-view .border-gray-200 {
+    border-color: var(--stroke, rgba(239, 215, 174, 0.115)) !important;
 }
 
-/* Phase 5.2 — Preserve role-based navigation visibility */
 #admin-view .nav-tab.hidden,
 #mobile-sidebar .nav-tab.hidden {
     display: none !important;
+}
+
+#admin-view .admin-only-col.hidden,
+#mobile-sidebar .admin-only-col.hidden {
+    display: none !important;
+}
+
+/* ==========================================================================
+   7. LUXURY EDITORIAL HERO BANNERS (PHOTOGRAPHER & ADMIN)
+   ========================================================================== */
+
+#admin-view .eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.24em;
+    color: var(--gold, #dfba7b);
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+#admin-view .photographer-hero,
+#admin-view .admin-hero {
+    position: relative;
+    border-radius: 14px;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.115));
+    background: linear-gradient(110deg, var(--heroShade, #10100f) 0%, var(--heroShade, #10100f) 35%, rgba(27, 24, 21, 0.88) 65%, transparent 100%),
+        var(--panel, #161719);
+    box-shadow: var(--shadow, 0 24px 80px rgba(0, 0, 0, 0.26));
+    padding: 26px 30px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+#admin-view .photographer-hero .hero-title,
+#admin-view .admin-hero .hero-title {
+    font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+    font-size: clamp(22px, 2.5vw, 36px);
+    line-height: 1.12;
+    color: #fff5e7;
+    margin: 8px 0 10px;
+}
+
+#admin-view .photographer-hero .hero-title em,
+#admin-view .admin-hero .hero-title em {
+    color: var(--goldhi, #ffdfaa);
+    font-style: normal;
+}
+
+#admin-view .photographer-hero .hero-desc,
+#admin-view .admin-hero .hero-desc {
+    font-size: 11px;
+    color: var(--muted2, #c5bdb1);
+    max-width: 520px;
+    line-height: 1.65;
+    margin: 0 0 16px;
+}
+
+#admin-view .hero-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+#admin-view .primary-hero-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 9px;
+    padding: 10px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: linear-gradient(120deg, var(--goldhi, #ffdfaa), var(--gold, #dfba7b));
+    color: var(--goldtxt, #22180e);
+    font-weight: 800;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(223, 186, 123, 0.28);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#admin-view .primary-hero-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(223, 186, 123, 0.45);
+    filter: brightness(1.06);
+}
+
+#admin-view .secondary-hero-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 9px;
+    padding: 10px 16px;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.25));
+    background: var(--panel2, #1b1c1e);
+    color: var(--text, #f9f3ea);
+    font-weight: 700;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#admin-view .secondary-hero-btn:hover {
+    border-color: var(--gold, #dfba7b);
+    color: var(--gold, #dfba7b);
 }

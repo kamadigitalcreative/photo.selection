@@ -166,7 +166,7 @@ function handleApiBridge(req, res, body) {
 
     if (action === 'verifyClientPassword') {
         const pin = String(payload.passwordInput || '').trim();
-        if (pin === '1234') {
+        if (pin === '1234' || pin === '123456') {
             return res.end(JSON.stringify({
                 status: 'success',
                 data: {
@@ -222,17 +222,18 @@ function handleApiBridge(req, res, body) {
             return res.end(JSON.stringify({
                 status: 'success',
                 data: {
-                    token: 'mock-admin-token-uat',
+                    id: 'admin-uat-1',
+                    nama: 'Admin Atelier',
+                    username: 'admin_atelier',
+                    email: 'admin@atelier.local',
+                    role: 'Admin',
+                    paket: 'Lifetime',
+                    status: 'Active',
+                    brandName: 'The Atelier Collection',
+                    brandLogo: '',
+                    expiredAt: 'Lifetime',
                     sessionId: 'mock-admin-session',
-                    user: {
-                        id: 'admin-uat-1',
-                        username: 'admin_atelier',
-                        email: 'admin@atelier.local',
-                        role: 'Admin',
-                        paket: 'Lifetime',
-                        status: 'Active',
-                        sessionId: 'mock-admin-session'
-                    }
+                    token: 'mock-admin-token-uat'
                 }
             }));
         } else {
@@ -240,18 +241,22 @@ function handleApiBridge(req, res, body) {
             return res.end(JSON.stringify({
                 status: 'success',
                 data: {
-                    token: 'mock-photographer-token-uat',
+                    id: 'photo-uat-1',
+                    nama: 'Kama Photographer',
+                    username: 'kama_photographer',
+                    email: 'photo@atelier.local',
+                    role: 'Photographer',
+                    paket: '1 Tahun',
+                    status: 'Active',
+                    brandName: 'The Atelier Collection',
+                    brandLogo: '',
+                    expiredAt: '2027-10-18',
+                    isPremiumAddon: true,
+                    isProLifetime: false,
+                    proExpiredAt: '2027-10-18',
+                    proIsActive: true,
                     sessionId: 'mock-photo-session',
-                    user: {
-                        id: 'photo-uat-1',
-                        username: 'kama_photographer',
-                        email: 'photo@atelier.local',
-                        role: 'Photographer',
-                        paket: '1 Tahun',
-                        status: 'Active',
-                        expiredAt: '2027-10-18',
-                        sessionId: 'mock-photo-session'
-                    }
+                    token: 'mock-photographer-token-uat'
                 }
             }));
         }
@@ -261,26 +266,41 @@ function handleApiBridge(req, res, body) {
     if (action === 'getProjects' || action === 'fetchProjects') {
         return res.end(JSON.stringify({
             status: 'success',
-            data: [
-                {
-                    id: 'proj-1',
-                    Token: 'token-proj-1',
-                    Nama_Client: 'Siti & Budi Wedding',
-                    Created_At: '2026-10-10',
-                    Status_Client: 'Sedang Memilih',
-                    Max_Foto: 3,
-                    selectedFiles: '[]'
-                },
-                {
-                    id: 'proj-2',
-                    Token: 'token-proj-2',
-                    Nama_Client: 'Annisa & Dimas Prewedding',
-                    Created_At: '2026-10-12',
-                    Status_Client: 'Selesai',
-                    Max_Foto: 20,
-                    selectedFiles: '[]'
-                }
-            ]
+            data: {
+                success: true,
+                data: [
+                    {
+                        id: 'proj-1',
+                        ID: 'proj-1',
+                        Token: 'dummy-client-token',
+                        'Nama Client': 'Siti & Budi Wedding',
+                        NamaClient: 'Siti & Budi Wedding',
+                        'Dibuat Pada': '2026-10-10',
+                        'Status Client': 'Sedang Memilih',
+                        Status: 'Sedang Memilih',
+                        'Max Foto': 3,
+                        MaxFoto: 3,
+                        'Foto Terpilih': 2,
+                        'Daftar Pilihan': ['DSC_0001.JPG', 'DSC_0002.JPG'],
+                        Owner: 'kama_photographer'
+                    },
+                    {
+                        id: 'proj-2',
+                        ID: 'proj-2',
+                        Token: 'token-proj-2',
+                        'Nama Client': 'Annisa & Dimas Prewedding',
+                        NamaClient: 'Annisa & Dimas Prewedding',
+                        'Dibuat Pada': '2026-10-12',
+                        'Status Client': 'Selesai',
+                        Status: 'Selesai',
+                        'Max Foto': 20,
+                        MaxFoto: 20,
+                        'Foto Terpilih': 20,
+                        'Daftar Pilihan': [],
+                        Owner: 'kama_photographer'
+                    }
+                ]
+            }
         }));
     }
 
@@ -488,16 +508,19 @@ async function runIsolationAudit() {
         check(rPhotos.status === 200 && rPhotos.data.data.images.length === 5, 'ISO-07', 'Mock getDriveContent menyajikan tepat 5 foto sampel untuk UAT');
 
         const rPhotoLogin = await postJson('login', { username: 'kama_photographer', password: 'password' });
-        check(rPhotoLogin.status === 200 && rPhotoLogin.data.data.user.role === 'Photographer', 'ISO-08', 'Login fotografer mengembalikan peran Photographer secara terisolasi');
+        const photoRole = rPhotoLogin.data?.data?.role || rPhotoLogin.data?.data?.user?.role;
+        check(rPhotoLogin.status === 200 && photoRole === 'Photographer', 'ISO-08', 'Login fotografer mengembalikan peran Photographer secara terisolasi');
 
         const rAdminLogin = await postJson('login', { username: 'admin_atelier', password: 'password' });
-        check(rAdminLogin.status === 200 && rAdminLogin.data.data.user.role === 'Admin', 'ISO-09', 'Login admin mengembalikan peran Admin dengan hak akses penuh');
+        const adminRole = rAdminLogin.data?.data?.role || rAdminLogin.data?.data?.user?.role;
+        check(rAdminLogin.status === 200 && adminRole === 'Admin', 'ISO-09', 'Login admin mengembalikan peran Admin dengan hak akses penuh');
 
         const rUsers = await postJson('getUsers');
         check(rUsers.status === 200 && rUsers.data.data.length === 4, 'ISO-10', 'Mock tabel pengguna menyajikan 4 tingkat akun berbeda (Admin, PRO, Reguler, Demo)');
 
         const rProjects = await postJson('getProjects');
-        check(rProjects.status === 200 && rProjects.data.data.length === 2, 'ISO-11', 'Mock getProjects menyajikan daftar proyek fotografer dummy');
+        const projList = Array.isArray(rProjects.data?.data) ? rProjects.data.data : (rProjects.data?.data?.data || []);
+        check(rProjects.status === 200 && projList.length === 2, 'ISO-11', 'Mock getProjects menyajikan daftar proyek fotografer dummy');
 
         const rSecurity = await getPath('/../package.json');
         check(rSecurity.status === 403 || rSecurity.status === 404, 'ISO-12', 'Proteksi directory traversal aktif mencegah akses file di luar root proyek');
