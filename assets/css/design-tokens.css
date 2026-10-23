@@ -5,35 +5,36 @@
  */
 
 :root {
-    /* --- COLOR PALETTE: NOIR CHAMPAGNE (DEFAULT THEME) --- */
-    --color-noir-deep: #0e0f10;
-    --color-noir-surface: #161719;
-    --color-noir-card: #1b1c1e;
-    --color-noir-card-hover: #242323;
-    --color-noir-border: rgba(239, 215, 174, 0.115);
-    --color-noir-border-subtle: rgba(255, 255, 255, 0.08);
+    /* --- UNIFIED ATELIER NOIR CHAMPAGNE DESIGN TOKENS --- */
+    --bg-main: #0e0f10;
+    --bg-sidebar: #0a0b0c;
+    --bg-surface: #17181b;
+    --bg-elevated: #212226;
+    --border-subtle: #35363b;
+    --border-champagne: rgba(223, 186, 123, 0.22);
+    --text-primary: #f4f0e9;
+    --text-secondary: #c9c4bc;
+    --text-muted: #a8a39c;
+    --accent-champagne: #dfba7b;
+    --accent-highlight: #ffdfab;
+    --text-on-gold: #241b11;
+    --state-success: #49be88;
+    --state-warning: #eab565;
+    --state-danger: #ee7979;
 
-    /* --- COLOR PALETTE: CHAMPAGNE GOLD --- */
-    --color-champagne-primary: #dfba7b;
-    --color-champagne-light: #ffdfaa;
-    --color-champagne-dark: #b9995b;
-    --color-champagne-glow: rgba(223, 186, 123, 0.20);
-    --color-champagne-tint: rgba(223, 186, 123, 0.095);
-    --color-champagne-border: rgba(239, 215, 174, 0.18);
-
-    /* --- CANONICAL PROTOTYPE THEME VARIABLES (DEFAULT: NOIR CHAMPAGNE) --- */
+    /* --- CANONICAL THEME VARIABLES & BACKWARD COMPATIBILITY --- */
     --bg: #0e0f10;
     --side: #0a0b0c;
-    --panel: #161719;
-    --panel2: #1b1c1e;
-    --raised: #242323;
+    --panel: #17181b;
+    --panel2: #212226;
+    --raised: #212226;
     --gold: #dfba7b;
-    --goldhi: #ffdfaa;
-    --goldtxt: #22180e;
-    --text: #f9f3ea;
-    --muted: #9e9a93;
-    --muted2: #c5bdb1;
-    --stroke: rgba(239, 215, 174, 0.115);
+    --goldhi: #ffdfab;
+    --goldtxt: #241b11;
+    --text: #f4f0e9;
+    --muted: #a8a39c;
+    --muted2: #c9c4bc;
+    --stroke: #35363b;
     --accentwash: rgba(223, 186, 123, 0.095);
     --heroShade: #10100f;
     --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
@@ -83,30 +84,69 @@
    ========================================================================== */
 
 /* 1. NOIR CHAMPAGNE (Primary Signature Theme) */
+:root,
+:root[data-theme="noir"],
+html[data-theme="noir"],
 body[data-theme="noir"],
+html[data-theme="noir"] body,
 html.theme-noir body,
-html.dark body {
+html.dark:not([data-theme]) body:not([data-theme]) {
+    --bg-main: #0e0f10;
+    --bg-sidebar: #0a0b0c;
+    --bg-surface: #17181b;
+    --bg-elevated: #212226;
+    --border-subtle: #35363b;
+    --border-champagne: rgba(223, 186, 123, 0.22);
+    --text-primary: #f4f0e9;
+    --text-secondary: #c9c4bc;
+    --text-muted: #a8a39c;
+    --accent-champagne: #dfba7b;
+    --accent-highlight: #ffdfab;
+    --text-on-gold: #241b11;
+    --state-success: #49be88;
+    --state-warning: #eab565;
+    --state-danger: #ee7979;
+
     --bg: #0e0f10;
     --side: #0a0b0c;
-    --panel: #161719;
-    --panel2: #1b1c1e;
-    --raised: #242323;
+    --panel: #17181b;
+    --panel2: #212226;
+    --raised: #212226;
     --gold: #dfba7b;
-    --goldhi: #ffdfaa;
-    --goldtxt: #22180e;
-    --text: #f9f3ea;
-    --muted: #9e9a93;
-    --muted2: #c5bdb1;
-    --stroke: rgba(239, 215, 174, 0.115);
+    --goldhi: #ffdfab;
+    --goldtxt: #241b11;
+    --text: #f4f0e9;
+    --muted: #a8a39c;
+    --muted2: #c9c4bc;
+    --stroke: #35363b;
     --accentwash: rgba(223, 186, 123, 0.095);
     --heroShade: #10100f;
     --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
 }
 
-/* 2. ATELIER IVORY (Warm Editorial Light Look) */
+/* 2. ATELIER IVORY (Warm Editorial Light Look - Default Light Mode) */
+:root[data-theme="ivory"],
+html[data-theme="ivory"],
 body[data-theme="ivory"],
+html[data-theme="ivory"] body,
 html.theme-ivory body,
-html:not(.dark) body[data-theme="ivory"] {
+html:not(.dark):not([data-theme]) body:not([data-theme]) {
+    --bg-main: #f5f1e9;
+    --bg-sidebar: #eae4d8;
+    --bg-surface: #fffdf9;
+    --bg-elevated: #f6f0e7;
+    --border-subtle: rgba(65, 45, 21, 0.15);
+    --border-champagne: rgba(148, 112, 73, 0.3);
+    --text-primary: #27231e;
+    --text-secondary: #6d6256;
+    --text-muted: #82796c;
+    --accent-champagne: #947049;
+    --accent-highlight: #ae8557;
+    --text-on-gold: #fffdfa;
+    --state-success: #2d8c52;
+    --state-warning: #c28834;
+    --state-danger: #d94f4f;
+
     --bg: #f5f1e9;
     --side: #eae4d8;
     --panel: #fffdf9;
@@ -118,15 +158,35 @@ html:not(.dark) body[data-theme="ivory"] {
     --text: #27231e;
     --muted: #82796c;
     --muted2: #6d6256;
-    --stroke: rgba(65, 45, 21, 0.125);
+    --stroke: rgba(65, 45, 21, 0.15);
     --accentwash: rgba(130, 89, 42, 0.085);
     --heroShade: #c8b7a0;
     --shadow: 0 24px 80px rgba(67, 50, 26, 0.1);
 }
 
 /* 3. MIDNIGHT SAPPHIRE (Deep Royal Blue Modern Look) */
+:root[data-theme="sapphire"],
+html[data-theme="sapphire"],
 body[data-theme="sapphire"],
-html.theme-sapphire body {
+html[data-theme="sapphire"] body,
+html.theme-sapphire body,
+html body[data-theme="sapphire"] {
+    --bg-main: #0a1120;
+    --bg-sidebar: #080f1c;
+    --bg-surface: #111b2b;
+    --bg-elevated: #18253a;
+    --border-subtle: rgba(198, 217, 255, 0.14);
+    --border-champagne: rgba(171, 199, 250, 0.3);
+    --text-primary: #f0f5ff;
+    --text-secondary: #c5d0e1;
+    --text-muted: #9daec6;
+    --accent-champagne: #abc7fa;
+    --accent-highlight: #e2edff;
+    --text-on-gold: #102039;
+    --state-success: #49be88;
+    --state-warning: #eab565;
+    --state-danger: #ee7979;
+
     --bg: #0a1120;
     --side: #080f1c;
     --panel: #111b2b;
@@ -145,8 +205,27 @@ html.theme-sapphire body {
 }
 
 /* 4. OLIVE HERITAGE (Natural Editorial Forest Look) */
+:root[data-theme="olive"],
+html[data-theme="olive"],
 body[data-theme="olive"],
-html.theme-olive body {
+html.theme-olive body,
+html body[data-theme="olive"] {
+    --bg-main: #e9ebe5;
+    --bg-sidebar: #e1e5dc;
+    --bg-surface: #fdfefa;
+    --bg-elevated: #f1f4ed;
+    --border-subtle: rgba(39, 80, 46, 0.13);
+    --border-champagne: rgba(78, 107, 83, 0.3);
+    --text-primary: #203327;
+    --text-secondary: #4e6454;
+    --text-muted: #738276;
+    --accent-champagne: #4e6b53;
+    --accent-highlight: #688a6d;
+    --text-on-gold: #ffffff;
+    --state-success: #2d8c52;
+    --state-warning: #c28834;
+    --state-danger: #d94f4f;
+
     --bg: #e9ebe5;
     --side: #e1e5dc;
     --panel: #fdfefa;

@@ -306,3 +306,129 @@
         font-size: 20px !important;
     }
 }
+
+/* ==========================================================================
+   10. SWEETALERT2 LUXURY MODAL HARMONIZATION (TASK E)
+   Harmonizes authentication and system dialogs with luxury dark/light themes
+   ========================================================================== */
+.swal2-container.swal2-backdrop-show,
+.swal2-container.swal2-noanimation {
+    background: rgba(10, 11, 14, 0.78) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+}
+
+.swal2-popup {
+    background: var(--panel, #17181b) !important;
+    border: 1px solid var(--stroke, rgba(223, 186, 123, 0.28)) !important;
+    border-radius: 20px !important;
+    color: var(--text, #f4f0e9) !important;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.65), 0 0 30px rgba(223, 186, 123, 0.08) !important;
+    padding: 26px !important;
+    font-family: inherit !important;
+}
+
+.swal2-title {
+    color: var(--text, #f4f0e9) !important;
+    font-family: var(--font-serif, 'Playfair Display', Georgia, serif) !important;
+    font-weight: 700 !important;
+    font-size: 20px !important;
+    letter-spacing: -0.01em !important;
+}
+
+.swal2-html-container {
+    color: var(--muted2, #c9c4bc) !important;
+    font-size: 13px !important;
+    line-height: 1.6 !important;
+}
+
+.swal2-actions {
+    gap: 10px !important;
+    margin-top: 22px !important;
+}
+
+.swal2-confirm {
+    background: linear-gradient(120deg, var(--goldhi, #ffdfaa), var(--gold, #dfba7b)) !important;
+    color: var(--goldtxt, #22180e) !important;
+    font-weight: 800 !important;
+    font-size: 12px !important;
+    letter-spacing: 0.02em !important;
+    border-radius: 10px !important;
+    padding: 11px 24px !important;
+    border: none !important;
+    box-shadow: 0 4px 16px rgba(223, 186, 123, 0.28) !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+}
+
+.swal2-confirm:hover {
+    filter: brightness(1.08) !important;
+    box-shadow: 0 6px 22px rgba(223, 186, 123, 0.42) !important;
+}
+
+.swal2-cancel {
+    background: var(--panel2, #212226) !important;
+    border: 1px solid var(--stroke, #35363b) !important;
+    color: var(--text, #f4f0e9) !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    border-radius: 10px !important;
+    padding: 11px 20px !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+}
+
+.swal2-cancel:hover {
+    border-color: var(--gold, #dfba7b) !important;
+    color: var(--gold, #dfba7b) !important;
+}
+
+.swal2-icon.swal2-error {
+    border-color: #ee7979 !important;
+    color: #ee7979 !important;
+}
+
+.swal2-icon.swal2-error [class^='swal2-x-mark-line'] {
+    background-color: #ee7979 !important;
+}
+
+.swal2-icon.swal2-success {
+    border-color: #49be88 !important;
+    color: #49be88 !important;
+}
+
+.swal2-icon.swal2-success [class^='swal2-success-line'] {
+    background-color: #49be88 !important;
+}
+
+.swal2-icon.swal2-warning {
+    border-color: #eab565 !important;
+    color: #eab565 !important;
+}
+
+/* Light Theme Overrides for SweetAlert2 */
+[data-theme="ivory"] .swal2-popup,
+[data-theme="olive"] .swal2-popup,
+html.theme-ivory .swal2-popup,
+html.theme-olive .swal2-popup,
+html:not(.dark) .swal2-popup {
+    background: var(--panel, #fffdf9) !important;
+    border-color: var(--stroke, rgba(65, 45, 21, 0.18)) !important;
+    box-shadow: 0 24px 80px rgba(67, 50, 26, 0.18) !important;
+}
+
+[data-theme="ivory"] .swal2-title,
+[data-theme="olive"] .swal2-title,
+html.theme-ivory .swal2-title,
+html.theme-olive .swal2-title,
+html:not(.dark) .swal2-title {
+    color: var(--text, #27231e) !important;
+}
+
+[data-theme="ivory"] .swal2-html-container,
+[data-theme="olive"] .swal2-html-container,
+html.theme-ivory .swal2-html-container,
+html.theme-olive .swal2-html-container,
+html:not(.dark) .swal2-html-container {
+    color: var(--muted2, #6d6256) !important;
+}
