@@ -68,6 +68,17 @@ function validatePhotoQuota(value, maxLimit = MAX_PHOTO_QUOTA) {
   return num;
 }
 
+function parseProjectMaxFoto(rawPrimary, rawSecondary) {
+  const val = (rawPrimary !== undefined && rawPrimary !== null && String(rawPrimary).trim() !== '')
+    ? rawPrimary
+    : rawSecondary;
+  if (val !== undefined && val !== null && String(val).trim() !== '') {
+    const n = Number(val);
+    if (Number.isFinite(n) && n >= 0) return n;
+  }
+  return 50;
+}
+
 function timingSafeStringEqual(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string') return false;
   const bufA = Buffer.from(a, 'utf8');
@@ -1371,16 +1382,54 @@ function resolveUserProEntitlement(user, proRow, options = {}) {
 
   // 2. Authoritative pro_entitlements record found
   if (proRow) {
-    if (proRow.is_lifetime === true || String(proRow.is_lifetime).toUpperCase() === 'TRUE') {
+    const rawIsPro = (proRow.is_pro !== undefined && proRow.is_pro !== null)
+      ? String(proRow.is_pro).trim().toLowerCase()
+      : null;
+    const rawStatus = (proRow.status !== undefined && proRow.status !== null)
+      ? String(proRow.status).trim().toLowerCase()
+      : '';
+    const rawLifetime = (proRow.is_lifetime !== undefined && proRow.is_lifetime !== null)
+      ? String(proRow.is_lifetime).trim().toLowerCase()
+      : '';
+
+    const isExplicitlyRevoked = (
+      proRow.is_pro === false ||
+      rawIsPro === 'false' ||
+      rawIsPro === '0' ||
+      rawIsPro === 'off' ||
+      rawIsPro === 'no' ||
+      ['inactive', 'revoked', 'disabled', 'cancelled', 'expired'].includes(rawStatus)
+    );
+
+    if (isExplicitlyRevoked) {
+      let safeRevokedExpiresAt = null;
+      if (proRow.expires_at) {
+        const d = new Date(proRow.expires_at);
+        if (!isNaN(d.getTime())) {
+          safeRevokedExpiresAt = d.toISOString();
+        }
+      }
+      return {
+        isPro: false,
+        isLifetime: false,
+        expiresAt: safeRevokedExpiresAt,
+        isExpired: false,
+        isRevoked: true,
+        source: proRow.source || 'entitlement_inactive'
+      };
+    }
+
+    if (proRow.is_lifetime === true || rawLifetime === 'true' || rawLifetime === '1') {
       return { isPro: true, isLifetime: true, expiresAt: null, source: proRow.source || 'payment' };
     }
     if (proRow.expires_at) {
       const expDate = new Date(proRow.expires_at);
-      const isStillValid = !isNaN(expDate.getTime()) && expDate.getTime() > Date.now();
+      const isDateValid = !isNaN(expDate.getTime());
+      const isStillValid = isDateValid && expDate.getTime() > Date.now();
       return {
         isPro: isStillValid,
         isLifetime: false,
-        expiresAt: isStillValid ? expDate.toISOString() : null,
+        expiresAt: (isDateValid && isStillValid) ? expDate.toISOString() : null,
         expiredAtRaw: proRow.expires_at,
         isExpired: !isStillValid,
         source: proRow.source || 'payment'
@@ -2119,7 +2168,7 @@ async function handleGetProjects(payload, res) {
     const clientName = p['Nama Client'] || p.NamaClient || 'Client';
     const nomorWA = p['Nomor WA'] || p.NomorWA || '';
     const passClient = p['Password Client'] || p.PasswordClient || '';
-    const maxFoto = Number(p['Max Foto']) || Number(p.MaxFoto) || 50;
+    const maxFoto = parseProjectMaxFoto(p['Max Foto'], p.MaxFoto);
     const driveLink = p['Drive Link'] || p.DriveLink || '';
     const dibuatPada = p['Dibuat Pada'] || p.created_at || new Date().toISOString();
     const lastUpdate = p['Last Update'] || p.LastUpdate || p.last_update || p.updated_at || dibuatPada;
@@ -2488,7 +2537,7 @@ function buildAuthorizedProjectData(p, ownerBrand, clientAccessToken) {
     needsPassword: false,
     accessGranted: true,
     clientAccessToken: clientAccessToken || '',
-    maxFoto: Number(p['Max Foto']) || 50,
+    maxFoto: parseProjectMaxFoto(p['Max Foto'], p.MaxFoto),
     driveLink: p['Drive Link'] || '',
     kategori: kat,
     categories: kat,
@@ -2712,8 +2761,10 @@ async function handleUpdateClientStatus(payload, res) {
   const updateBody = {};
   const curStatus = project.Status || project['Status Client'] || 'Belum Memilih';
   let currentStatus = curStatus;
-  let currentMax = Number(project['Max Foto']) || Number(project.MaxFoto) || 50;
-  let isDownloadActive = String(project.AksesDownload || project.Akses_Download).toUpperCase() !== 'FALSE';
+  const currentMax = parseProjectMaxFoto(project['Max Foto'], project.MaxFoto);
+  const extraPrice = Number(project.ExtraPrice) || Number(project['Extra Price']) || Number(project.extra_price) || 0;
+  const isUnlimited = currentMax >= 99999;
+  const isDownloadActive = String(project.AksesDownload || project.Akses_Download).toUpperCase() !== 'FALSE';
 
   const ALLOWED_CLIENT_STATUSES = new Set([
     'Belum Memilih',
@@ -2722,33 +2773,38 @@ async function handleUpdateClientStatus(payload, res) {
     'Selesai',
     'Menunggu Konfirmasi Pembayaran'
   ]);
+  let incomingStatus = undefined;
   if (payload.status !== undefined) {
     if (typeof payload.status !== 'string' || !ALLOWED_CLIENT_STATUSES.has(payload.status.trim())) {
       return error(res, 'Status client tidak valid.', 400);
     }
+    incomingStatus = payload.status.trim();
   }
 
-  const isAlreadyDone = (curStatus === 'Selesai' || curStatus === 'Menunggu Konfirmasi Pembayaran');
-  const isIncomingDraft = (payload.status === 'Sedang Memilih' || payload.status === 'Dalam Proses' || payload.status === 'Belum Memilih');
-
-  if (isAlreadyDone && isIncomingDraft) {
-    // Tetap pertahankan status Selesai, jangan ditimpa status draft/heartbeat
-  } else if (payload.status) {
-    const cleanStatus = payload.status.trim();
-    updateBody.Status = cleanStatus;
-    updateBody['Status Client'] = cleanStatus;
-    currentStatus = cleanStatus;
-  }
-
+  let countNum = null;
   if (payload.selectedCount !== undefined || payload.fotoTerpilih !== undefined) {
     const rawCount = payload.selectedCount !== undefined ? payload.selectedCount : payload.fotoTerpilih;
-    const countNum = Number(rawCount);
+    countNum = Number(rawCount);
     if (!Number.isInteger(countNum) || countNum < 0 || countNum > 10000) {
       return error(res, 'Jumlah foto terpilih tidak valid (harus bilangan bulat 0 - 10000).', 400);
     }
-    updateBody['Foto Terpilih'] = String(countNum);
   }
 
+  // Parse authoritative persisted files from project record
+  let persistedFiles = [];
+  const rawPersistedDp = project['Daftar Pilihan'] || project.DaftarPilihan;
+  if (rawPersistedDp) {
+    if (Array.isArray(rawPersistedDp)) {
+      persistedFiles = rawPersistedDp;
+    } else if (typeof rawPersistedDp === 'string') {
+      try {
+        const parsed = JSON.parse(rawPersistedDp);
+        if (Array.isArray(parsed)) persistedFiles = parsed;
+      } catch (_) { }
+    }
+  }
+
+  let cleanFiles = null;
   if (payload.selectedFiles !== undefined || payload.daftarPilihan !== undefined) {
     let files = payload.selectedFiles !== undefined ? payload.selectedFiles : payload.daftarPilihan;
     if (typeof files === 'string') {
@@ -2757,7 +2813,8 @@ async function handleUpdateClientStatus(payload, res) {
     if (!Array.isArray(files)) return error(res, 'Daftar pilihan harus berupa array.', 400);
     if (files.length > 10000) return error(res, 'Daftar pilihan melebihi batas maksimal 10.000 foto.', 400);
 
-    const cleanFiles = [];
+    cleanFiles = [];
+    const seenFiles = new Set();
     for (const f of files) {
       if (!f || typeof f !== 'object' || Array.isArray(f)) {
         return error(res, 'Item daftar pilihan tidak valid.', 400);
@@ -2771,9 +2828,18 @@ async function handleUpdateClientStatus(payload, res) {
       const folder = cleanPlainString(String(rawFolder), false);
       const category = cleanPlainString(String(rawCat), false);
 
+      if (!name) {
+        return error(res, 'Nama file dalam daftar pilihan tidak boleh kosong.', 400);
+      }
       if (name.length > 500) return error(res, 'Nama file dalam daftar pilihan maksimal 500 karakter.', 400);
       if (folder.length > 500) return error(res, 'Nama folder dalam daftar pilihan maksimal 500 karakter.', 400);
       if (category.length > 500) return error(res, 'Nama kategori dalam daftar pilihan maksimal 500 karakter.', 400);
+
+      const fileKey = `${folder.toLowerCase()}::${name.toLowerCase()}`;
+      if (seenFiles.has(fileKey)) {
+        return error(res, 'Daftar pilihan mengandung foto duplikat.', 400);
+      }
+      seenFiles.add(fileKey);
 
       let cleanRef = '';
       if (rawRef !== undefined && rawRef !== null && String(rawRef).trim() !== '') {
@@ -2798,7 +2864,76 @@ async function handleUpdateClientStatus(payload, res) {
         c: category
       });
     }
-    updateBody['Daftar Pilihan'] = JSON.stringify(cleanFiles);
+  }
+
+  // Cross-validation when selectedFiles is provided in request
+  if (countNum !== null && cleanFiles !== null) {
+    if (countNum !== cleanFiles.length) {
+      return error(res, 'Jumlah foto terpilih tidak sesuai dengan daftar berkas pilihan.', 400);
+    }
+  }
+
+  const isFinalizing = (incomingStatus === 'Selesai' || incomingStatus === 'Menunggu Konfirmasi Pembayaran');
+
+  // CASE A & C: When finalizing without selectedFiles, validate against authoritative persisted files
+  if (isFinalizing && cleanFiles === null) {
+    if (countNum !== null && countNum !== persistedFiles.length) {
+      return error(res, `Jumlah foto terpilih (${countNum}) tidak sesuai dengan daftar berkas pilihan yang tersimpan (${persistedFiles.length}).`, 400);
+    }
+    if (incomingStatus === 'Menunggu Konfirmasi Pembayaran' && persistedFiles.length === 0) {
+      return error(res, 'Tidak ada foto pilihan yang tersimpan untuk konfirmasi pembayaran.', 400);
+    }
+  }
+
+  // Authoritative effective count: cleanFiles length > persistedFiles length > saved project count
+  const effectiveCount = cleanFiles !== null
+    ? cleanFiles.length
+    : (persistedFiles.length > 0 ? persistedFiles.length : (countNum !== null ? countNum : (Number(project['Foto Terpilih']) || 0)));
+
+  // CASE B / ISSUE 2: Quota validation for projects with Upsell disabled
+  if (!isUnlimited && extraPrice <= 0 && effectiveCount > currentMax) {
+    return error(res, `Jumlah foto terpilih (${effectiveCount}) melebihi kuota project (${currentMax}).`, 400);
+  }
+
+  // CASE A / ISSUE 1: Prevent payment status bypass when extra paid photos are selected
+  if (!isUnlimited && extraPrice > 0 && effectiveCount > currentMax) {
+    if (incomingStatus === 'Selesai') {
+      return error(res, 'Project memiliki foto ekstra berbayar dan memerlukan konfirmasi pembayaran fotografer. Status harus Menunggu Konfirmasi Pembayaran.', 403);
+    }
+  }
+
+  // Client cannot set Menunggu Konfirmasi Pembayaran if no extra photos were selected
+  if (!isUnlimited && extraPrice > 0 && effectiveCount <= currentMax && incomingStatus === 'Menunggu Konfirmasi Pembayaran') {
+    return error(res, 'Status Menunggu Konfirmasi Pembayaran hanya berlaku jika jumlah foto melebihi kuota gratis.', 400);
+  }
+
+  const isAlreadyDone = (curStatus === 'Selesai' || curStatus === 'Menunggu Konfirmasi Pembayaran');
+  const isIncomingDraft = (incomingStatus === 'Sedang Memilih' || incomingStatus === 'Dalam Proses' || incomingStatus === 'Belum Memilih');
+
+  if (isAlreadyDone) {
+    if (incomingStatus && incomingStatus !== curStatus) {
+      if (curStatus === 'Menunggu Konfirmasi Pembayaran' && incomingStatus === 'Selesai') {
+        return error(res, 'Status Selesai hanya dapat dikonfirmasi oleh fotografer setelah verifikasi pembayaran.', 403);
+      }
+      if (curStatus === 'Selesai') {
+        return error(res, 'Project sudah selesai dan status tidak dapat diubah.', 400);
+      }
+    }
+    // Sesi sudah final/menunggu pembayaran, abaikan pembaruan status atau daftar foto dari client background sync
+    currentStatus = curStatus;
+  } else {
+    if (incomingStatus) {
+      updateBody.Status = incomingStatus;
+      updateBody['Status Client'] = incomingStatus;
+      currentStatus = incomingStatus;
+    }
+    if (cleanFiles !== null) {
+      updateBody['Foto Terpilih'] = String(cleanFiles.length);
+      updateBody['Daftar Pilihan'] = JSON.stringify(cleanFiles);
+    } else if (countNum !== null && (persistedFiles.length === 0 || countNum === persistedFiles.length)) {
+      // In count-only background pings, never corrupt or overwrite authoritative selection data
+      updateBody['Foto Terpilih'] = String(persistedFiles.length > 0 ? persistedFiles.length : countNum);
+    }
   }
 
   if (payload.notes !== undefined) {
@@ -3890,7 +4025,7 @@ async function handleSyncBackground(payload, res) {
     const clientName = p['Nama Client'] || p.NamaClient || 'Client';
     const nomorWA = p['Nomor WA'] || p.NomorWA || '';
     const passClient = p['Password Client'] || p.PasswordClient || '';
-    const maxFoto = Number(p['Max Foto']) || Number(p.MaxFoto) || 50;
+    const maxFoto = parseProjectMaxFoto(p['Max Foto'], p.MaxFoto);
     const driveLink = p['Drive Link'] || p.DriveLink || '';
     const dibuatPada = p['Dibuat Pada'] || p.created_at || new Date().toISOString();
     const lastUpdate = p['Last Update'] || p.LastUpdate || p.last_update || p.updated_at || dibuatPada;

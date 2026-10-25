@@ -218,6 +218,11 @@ const MOCK_ALL_PROJECTS = [
         token: 'dummy-client-token',
         'Nama Client': 'Siti & Budi Wedding',
         NamaClient: 'Siti & Budi Wedding',
+        'Password Client': '1234',
+        passwordClient: '1234',
+        password: '1234',
+        'Drive Link': 'https://drive.google.com/drive/folders/mock-folder-root',
+        driveLink: 'https://drive.google.com/drive/folders/mock-folder-root',
         'Dibuat Pada': '2026-10-10',
         'Status Client': 'Sedang Memilih',
         Status: 'Sedang Memilih',
@@ -235,6 +240,11 @@ const MOCK_ALL_PROJECTS = [
         token: 'token-no-download',
         'Nama Client': 'Siti & Budi Wedding (No DL)',
         NamaClient: 'Siti & Budi Wedding (No DL)',
+        'Password Client': '1234',
+        passwordClient: '1234',
+        password: '1234',
+        'Drive Link': 'https://drive.google.com/drive/folders/mock-folder-root',
+        driveLink: 'https://drive.google.com/drive/folders/mock-folder-root',
         'Dibuat Pada': '2026-10-10',
         'Status Client': 'Sedang Memilih',
         Status: 'Sedang Memilih',
@@ -252,6 +262,11 @@ const MOCK_ALL_PROJECTS = [
         token: 'token-empty',
         'Nama Client': 'Empty Gallery Project',
         NamaClient: 'Empty Gallery Project',
+        'Password Client': '1234',
+        passwordClient: '1234',
+        password: '1234',
+        'Drive Link': 'https://drive.google.com/drive/folders/mock-folder-root',
+        driveLink: 'https://drive.google.com/drive/folders/mock-folder-root',
         'Dibuat Pada': '2026-10-15',
         'Status Client': 'Belum Memilih',
         Status: 'Belum Memilih',
@@ -269,6 +284,11 @@ const MOCK_ALL_PROJECTS = [
         token: 'token-proj-2',
         'Nama Client': 'Annisa & Dimas Prewedding',
         NamaClient: 'Annisa & Dimas Prewedding',
+        'Password Client': '1234',
+        passwordClient: '1234',
+        password: '1234',
+        'Drive Link': 'https://drive.google.com/drive/folders/mock-folder-root',
+        driveLink: 'https://drive.google.com/drive/folders/mock-folder-root',
         'Dibuat Pada': '2026-10-12',
         'Status Client': 'Selesai',
         Status: 'Selesai',
@@ -286,6 +306,11 @@ const MOCK_ALL_PROJECTS = [
         token: 'token-ivory',
         'Nama Client': 'Reguler Studio Project',
         NamaClient: 'Reguler Studio Project',
+        'Password Client': '1234',
+        passwordClient: '1234',
+        password: '1234',
+        'Drive Link': 'https://drive.google.com/drive/folders/mock-folder-root',
+        driveLink: 'https://drive.google.com/drive/folders/mock-folder-root',
         'Dibuat Pada': '2026-10-14',
         'Status Client': 'Sedang Memilih',
         Status: 'Sedang Memilih',
@@ -303,6 +328,11 @@ const MOCK_ALL_PROJECTS = [
         token: 'token-olive',
         'Nama Client': 'Demo Studio Project',
         NamaClient: 'Demo Studio Project',
+        'Password Client': '1234',
+        passwordClient: '1234',
+        password: '1234',
+        'Drive Link': 'https://drive.google.com/drive/folders/mock-folder-root',
+        driveLink: 'https://drive.google.com/drive/folders/mock-folder-root',
         'Dibuat Pada': '2026-10-14',
         'Status Client': 'Sedang Memilih',
         Status: 'Sedang Memilih',
@@ -374,6 +404,14 @@ function resolveStaffSession(req, payload) {
     if (!sessionToken && payload.currentUser && typeof payload.currentUser === 'object') {
         if (payload.currentUser.sessionId) sessionToken = String(payload.currentUser.sessionId).trim();
         else if (payload.currentUser.token) sessionToken = String(payload.currentUser.token).trim();
+    }
+    if (!sessionToken && payload.formData && typeof payload.formData === 'object') {
+        if (payload.formData.sessionId) sessionToken = String(payload.formData.sessionId).trim();
+        else if (payload.formData.token) sessionToken = String(payload.formData.token).trim();
+        else if (payload.formData.currentUser && typeof payload.formData.currentUser === 'object') {
+            if (payload.formData.currentUser.sessionId) sessionToken = String(payload.formData.currentUser.sessionId).trim();
+            else if (payload.formData.currentUser.token) sessionToken = String(payload.formData.currentUser.token).trim();
+        }
     }
 
     if (!sessionToken) return { session: null, error: 'SESSION_REQUIRED' };
@@ -475,6 +513,63 @@ function handleApiBridge(req, res, body) {
         });
     }
 
+    function buildMockAuthorizedProjectData(proj, ownerConfig, clientSessionToken, token) {
+        const owner = (proj && (proj.Owner || proj.owner)) || mockProjectOwners[token] || 'fotografer';
+        const isDownloadActive = (proj && proj.isDownloadActive !== undefined) ? proj.isDownloadActive : (token !== 'token-no-download');
+        const isPilihActive = (proj && proj.isPilihActive !== undefined) ? proj.isPilihActive : true;
+        const maxFoto = (proj && (proj['Max Foto'] || proj.MaxFoto || proj.maxFoto)) !== undefined ? Number(proj['Max Foto'] || proj.MaxFoto || proj.maxFoto) : 5;
+        const extraPrice = (proj && (proj.ExtraPrice || proj.extraPrice)) !== undefined ? Number(proj.ExtraPrice || proj.extraPrice) : 0;
+        const driveLink = (proj && (proj['Drive Link'] || proj.driveLink || proj.DriveLink)) || '';
+        const namaClient = (proj && (proj['Nama Client'] || proj.NamaClient || proj.name)) || (token === 'token-proj-2' ? 'Annisa & Dimas Prewedding' : (token === 'token-ivory' ? 'Reguler Studio Project' : (token === 'token-olive' ? 'Demo Studio Project' : (token === 'token-empty' ? 'Empty Gallery Project' : 'Siti & Budi Wedding'))));
+        const savedSelections = mockProjectSelections.get(token) || (proj && (proj['Daftar Pilihan'] || proj.daftarPilihan)) || [];
+        const storedPass = proj ? String(proj['Password Client'] || proj.passwordClient || proj.password || '').trim() : '';
+        const hasPassword = Boolean(storedPass !== '');
+
+        let kat = (proj && (proj.Kategori || proj.categories)) || [];
+        if (typeof kat === 'string') {
+            try { kat = JSON.parse(kat); } catch (e) { kat = []; }
+        }
+
+        return {
+            token: token,
+            namaClient: namaClient,
+            name: namaClient,
+            brandName: ownerConfig.brandName,
+            studioName: ownerConfig.studioName || ownerConfig.brandName,
+            photographerName: owner,
+            ownerStudio: ownerConfig.studioName || ownerConfig.brandName,
+            nomorWA: (proj && (proj['Nomor WA'] || proj.nomorWA)) || '6281234567890',
+            maxFoto: maxFoto,
+            fotoTerpilih: savedSelections.length,
+            extraPrice: extraPrice,
+            isPilihActive: isPilihActive,
+            isDownloadActive: isDownloadActive,
+            driveLink: driveLink,
+            statusClient: (proj && (proj['Status Client'] || proj.Status || proj.statusClient)) || 'Belum Memilih',
+            selectedFiles: JSON.stringify(savedSelections),
+            daftarPilihan: savedSelections,
+            'Daftar Pilihan': savedSelections,
+            clientLayout: (proj && (proj.ClientLayout || proj.clientLayout)) || 'masonry',
+            watermarkEnabled: (proj && proj.watermarkEnabled !== undefined) ? proj.watermarkEnabled : (proj ? !!proj.useWatermark : false),
+            useWatermark: (proj && proj.watermarkEnabled !== undefined) ? proj.watermarkEnabled : (proj ? !!proj.useWatermark : false),
+            useWatermarkTiled: proj ? !!proj.useWatermarkTiled : false,
+            categories: kat,
+            kategori: kat,
+            musicUrl: (proj && (proj.MusicUrl || proj.musicUrl)) || '',
+            durasiPilih: (proj && (proj.DurasiPilih || proj.durasiPilih)) || 'Selamanya',
+            durasiDownload: (proj && (proj.DurasiDownload || proj.durasiDownload)) || 'Selamanya',
+            deadline: (proj && (proj.Deadline || proj.deadline)) || '',
+            hasPassword: hasPassword,
+            needsPassword: false,
+            accessGranted: true,
+            clientAccessToken: clientSessionToken || '',
+            isMockDrive: true,
+            mockNotice: 'Local Mock Fixtures Active — Simulated Google Drive Content',
+            theme: ownerConfig.theme,
+            ownerTheme: ownerConfig.theme
+        };
+    }
+
     // 1. Client App Auth & Verification
     if (action === 'getProjectForClient') {
         const token = String(payload.token || '').trim();
@@ -492,8 +587,9 @@ function handleApiBridge(req, res, body) {
             });
         }
         const ownerConfig = mockPhotographerSettings[owner] || { theme: 'noir', brandName: 'The Atelier Collection' };
+        const proj = findMockProject(token);
 
-        // Check for session restoration (FAIL C)
+        // Check for session restoration
         let sessionToken = '';
         if (req.headers['authorization']) {
             const authParts = req.headers['authorization'].split(' ');
@@ -509,7 +605,42 @@ function handleApiBridge(req, res, body) {
         }
 
         const now = getNow(req);
+        const storedPass = proj ? String(proj['Password Client'] || proj.passwordClient || proj.password || '').trim() : '';
+        const hasPassword = Boolean(storedPass !== '');
 
+        // 1. PASSWORDLESS PROJECT FLOW: Immediately grant project-scoped authorized session
+        if (!hasPassword) {
+            let activeClientSession = sessionToken ? mockVerifiedSessions.get(sessionToken) : null;
+            if (!activeClientSession || activeClientSession.projectToken !== token || now > activeClientSession.expiresAt) {
+                sessionToken = 'ps_sess_' + crypto.randomBytes(24).toString('hex');
+                const isDl = (proj && proj.isDownloadActive !== undefined) ? proj.isDownloadActive : (token !== 'token-no-download');
+                mockVerifiedSessions.set(sessionToken, {
+                    token: token,
+                    projectToken: token,
+                    sessionToken: sessionToken,
+                    verified: true,
+                    isPasswordless: true,
+                    isDownloadActive: isDl,
+                    createdAt: now,
+                    expiresAt: now + (24 * 60 * 60 * 1000)
+                });
+            }
+            const authorizedData = buildMockAuthorizedProjectData(proj, ownerConfig, sessionToken, token);
+            return reply(200, {
+                status: 'success',
+                data: {
+                    accessGranted: true,
+                    valid: true,
+                    needsPassword: false,
+                    hasPassword: false,
+                    clientAccessToken: sessionToken,
+                    project: authorizedData,
+                    ...authorizedData
+                }
+            });
+        }
+
+        // 2. PASSWORD-PROTECTED FLOW WITH EXISTING ACTIVE SESSION
         if (sessionToken) {
             const clientSession = mockVerifiedSessions.get(sessionToken);
             if (!clientSession) {
@@ -520,7 +651,7 @@ function handleApiBridge(req, res, body) {
                         needsPassword: true,
                         hasPassword: true,
                         accessGranted: false,
-                        namaClient: token === 'token-proj-2' ? 'Annisa & Dimas Prewedding' : (token === 'token-ivory' ? 'Reguler Studio Project' : (token === 'token-olive' ? 'Demo Studio Project' : (token === 'token-empty' ? 'Empty Gallery Project' : 'Siti & Budi Wedding'))),
+                        namaClient: (proj && (proj['Nama Client'] || proj.NamaClient)) || 'Gallery Client',
                         brandName: ownerConfig.brandName,
                         brandLogo: '',
                         theme: ownerConfig.theme,
@@ -538,7 +669,7 @@ function handleApiBridge(req, res, body) {
                         needsPassword: true,
                         hasPassword: true,
                         accessGranted: false,
-                        namaClient: token === 'token-proj-2' ? 'Annisa & Dimas Prewedding' : (token === 'token-ivory' ? 'Reguler Studio Project' : (token === 'token-olive' ? 'Demo Studio Project' : (token === 'token-empty' ? 'Empty Gallery Project' : 'Siti & Budi Wedding'))),
+                        namaClient: (proj && (proj['Nama Client'] || proj.NamaClient)) || 'Gallery Client',
                         brandName: ownerConfig.brandName,
                         brandLogo: '',
                         theme: ownerConfig.theme,
@@ -557,9 +688,7 @@ function handleApiBridge(req, res, body) {
             }
 
             // Valid active session for this project => accessGranted true, return authorized project
-            const isDownloadActive = token !== 'token-no-download' && clientSession.isDownloadActive !== false;
-            const projObj = findMockProject(token);
-            const savedSelections = mockProjectSelections.get(token) || (projObj && projObj['Daftar Pilihan']) || [];
+            const authorizedData = buildMockAuthorizedProjectData(proj, ownerConfig, sessionToken, token);
             return reply(200, {
                 status: 'success',
                 data: {
@@ -568,40 +697,20 @@ function handleApiBridge(req, res, body) {
                     needsPassword: false,
                     hasPassword: true,
                     clientAccessToken: sessionToken,
-                    project: {
-                        token: token,
-                        namaClient: (projObj && (projObj['Nama Client'] || projObj.NamaClient)) || (token === 'token-proj-2' ? 'Annisa & Dimas Prewedding' : (token === 'token-ivory' ? 'Reguler Studio Project' : (token === 'token-olive' ? 'Demo Studio Project' : (token === 'token-empty' ? 'Empty Gallery Project' : 'Siti & Budi Wedding')))),
-                        brandName: ownerConfig.brandName,
-                        studioName: ownerConfig.studioName || ownerConfig.brandName,
-                        photographerName: owner,
-                        ownerStudio: ownerConfig.studioName || ownerConfig.brandName,
-                        nomorWA: '6281234567890',
-                        maxFoto: (projObj && (projObj['Max Foto'] || projObj.MaxFoto)) || 3,
-                        fotoTerpilih: savedSelections.length,
-                        extraPrice: 0,
-                        isPilihActive: true,
-                        isDownloadActive: isDownloadActive,
-                        driveLink: 'mock-folder-root',
-                        statusClient: (projObj && (projObj['Status Client'] || projObj.Status)) || 'Sedang Memilih',
-                        selectedFiles: JSON.stringify(savedSelections),
-                        clientLayout: 'masonry',
-                        watermarkEnabled: false,
-                        theme: ownerConfig.theme,
-                        ownerTheme: ownerConfig.theme
-                    }
+                    project: authorizedData,
+                    ...authorizedData
                 }
             });
         }
 
-        // No session => gallery remains locked, prompt for PIN
-        const projLocked = findMockProject(token);
+        // 3. PASSWORD-PROTECTED FLOW WITHOUT SESSION => Locked view, prompt for PIN
         return reply(200, {
             status: 'success',
             data: {
                 needsPassword: true,
                 hasPassword: true,
                 accessGranted: false,
-                namaClient: (projLocked && (projLocked['Nama Client'] || projLocked.NamaClient)) || (token === 'token-proj-2' ? 'Annisa & Dimas Prewedding' : (token === 'token-ivory' ? 'Reguler Studio Project' : (token === 'token-olive' ? 'Demo Studio Project' : (token === 'token-empty' ? 'Empty Gallery Project' : 'Siti & Budi Wedding')))),
+                namaClient: (proj && (proj['Nama Client'] || proj.NamaClient)) || 'Gallery Client',
                 brandName: ownerConfig.brandName,
                 brandLogo: '',
                 theme: ownerConfig.theme,
@@ -627,10 +736,14 @@ function handleApiBridge(req, res, body) {
             });
         }
         const ownerConfig = mockPhotographerSettings[owner] || { theme: 'noir', brandName: 'The Atelier Collection' };
+        const proj = findMockProject(token);
 
-        if (pin === '1234' || pin === '123456') {
+        const expectedPin = proj ? String(proj['Password Client'] || proj.passwordClient || proj.password || '').trim() : '';
+        const isMatch = expectedPin ? (pin === expectedPin) : true;
+
+        if (isMatch) {
             const now = getNow(req);
-            const isDownloadActive = token !== 'token-no-download';
+            const isDownloadActive = (proj && proj.isDownloadActive !== undefined) ? proj.isDownloadActive : (token !== 'token-no-download');
             const sessionToken = 'ps_sess_' + crypto.randomBytes(24).toString('hex');
             const sessionData = {
                 token: token,
@@ -643,32 +756,15 @@ function handleApiBridge(req, res, body) {
             };
             mockVerifiedSessions.set(sessionToken, sessionData);
 
+            const authorizedData = buildMockAuthorizedProjectData(proj, ownerConfig, sessionToken, token);
             return res.end(JSON.stringify({
                 status: 'success',
                 data: {
                     valid: true,
                     accessGranted: true,
                     clientAccessToken: sessionToken,
-                    project: {
-                        token: token,
-                        namaClient: token === 'token-proj-2' ? 'Annisa & Dimas Prewedding' : (token === 'token-ivory' ? 'Reguler Studio Project' : (token === 'token-olive' ? 'Demo Studio Project' : (token === 'token-empty' ? 'Empty Gallery Project' : 'Siti & Budi Wedding'))),
-                        brandName: ownerConfig.brandName,
-                        studioName: ownerConfig.studioName || ownerConfig.brandName,
-                        photographerName: owner,
-                        ownerStudio: ownerConfig.studioName || ownerConfig.brandName,
-                        nomorWA: '6281234567890',
-                        maxFoto: 3,
-                        extraPrice: 0,
-                        isPilihActive: true,
-                        isDownloadActive: isDownloadActive,
-                        driveLink: 'mock-folder-root',
-                        statusClient: 'Sedang Memilih',
-                        selectedFiles: '[]',
-                        clientLayout: 'masonry',
-                        watermarkEnabled: false,
-                        theme: ownerConfig.theme,
-                        ownerTheme: ownerConfig.theme
-                    }
+                    project: authorizedData,
+                    ...authorizedData
                 }
             }));
         } else {
@@ -750,14 +846,23 @@ function handleApiBridge(req, res, body) {
                 }
 
                 const allowedFiles = mockProjectFixtures[reqProjectToken] || [];
-                const filteredImages = DUMMY_PHOTOS.filter(img => allowedFiles.includes(img.name));
+                const project = findMockProject(reqProjectToken);
+                const filteredImages = DUMMY_PHOTOS.filter(img => allowedFiles.includes(img.name)).map(img => ({
+                    ...img,
+                    isMockFixture: true,
+                    source: 'local-mock-fixture',
+                    mockNotice: 'Local sample fixture — not genuine Google Drive content'
+                }));
 
                 // Safe return: empty list if empty, NEVER fall back to DUMMY_PHOTOS
                 return res.end(JSON.stringify({
                     status: 'success',
                     data: {
                         folders: [],
-                        images: filteredImages
+                        images: filteredImages,
+                        isMockDrive: true,
+                        driveReference: (project && (project['Drive Link'] || project.driveLink || project.DriveLink)) || '',
+                        mockNotice: 'Local Mock Fixtures Active — Simulated Google Drive Content'
                     }
                 }));
             }
@@ -812,14 +917,23 @@ function handleApiBridge(req, res, body) {
 
         const projectToken = clientSession.projectToken;
         const allowedFiles = mockProjectFixtures[projectToken] || [];
-        const filteredImages = DUMMY_PHOTOS.filter(img => allowedFiles.includes(img.name));
+        const project = findMockProject(projectToken);
+        const filteredImages = DUMMY_PHOTOS.filter(img => allowedFiles.includes(img.name)).map(img => ({
+            ...img,
+            isMockFixture: true,
+            source: 'local-mock-fixture',
+            mockNotice: 'Local sample fixture — not genuine Google Drive content'
+        }));
 
         // Safe return: empty list if empty, NEVER fall back to DUMMY_PHOTOS (FAIL B)
         return reply(200, {
             status: 'success',
             data: {
                 folders: [],
-                images: filteredImages
+                images: filteredImages,
+                isMockDrive: true,
+                driveReference: (project && (project['Drive Link'] || project.driveLink || project.DriveLink)) || '',
+                mockNotice: 'Local Mock Fixtures Active — Simulated Google Drive Content'
             }
         });
     }
@@ -949,7 +1063,7 @@ function handleApiBridge(req, res, body) {
 
         if ((username === 'admin' || username === 'admin_atelier') && password === 'password123') {
             const adminToken = 'ps_adm_' + crypto.randomBytes(24).toString('hex');
-            mockPhotographerSessions.set(adminToken, { username: 'admin', role: 'Admin', createdAt: now, expiresAt: now + 86400000 });
+            mockPhotographerSessions.set(adminToken, { username: 'admin', role: 'Admin', isPro: true, createdAt: now, expiresAt: now + 86400000 });
             return res.end(JSON.stringify({
                 status: 'success',
                 data: {
@@ -969,7 +1083,7 @@ function handleApiBridge(req, res, body) {
             }));
         } else if ((username === 'fotografer' || username === 'kama_photographer') && password === 'password123') {
             const photoToken = 'ps_pht_' + crypto.randomBytes(24).toString('hex');
-            mockPhotographerSessions.set(photoToken, { username: 'fotografer', role: 'Photographer', createdAt: now, expiresAt: now + 86400000 });
+            mockPhotographerSessions.set(photoToken, { username: 'fotografer', role: 'Photographer', isPro: true, createdAt: now, expiresAt: now + 86400000 });
             return res.end(JSON.stringify({
                 status: 'success',
                 data: {
@@ -993,7 +1107,7 @@ function handleApiBridge(req, res, body) {
             }));
         } else if ((username === 'demo' || username === 'demo_user') && (password === 'password123' || password === 'demo')) {
             const demoToken = 'ps_dmo_' + crypto.randomBytes(24).toString('hex');
-            mockPhotographerSessions.set(demoToken, { username: 'demo_user', role: 'Photographer', createdAt: now, expiresAt: now + 86400000 });
+            mockPhotographerSessions.set(demoToken, { username: 'demo_user', role: 'Photographer', isPro: false, createdAt: now, expiresAt: now + 86400000 });
             return res.end(JSON.stringify({
                 status: 'success',
                 data: {
@@ -1302,39 +1416,92 @@ function handleApiBridge(req, res, body) {
             return reply(200, {
                 status: 'error',
                 code: staffAuth.error,
-                message: 'Akses ditolak: Sesi staf diperlukan untuk membuat proyek.'
+                message: staffAuth.error === 'SESSION_EXPIRED'
+                    ? 'Sesi staf telah kedaluwarsa. Silakan login kembali.'
+                    : (staffAuth.error === 'INVALID_SESSION'
+                        ? 'Akses ditolak: Sesi staf tidak valid atau server telah dimulai ulang. Silakan login kembali.'
+                        : 'Akses ditolak: Sesi staf diperlukan untuk membuat proyek.')
             });
         }
         const fd = payload.formData || payload;
         const ownerName = staffAuth.session.username;
+
+        // Unified PRO Entitlement Enforcement for Paid Upsell (C07 / C08)
+        const extraPriceNum = Number(fd.extraPrice || fd.extra || 0);
+        if (extraPriceNum > 0 && !staffAuth.session.isPro && staffAuth.session.role !== 'Admin') {
+            return reply(200, {
+                status: 'error',
+                code: 'PRO_REQUIRED',
+                message: 'Fitur Upsell Foto Ekstra hanya tersedia untuk fotografer Add-On PRO aktif.'
+            });
+        }
+
         const newProjId = 'proj-' + crypto.randomBytes(4).toString('hex');
         const newToken = 'token-' + crypto.randomBytes(6).toString('hex');
+        const clientPass = fd.passwordClient !== undefined ? String(fd.passwordClient).trim() : (fd.password !== undefined ? String(fd.password).trim() : (fd['Password Client'] !== undefined ? String(fd['Password Client']).trim() : ''));
+        const driveLink = String(fd.driveLink || fd['Drive Link'] || fd.DriveLink || fd.folderUrl || fd.linkDrive || '').trim();
+        const namaClient = String(fd.namaClient || fd.name || fd['Nama Client'] || 'New Client').trim();
+        const maxFoto = (fd.maxFoto !== undefined && fd.maxFoto !== '') ? Number(fd.maxFoto) : 5;
+        const nomorWA = String(fd.nomorWA || fd.noWA || fd['Nomor WA'] || '').trim();
+        const clientLayout = String(fd.clientLayout || fd.layout || 'masonry').trim();
+        const useWatermark = Boolean(fd.useWatermark || fd.watermarkEnabled);
+        const useWatermarkTiled = Boolean(fd.useWatermarkTiled);
+        const musicUrl = String(fd.musicUrl || '').trim();
+        const durasiPilih = String(fd.durasiPilih || 'Selamanya').trim();
+        const durasiDownload = String(fd.durasiDownload || 'Selamanya').trim();
+        const deadline = String(fd.deadline || '').trim();
+        let categories = fd.categories || fd.kategori || [];
+        if (typeof categories === 'string') {
+            try { categories = JSON.parse(categories); } catch (e) { categories = []; }
+        }
+
         const newProj = {
             id: newProjId,
             ID: newProjId,
             Token: newToken,
             token: newToken,
-            'Nama Client': fd.namaClient || 'New Client',
-            NamaClient: fd.namaClient || 'New Client',
+            'Nama Client': namaClient,
+            NamaClient: namaClient,
+            name: namaClient,
+            'Password Client': clientPass,
+            passwordClient: clientPass,
+            password: clientPass,
+            'Drive Link': driveLink,
+            driveLink: driveLink,
+            DriveLink: driveLink,
             'Dibuat Pada': new Date().toISOString().slice(0, 10),
-            'Status Client': 'Sedang Memilih',
-            Status: 'Sedang Memilih',
-            statusClient: 'Sedang Memilih',
-            'Max Foto': Number(fd.maxFoto) || 5,
-            MaxFoto: Number(fd.maxFoto) || 5,
-            maxFoto: Number(fd.maxFoto) || 5,
+            'Status Client': 'Belum Memilih',
+            Status: 'Belum Memilih',
+            statusClient: 'Belum Memilih',
+            'Max Foto': maxFoto,
+            MaxFoto: maxFoto,
+            maxFoto: maxFoto,
             'Foto Terpilih': 0,
             'Daftar Pilihan': [],
             Owner: ownerName,
             owner: ownerName,
+            ExtraPrice: String(extraPriceNum),
+            extraPrice: extraPriceNum,
             isPilihActive: fd.aksesPilih !== false,
             isDownloadActive: fd.aksesDownload !== false,
-            watermarkEnabled: !!fd.useWatermark,
-            deadline: fd.deadline || ''
+            watermarkEnabled: useWatermark,
+            useWatermark: useWatermark,
+            useWatermarkTiled: useWatermarkTiled,
+            nomorWA: nomorWA,
+            'Nomor WA': nomorWA,
+            clientLayout: clientLayout,
+            categories: categories,
+            kategori: categories,
+            musicUrl: musicUrl,
+            durasiPilih: durasiPilih,
+            durasiDownload: durasiDownload,
+            deadline: deadline,
+            isMockFixture: true,
+            source: 'local-mock-fixture'
         };
         MOCK_ALL_PROJECTS.push(newProj);
         mockProjectOwners[newToken] = ownerName;
-        mockProjectFixtures[newToken] = ['photo1.png', 'photo2.png'];
+        mockProjectFixtures[newToken] = ['photo1.png', 'photo2.png', 'photo3.png', 'photo4.png', 'photo5.png'];
         return reply(200, {
             status: 'success',
             data: {

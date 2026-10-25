@@ -39,6 +39,18 @@
     --heroShade: #10100f;
     --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
 
+    /* --- COLOR PALETTE: ATELIER NOIR --- */
+    --color-noir-deep: #101115;
+    --color-noir-surface: #16171e;
+    --color-noir-card: #1c1e26;
+    --color-noir-border: #2a2d39;
+
+    /* --- COLOR PALETTE: ATELIER CHAMPAGNE --- */
+    --color-champagne-light: #E6CF9F;
+    --color-champagne-primary: #D8BA83;
+    --color-champagne-border: rgba(216, 186, 131, 0.35);
+    --color-champagne-tint: rgba(216, 186, 131, 0.12);
+
     /* --- COLOR PALETTE: ATELIER IVORY --- */
     --color-ivory-bg: #f5f1e9;
     --color-ivory-surface: #fffdf9;

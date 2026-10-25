@@ -218,7 +218,13 @@
 #client-gallery-view {
     background-color: #0e0f12 !important;
     color: #f4f0e9 !important;
-    min-height: 100vh;
+    height: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    width: 100%;
+    max-width: 100vw;
+    overflow: hidden;
+    box-sizing: border-box;
     transition: background-color 0.3s ease;
 }
 
@@ -289,17 +295,24 @@
 }
 
 /* Header Total & Terpilih Counter Pill */
-#client-gallery-view header .client-header-counter-pill,
-#client-gallery-view header .shrink-0.flex.items-center.bg-white,
-#client-gallery-view header .shrink-0.flex.items-center {
+#client-gallery-view header .client-header-counter-pill {
     background: #18191d !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: var(--radius-md, 12px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
-#client-gallery-view header .shrink-0.flex.items-center .text-slate-400 {
+#client-gallery-view header .client-header-counter-pill .text-slate-400 {
     color: #8e8a82 !important;
+}
+
+/* Header Action & Tool Wrappers (Clean & Transparent - No Outer Box / Double Border) */
+#client-gallery-view .client-header-actions,
+#client-gallery-view .client-header-tools,
+#client-gallery-view .client-header-right {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 #client-gallery-view #header-total-foto {
@@ -400,11 +413,20 @@
 
 /* Scroll Container & Grid Padding Protection */
 #client-gallery-view #gallery-scroll-area {
-    padding-bottom: 96px;
+    flex: 1 1 0% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(120px + env(safe-area-inset-bottom, 20px));
 }
 
 #client-gallery-view #gallery-container {
     padding-bottom: 24px;
+    box-sizing: border-box;
 }
 
 /* ==========================================================================
@@ -862,10 +884,154 @@
     font-weight: 700;
 }
 
-/* Category Selector Modal */
+/* Category Selector Modal - Luxury Styling Across All 4 Themes (Task B) */
+#categorySelectorModal {
+    z-index: 100000;
+}
+
 #categorySelectorModal #categorySelectorContent {
-    border-top: 2px solid var(--gold, #dfba7b);
-    background: var(--panel, #161719) !important;
+    background: var(--bg-surface, var(--panel, #17181b)) !important;
+    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12)) !important;
+    border-top: 3px solid var(--gold, #dfba7b) !important;
+    color: var(--text-primary, #f4f0e9) !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5) !important;
+}
+
+#categorySelectorModal .category-modal-header {
+    background: var(--bg-elevated, var(--panel2, #212226)) !important;
+    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08)) !important;
+}
+
+#categorySelectorModal .category-modal-title {
+    color: var(--text-primary, #f4f0e9) !important;
+    font-family: var(--font-serif, 'Playfair Display', Georgia, serif) !important;
+}
+
+#categorySelectorModal .category-modal-subtitle {
+    color: var(--text-secondary, #c9c4bc) !important;
+}
+
+#categorySelectorModal .category-modal-close {
+    background: var(--bg-surface, #17181b) !important;
+    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.15)) !important;
+    color: var(--text-primary, #f4f0e9) !important;
+}
+
+#categorySelectorModal .category-modal-close:hover {
+    color: var(--gold, #dfba7b) !important;
+    border-color: var(--gold, #dfba7b) !important;
+}
+
+#categorySelectorModal .category-preview-card {
+    background: var(--bg-elevated, #212226) !important;
+    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1)) !important;
+}
+
+#categorySelectorModal #catSelImageName {
+    color: var(--text-primary, #f4f0e9) !important;
+}
+
+/* Category item buttons in modal */
+.category-item-btn {
+    background: var(--bg-elevated, #212226) !important;
+    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12)) !important;
+    color: var(--text-primary, #f4f0e9) !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.category-item-btn:hover:not(:disabled) {
+    border-color: var(--gold, #dfba7b) !important;
+    background: var(--accentwash, rgba(223, 186, 123, 0.08)) !important;
+    transform: translateY(-1px);
+}
+
+.category-item-btn .cat-name {
+    color: var(--text-primary, #f4f0e9) !important;
+    font-weight: 700 !important;
+}
+
+.category-item-btn .cat-count {
+    color: var(--text-secondary, #c9c4bc) !important;
+}
+
+.category-item-btn.cat-current {
+    border-color: var(--gold, #dfba7b) !important;
+    box-shadow: 0 0 0 1px var(--gold, #dfba7b) inset !important;
+}
+
+.category-item-btn.cat-full {
+    opacity: 0.75 !important;
+}
+
+.category-item-btn.cat-extra {
+    border-color: var(--state-warning, #eab565) !important;
+    background: rgba(234, 181, 101, 0.08) !important;
+}
+
+.cat-badge-active {
+    background: var(--gold, #dfba7b) !important;
+    color: var(--goldtxt, #241b11) !important;
+}
+
+.cat-badge-extra {
+    background: rgba(234, 181, 101, 0.2) !important;
+    color: var(--state-warning, #eab565) !important;
+    border: 1px solid var(--state-warning, #eab565) !important;
+}
+
+.cat-modal-safe-title {
+    color: var(--text-primary, #f4f0e9) !important;
+}
+
+.cat-modal-safe-desc {
+    color: var(--text-secondary, #c9c4bc) !important;
+}
+
+.category-modal-close-safe {
+    background: var(--gold, #dfba7b) !important;
+    color: var(--goldtxt, #241b11) !important;
+}
+
+/* Client Header Tools (Palette & Language Switchers - Task D & E) */
+.client-tool-btn {
+    background: var(--bg-elevated, #212226) !important;
+    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12)) !important;
+    color: var(--text-primary, #f4f0e9) !important;
+}
+
+.client-tool-btn:hover {
+    border-color: var(--gold, #dfba7b) !important;
+    color: var(--gold, #dfba7b) !important;
+}
+
+#clientThemeDropdown,
+#clientLangDropdown {
+    background: var(--bg-surface, #17181b) !important;
+    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.15)) !important;
+    color: var(--text-primary, #f4f0e9) !important;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45) !important;
+}
+
+.client-theme-opt,
+.client-lang-opt {
+    color: var(--text-primary, #f4f0e9) !important;
+}
+
+.client-theme-opt:hover,
+.client-lang-opt:hover {
+    background: var(--accentwash, rgba(223, 186, 123, 0.08)) !important;
+    color: var(--gold, #dfba7b) !important;
+}
+
+.client-theme-opt.theme-opt-active,
+.client-lang-opt.lang-opt-active {
+    color: var(--gold, #dfba7b) !important;
+    font-weight: 700 !important;
+}
+
+.client-theme-opt .opt-check,
+.client-lang-opt .lang-check {
+    color: var(--gold, #dfba7b) !important;
 }
 
 /* ==========================================================================
@@ -873,6 +1039,7 @@
    ========================================================================== */
 
 @media (max-width: 640px) {
+    /* 1. MOBILE HEADER (2 Rows: Actions + Right on Row 1, Title on Row 2) */
     #client-gallery-view header.glass-header {
         display: grid !important;
         grid-template-columns: auto 1fr !important;
@@ -880,10 +1047,13 @@
             "actions right"
             "title   title" !important;
         align-items: center !important;
-        row-gap: 6px !important;
-        column-gap: 8px !important;
+        row-gap: 5px !important;
+        column-gap: 6px !important;
         padding: 8px 10px !important;
         box-sizing: border-box !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow: hidden !important;
     }
 
     #client-gallery-view .client-header-actions {
@@ -891,6 +1061,8 @@
         justify-self: start !important;
         display: flex !important;
         align-items: center !important;
+        gap: 4px !important;
+        min-width: 0 !important;
     }
 
     #client-gallery-view .client-header-right {
@@ -898,6 +1070,9 @@
         justify-self: end !important;
         display: flex !important;
         align-items: center !important;
+        gap: 3px !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
     }
 
     #client-gallery-view .client-header-title-box {
@@ -908,7 +1083,7 @@
     }
 
     #client-gallery-view #gallery-title {
-        font-size: 14px !important;
+        font-size: 13.5px !important;
         max-width: 100% !important;
         width: 100% !important;
         line-height: 1.25 !important;
@@ -931,132 +1106,166 @@
         margin-top: 1px !important;
     }
 
+    /* 2. CONTAINER & SCROLL AREA */
+    #client-gallery-view {
+        height: 100% !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    #client-gallery-view #gallery-scroll-area {
+        flex: 1 1 0% !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        min-height: 0 !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        box-sizing: border-box !important;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: calc(140px + env(safe-area-inset-bottom, 24px)) !important;
+    }
+
     #client-gallery-view .btn-client-switch-mode {
-        padding: 5px 8px !important;
-        font-size: 11px !important;
-        gap: 4px;
-        border-radius: 8px;
+        padding: 5px 7px !important;
+        font-size: 10.5px !important;
+        gap: 3px !important;
+        border-radius: 8px !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
     }
 
     #client-gallery-view .client-header-counter-pill {
-        padding: 3px 6px !important;
+        padding: 2px 5px !important;
         border-radius: 8px !important;
-        gap: 4px !important;
+        gap: 3px !important;
+        flex-shrink: 0 !important;
     }
 
+    #client-gallery-view .client-header-counter-pill > div {
+        padding: 0 3px !important;
+    }
+
+    #client-gallery-view .client-header-tools {
+        gap: 3px !important;
+        flex-shrink: 0 !important;
+    }
+
+    #client-gallery-view .client-tool-btn {
+        width: 30px !important;
+        height: 30px !important;
+        border-radius: 8px !important;
+        flex-shrink: 0 !important;
+    }
+
+    #client-gallery-view #btn-client-lang-toggle {
+        width: auto !important;
+        height: 30px !important;
+        padding: 0 5px !important;
+        font-size: 10.5px !important;
+        flex-shrink: 0 !important;
+    }
+
+    #client-gallery-view #clientThemeDropdown,
+    #client-gallery-view #clientLangDropdown {
+        max-width: calc(100vw - 20px) !important;
+    }
+
+    /* 3. HERO / BANNER */
     #client-gallery-view .client-banner-luxury {
-        padding: 12px 14px 10px !important;
-        margin: 6px auto 8px !important;
+        width: calc(100% - 16px) !important;
+        max-width: calc(100% - 16px) !important;
+        margin: 6px 8px 8px !important;
+        padding: 10px 12px 10px !important;
         border-radius: 10px !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
     }
 
     #client-gallery-view .client-banner-luxury h1 {
-        font-size: 17px !important;
-        line-height: 1.22 !important;
-        margin: 4px 0 4px !important;
+        font-size: 15px !important;
+        line-height: 1.25 !important;
+        margin: 3px 0 4px !important;
+        word-break: break-word !important;
     }
 
     #client-gallery-view .client-banner-luxury p {
-        font-size: 11px !important;
-        line-height: 1.4 !important;
+        font-size: 10.5px !important;
+        line-height: 1.35 !important;
+        word-break: break-word !important;
     }
 
     #client-gallery-view .client-banner-luxury .eyebrow {
-        font-size: 9px !important;
+        font-size: 8.5px !important;
         letter-spacing: 0.12em !important;
     }
 
+    /* 4. 3-STEP VISUAL INSTRUCTION GUIDE (Compact, Zero Overflow, Truncated Ellipsis) */
     #client-gallery-view .client-simple-steps {
-        padding: 0 6px 4px !important;
-        gap: 4px;
-        margin-bottom: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 6px 6px !important;
+        gap: 2px !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        margin: 0 auto 6px !important;
     }
 
     #client-gallery-view .client-step {
-        font-size: 9px !important;
-        gap: 4px;
+        display: flex !important;
+        align-items: center !important;
+        min-width: 0 !important;
+        flex: 1 1 0% !important;
+        gap: 3px !important;
+        font-size: 8.5px !important;
+        overflow: hidden !important;
     }
 
     #client-gallery-view .client-step b {
-        width: 20px;
-        height: 20px;
-        font-size: 9px;
+        width: 18px !important;
+        height: 18px !important;
+        min-width: 18px !important;
+        font-size: 8.5px !important;
+        flex-shrink: 0 !important;
+    }
+
+    #client-gallery-view .client-step span {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        min-width: 0 !important;
+        font-size: 8.5px !important;
+        display: inline-block !important;
     }
 
     #client-gallery-view .step-arrow {
-        font-size: 10px !important;
+        font-size: 8px !important;
+        flex-shrink: 0 !important;
+        padding: 0 1px !important;
+        opacity: 0.6;
     }
 
-    #client-gallery-view .action-bar {
-        padding: 8px 10px max(8px, env(safe-area-inset-bottom)) !important;
-        min-height: 54px !important;
-    }
-
-    #client-gallery-view #bottom-counter {
-        font-size: 18px !important;
-    }
-
-    #client-gallery-view .action-bar span.text-gray-400,
-    #client-gallery-view .action-bar span.tracking-wider {
-        font-size: 9px !important;
-    }
-
-    #client-gallery-view #action-selection-mode {
-        gap: 5px !important;
-    }
-
-    #client-gallery-view #btn-client-reset {
-        min-height: 38px !important;
-        padding: 6px 10px !important;
-        font-size: 11px !important;
-        border-radius: 10px !important;
-    }
-
-    #client-gallery-view #btn-client-preview,
-    #client-gallery-view #btn-client-copy {
-        min-height: 38px !important;
-        padding: 6px 10px !important;
-        font-size: 11px !important;
-        border-radius: 10px !important;
-    }
-
-    #client-gallery-view #btn-client-wa {
-        min-height: 38px !important;
-        padding: 6px 12px !important;
-        font-size: 12px !important;
-        border-radius: 10px !important;
-        gap: 6px;
-    }
-
-    #client-gallery-view #action-download-mode {
-        gap: 6px !important;
-    }
-
-    #client-gallery-view #action-download-mode label,
-    #client-gallery-view .client-select-all-label {
-        min-height: 38px !important;
-        padding: 6px 10px !important;
-        font-size: 11px !important;
-        border-radius: 10px !important;
-    }
-
-    #client-gallery-view #btn-download-zip,
-    #client-gallery-view .btn-download-zip,
-    #client-gallery-view #action-download-mode button,
-    #client-gallery-view .btn-main-download {
-        min-height: 38px !important;
-        padding: 6px 10px !important;
-        font-size: 11px !important;
-        border-radius: 10px !important;
-    }
-
+    /* 5. 2-COLUMN PHOTO GRID & CARDS */
     #client-gallery-view .gallery-grid,
+    #client-gallery-view #gallery-container,
     #client-gallery-view .adaptive-grid {
         display: grid !important;
-        grid-template-columns: repeat(2, 1fr) !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: 8px !important;
-        padding: 6px !important;
+        padding: 4px 8px 30px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
         flex-wrap: nowrap !important;
+        overflow: hidden !important;
     }
 
     #client-gallery-view .adaptive-grid::after {
@@ -1067,45 +1276,263 @@
         height: auto !important;
         aspect-ratio: 3/3.7 !important;
         width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
         flex-grow: 0 !important;
     }
 
     #client-gallery-view .photo-card {
-        border-radius: 10px;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        border-radius: 10px !important;
     }
 
     #client-gallery-view .photo-card .info-overlay {
-        padding: 18px 6px 6px !important;
-        gap: 3px;
+        padding: 16px 6px 6px !important;
+        gap: 3px !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
     }
 
     #client-gallery-view .photo-card .filename-text {
         font-size: 10px !important;
-        line-height: 1.2;
+        line-height: 1.25 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        display: block !important;
+        word-break: break-all !important;
     }
 
     #client-gallery-view .photo-card .heart-btn,
     #client-gallery-view .photo-card .check-badge {
-        width: 34px !important;
-        height: 34px !important;
+        width: 32px !important;
+        height: 32px !important;
         right: 6px !important;
         top: 6px !important;
-        font-size: 14px !important;
+        font-size: 13px !important;
     }
 
     #client-gallery-view .btn-pilih-foto,
     #client-gallery-view .btn-pilih-download {
-        min-height: 34px !important;
-        font-size: 10px !important;
+        min-height: 32px !important;
+        font-size: 9.5px !important;
         padding: 4px 6px !important;
-        border-radius: 7px !important;
+        border-radius: 6px !important;
+        white-space: nowrap !important;
     }
 
     #client-gallery-view .btn-direct-download {
-        min-height: 34px !important;
-        padding: 4px 8px !important;
+        min-height: 32px !important;
+        padding: 4px 6px !important;
+        font-size: 10px !important;
+        border-radius: 6px !important;
+        white-space: nowrap !important;
+    }
+
+    /* 6. STICKY BOTTOM ACTION BAR (Full Button Visibility, Zero Clipping) */
+    #client-gallery-view .action-bar {
+        position: relative !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        z-index: 50 !important;
+        flex-shrink: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 5px !important;
+        padding: 6px 10px calc(8px + env(safe-area-inset-bottom, 10px)) !important;
+        min-height: auto !important;
+    }
+
+    /* Counter row inside Action Bar: horizontal single line */
+    #client-gallery-view .action-bar > .flex.flex-col {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        margin-bottom: 1px !important;
+    }
+
+    #client-gallery-view .action-bar span.tracking-wider {
+        font-size: 9px !important;
+        letter-spacing: 0.08em !important;
+    }
+
+    #client-gallery-view #bottom-counter {
+        font-size: 16px !important;
+        font-weight: 800 !important;
+        line-height: 1 !important;
+    }
+
+    #client-gallery-view .action-bar span.text-gray-500 {
+        font-size: 10.5px !important;
+    }
+
+    /* Selection Mode Controls */
+    #client-gallery-view #action-selection-mode {
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 5px !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Override app-core.css flex: 1 for selection mode buttons */
+    #client-gallery-view #action-selection-mode button {
+        flex: 0 0 auto !important;
+    }
+
+    /* Reset button */
+    #client-gallery-view #btn-client-reset {
+        flex: 0 0 auto !important;
+        min-height: 38px !important;
+        height: 38px !important;
+        padding: 0 8px !important;
         font-size: 11px !important;
-        border-radius: 7px !important;
+        border-radius: 9px !important;
+        gap: 4px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Preview icon button */
+    #client-gallery-view #btn-client-preview {
+        flex: 0 0 38px !important;
+        width: 38px !important;
+        min-height: 38px !important;
+        height: 38px !important;
+        padding: 0 !important;
+        border-radius: 9px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Copy icon button */
+    #client-gallery-view #btn-client-copy {
+        flex: 0 0 38px !important;
+        width: 38px !important;
+        min-height: 38px !important;
+        height: 38px !important;
+        padding: 0 !important;
+        border-radius: 9px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+    }
+
+    /* WhatsApp button: takes all remaining available width */
+    #client-gallery-view #btn-client-wa {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        min-height: 38px !important;
+        height: 38px !important;
+        padding: 0 10px !important;
+        font-size: 11.5px !important;
+        border-radius: 9px !important;
+        gap: 5px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+    }
+
+    #client-gallery-view #btn-client-wa span {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        font-size: 11.5px !important;
+        font-weight: 700 !important;
+    }
+
+    /* Download Mode Controls: Responsive 2-Row Grid */
+    #client-gallery-view #action-download-mode {
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        grid-template-areas:
+            "select select"
+            "zip original" !important;
+        gap: 6px !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #client-gallery-view #action-download-mode.hidden {
+        display: none !important;
+    }
+
+    #client-gallery-view #action-download-mode label,
+    #client-gallery-view .client-select-all-label {
+        grid-area: select !important;
+        width: 100% !important;
+        min-height: 30px !important;
+        height: 30px !important;
+        padding: 3px 10px !important;
+        font-size: 11px !important;
+        border-radius: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 6px !important;
+        box-sizing: border-box !important;
+    }
+
+    #client-gallery-view #btn-download-zip,
+    #client-gallery-view .btn-download-zip {
+        grid-area: zip !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        min-height: 38px !important;
+        height: 38px !important;
+        padding: 0 6px !important;
+        font-size: 11px !important;
+        border-radius: 9px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 4px !important;
+        box-sizing: border-box !important;
+    }
+
+    #client-gallery-view .btn-main-download {
+        grid-area: original !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        min-height: 38px !important;
+        height: 38px !important;
+        padding: 0 6px !important;
+        font-size: 11px !important;
+        border-radius: 9px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 4px !important;
+        box-sizing: border-box !important;
+    }
+
+    #client-gallery-view #action-download-mode span.whitespace-nowrap {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        min-width: 0 !important;
+        font-size: 10.5px !important;
     }
 }
 
@@ -1239,8 +1666,8 @@ html[data-theme="ivory"] #client-gallery-view #gallery-subtitle {
     color: #6d6256 !important;
 }
 
-[data-theme="ivory"] #client-gallery-view header .shrink-0.flex.items-center,
-html[data-theme="ivory"] #client-gallery-view header .shrink-0.flex.items-center {
+[data-theme="ivory"] #client-gallery-view header .client-header-counter-pill,
+html[data-theme="ivory"] #client-gallery-view header .client-header-counter-pill {
     background: #fffdf9 !important;
     border-color: rgba(65, 45, 21, 0.16) !important;
     box-shadow: 0 2px 8px rgba(67, 50, 26, 0.06);
@@ -1520,8 +1947,8 @@ html[data-theme="sapphire"] #client-gallery-view #gallery-subtitle {
     color: #9daec6 !important;
 }
 
-[data-theme="sapphire"] #client-gallery-view header .shrink-0.flex.items-center,
-html[data-theme="sapphire"] #client-gallery-view header .shrink-0.flex.items-center {
+[data-theme="sapphire"] #client-gallery-view header .client-header-counter-pill,
+html[data-theme="sapphire"] #client-gallery-view header .client-header-counter-pill {
     background: #18253a !important;
     border-color: rgba(198, 217, 255, 0.14) !important;
 }
@@ -1814,8 +2241,8 @@ html[data-theme="olive"] #client-gallery-view #gallery-subtitle {
     color: #4e6454 !important;
 }
 
-[data-theme="olive"] #client-gallery-view header .shrink-0.flex.items-center,
-html[data-theme="olive"] #client-gallery-view header .shrink-0.flex.items-center {
+[data-theme="olive"] #client-gallery-view header .client-header-counter-pill,
+html[data-theme="olive"] #client-gallery-view header .client-header-counter-pill {
     background: #fdfefa !important;
     border-color: rgba(39, 80, 46, 0.16) !important;
     box-shadow: 0 2px 8px rgba(30, 61, 36, 0.06);

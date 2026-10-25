@@ -4558,8 +4558,8 @@
                         id="gallery-max" class="font-semibold text-kama-800">0</span> foto</p>
             </div>
 
-            <!-- Right Controls: BGM, Deadline, Counter Pill -->
-            <div class="client-header-right flex items-center gap-2 sm:gap-3 shrink-0">
+            <!-- Right Controls: BGM, Deadline, Appearance/Lang Tools, Counter Pill -->
+            <div class="client-header-right flex items-center gap-1.5 sm:gap-3 shrink-0">
                 <div id="bgm-player-container" class="hidden shrink-0 flex items-center justify-center">
                     <audio id="bgm-audio" loop></audio>
                     <button id="btn-toggle-bgm" onclick="toggleBGM()"
@@ -4580,6 +4580,69 @@
                             id="deadline-text">Batas Waktu: -</span>
                         <span class="text-[9px] sm:text-xs font-semibold text-red-600 leading-none mt-0.5"
                             id="deadline-timer">Sisa waktu: -</span>
+                    </div>
+                </div>
+
+                <!-- Client Appearance & Language Tools -->
+                <div id="client-header-tools" class="client-header-tools flex items-center gap-1.5 sm:gap-2 shrink-0 relative">
+                    <!-- Client Theme Selector -->
+                    <div class="relative" id="clientThemeContainer">
+                        <button id="btn-client-theme-toggle" type="button" onclick="toggleClientThemeDropdown(event)"
+                            class="client-tool-btn w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer shadow-sm"
+                            title="Ubah Tema" aria-label="Ubah Tema" aria-haspopup="true" aria-expanded="false">
+                            <i class="fa-solid fa-palette text-xs"></i>
+                        </button>
+                        <div id="clientThemeDropdown"
+                            class="hidden absolute right-0 top-full mt-2 w-48 rounded-xl shadow-2xl py-2 z-[9999] border backdrop-blur-md transition-all">
+                            <div class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider opacity-70" id="tx-theme-menu-title">
+                                Pilihan Tema
+                            </div>
+                            <button type="button" class="client-theme-opt w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer" data-theme-val="studio" onclick="selectClientTheme('studio')">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-camera-retro text-[11px]"></i> <span id="tx-opt-studio">Tema Studio</span></span>
+                                <i class="fa-solid fa-check text-[10px] opt-check hidden"></i>
+                            </button>
+                            <div class="my-1 border-t border-subtle opacity-30"></div>
+                            <button type="button" class="client-theme-opt w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer" data-theme-val="noir" onclick="selectClientTheme('noir')">
+                                <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-[#dfba7b] inline-block border border-black/40"></span> Noir Champagne</span>
+                                <i class="fa-solid fa-check text-[10px] opt-check hidden"></i>
+                            </button>
+                            <button type="button" class="client-theme-opt w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer" data-theme-val="ivory" onclick="selectClientTheme('ivory')">
+                                <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-[#f5f1e9] inline-block border border-gray-400"></span> Atelier Ivory</span>
+                                <i class="fa-solid fa-check text-[10px] opt-check hidden"></i>
+                            </button>
+                            <button type="button" class="client-theme-opt w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer" data-theme-val="sapphire" onclick="selectClientTheme('sapphire')">
+                                <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-[#abc7fa] inline-block border border-black/40"></span> Midnight Sapphire</span>
+                                <i class="fa-solid fa-check text-[10px] opt-check hidden"></i>
+                            </button>
+                            <button type="button" class="client-theme-opt w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer" data-theme-val="olive" onclick="selectClientTheme('olive')">
+                                <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-[#b8cfb4] inline-block border border-black/40"></span> Olive Heritage</span>
+                                <i class="fa-solid fa-check text-[10px] opt-check hidden"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Client Language Selector -->
+                    <div class="relative" id="clientLangContainer">
+                        <button id="btn-client-lang-toggle" type="button" onclick="toggleClientLangDropdown(event)"
+                            class="client-tool-btn px-2 h-7 sm:h-8 rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer shadow-sm text-xs font-bold"
+                            title="Pilih Bahasa" aria-label="Pilih Bahasa" aria-haspopup="true" aria-expanded="false">
+                            <i class="fa-solid fa-globe text-xs"></i>
+                            <span id="client-lang-current" class="text-[11px] font-extrabold uppercase">ID</span>
+                        </button>
+                        <div id="clientLangDropdown"
+                            class="hidden absolute right-0 top-full mt-2 w-36 rounded-xl shadow-2xl py-2 z-[9999] border backdrop-blur-md transition-all">
+                            <div class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider opacity-70" id="tx-lang-menu-title">
+                                Bahasa
+                            </div>
+                            <button type="button" class="client-lang-opt w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer" data-lang-val="id" onclick="selectClientLanguage('id')">
+                                <span class="font-semibold">🇮🇩 ID <span class="text-[10px] opacity-70 font-normal">Indonesia</span></span>
+                                <i class="fa-solid fa-check text-[10px] lang-check hidden"></i>
+                            </button>
+                            <button type="button" class="client-lang-opt w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer" data-lang-val="en" onclick="selectClientLanguage('en')">
+                                <span class="font-semibold">🇬🇧 EN <span class="text-[10px] opacity-70 font-normal">English</span></span>
+                                <i class="fa-solid fa-check text-[10px] lang-check hidden"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -4619,15 +4682,15 @@
                 <div class="client-text">
                     <div class="eyebrow" id="client-eyebrow-brand">GALERI FOTO KLIEN</div>
                     <h1 id="client-banner-heading">Pilih Foto Favorit Anda<br><em>Seleksi Foto Eksklusif.</em></h1>
-                    <p>Silakan pilih foto-foto terbaik Anda dengan menyentuh foto atau tombol hati pada setiap foto.</p>
+                    <p id="client-banner-instruction">Ketuk foto untuk memilihnya. Ketuk kembali untuk membatalkan pilihan.</p>
                 </div>
             </section>
-            <div class="client-simple-steps max-w-[1600px] mx-auto px-4">
-                <div class="client-step active"><b>01</b> <span>Eksplorasi Galeri</span></div>
+            <div class="client-simple-steps max-w-[1600px] mx-auto px-2 sm:px-4">
+                <div class="client-step active"><b>01</b> <span id="client-step-1">Eksplorasi Galeri</span></div>
                 <span class="step-arrow">→</span>
-                <div class="client-step"><b>02</b> <span>Pilih Favorit</span></div>
+                <div class="client-step"><b>02</b> <span id="client-step-2">Pilih Favorit</span></div>
                 <span class="step-arrow">→</span>
-                <div class="client-step"><b>03</b> <span>Kirim & Konfirmasi</span></div>
+                <div class="client-step"><b>03</b> <span id="client-step-3">Kirim & Konfirmasi</span></div>
             </div>
 
             <div id="gallery-container" class="gallery-grid max-w-[1600px] mx-auto scroll-smooth"></div>
@@ -4802,25 +4865,26 @@
     <!-- UI PEMILIH KATEGORI (BOTTOM SHEET - PHASE 3) -->
     <div id="categorySelectorModal"
         class="fixed inset-0 z-[100000] hidden bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center opacity-0 transition-opacity duration-300">
-        <div class="bg-white w-full sm:w-96 sm:rounded-2xl rounded-t-2xl transform translate-y-full sm:translate-y-0 sm:scale-95 transition-transform duration-300 shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
+        <div class="w-full sm:w-96 sm:rounded-2xl rounded-t-2xl transform translate-y-full sm:translate-y-0 sm:scale-95 transition-transform duration-300 shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
             id="categorySelectorContent">
-            <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/80 backdrop-blur">
-                <div>
-                    <h3 class="font-bold text-gray-800 text-lg">Pilih Kategori</h3>
-                    <p class="text-xs text-gray-500 mt-0.5">Masukkan foto ini ke kategori mana?</p>
+            <div class="category-modal-header p-5 border-b flex justify-between items-center backdrop-blur">
+                <div class="min-w-0 pr-2">
+                    <h3 class="category-modal-title font-bold text-lg leading-tight" id="catSelModalTitle">Pilih Kategori</h3>
+                    <p class="category-modal-subtitle text-xs mt-0.5" id="catSelModalSubtitle">Masukkan foto ini ke kategori mana?</p>
                 </div>
-                <button onclick="closeCategorySelector()"
-                    class="text-gray-400 hover:text-gray-800 bg-white shadow-sm border border-gray-100 w-8 h-8 rounded-full flex items-center justify-center transition-all">
+                <button type="button" onclick="closeCategorySelector()"
+                    class="category-modal-close w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0"
+                    title="Tutup" aria-label="Tutup">
                     <i class="fa-solid fa-times"></i>
                 </button>
             </div>
             <div class="p-4 overflow-y-auto custom-scrollbar flex-1">
-                <div class="flex items-center gap-3 mb-4 p-3 bg-blue-50/50 rounded-xl border border-blue-100/50">
+                <div class="category-preview-card flex items-center gap-3 mb-4 p-3 rounded-xl border">
                     <div
-                        class="w-12 h-12 rounded-lg overflow-hidden shrink-0 shadow-sm border border-white/50 bg-black/10">
-                        <img id="catSelImagePreview" src="" class="w-full h-full object-cover">
+                        class="w-12 h-12 rounded-lg overflow-hidden shrink-0 shadow-sm border border-white/20 bg-black/10">
+                        <img id="catSelImagePreview" src="" class="w-full h-full object-cover" alt="Preview">
                     </div>
-                    <div class="truncate text-sm font-semibold text-gray-700" id="catSelImageName"></div>
+                    <div class="truncate text-sm font-semibold flex-1" id="catSelImageName"></div>
                 </div>
 
                 <div id="categorySelectorList" class="space-y-2">
@@ -8146,9 +8210,11 @@
                         renderProjectsTable(res.data.data);
                     }
                 } else if (!silent) {
-                    var errMsg = res.message || res.data?.message;
-                    if (errMsg === 'Sesi berakhir, harap login ulang.') {
-                        Swal.fire('Sesi Berakhir', 'Sesi Anda telah kedaluwarsa. Silakan login kembali.', 'warning').then(() => handleLogout());
+                    var errMsg = res.message || (res.data ? res.data.message : '');
+                    var isSessionErr = res.code === 'INVALID_SESSION' || res.code === 'SESSION_EXPIRED' || res.code === 'SESSION_REQUIRED' ||
+                        (errMsg && (errMsg === 'Sesi berakhir, harap login ulang.' || errMsg.includes('Sesi staf') || errMsg.includes('Sesi Anda') || errMsg.includes('Sesi tidak valid')));
+                    if (isSessionErr) {
+                        Swal.fire('Sesi Berakhir', 'Sesi Anda telah kedaluwarsa atau tidak valid. Silakan login kembali.', 'warning').then(() => handleLogout());
                     } else if (!cachedProjects) {
                         Swal.fire('Error', errMsg, 'error');
                     }
@@ -9781,7 +9847,21 @@
                     loadDataProjects();
                 } else {
                     var errorMsg = (res.data ? res.data.message : null) || res.message || 'Gagal membuat project.';
-                    Swal.fire('Error', errorMsg, 'error');
+                    var isEn = localStorage.getItem('ps_lang') === 'en';
+                    var isSessionError = res.code === 'INVALID_SESSION' || res.code === 'SESSION_EXPIRED' || res.code === 'SESSION_REQUIRED' ||
+                        response.status === 401 ||
+                        (errorMsg && (errorMsg.includes('Sesi staf') || errorMsg.includes('Sesi berakhir') || errorMsg.includes('Sesi tidak valid') || errorMsg.includes('Sesi Anda')));
+                    if (isSessionError) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: isEn ? 'Session Expired' : 'Sesi Berakhir',
+                            text: isEn ? 'Your session is invalid or has expired. Please sign in again.' : (errorMsg || 'Sesi Anda tidak valid atau telah kedaluwarsa. Silakan login kembali.')
+                        }).then(function () {
+                            handleLogout();
+                        });
+                    } else {
+                        Swal.fire('Error', errorMsg, 'error');
+                    }
                 }
             } catch (err) {
                 endLoading();
@@ -11251,9 +11331,28 @@
 
             updateClientCounterUI();
 
-            // Sync Client Gallery Theme from Project Owner branding / metadata
-            var clientTheme = projectData.theme || projectData.studioTheme || projectData.ownerTheme || 'noir';
-            applyTheme(clientTheme, false);
+            // Sync Client Gallery Theme from Project Owner branding / metadata (Task C & D)
+            var photographerTheme = projectData.theme || projectData.studioTheme || projectData.ownerTheme || 'noir';
+            clientState.photographerTheme = photographerTheme;
+            var clientOverrideTheme = null;
+            if (projectData.token) {
+                try {
+                    clientOverrideTheme = localStorage.getItem('ps_client_theme_' + projectData.token);
+                } catch (e) { }
+            }
+            var activeTheme = clientOverrideTheme || photographerTheme;
+            applyTheme(activeTheme, false);
+            updateClientThemeDropdownUI(activeTheme, !!clientOverrideTheme);
+
+            // Sync Client Gallery Language (Task E)
+            var clientLang = 'id';
+            if (projectData.token) {
+                try {
+                    var savedLang = localStorage.getItem('ps_client_lang_' + projectData.token);
+                    if (savedLang === 'en' || savedLang === 'id') clientLang = savedLang;
+                } catch (e) { }
+            }
+            selectClientLanguage(clientLang, true);
 
             var btnBackAuth = document.getElementById('btn-back-dashboard-auth');
             var btnBackMode = document.getElementById('btn-back-dashboard-mode');
@@ -12474,86 +12573,124 @@
         }
 
         function showCategorySelector(cardElement, filename, url) {
-            var isEn = localStorage.getItem('ps_lang') === 'en';
-            document.getElementById('catSelImagePreview').src = url;
-            document.getElementById('catSelImageName').innerText = filename;
+            var isEn = (clientState.token && localStorage.getItem('ps_client_lang_' + clientState.token) === 'en') || (localStorage.getItem('ps_lang') === 'en');
+            var previewImg = document.getElementById('catSelImagePreview');
+            if (previewImg) previewImg.src = url || '';
+            var previewName = document.getElementById('catSelImageName');
+            if (previewName) previewName.innerText = filename || '';
+
+            var modalTitle = document.getElementById('catSelModalTitle');
+            if (modalTitle) modalTitle.innerText = isEn ? 'Select Category' : 'Pilih Kategori';
+            var modalSub = document.getElementById('catSelModalSubtitle');
+            if (modalSub) modalSub.innerText = isEn ? 'Which category should this photo belong to?' : 'Masukkan foto ini ke kategori mana?';
 
             var list = document.getElementById('categorySelectorList');
+            if (!list) return;
             list.innerHTML = '';
 
-            clientState.categories.forEach(function (cat) {
-                var catCount = clientState.selectedImages.filter(function (s) { return s.category === cat.name; }).length;
-                var isFull = catCount >= cat.max;
+            var existingSelection = clientState.selectedImages.find(function (s) {
+                return s.name === filename && (s.folder === clientState.currentFolderName || !s.folder || !clientState.currentFolderName);
+            });
+            var currentCategoryName = existingSelection ? existingSelection.category : null;
 
-                var btn = document.createElement('button');
-                btn.className = "w-full text-left p-3 rounded-xl border transition-all flex justify-between items-center " + (isFull ? "bg-gray-50 border-gray-200 opacity-70 cursor-not-allowed" : "bg-white border-purple-200 hover:bg-purple-50 hover:border-purple-400 cursor-pointer");
-                btn.innerHTML = `
-                    <div>
-                        <div class="font-bold text-gray-800 text-sm">${cat.name}</div>
-                        <div class="text-xs text-gray-500 mt-0.5">${catCount} / ${cat.max} ${isEn ? 'Selected' : 'Terpilih'}</div>
-                    </div>
-                    <div class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center">
-                        ${isFull ? '<i class="fa-solid fa-lock text-gray-400 text-[10px]"></i>' : ''}
-                    </div>
+            var categories = clientState.categories;
+            if (!Array.isArray(categories) || categories.length === 0) {
+                var emptyDiv = document.createElement('div');
+                emptyDiv.className = 'p-5 rounded-xl text-center border border-dashed border-gray-400/30 my-2';
+                emptyDiv.innerHTML = `
+                    <div class="text-sm font-semibold mb-1 cat-modal-safe-title">${isEn ? 'No categories configured' : 'Tidak ada kategori'}</div>
+                    <div class="text-xs mb-3 cat-modal-safe-desc">${isEn ? 'This project does not have category restrictions.' : 'Proyek ini tidak memiliki pembagian kategori.'}</div>
+                    <button type="button" class="category-modal-close-safe px-4 py-2 rounded-lg text-xs font-bold cursor-pointer" onclick="closeCategorySelector()">${isEn ? 'Close' : 'Tutup'}</button>
                 `;
+                list.appendChild(emptyDiv);
+            } else {
+                categories.forEach(function (cat) {
+                    var catName = (cat && typeof cat.name === 'string') ? cat.name.trim() : '';
+                    if (!catName) catName = isEn ? 'General' : 'Umum';
+                    var maxQuota = (cat && typeof cat.max === 'number') ? cat.max : (clientState.maxFoto || 0);
 
-                if (!isFull) {
-                    btn.onclick = function () {
-                        var btnPilih = cardElement ? cardElement.querySelector('.btn-pilih-foto') : null;
-                        document.getElementById('categorySelectorModal').classList.add('hidden');
-                        performSelectionData(cardElement, filename, url, cat.name, btnPilih, isEn);
-                        closeCategorySelector();
-                    };
-                } else {
-                    if (clientState.extraPrice > 0) {
-                        btn.className = "w-full text-left p-3 rounded-xl border transition-all flex justify-between items-center bg-yellow-50 border-yellow-200 hover:bg-yellow-100 hover:border-yellow-300 cursor-pointer";
-                        btn.innerHTML = `
-                            <div>
-                                <div class="font-bold text-gray-800 text-sm">${cat.name} <span class="text-[10px] text-yellow-600 ml-1 px-1.5 py-0.5 bg-yellow-200/50 rounded-md">Extra Photo</span></div>
-                                <div class="text-xs text-gray-500 mt-0.5">${catCount} / ${cat.max} ${isEn ? 'Selected' : 'Terpilih'}</div>
-                            </div>
-                            <div class="w-6 h-6 rounded-full border-2 border-yellow-400 flex items-center justify-center text-yellow-600">
-                                <i class="fa-solid fa-plus text-[10px]"></i>
-                            </div>
-                        `;
+                    var catCount = clientState.selectedImages.filter(function (s) { return s.category === catName; }).length;
+                    var isCurrentCat = (currentCategoryName === catName);
+                    var isFull = catCount >= maxQuota && !isCurrentCat;
+
+                    var btn = document.createElement('button');
+                    btn.type = 'button';
+                    var stateClass = isCurrentCat ? 'cat-current ' : (isFull ? 'cat-full ' : '');
+
+                    var rightIndicator = '';
+                    if (isCurrentCat) {
+                        rightIndicator = `<span class="cat-badge-active px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0"><i class="fa-solid fa-check mr-1"></i>${isEn ? 'Active' : 'Saat Ini'}</span>`;
+                    } else if (isFull) {
+                        if (clientState.extraPrice > 0) {
+                            stateClass += 'cat-extra ';
+                            rightIndicator = `<span class="cat-badge-extra px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0"><i class="fa-solid fa-plus mr-1"></i>Extra</span>`;
+                        } else {
+                            rightIndicator = `<div class="w-6 h-6 rounded-full flex items-center justify-center opacity-60 shrink-0"><i class="fa-solid fa-lock text-xs"></i></div>`;
+                        }
+                    } else {
+                        rightIndicator = `<div class="w-6 h-6 rounded-full border border-subtle flex items-center justify-center text-xs opacity-70 shrink-0"><i class="fa-solid fa-chevron-right text-[10px]"></i></div>`;
+                    }
+
+                    btn.className = "category-item-btn w-full text-left p-3 rounded-xl border flex items-center justify-between gap-3 cursor-pointer " + stateClass;
+                    var safeName = catName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                    btn.innerHTML = `
+                        <div class="min-w-0 flex-1">
+                            <div class="cat-name text-sm font-bold truncate leading-snug">${safeName}</div>
+                            <div class="cat-count text-xs mt-0.5 leading-tight">${catCount} / ${maxQuota} ${isEn ? 'Selected' : 'Terpilih'}</div>
+                        </div>
+                        <div class="shrink-0 flex items-center">
+                            ${rightIndicator}
+                        </div>
+                    `;
+
+                    if (!isFull) {
                         btn.onclick = function () {
                             var btnPilih = cardElement ? cardElement.querySelector('.btn-pilih-foto') : null;
-                            let totalExtras = (clientState.selectedImages.length - clientState.maxFoto) + 1;
-                            if (totalExtras < 1) totalExtras = 1;
-                            let extraFee = totalExtras * clientState.extraPrice;
-                            let paymentInfo = (typeof appBranding !== 'undefined' && appBranding.paymentInfo) ? `<div class="mt-3 p-3 bg-blue-50 text-blue-800 text-xs rounded-lg text-left whitespace-pre-wrap">${appBranding.paymentInfo}</div>` : '';
-
-                            Swal.fire({
-                                title: (isEn ? 'Extra Photo' : 'Foto Tambahan'),
-                                html: (isEn ? 'You have exceeded the category quota. This extra photo will cost ' : 'Anda telah melampaui kuota kategori. Tambahan foto ini dikenakan biaya ') + '<b>Rp ' + clientState.extraPrice.toLocaleString('id-ID') + '</b>.<br><br>' +
-                                    (isEn ? 'Total Extra Fee: ' : 'Total Biaya Tambahan: ') + '<b>Rp ' + extraFee.toLocaleString('id-ID') + '</b>.<br><br>' +
-                                    (isEn ? 'Continue selecting?' : 'Lanjutkan memilih?') + paymentInfo,
-                                icon: 'warning',
-                                showCancelButton: true,
-                                confirmButtonText: (isEn ? 'Yes, Add' : 'Ya, Tambahkan'),
-                                cancelButtonText: (isEn ? 'Cancel' : 'Batal'),
-                                confirmButtonColor: '#1e1e2d'
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    document.getElementById('categorySelectorModal').classList.add('hidden');
-                                    performSelectionData(cardElement, filename, url, cat.name, btnPilih, isEn);
-                                    closeCategorySelector();
-                                }
-                            });
+                            document.getElementById('categorySelectorModal').classList.add('hidden');
+                            performSelectionData(cardElement, filename, url, catName, btnPilih, isEn);
+                            closeCategorySelector();
                         };
                     } else {
-                        btn.onclick = function () {
-                            Swal.fire({
-                                icon: 'warning',
-                                title: (isEn ? 'Category Full' : 'Kuota Kategori Penuh'),
-                                text: (isEn ? 'This category has reached its maximum limit (' + cat.max + ' photos).' : 'Kategori ini sudah mencapai batas maksimal (' + cat.max + ' foto). Silakan batalkan foto lain dalam kategori ini terlebih dahulu.'),
-                                confirmButtonColor: '#1e1e2d'
-                            });
-                        };
+                        if (clientState.extraPrice > 0) {
+                            btn.onclick = function () {
+                                var btnPilih = cardElement ? cardElement.querySelector('.btn-pilih-foto') : null;
+                                let totalExtras = (clientState.selectedImages.length - clientState.maxFoto) + 1;
+                                if (totalExtras < 1) totalExtras = 1;
+                                let extraFee = totalExtras * clientState.extraPrice;
+                                let paymentInfo = (typeof appBranding !== 'undefined' && appBranding.paymentInfo) ? `<div class="mt-3 p-3 bg-blue-50 text-blue-800 text-xs rounded-lg text-left whitespace-pre-wrap">${appBranding.paymentInfo}</div>` : '';
+
+                                Swal.fire({
+                                    title: (isEn ? 'Extra Photo' : 'Foto Tambahan'),
+                                    html: (isEn ? 'You have exceeded the category quota. This extra photo will cost ' : 'Anda telah melampaui kuota kategori. Tambahan foto ini dikenakan biaya ') + '<b>Rp ' + clientState.extraPrice.toLocaleString('id-ID') + '</b>.<br><br>' +
+                                        (isEn ? 'Total Extra Fee: ' : 'Total Biaya Tambahan: ') + '<b>Rp ' + extraFee.toLocaleString('id-ID') + '</b>.<br><br>' +
+                                        (isEn ? 'Continue selecting?' : 'Lanjutkan memilih?') + paymentInfo,
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonText: (isEn ? 'Yes, Add' : 'Ya, Tambahkan'),
+                                    cancelButtonText: (isEn ? 'Cancel' : 'Batal'),
+                                    confirmButtonColor: '#1e1e2d'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        document.getElementById('categorySelectorModal').classList.add('hidden');
+                                        performSelectionData(cardElement, filename, url, catName, btnPilih, isEn);
+                                        closeCategorySelector();
+                                    }
+                                });
+                            };
+                        } else {
+                            btn.onclick = function () {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: (isEn ? 'Category Full' : 'Kuota Kategori Penuh'),
+                                    text: (isEn ? 'This category has reached its maximum limit (' + maxQuota + ' photos).' : 'Kategori ini sudah mencapai batas maksimal (' + maxQuota + ' foto). Silakan batalkan foto lain dalam kategori ini terlebih dahulu.'),
+                                    confirmButtonColor: '#1e1e2d'
+                                });
+                            };
+                        }
                     }
-                }
-                list.appendChild(btn);
-            });
+                    list.appendChild(btn);
+                });
+            }
 
             var modal = document.getElementById('categorySelectorModal');
             var content = document.getElementById('categorySelectorContent');
@@ -12563,6 +12700,346 @@
                 content.classList.remove('translate-y-full', 'sm:translate-y-0', 'sm:scale-95');
             }, 10);
         }
+
+        // --- CLIENT THEME AND LANGUAGE SWITCHER CONTROLLERS (TASK D & E) ---
+        function toggleClientThemeDropdown(e) {
+            if (e) e.stopPropagation();
+            var dd = document.getElementById('clientThemeDropdown');
+            var btn = document.getElementById('btn-client-theme-toggle');
+            if (!dd) return;
+            var isHidden = dd.classList.contains('hidden');
+            var ddL = document.getElementById('clientLangDropdown');
+            if (ddL) ddL.classList.add('hidden');
+
+            if (isHidden) {
+                dd.classList.remove('hidden');
+                if (btn) btn.setAttribute('aria-expanded', 'true');
+                var currentOverride = null;
+                if (clientState.token) {
+                    try { currentOverride = localStorage.getItem('ps_client_theme_' + clientState.token); } catch(err) {}
+                }
+                var activeTheme = currentOverride || clientState.photographerTheme || document.documentElement.getAttribute('data-theme') || 'noir';
+                updateClientThemeDropdownUI(activeTheme, !!currentOverride);
+            } else {
+                dd.classList.add('hidden');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+            }
+        }
+
+        function selectClientTheme(themeName) {
+            var isStudio = (themeName === 'studio');
+            if (isStudio) {
+                if (clientState.token) {
+                    try { localStorage.removeItem('ps_client_theme_' + clientState.token); } catch(e) {}
+                }
+                var targetTheme = clientState.photographerTheme || 'noir';
+                applyTheme(targetTheme, false);
+                updateClientThemeDropdownUI(targetTheme, false);
+            } else {
+                if (clientState.token) {
+                    try { localStorage.setItem('ps_client_theme_' + clientState.token, themeName); } catch(e) {}
+                }
+                applyTheme(themeName, false);
+                updateClientThemeDropdownUI(themeName, true);
+            }
+            var dd = document.getElementById('clientThemeDropdown');
+            if (dd) dd.classList.add('hidden');
+            var btn = document.getElementById('btn-client-theme-toggle');
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+        }
+
+        function updateClientThemeDropdownUI(activeTheme, hasOverride) {
+            var options = document.querySelectorAll('.client-theme-opt');
+            options.forEach(function (opt) {
+                var val = opt.getAttribute('data-theme-val');
+                var check = opt.querySelector('.opt-check');
+                var isActive = false;
+                if (!hasOverride && val === 'studio') {
+                    isActive = true;
+                } else if (hasOverride && val === activeTheme) {
+                    isActive = true;
+                }
+                if (check) {
+                    if (isActive) check.classList.remove('hidden');
+                    else check.classList.add('hidden');
+                }
+                if (isActive) {
+                    opt.classList.add('theme-opt-active');
+                } else {
+                    opt.classList.remove('theme-opt-active');
+                }
+            });
+        }
+
+        function toggleClientLangDropdown(e) {
+            if (e) e.stopPropagation();
+            var dd = document.getElementById('clientLangDropdown');
+            var btn = document.getElementById('btn-client-lang-toggle');
+            if (!dd) return;
+            var isHidden = dd.classList.contains('hidden');
+            var ddT = document.getElementById('clientThemeDropdown');
+            if (ddT) ddT.classList.add('hidden');
+
+            if (isHidden) {
+                dd.classList.remove('hidden');
+                if (btn) btn.setAttribute('aria-expanded', 'true');
+                var curLang = 'id';
+                if (clientState.token) {
+                    try { curLang = localStorage.getItem('ps_client_lang_' + clientState.token) || localStorage.getItem('ps_lang') || 'id'; } catch(err) {}
+                } else {
+                    try { curLang = localStorage.getItem('ps_lang') || 'id'; } catch(err) {}
+                }
+                updateClientLangDropdownUI(curLang);
+            } else {
+                dd.classList.add('hidden');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+            }
+        }
+
+        function selectClientLanguage(lang, skipRender) {
+            if (lang !== 'en' && lang !== 'id') lang = 'id';
+            if (clientState.token) {
+                try { localStorage.setItem('ps_client_lang_' + clientState.token, lang); } catch (e) {}
+            }
+            try { localStorage.setItem('ps_lang', lang); } catch (e) {}
+            applyClientLanguage(lang);
+            updateClientLangDropdownUI(lang);
+            if (!skipRender && typeof updateGalleryLock === 'function') {
+                updateGalleryLock();
+            }
+            var dd = document.getElementById('clientLangDropdown');
+            if (dd) dd.classList.add('hidden');
+            var btn = document.getElementById('btn-client-lang-toggle');
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+        }
+
+        function updateClientLangDropdownUI(lang) {
+            var badge = document.getElementById('client-lang-current');
+            if (badge) badge.innerText = String(lang || 'id').toUpperCase();
+            var options = document.querySelectorAll('.client-lang-opt');
+            options.forEach(function (opt) {
+                var val = opt.getAttribute('data-lang-val');
+                var check = opt.querySelector('.lang-check');
+                var isActive = (val === lang);
+                if (check) {
+                    if (isActive) check.classList.remove('hidden');
+                    else check.classList.add('hidden');
+                }
+                if (isActive) {
+                    opt.classList.add('lang-opt-active');
+                } else {
+                    opt.classList.remove('lang-opt-active');
+                }
+            });
+        }
+
+        function applyClientLanguage(lang) {
+            var isEn = (lang === 'en');
+
+            // 1. Client Header & Tooltips
+            var txSwitch = document.getElementById('tx-btn-switch-mode');
+            if (txSwitch) txSwitch.innerText = isEn ? 'Change Mode' : 'Ganti Mode';
+            var btnSwitch = document.getElementById('btn-client-switch-mode');
+            if (btnSwitch) {
+                btnSwitch.title = isEn ? 'Menu / Change Mode' : 'Menu / Ganti Mode';
+                btnSwitch.setAttribute('aria-label', isEn ? 'Menu / Change Mode' : 'Menu / Ganti Mode');
+            }
+            var btnTheme = document.getElementById('btn-client-theme-toggle');
+            if (btnTheme) {
+                btnTheme.title = isEn ? 'Change Theme' : 'Ubah Tema';
+                btnTheme.setAttribute('aria-label', isEn ? 'Change Theme' : 'Ubah Tema');
+            }
+            var btnLang = document.getElementById('btn-client-lang-toggle');
+            if (btnLang) {
+                btnLang.title = isEn ? 'Choose Language' : 'Pilih Bahasa';
+                btnLang.setAttribute('aria-label', isEn ? 'Choose Language' : 'Pilih Bahasa');
+            }
+            var txThemeTitle = document.getElementById('tx-theme-menu-title');
+            if (txThemeTitle) txThemeTitle.innerText = isEn ? 'Theme Options' : 'Pilihan Tema';
+            var txStudio = document.getElementById('tx-opt-studio');
+            if (txStudio) txStudio.innerText = isEn ? 'Studio Default' : 'Tema Studio';
+            var txLangTitle = document.getElementById('tx-lang-menu-title');
+            if (txLangTitle) txLangTitle.innerText = isEn ? 'Language' : 'Bahasa';
+            var currentLangBadge = document.getElementById('client-lang-current');
+            if (currentLangBadge) currentLangBadge.innerText = isEn ? 'EN' : 'ID';
+
+            var galSub = document.getElementById('gallery-subtitle');
+            if (galSub) {
+                var maxF = clientState.maxFoto || (document.getElementById('gallery-max') ? document.getElementById('gallery-max').innerText : '0');
+                galSub.innerHTML = isEn
+                    ? 'Select up to <span id="gallery-max" class="font-semibold text-kama-800">' + maxF + '</span> photos'
+                    : 'Pilih maksimal <span id="gallery-max" class="font-semibold text-kama-800">' + maxF + '</span> foto';
+            }
+
+            var headerPillLabels = document.querySelectorAll('.client-header-counter-pill .uppercase');
+            if (headerPillLabels.length >= 2) {
+                headerPillLabels[0].innerText = isEn ? 'Total Photos' : 'Total Foto';
+                headerPillLabels[1].innerText = isEn ? 'Selected' : 'Terpilih';
+            }
+
+            var deadlineText = document.getElementById('deadline-text');
+            if (deadlineText && deadlineText.dataset && deadlineText.dataset.rawDeadline) {
+                deadlineText.innerText = (isEn ? 'Deadline: ' : 'Batas Waktu: ') + deadlineText.dataset.rawDeadline;
+            }
+
+            // 2. Banner & 3-Step Guide (TASK A)
+            var eyebrow = document.getElementById('client-eyebrow-brand');
+            if (eyebrow) eyebrow.innerText = isEn ? 'CLIENT PHOTO GALLERY' : 'GALERI FOTO KLIEN';
+            var heading = document.getElementById('client-banner-heading');
+            if (heading) {
+                heading.innerHTML = isEn
+                    ? 'Choose Your Favorite Photos<br><em>Exclusive Photo Selection.</em>'
+                    : 'Pilih Foto Favorit Anda<br><em>Seleksi Foto Eksklusif.</em>';
+            }
+            var instruction = document.getElementById('client-banner-instruction');
+            if (instruction) {
+                instruction.innerText = isEn
+                    ? 'Tap a photo to select it. Tap again to deselect.'
+                    : 'Ketuk foto untuk memilihnya. Ketuk kembali untuk membatalkan pilihan.';
+            }
+            var step1 = document.getElementById('client-step-1');
+            if (step1) step1.innerText = isEn ? 'Explore Gallery' : 'Eksplorasi Galeri';
+            var step2 = document.getElementById('client-step-2');
+            if (step2) step2.innerText = isEn ? 'Choose Favorites' : 'Pilih Favorit';
+            var step3 = document.getElementById('client-step-3');
+            if (step3) step3.innerText = isEn ? 'Submit & Confirm' : 'Kirim & Konfirmasi';
+
+            // 3. Client Mode View
+            var modeHeading = document.querySelector('#client-mode-view h2');
+            if (modeHeading) modeHeading.innerText = isEn ? 'Welcome' : 'Selamat Datang';
+            var modeSub = document.querySelector('#client-mode-view p.text-slate-500');
+            if (modeSub) modeSub.innerText = isEn ? 'Please select the action you want to perform on this gallery.' : 'Silakan pilih tindakan yang ingin Anda lakukan pada galeri ini.';
+            var btnModePilihH3 = document.querySelector('#client-mode-view button[onclick="selectClientMode(\'selection\')"] h3');
+            if (btnModePilihH3) btnModePilihH3.innerText = isEn ? 'Select Photos' : 'Pilih Foto';
+            var btnModePilihP = document.querySelector('#client-mode-view button[onclick="selectClientMode(\'selection\')"] p');
+            if (btnModePilihP) btnModePilihP.innerText = isEn ? 'Select photos to edit/print' : 'Pilih foto untuk diedit/dicetak';
+            var btnModeDownH3 = document.querySelector('#client-mode-view button[onclick="selectClientMode(\'download\')"] h3');
+            if (btnModeDownH3) btnModeDownH3.innerText = isEn ? 'Download Photos' : 'Download Foto';
+            var btnModeDownP = document.querySelector('#client-mode-view button[onclick="selectClientMode(\'download\')"] p');
+            if (btnModeDownP) btnModeDownP.innerText = isEn ? 'Download original photos (single direct or bundled ZIP archive)' : 'Unduh file foto asli (satuan langsung atau gabung arsip ZIP)';
+
+            // 4. Action Dock (Bottom Bar)
+            var statusTitle = document.querySelector('.action-bar span.tracking-wider');
+            if (statusTitle) statusTitle.innerText = isEn ? 'Selection Status' : 'Status Pilihan';
+            var terpilihSpan = document.querySelector('#bottom-counter + span');
+            if (terpilihSpan) terpilihSpan.innerText = isEn ? 'selected' : 'terpilih';
+            var btnReset = document.getElementById('btn-client-reset');
+            if (btnReset) {
+                btnReset.title = isEn ? 'Reset Selection' : 'Reset Pilihan';
+                var rSpan = btnReset.querySelector('span');
+                if (rSpan) rSpan.innerText = 'Reset';
+            }
+            var btnPreview = document.getElementById('btn-client-preview');
+            if (btnPreview) {
+                btnPreview.title = isEn ? 'Preview' : 'Preview';
+                var pSpan = btnPreview.querySelector('span');
+                if (pSpan) pSpan.innerText = isEn ? 'Preview' : 'Preview';
+            }
+            var btnCopy = document.getElementById('btn-client-copy');
+            if (btnCopy) btnCopy.title = isEn ? 'Copy Text' : 'Salin Teks';
+            var btnWA = document.getElementById('btn-client-wa');
+            if (btnWA) {
+                var waSpan = btnWA.querySelector('span');
+                if (waSpan) waSpan.innerText = isEn ? 'Submit WA' : 'Kirim WA';
+            }
+            var selectAllLbl = document.querySelector('#action-download-mode label.client-select-all-label');
+            if (selectAllLbl) {
+                var chk = selectAllLbl.querySelector('input');
+                selectAllLbl.innerHTML = '';
+                if (chk) selectAllLbl.appendChild(chk);
+                selectAllLbl.appendChild(document.createTextNode(isEn ? ' Select All' : ' Pilih Semua'));
+            }
+            var btnZip = document.getElementById('btn-download-zip');
+            if (btnZip) {
+                btnZip.title = isEn ? 'Download selected photos in 1 ZIP archive' : 'Download foto terpilih dalam 1 arsip ZIP';
+                var zipSpan = btnZip.querySelector('span');
+                if (zipSpan) zipSpan.innerText = isEn ? 'Download Selected (ZIP)' : 'Download Pilihan (ZIP)';
+            }
+            var btnMainDl = document.querySelector('#action-download-mode .btn-main-download span');
+            if (btnMainDl) btnMainDl.innerText = isEn ? 'Download Original Files' : 'Download File Asli';
+
+            // 5. Preview Modal
+            var prevTitle = document.getElementById('tx-preview-title');
+            if (prevTitle) prevTitle.innerText = isEn ? 'Selection Preview' : 'Preview Pilihan';
+
+            // 6. Viewer Modal
+            var txNoteTitle = document.getElementById('tx-note-title');
+            if (txNoteTitle) txNoteTitle.innerText = isEn ? 'Photo Note / Revision' : 'Catatan / Revisi Foto';
+            var noteInput = document.getElementById('viewerNoteInput');
+            if (noteInput) noteInput.placeholder = isEn ? 'Example: Please remove person in background...' : 'Contoh: Tolong hapus orang di background...';
+            var txNote = document.getElementById('tx-viewer-note');
+            if (txNote) txNote.innerText = isEn ? 'Note' : 'Catatan';
+            var closeViewerBtn = document.querySelector('#imageViewerModal button[title="Tutup"], #imageViewerModal button[title="Close"]');
+            if (closeViewerBtn) {
+                closeViewerBtn.title = isEn ? 'Close' : 'Tutup';
+            }
+
+            // 7. Category Modal
+            var catTitle = document.getElementById('catSelModalTitle');
+            if (catTitle) catTitle.innerText = isEn ? 'Select Category' : 'Pilih Kategori';
+            var catSub = document.getElementById('catSelModalSubtitle');
+            if (catSub) catSub.innerText = isEn ? 'Which category should this photo belong to?' : 'Masukkan foto ini ke kategori mana?';
+            var catClose = document.querySelector('#categorySelectorModal .category-modal-close');
+            if (catClose) {
+                catClose.title = isEn ? 'Close' : 'Tutup';
+                catClose.setAttribute('aria-label', isEn ? 'Close' : 'Tutup');
+            }
+
+            // 8. Password/PIN Screen (#client-auth-view)
+            var authHeading = document.querySelector('#client-auth-view h2');
+            if (authHeading) authHeading.innerText = isEn ? 'Private Gallery' : 'Galeri Privat';
+            var authP = document.querySelector('#client-auth-view p.text-gray-500');
+            if (authP) authP.innerText = isEn ? 'Enter password to unlock your gallery.' : 'Masukkan password untuk membuka akses galeri Anda.';
+            var passInput = document.getElementById('client-password');
+            if (passInput) passInput.placeholder = isEn ? 'Enter Password' : 'Masukkan Password';
+            var btnAuth = document.getElementById('btnClientAuth');
+            if (btnAuth && !btnAuth.disabled) btnAuth.innerText = isEn ? 'Unlock Gallery' : 'Buka Galeri';
+
+            // 9. Existing Gallery Photo Cards
+            var cards = document.querySelectorAll('#client-gallery-view .photo-card');
+            cards.forEach(function (card) {
+                var isSelected = card.classList.contains('selected');
+                var btnPilih = card.querySelector('.btn-pilih-foto');
+                if (btnPilih) {
+                    if (clientState.galleryMode === 'download') {
+                        btnPilih.innerHTML = isSelected
+                            ? '<i class="fa-solid fa-check mr-1.5"></i> ' + (isEn ? 'Selected' : 'Dipilih')
+                            : '<i class="fa-regular fa-square-check mr-1.5"></i> ' + (isEn ? 'Select' : 'Pilih');
+                    } else if (hasClientSubmitted) {
+                        btnPilih.innerHTML = isSelected
+                            ? '<i class="fa-solid fa-check mr-2"></i> ' + (isEn ? 'Selected (Locked)' : 'Terpilih (Terkunci)')
+                            : '<i class="fa-solid fa-lock mr-2"></i> ' + (isEn ? 'Locked' : 'Terkunci');
+                    } else {
+                        btnPilih.innerHTML = isSelected
+                            ? '<i class="fa-solid fa-check mr-2"></i> ' + (isEn ? 'Selected (Cancel)' : 'Terpilih (Batal)')
+                            : '<i class="fa-regular fa-square-check mr-2"></i> ' + (isEn ? 'Select' : 'Pilih');
+                    }
+                }
+                var heartBtn = card.querySelector('.heart-btn');
+                if (heartBtn) {
+                    heartBtn.setAttribute('title', isSelected ? (isEn ? 'Deselect photo' : 'Batalkan pilihan') : (isEn ? 'Select photo' : 'Pilih foto ini'));
+                    heartBtn.setAttribute('aria-label', isSelected ? (isEn ? 'Deselect photo' : 'Batalkan pilihan') : (isEn ? 'Select photo' : 'Pilih foto ini'));
+                }
+            });
+        }
+
+        // Global dropdown dismiss handler for client tools
+        document.addEventListener('click', function (e) {
+            var themeContainer = document.getElementById('clientThemeContainer');
+            if (themeContainer && !themeContainer.contains(e.target)) {
+                var dd = document.getElementById('clientThemeDropdown');
+                if (dd) dd.classList.add('hidden');
+                var btn = document.getElementById('btn-client-theme-toggle');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+            }
+            var langContainer = document.getElementById('clientLangContainer');
+            if (langContainer && !langContainer.contains(e.target)) {
+                var ddL = document.getElementById('clientLangDropdown');
+                if (ddL) ddL.classList.add('hidden');
+                var btnL = document.getElementById('btn-client-lang-toggle');
+                if (btnL) btnL.setAttribute('aria-expanded', 'false');
+            }
+        });
 
         function closeCategorySelector() {
             var modal = document.getElementById('categorySelectorModal');
@@ -14447,7 +14924,7 @@
 
                 if (bannerEyebrow) bannerEyebrow.innerText = isEn ? 'CLIENT PHOTO GALLERY' : 'GALERI FOTO KLIEN';
                 if (bannerHeading) bannerHeading.innerHTML = isEn ? 'Select Your Favorite Photos<br><em>Exclusive Photo Selection.</em>' : 'Pilih Foto Favorit Anda<br><em>Seleksi Foto Eksklusif.</em>';
-                if (bannerDesc) bannerDesc.innerText = isEn ? 'Please choose your best photos by tapping photos or heart buttons.' : 'Silakan pilih foto-foto terbaik Anda dengan menyentuh foto atau tombol hati pada setiap foto.';
+                if (bannerDesc) bannerDesc.innerText = isEn ? 'Tap a photo to select it. Tap again to deselect.' : 'Ketuk foto untuk memilihnya. Ketuk kembali untuk membatalkan pilihan.';
                 if (stepsContainer) {
                     stepsContainer.innerHTML = isEn
                         ? '<div class="client-step active"><b>01</b> <span>Explore Gallery</span></div><span class="step-arrow">→</span><div class="client-step"><b>02</b> <span>Choose Favorites</span></div><span class="step-arrow">→</span><div class="client-step"><b>03</b> <span>Submit & Confirm</span></div>'

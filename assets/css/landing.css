@@ -53,13 +53,13 @@ body {
 
 /* --- LUXURY BUTTONS --- */
 .btn-champagne {
-    background: linear-gradient(135deg, var(--color-champagne-light) 0%, var(--color-champagne-primary) 100%);
+    background: linear-gradient(135deg, var(--color-champagne-light, #E6CF9F) 0%, var(--color-champagne-primary, #D8BA83) 100%);
     color: #0f1014;
     font-weight: 600;
     letter-spacing: 0.02em;
     border: 1px solid rgba(255, 255, 255, 0.25);
     box-shadow: 0 4px 15px rgba(216, 186, 131, 0.25);
-    transition: all var(--transition-base);
+    transition: all var(--transition-base, 0.25s ease);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -67,21 +67,28 @@ body {
 }
 
 .btn-champagne:hover {
-    background: linear-gradient(135deg, #FFF0D0 0%, var(--color-champagne-light) 100%);
+    background: linear-gradient(135deg, #FFF0D0 0%, var(--color-champagne-light, #E6CF9F) 100%);
     box-shadow: 0 8px 25px rgba(216, 186, 131, 0.4);
     transform: translateY(-1px);
+    color: #0f1014;
 }
 
 .btn-champagne:active {
     transform: translateY(0);
+    color: #0f1014;
+}
+
+.btn-champagne:focus-visible {
+    outline: 2px solid var(--color-champagne-light, #E6CF9F);
+    outline-offset: 2px;
 }
 
 .btn-outline-champagne {
     background: rgba(28, 30, 38, 0.6);
-    color: var(--color-champagne-light);
-    border: 1px solid var(--color-champagne-border);
+    color: var(--color-champagne-light, #E6CF9F);
+    border: 1px solid var(--color-champagne-border, rgba(216, 186, 131, 0.35));
     backdrop-filter: blur(8px);
-    transition: all var(--transition-base);
+    transition: all var(--transition-base, 0.25s ease);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -89,10 +96,15 @@ body {
 }
 
 .btn-outline-champagne:hover {
-    background: var(--color-champagne-tint);
-    border-color: var(--color-champagne-light);
+    background: var(--color-champagne-tint, rgba(216, 186, 131, 0.12));
+    border-color: var(--color-champagne-light, #E6CF9F);
     color: #ffffff;
     transform: translateY(-1px);
+}
+
+.btn-outline-champagne:focus-visible {
+    outline: 2px solid var(--color-champagne-light, #E6CF9F);
+    outline-offset: 2px;
 }
 
 .btn-ivory-dark {
