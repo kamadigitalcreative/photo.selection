@@ -43,6 +43,8 @@ class MockDriveProvider {
     this.fixturesDir = options.fixturesDir || FIXTURES_DIR;
     // Map of custom test folder configurations
     this.customFolders = new Map();
+    // Map of custom folder parent relationships
+    this.folderParents = new Map();
   }
 
   /**
@@ -50,6 +52,13 @@ class MockDriveProvider {
    */
   setFolderScenario(folderId, scenario) {
     this.customFolders.set(folderId, scenario);
+  }
+
+  /**
+   * Register a folder parent relationship for hierarchy verification
+   */
+  setFolderParent(childId, parentId) {
+    this.folderParents.set(childId, parentId);
   }
 
   /**
@@ -272,6 +281,57 @@ class MockDriveProvider {
     };
   }
 
+  setFileMetadata(fileId, meta) {
+    if (!this.customFileMeta) this.customFileMeta = new Map();
+    this.customFileMeta.set(fileId, meta);
+  }
+
+  async getFileMetadata(fileId) {
+    if (!fileId) return null;
+    if (this.customFileMeta && this.customFileMeta.has(fileId)) {
+      return this.customFileMeta.get(fileId);
+    }
+    if (fileId.includes('notfound') || fileId.includes('missing')) {
+      return null;
+    }
+    if (fileId.includes('trashed')) {
+      return { id: fileId, name: 'trashed.jpg', mimeType: 'image/jpeg', size: 1024, trashed: true, parents: ['mock-folder-root'] };
+    }
+    if (fileId.startsWith('synthetic-')) {
+      const syn = this.getSyntheticMedia(fileId);
+      return {
+        id: fileId,
+        name: fileId,
+        mimeType: 'image/jpeg',
+        size: syn.size,
+        parents: ['mock-folder-root', 'correctProjectFolderId', 'mock-folder-fotografer'],
+        trashed: false,
+        thumbnailLink: `https://lh3.googleusercontent.com/drive-viewer/${fileId}=s1200`
+      };
+    }
+    const found = DEFAULT_MOCK_PHOTOS.find(p => p.id === fileId || p.name === fileId);
+    if (found) {
+      return {
+        id: found.id,
+        name: found.name,
+        mimeType: found.mimeType || 'image/jpeg',
+        size: found.size || 102400,
+        parents: ['mock-folder-root', 'correctProjectFolderId', 'mock-folder-fotografer'],
+        trashed: false,
+        thumbnailLink: `https://lh3.googleusercontent.com/drive-viewer/${found.id}=s1200`
+      };
+    }
+    return {
+      id: fileId,
+      name: path.basename(fileId),
+      mimeType: fileId.endsWith('.png') ? 'image/png' : 'image/jpeg',
+      size: 102400,
+      parents: ['mock-folder-root', 'correctProjectFolderId'],
+      trashed: false,
+      thumbnailLink: `https://lh3.googleusercontent.com/drive-viewer/${fileId}=s1200`
+    };
+  }
+
   /**
    * Fetches stream for mock file.
    */
@@ -292,7 +352,7 @@ class MockDriveProvider {
 
   /**
    * Fetches preview thumbnail stream.
-   * Rejects RAW camera files with HTTP 415 and bounds synthetic previews to 64KB.
+   * ISSUE 1: Rejects RAW camera files with HTTP 415, bounds previews, and never falls back to unbounded original.
    */
   async fetchThumbnailStream(fileId, options = {}) {
     const safeName = path.basename(fileId || 'photo1.png');
@@ -307,6 +367,37 @@ class MockDriveProvider {
       };
     }
 
+    // Test scenario: Missing thumbnail
+    if (fileId.includes('missing-thumb') || fileId.includes('thumbnail_not_available')) {
+      return {
+        success: false,
+        code: 'THUMBNAIL_NOT_AVAILABLE',
+        status: 404,
+        message: 'Thumbnail preview tidak tersedia untuk berkas ini dari Google Drive.'
+      };
+    }
+
+    // Test scenario: Untrusted thumbnail URL origin / redirect
+    if (fileId.includes('untrusted-thumb') || fileId.includes('untrusted-redirect-thumb')) {
+      return {
+        success: false,
+        code: 'UNTRUSTED_THUMBNAIL_URL',
+        status: 502,
+        message: 'Hostname thumbnail Google Drive tidak terpercaya.'
+      };
+    }
+
+    // Test scenario: Oversized thumbnail (declared or streamed body)
+    if (fileId.includes('oversized-thumb') || fileId.includes('no-cl-oversized-thumb') || fileId.includes('false-cl-oversized-thumb')) {
+      return {
+        success: false,
+        code: 'THUMBNAIL_OVERSIZED',
+        status: 502,
+        message: 'Ukuran aktual body thumbnail melebihi batas 4MB.'
+      };
+    }
+
+    // Synthetic media preview: Always bounded to 64KB (never 18MB camera original)
     if (safeName.startsWith('synthetic-')) {
       const thumbBuf = generateSyntheticJpeg(64 * 1024, safeName.length);
       return {
@@ -322,7 +413,75 @@ class MockDriveProvider {
       };
     }
 
-    return await this.fetchOriginalStream(fileId, options);
+    // Default mock preview: stream local fixture bounded to max 128KB
+    const orig = await this.fetchOriginalStream(fileId, options);
+    if (!orig.success) return orig;
+
+    const mime = orig.headers?.['Content-Type'] || 'image/jpeg';
+    return {
+      success: true,
+      status: 200,
+      headers: {
+        'Content-Type': mime,
+        'Content-Length': orig.headers?.['Content-Length'],
+        'Cache-Control': 'private, max-age=3600',
+        'X-Content-Type-Options': 'nosniff'
+      },
+      body: orig.body
+    };
+  }
+
+  /**
+   * ISSUE 3: Verifies that a requested subfolder is a legitimate descendant of the project root folder.
+   */
+  async verifyFolderHierarchy({ folderId, rootFolderId, maxDepth = 10 } = {}) {
+    if (!folderId || !rootFolderId) {
+      return { allowed: false, reason: 'MISSING_PARAMETERS' };
+    }
+    if (folderId === rootFolderId) {
+      return { allowed: true, depth: 0 };
+    }
+
+    const DEFAULT_HIERARCHY = {
+      'mock-subfolder-1': 'correctProjectFolderId',
+      'mock-subfolder-child': 'mock-folder-root',
+      'mock-subfolder-grandchild': 'mock-subfolder-child',
+      'mock-subfolder-ceremony': 'mock-folder-fotografer',
+      'mock-subfolder-reception': 'mock-folder-fotografer',
+      'mock-subfolder-speeches': 'mock-subfolder-reception',
+      'foreign-subfolder-id': 'foreign-root-id',
+      'alien-subfolder': 'alienProjectFolderId'
+    };
+
+    let currentId = folderId;
+    let depth = 0;
+    const visited = new Set([currentId]);
+
+    while (depth < maxDepth) {
+      depth++;
+      let parent = null;
+      if (this.folderParents && this.folderParents.has(currentId)) {
+        parent = this.folderParents.get(currentId);
+      } else if (DEFAULT_HIERARCHY[currentId]) {
+        parent = DEFAULT_HIERARCHY[currentId];
+      }
+
+      if (!parent) {
+        return { allowed: false, reason: 'NOT_A_SUBFOLDER' };
+      }
+
+      if (parent === rootFolderId) {
+        return { allowed: true, depth };
+      }
+
+      if (visited.has(parent)) {
+        return { allowed: false, reason: 'HIERARCHY_CYCLE_DETECTED' };
+      }
+      visited.add(parent);
+      currentId = parent;
+    }
+
+    return { allowed: false, reason: 'MAX_DEPTH_EXCEEDED' };
   }
 
   /**

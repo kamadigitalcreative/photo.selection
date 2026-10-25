@@ -8839,11 +8839,11 @@
                             card.appendChild(badge);
 
                             var imgEl = document.createElement('img');
-                            imgEl.src = safeUrl;
                             imgEl.alt = img.name || '';
                             imgEl.loading = 'lazy';
                             imgEl.referrerPolicy = 'no-referrer';
                             imgEl.onerror = function () { this.src = 'https://placehold.co/400x400?text=' + encodeURIComponent(img.name || 'Error'); };
+                            loadAuthenticatedPreview(imgEl, safeUrl, 'https://placehold.co/400x400?text=' + encodeURIComponent(img.name || 'Foto'));
                             card.appendChild(imgEl);
 
                             var overlay = document.createElement('div');
@@ -8882,11 +8882,11 @@
                         card.appendChild(badge);
 
                         var imgEl = document.createElement('img');
-                        imgEl.src = safeUrl;
                         imgEl.alt = img.name || '';
                         imgEl.loading = 'lazy';
                         imgEl.referrerPolicy = 'no-referrer';
                         imgEl.onerror = function () { this.src = 'https://placehold.co/400x400?text=' + encodeURIComponent(img.name || 'Error'); };
+                        loadAuthenticatedPreview(imgEl, safeUrl, 'https://placehold.co/400x400?text=' + encodeURIComponent(img.name || 'Foto'));
                         card.appendChild(imgEl);
 
                         var overlay = document.createElement('div');
@@ -11799,12 +11799,33 @@
 
             var rawUrl = (url !== undefined && url !== null) ? String(url) : '';
             var safePlaceholder = 'https://placehold.co/400x400?text=Gambar';
-            var validatedUrl = safeImageUrl(rawUrl, safePlaceholder);
-            var hdUrl = validatedUrl.replace('=w1000', '=s0');
-            img.src = hdUrl;
+            var safeUrl = safeImageUrl(rawUrl, safePlaceholder);
             cap.innerText = name;
 
-            updateViewerUI(name, hdUrl);
+            updateViewerUI(name, safeUrl);
+
+            window.viewerLoadRequestId = (window.viewerLoadRequestId || 0) + 1;
+            var currentReq = window.viewerLoadRequestId;
+
+            if (previewBlobCache.has(safeUrl)) {
+                img.src = previewBlobCache.get(safeUrl);
+            } else {
+                img.src = safePlaceholder;
+                fetchAuthenticatedPreviewBlob(safeUrl).then(function (blobUrl) {
+                    if (window.viewerLoadRequestId === currentReq && img) {
+                        img.src = blobUrl || safePlaceholder;
+                    }
+                }).catch(function () {
+                    if (window.viewerLoadRequestId === currentReq && img) {
+                        img.src = safePlaceholder;
+                    }
+                });
+            }
+
+            if (typeof preloadViewerImage === 'function') {
+                preloadViewerImage(window.currentViewerIndex + 1);
+                preloadViewerImage(window.currentViewerIndex - 1);
+            }
 
             modal.classList.remove('hidden');
             void modal.offsetWidth;
@@ -11853,25 +11874,33 @@
             var rawNextUrl = (nextImg.url !== undefined && nextImg.url !== null) ? String(nextImg.url) : '';
             var safeUrl = safeImageUrl(rawNextUrl, safePlaceholder);
 
-            // 1. Ganti UI dan Judul langsung seketika (0 detik)
+            // Ganti UI dan Judul langsung seketika (0 detik)
             capEl.innerText = nextImg.name || '';
             updateViewerUI(nextImg.name || '', safeUrl);
             resetZoom(); // Reset posisi dan zoom untuk foto baru
 
-            // 2. Trik Anti-Lag: Pasang versi ringan (=w1000) yang sudah ada di memori HP/PC klien.
-            // Ini membuat foto langsung berubah tanpa ada lag sama sekali.
-            imgEl.src = safeUrl;
+            window.viewerLoadRequestId = (window.viewerLoadRequestId || 0) + 1;
+            var currentReq = window.viewerLoadRequestId;
 
-            // 3. Mesin Gaib: Tarik resolusi asli (=s0) secara diam-diam di belakang layar.
-            var hdImage = new Image();
-            hdImage.onload = function () {
-                // Begitu foto HD selesai di-download, otomatis timpa foto yang ringan, 
-                // TAPI pastikan klien belum menggeser ke foto yang lain.
-                if (capEl.innerText === (nextImg.name || '')) {
-                    imgEl.src = safeUrl.replace('=w1000', '=s0');
-                }
-            };
-            hdImage.src = safeUrl.replace('=w1000', '=s0');
+            if (previewBlobCache.has(safeUrl)) {
+                imgEl.src = previewBlobCache.get(safeUrl);
+            } else {
+                imgEl.src = safePlaceholder;
+                fetchAuthenticatedPreviewBlob(safeUrl).then(function (blobUrl) {
+                    if (window.viewerLoadRequestId === currentReq && imgEl) {
+                        imgEl.src = blobUrl || safePlaceholder;
+                    }
+                }).catch(function () {
+                    if (window.viewerLoadRequestId === currentReq && imgEl) {
+                        imgEl.src = safePlaceholder;
+                    }
+                });
+            }
+
+            if (typeof preloadViewerImage === 'function') {
+                preloadViewerImage(window.currentViewerIndex + 1);
+                preloadViewerImage(window.currentViewerIndex - 1);
+            }
         }
 
         function handleViewerKeyboard(e) {
@@ -12173,45 +12202,104 @@
             });
         }
 
-        // Phase 6 Preview Object URL Management
+        // Phase 6 Preview Object URL & Blob Cache Management
+        var previewBlobCache = new Map();
         var activePreviewObjectUrls = new Set();
+        var MAX_PREVIEW_CACHE = 100;
+
         function revokeActivePreviewObjectUrls() {
             activePreviewObjectUrls.forEach(function (u) {
                 try { URL.revokeObjectURL(u); } catch (_) { }
             });
             activePreviewObjectUrls.clear();
+            previewBlobCache.clear();
         }
 
-        async function loadAuthenticatedPreview(imgEl, rawUrl, fallbackUrl) {
-            if (!rawUrl || rawUrl.startsWith('data:')) {
-                imgEl.src = rawUrl || fallbackUrl;
-                return;
+        async function fetchAuthenticatedPreviewBlob(rawUrl) {
+            if (!rawUrl || rawUrl.startsWith('data:') || rawUrl.startsWith('blob:')) {
+                return rawUrl;
             }
+            if (previewBlobCache.has(rawUrl)) {
+                return previewBlobCache.get(rawUrl);
+            }
+
             try {
                 var parsed = new URL(rawUrl, window.location.origin);
                 var isSameOrigin = parsed.origin === window.location.origin;
                 if (!isSameOrigin) {
-                    imgEl.src = rawUrl;
-                    return;
+                    return rawUrl;
                 }
-                var tokenVal = (typeof clientState !== 'undefined' && clientState.token) ? clientState.token : '';
-                var sessionToken = (typeof getClientAccessToken === 'function' ? getClientAccessToken(tokenVal) : '') || (typeof clientState !== 'undefined' ? clientState.clientAccessToken : '');
+
+                // Strip access token from query params if accidentally present (never expose tokens in URL)
+                var queryToken = parsed.searchParams.get('token') || '';
+                if (parsed.searchParams.has('clientAccessToken')) parsed.searchParams.delete('clientAccessToken');
+                if (parsed.searchParams.has('sessionToken')) parsed.searchParams.delete('sessionToken');
+                var fetchUrl = parsed.pathname + parsed.search;
+
+                var tokenVal = (typeof clientState !== 'undefined' && clientState.token) ? clientState.token : queryToken;
+                var sessionToken = (typeof getClientAccessToken === 'function' ? getClientAccessToken(tokenVal) : '') ||
+                    (typeof clientState !== 'undefined' ? (clientState.clientAccessToken || clientState.sessionToken) : '') ||
+                    (typeof adminState !== 'undefined' && adminState.sessionToken ? adminState.sessionToken : '');
 
                 var headers = {};
                 if (tokenVal) headers['X-Client-Token'] = tokenVal;
                 if (sessionToken) headers['Authorization'] = 'Bearer ' + sessionToken;
 
-                var res = await fetch(rawUrl, { headers: headers });
+                var res = await fetch(fetchUrl, { headers: headers });
                 if (!res.ok) {
-                    imgEl.src = fallbackUrl;
-                    return;
+                    if (res.status === 401 || res.status === 403) {
+                        console.warn('[PreviewAuth] Unauthorized or session expired (HTTP ' + res.status + ')');
+                    }
+                    return null;
                 }
+
                 var blob = await res.blob();
                 var objectUrl = URL.createObjectURL(blob);
+
+                // Enforce cache size ceiling (LRU eviction)
+                if (previewBlobCache.size >= MAX_PREVIEW_CACHE) {
+                    var firstKey = previewBlobCache.keys().next().value;
+                    if (firstKey) {
+                        var oldUrl = previewBlobCache.get(firstKey);
+                        previewBlobCache.delete(firstKey);
+                        activePreviewObjectUrls.delete(oldUrl);
+                        try { URL.revokeObjectURL(oldUrl); } catch (_) { }
+                    }
+                }
+
                 activePreviewObjectUrls.add(objectUrl);
-                imgEl.src = objectUrl;
+                previewBlobCache.set(rawUrl, objectUrl);
+                return objectUrl;
+            } catch (err) {
+                console.warn('[PreviewAuth] Failed to load preview blob:', err);
+                return null;
+            }
+        }
+
+        async function loadAuthenticatedPreview(imgEl, rawUrl, fallbackUrl) {
+            if (!rawUrl || rawUrl.startsWith('data:') || rawUrl.startsWith('blob:')) {
+                if (imgEl) imgEl.src = rawUrl || fallbackUrl;
+                return;
+            }
+            try {
+                var blobUrl = await fetchAuthenticatedPreviewBlob(rawUrl);
+                if (imgEl) {
+                    imgEl.src = blobUrl || fallbackUrl;
+                }
             } catch (e) {
-                imgEl.src = fallbackUrl;
+                if (imgEl) imgEl.src = fallbackUrl;
+            }
+        }
+
+        function preloadViewerImage(index) {
+            if (!window.viewerActiveList || !window.viewerActiveList.length) return;
+            if (index < 0 || index >= window.viewerActiveList.length) return;
+            var target = window.viewerActiveList[index];
+            if (target && target.url) {
+                var safeUrl = safeImageUrl(String(target.url), '');
+                if (safeUrl) {
+                    fetchAuthenticatedPreviewBlob(safeUrl).catch(function () {});
+                }
             }
         }
 
@@ -14570,10 +14658,10 @@
                             card.appendChild(badge);
 
                             var imgEl = document.createElement('img');
-                            imgEl.src = safeUrl;
                             imgEl.alt = img.name || '';
                             imgEl.loading = 'lazy';
                             imgEl.referrerPolicy = 'no-referrer';
+                            loadAuthenticatedPreview(imgEl, safeUrl, 'https://placehold.co/400x400?text=Memuat...');
                             card.appendChild(imgEl);
 
                             var overlay = document.createElement('div');
@@ -14612,10 +14700,10 @@
                         card.appendChild(badge);
 
                         var imgEl = document.createElement('img');
-                        imgEl.src = safeUrl;
                         imgEl.alt = img.name || '';
                         imgEl.loading = 'lazy';
                         imgEl.referrerPolicy = 'no-referrer';
+                        loadAuthenticatedPreview(imgEl, safeUrl, 'https://placehold.co/400x400?text=Memuat...');
                         card.appendChild(imgEl);
 
                         var overlay = document.createElement('div');
@@ -15352,9 +15440,17 @@
                 if (response.status === 206) {
                     var crHeader = response.headers.get('content-range') || '';
                     var crMatch = crHeader.match(/^bytes\s+(\d+)-(\d+)\/(\d+)$/i);
-                    expectedTotalSize = crMatch ? parseInt(crMatch[3], 10) : 0;
+                    if (!crMatch) {
+                        throw new Error("INVALID_CONTENT_RANGE: Missing or invalid Content-Range header in HTTP 206 response.");
+                    }
+                    var crStart = parseInt(crMatch[1], 10);
+                    var crEnd = parseInt(crMatch[2], 10);
+                    expectedTotalSize = parseInt(crMatch[3], 10);
 
                     var firstChunk = await response.blob();
+                    if (crStart !== 0 || crEnd !== firstChunk.size - 1) {
+                        throw new Error("INVALID_CONTENT_RANGE: Initial chunk range mismatch with byte size.");
+                    }
                     chunksArray.push(firstChunk);
                     var totalLoaded = firstChunk.size;
 
@@ -15377,6 +15473,18 @@
 
                             if (sliceRes.status !== 206) {
                                 throw new Error("HTTP " + sliceRes.status + ": Expected HTTP 206 slice for " + rangeSpec);
+                            }
+
+                            var sliceCr = sliceRes.headers.get('content-range') || '';
+                            var sliceCrMatch = sliceCr.match(/^bytes\s+(\d+)-(\d+)\/(\d+)$/i);
+                            if (!sliceCrMatch) {
+                                throw new Error("INVALID_CONTENT_RANGE: Missing Content-Range on chunk slice " + rangeSpec);
+                            }
+                            var sStart = parseInt(sliceCrMatch[1], 10);
+                            var sEnd = parseInt(sliceCrMatch[2], 10);
+                            var sTotal = parseInt(sliceCrMatch[3], 10);
+                            if (sStart !== currentStart || sEnd !== currentEnd || sTotal !== expectedTotalSize) {
+                                throw new Error("INVALID_CONTENT_RANGE: Content-Range mismatch for chunk " + rangeSpec + " (got " + sliceCr + ")");
                             }
 
                             var sliceBlob = await sliceRes.blob();
@@ -15404,6 +15512,12 @@
                         throw new Error("ASSEMBLED_SIZE_MISMATCH: Assembled " + blob.size + " bytes, expected " + expectedTotalSize);
                     }
                 } else {
+                    if (fetchOpts.headers['Range']) {
+                        var clHeader = parseInt(response.headers.get('content-length'), 10);
+                        if (clHeader && clHeader > 4.5 * 1024 * 1024) {
+                            throw new Error("UNEXPECTED_FULL_RESPONSE: Upstream returned HTTP 200 instead of 206 for Range request on large file.");
+                        }
+                    }
                     blob = await response.blob();
                 }
             }

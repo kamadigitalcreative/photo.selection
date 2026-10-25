@@ -179,8 +179,10 @@ class DownloadService {
     const safeFilename = path.basename(fileId || '');
     const projectToken = project.Token || project.token || (session && session.projectToken);
 
-    // Check in Mock Mode
-    if (provider.name === 'mock') {
+    // Check in Mock Mode if not using authoritative metadata
+    const hasAuthoritativeMetadata = provider.name === 'google' || (provider.customFileMeta && provider.customFileMeta.has(fileId)) || (fileId.startsWith('file-') && typeof provider.getFileMetadata === 'function');
+
+    if (!hasAuthoritativeMetadata && provider.name === 'mock') {
       const ext = path.extname(safeFilename).toLowerCase();
       const isStandardImg = ['.jpg', '.jpeg', '.png', '.webp'].includes(ext);
       const isRawExt = SUPPORTED_RAW_EXTENSIONS.includes(ext);
@@ -250,8 +252,8 @@ class DownloadService {
       };
     }
 
-    // Check in Google Drive Mode (Opaque fileId)
-    if (provider.name === 'google') {
+    // Check in Google Drive Mode or any provider that implements getFileMetadata
+    if (provider.name === 'google' || typeof provider.getFileMetadata === 'function') {
       const meta = await provider.getFileMetadata(fileId);
       if (!meta) {
         return {
@@ -290,14 +292,34 @@ class DownloadService {
         };
       }
 
-      // Check parent folder membership
-      const projectFolderId = extractFolderId(project['Drive Link'] || project.driveLink || project.DriveLink || '');
-      if (!projectFolderId || !meta.parents || !Array.isArray(meta.parents) || !meta.parents.includes(projectFolderId)) {
+      // FIX 2: Check parent folder ancestry up to authorized project root
+      const rawFolder = project['Drive Link'] || project.driveLink || project.DriveLink || project.google_drive_folder_id || project.folderId || '';
+      const projectFolderId = extractFolderId(rawFolder) || rawFolder;
+      const parents = Array.isArray(meta.parents) ? meta.parents : [];
+      let isAncestorVerified = false;
+
+      if (projectFolderId && parents.includes(projectFolderId)) {
+        isAncestorVerified = true;
+      } else if (projectFolderId && typeof provider.verifyFolderHierarchy === 'function') {
+        for (const parentFolderId of parents) {
+          const hierCheck = await provider.verifyFolderHierarchy({
+            folderId: parentFolderId,
+            rootFolderId: projectFolderId,
+            maxDepth: 10
+          });
+          if (hierCheck && hierCheck.allowed) {
+            isAncestorVerified = true;
+            break;
+          }
+        }
+      }
+
+      if (!isAncestorVerified) {
         return {
           allowed: false,
           error: {
             code: ERROR_CODES.CROSS_PROJECT_FORBIDDEN,
-            message: `HTTP 403: Berkas ${fileId} bukan milik folder proyek ini (Cross-project access denied).`,
+            message: `HTTP 403: Berkas ${fileId} bukan milik folder proyek ini atau subfoldernya (Cross-project access denied).`,
             status: 403
           }
         };

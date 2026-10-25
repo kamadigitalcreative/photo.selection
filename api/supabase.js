@@ -6,11 +6,14 @@
 const crypto = require('crypto');
 const path = require('path');
 const { URL } = require('url');
-const { Readable, pipeline } = require('stream');
+const { Readable, Transform, pipeline } = require('stream');
 const { getDriveProvider, urlParser, DownloadService, types } = require('./drive');
 
 function toNodeReadable(body) {
   if (!body) return null;
+  if (Buffer.isBuffer(body)) {
+    return Readable.from([body]);
+  }
   if (typeof body.pipe === 'function') {
     return body;
   }
@@ -3885,7 +3888,25 @@ async function handleGetDriveContent(payload, req, res) {
       if (!isOwner) {
         return error(res, 'Akses ditolak: Akun Anda tidak memiliki hak akses untuk project ini.', 403);
       }
-      authoritativeFolderId = urlParser.extractFolderId(project['Drive Link'] || project.driveLink || project.DriveLink);
+      const rootFolderId = urlParser.extractFolderId(project['Drive Link'] || project.driveLink || project.DriveLink);
+      if (!rootFolderId) {
+        return error(res, 'Link atau ID Google Drive pada project ini tidak valid atau belum diatur.', 400);
+      }
+
+      // ISSUE 3: Authorized subfolder navigation for photographer
+      let targetFolderId = rootFolderId;
+      const requestedFolderId = (payload.folder_id || payload.folderId || '').trim();
+      if (requestedFolderId && requestedFolderId !== rootFolderId) {
+        const prov = getDriveProvider();
+        if (typeof prov.verifyFolderHierarchy === 'function') {
+          const hierCheck = await prov.verifyFolderHierarchy({ folderId: requestedFolderId, rootFolderId });
+          if (!hierCheck.allowed) {
+            return error(res, 'Akses ditolak: Folder ini bukan bagian dari proyek galeri ini (Cross-project / invalid subfolder).', 403);
+          }
+        }
+        targetFolderId = requestedFolderId;
+      }
+      authoritativeFolderId = targetFolderId;
     } else {
       // Photographer previewing folder during project creation form
       const clientFolderUrl = payload.folder_id || payload.folderId || payload.driveLink || payload.link;
@@ -3938,7 +3959,25 @@ async function handleGetDriveContent(payload, req, res) {
     }
 
     // Authoritative folder ID from the server-side project record ONLY!
-    authoritativeFolderId = urlParser.extractFolderId(project['Drive Link'] || project.driveLink || project.DriveLink);
+    const rootFolderId = urlParser.extractFolderId(project['Drive Link'] || project.driveLink || project.DriveLink);
+    if (!rootFolderId) {
+      return error(res, 'Link atau ID Google Drive pada project ini tidak valid atau belum diatur.', 400);
+    }
+
+    // ISSUE 3: Authorized subfolder navigation for verified client gallery visitor
+    let targetFolderId = rootFolderId;
+    const requestedFolderId = (payload.folder_id || payload.folderId || '').trim();
+    if (requestedFolderId && requestedFolderId !== rootFolderId) {
+      const prov = getDriveProvider();
+      if (typeof prov.verifyFolderHierarchy === 'function') {
+        const hierCheck = await prov.verifyFolderHierarchy({ folderId: requestedFolderId, rootFolderId });
+        if (!hierCheck.allowed) {
+          return error(res, 'Akses ditolak: Folder ini bukan bagian dari proyek galeri ini (Cross-project / invalid subfolder).', 403);
+        }
+      }
+      targetFolderId = requestedFolderId;
+    }
+    authoritativeFolderId = targetFolderId;
   }
 
   if (!authoritativeFolderId) {
@@ -4009,11 +4048,11 @@ async function handleDownloadOriginalFile(payload, req, res) {
     return error(res, 'Akses ditolak: Memerlukan otorisasi sesi untuk mengunduh berkas asli.', 403);
   }
 
-  const provider = getDriveProvider();
+  const provider = payload.testProviderOverride || getDriveProvider();
 
   const downloadService = new DownloadService({
     driveProvider: provider,
-    sessionVerifier: async (token) => {
+    sessionVerifier: payload.testSessionVerifier || (async (token) => {
       if (projectToken) {
         const p = await findProjectForClient(projectToken);
         if (p) {
@@ -4029,10 +4068,10 @@ async function handleDownloadOriginalFile(payload, req, res) {
         }
       }
       return null;
-    },
-    projectFinder: async (tok) => {
+    }),
+    projectFinder: payload.testProjectFinder || (async (tok) => {
       return await findProjectForClient(tok);
-    }
+    })
   });
 
   const authCheck = await downloadService.authorizeDownload({
@@ -4046,9 +4085,9 @@ async function handleDownloadOriginalFile(payload, req, res) {
     return error(res, authCheck.error.message, authCheck.error.status);
   }
 
-  const rangeHeader = req && req.headers ? req.headers['range'] : null;
+  const rangeHeader = req && req.headers ? (req.headers['range'] || payload.range) : payload.range;
 
-  if (provider.name === 'google') {
+  if (provider.name === 'google' || provider.isStreamingProvider || payload.forceStreamDelivery) {
     const meta = await provider.getFileMetadata(fileId);
     if (!meta) {
       return error(res, 'Berkas foto tidak ditemukan di Google Drive.', 404);
@@ -4069,7 +4108,43 @@ async function handleDownloadOriginalFile(payload, req, res) {
     const streamOpts = rangeInfo.isRange ? { range: `bytes=${rangeInfo.start}-${rangeInfo.end}` } : {};
     const streamRes = await provider.fetchOriginalStream(fileId, streamOpts);
     if (!streamRes.success) {
-      return error(res, streamRes.message, 500);
+      return error(res, streamRes.message, streamRes.status || 500, streamRes.code ? { code: streamRes.code } : null);
+    }
+
+    // FIX 3: Upstream status verification when Range requested — Never label full 200 response as 206!
+    if (rangeInfo.isRange && streamRes.status !== 206) {
+      return error(res, 'Upstream Google Drive mengabaikan header Range dan mengirim respons penuh.', 502, { code: 'UNEXPECTED_FULL_RESPONSE' });
+    }
+
+    // FIX 3: Parse and verify upstream Content-Range against requested bounds and authoritative file size
+    let verifiedUpstreamCr = null;
+    let expectedChunkBytes = 0;
+    if (rangeInfo.isRange) {
+      const cr = streamRes.headers?.['Content-Range'] || streamRes.headers?.['content-range'];
+      if (!cr) {
+        return error(res, 'Header Content-Range tidak ditemukan pada respons partial upstream.', 502, { code: 'INVALID_CONTENT_RANGE' });
+      }
+      const match = String(cr).match(/^bytes\s+(\d+)-(\d+)\/(\d+)$/i);
+      if (!match) {
+        return error(res, `Format Content-Range upstream tidak valid: ${cr}`, 502, { code: 'INVALID_CONTENT_RANGE' });
+      }
+      const crStart = parseInt(match[1], 10);
+      const crEnd = parseInt(match[2], 10);
+      const crTotal = parseInt(match[3], 10);
+      const authoritativeTotal = meta.size ? parseInt(meta.size, 10) : crTotal;
+
+      if (crStart !== rangeInfo.start || crEnd !== rangeInfo.end || (authoritativeTotal && crTotal !== authoritativeTotal)) {
+        return error(res, `Content-Range upstream (${cr}) tidak cocok dengan rentang yang diminta (bytes ${rangeInfo.start}-${rangeInfo.end}/${authoritativeTotal}).`, 502, { code: 'INVALID_CONTENT_RANGE' });
+      }
+
+      expectedChunkBytes = crEnd - crStart + 1;
+      const upCl = parseInt(streamRes.headers?.['Content-Length'] || streamRes.headers?.['content-length'], 10);
+      if (upCl && upCl !== expectedChunkBytes) {
+        return error(res, `Content-Length upstream (${upCl}) tidak cocok dengan ukuran rentang chunk (${expectedChunkBytes}).`, 502, { code: 'INVALID_CONTENT_RANGE' });
+      }
+      verifiedUpstreamCr = cr;
+    } else {
+      expectedChunkBytes = meta.size ? parseInt(meta.size, 10) : 0;
     }
 
     const cleanName = downloadService.sanitizeHeaderFilename(meta.name);
@@ -4080,27 +4155,67 @@ async function handleDownloadOriginalFile(payload, req, res) {
 
     const resStatus = rangeInfo.isRange ? 206 : (streamRes.status || 200);
     const headers = {
-      ...streamRes.headers,
+      'Content-Type': streamRes.headers?.['Content-Type'] || streamRes.headers?.['content-type'] || 'application/octet-stream',
       'Content-Disposition': `attachment; filename="${cleanName}"`,
+      'Accept-Ranges': 'bytes',
       'X-Content-Type-Options': 'nosniff'
     };
     if (rangeInfo.isRange) {
-      headers['Content-Range'] = rangeInfo.contentRange;
-      headers['Content-Length'] = rangeInfo.chunkSize;
+      // Forward genuine verified upstream Content-Range (never fabricate mismatched expected headers)
+      headers['Content-Range'] = verifiedUpstreamCr;
+      headers['Content-Length'] = String(expectedChunkBytes);
+    } else if (streamRes.headers?.['Content-Length'] || streamRes.headers?.['content-length']) {
+      headers['Content-Length'] = streamRes.headers['Content-Length'] || streamRes.headers['content-length'];
     }
+
+    let streamedBytes = 0;
+    const MAX_CHUNK_LIMIT = 4.5 * 1024 * 1024;
+
+    const validatorTransform = new Transform({
+      transform(chunk, encoding, callback) {
+        streamedBytes += chunk.length;
+        if (rangeInfo.isRange && streamedBytes > MAX_CHUNK_LIMIT) {
+          return callback(new Error('CHUNK_OVERSIZED: Streamed chunk exceeded 4.5MB Vercel boundary'));
+        }
+        if (expectedChunkBytes > 0 && streamedBytes > expectedChunkBytes) {
+          return callback(new Error(`CHUNK_OVERSIZED: Streamed ${streamedBytes} bytes, expected ${expectedChunkBytes}`));
+        }
+        callback(null, chunk);
+      },
+      flush(callback) {
+        if (expectedChunkBytes > 0 && streamedBytes !== expectedChunkBytes) {
+          return callback(new Error(`CHUNK_TRUNCATED: Streamed ${streamedBytes} bytes, expected ${expectedChunkBytes}`));
+        }
+        callback();
+      }
+    });
 
     res.writeHead(resStatus, headers);
-    if (req) {
-      req.on('close', () => {
-        if (!res.writableEnded && typeof nodeStream.destroy === 'function') nodeStream.destroy();
-      });
-    }
 
-    pipeline(nodeStream, res, (err) => {
-      if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
-        console.error('Download stream error:', err);
-        if (!res.headersSent) error(res, 'Gagal mengalirkan berkas.', 500);
-        else res.destroy(err);
+    const onResClose = () => {
+      // Reliable response cancellation cleanup: only destroy if connection dropped before finish
+      if (!res.writableFinished && !res.writableEnded) {
+        if (typeof nodeStream.destroy === 'function') {
+          nodeStream.destroy(new Error('CLIENT_ABORTED'));
+        }
+        if (typeof validatorTransform.destroy === 'function') {
+          validatorTransform.destroy(new Error('CLIENT_ABORTED'));
+        }
+      }
+    };
+    res.on('close', onResClose);
+
+    pipeline(nodeStream, validatorTransform, res, (err) => {
+      res.removeListener('close', onResClose);
+      if (err) {
+        if (err.code !== 'ERR_STREAM_PREMATURE_CLOSE' && err.message !== 'CLIENT_ABORTED') {
+          console.error('Download stream error:', err.message);
+        }
+        if (!res.headersSent) {
+          error(res, 'Gagal mengalirkan berkas.', 502);
+        } else if (!res.destroyed) {
+          res.destroy(err);
+        }
       }
     });
     return;
@@ -4241,14 +4356,20 @@ async function handleGetPreviewImage(payload, req, res) {
   const nodeStream = toNodeReadable(streamRes.body);
   if (!nodeStream) return error(res, 'Upstream stream tidak valid.', 502);
 
-  if (req) {
-    req.on('close', () => {
-      if (!res.writableEnded && typeof nodeStream.destroy === 'function') nodeStream.destroy();
-    });
-  }
+  const onPreviewResClose = () => {
+    // Reliable response cancellation cleanup: only destroy if connection dropped before finish
+    if (!res.writableFinished && !res.writableEnded) {
+      if (typeof nodeStream.destroy === 'function') {
+        nodeStream.destroy(new Error('CLIENT_ABORTED'));
+      }
+    }
+  };
+  res.on('close', onPreviewResClose);
+
   pipeline(nodeStream, res, (err) => {
-    if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
-      console.error('Preview stream error:', err);
+    res.removeListener('close', onPreviewResClose);
+    if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE' && err.message !== 'CLIENT_ABORTED') {
+      console.error('Preview stream error:', err.message);
     }
   });
 }
