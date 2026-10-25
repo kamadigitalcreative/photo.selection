@@ -35,6 +35,19 @@ const MIME_TYPES = {
 const zlib = require('zlib');
 const FIXTURES_DIR = path.join(__dirname, 'phase55-fixtures');
 
+function generateSyntheticJpeg(sizeBytes, seed = 1) {
+    const buf = Buffer.alloc(sizeBytes);
+    buf[0] = 0xFF; buf[1] = 0xD8; buf[2] = 0xFF; buf[3] = 0xE0;
+    buf[4] = 0x00; buf[5] = 0x10; buf[6] = 0x4A; buf[7] = 0x46; // JFIF
+    buf[8] = 0x49; buf[9] = 0x46; buf[10] = 0x00; buf[11] = 0x01;
+    for (let i = 12; i < sizeBytes - 2; i++) {
+        buf[i] = (i * seed + 37) & 0xFF;
+    }
+    buf[sizeBytes - 2] = 0xFF;
+    buf[sizeBytes - 1] = 0xD9;
+    return buf;
+}
+
 // Generator PNG murni Node.js (400x500px, komposisi fotografi mewah dengan aksen border emas champagne)
 function generateSolidPng(width, height, r, g, b, typeIndex = 1) {
     const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
@@ -354,7 +367,7 @@ const MOCK_USERS_LIST = [
 
 // In-Memory Project-Scoped Fixtures Map
 const mockProjectFixtures = {
-    'dummy-client-token': ['photo1.png', 'photo2.png', 'photo3.png', 'photo4.png', 'photo5.png'],
+    'dummy-client-token': ['photo1.png', 'photo2.png', 'photo3.png', 'photo4.png', 'photo5.png', 'synthetic-1mb.jpg', 'synthetic-6mb.jpg', 'synthetic-18mb.jpg'],
     'token-no-download': ['photo1.png', 'photo2.png', 'photo3.png', 'photo4.png', 'photo5.png'],
     'token-ivory': ['photo1.png', 'photo2.png'],
     'token-olive': ['photo3.png'],
@@ -492,6 +505,18 @@ function handleApiBridge(req, res, body) {
     } catch (e) {
         return reply(400, { status: 'error', message: 'Invalid JSON' });
     }
+
+    if (!payload.action && req.url && req.url.includes('?')) {
+        try {
+            const parsedUrl = new URL(req.url, 'http://127.0.0.1');
+            parsedUrl.searchParams.forEach((val, key) => {
+                if (payload[key] === undefined) payload[key] = val;
+            });
+        } catch (_) {}
+    }
+
+    // Phase 6 Critical: NEVER trust client-supplied authUser
+    delete payload.authUser;
 
     const action = payload.action;
 
@@ -1820,6 +1845,241 @@ function handleApiBridge(req, res, body) {
             status: 'success',
             data: { success: true, message: 'Visit logged in mock' }
         });
+    }
+
+    if (action === 'downloadOriginalFile') {
+        const fileId = payload.fileId || payload.id;
+        let projectToken = payload.token || payload.projectToken;
+        if (!projectToken && req.headers && req.headers['x-client-token']) {
+            projectToken = req.headers['x-client-token'];
+        }
+
+        let sessionToken = '';
+        if (req.headers && req.headers['authorization']) {
+            const authParts = req.headers['authorization'].split(' ');
+            if (authParts.length === 2 && authParts[0].toLowerCase() === 'bearer') {
+                sessionToken = authParts[1].trim();
+            }
+        }
+        if (!sessionToken && payload.clientAccessToken) sessionToken = String(payload.clientAccessToken).trim();
+        if (!sessionToken && payload.sessionToken) sessionToken = String(payload.sessionToken).trim();
+        if (!sessionToken && payload.session) sessionToken = String(payload.session).trim();
+
+        if (!sessionToken) {
+            return reply(403, {
+                status: 'error',
+                code: 'SESSION_REQUIRED',
+                message: 'HTTP 403: Kredensial sesi tidak ditemukan.'
+            });
+        }
+
+        const clientSession = mockVerifiedSessions.get(sessionToken);
+        if (!clientSession) {
+            return reply(403, {
+                status: 'error',
+                code: 'INVALID_SESSION',
+                message: 'HTTP 403: Sesi galeri tidak valid.'
+            });
+        }
+
+        const now = getNow(req);
+        if (now > clientSession.expiresAt) {
+            mockVerifiedSessions.delete(sessionToken);
+            return reply(403, {
+                status: 'error',
+                code: 'SESSION_EXPIRED',
+                message: 'HTTP 403: Sesi galeri telah kedaluwarsa.'
+            });
+        }
+
+        if (projectToken && projectToken !== clientSession.projectToken) {
+            return reply(403, {
+                status: 'error',
+                code: 'PROJECT_MISMATCH',
+                message: 'HTTP 403: Sesi aktif tidak cocok dengan proyek yang diminta.'
+            });
+        }
+
+        if (clientSession.isDownloadActive === false || clientSession.projectToken === 'token-no-download') {
+            return reply(403, {
+                status: 'error',
+                code: 'DOWNLOAD_DISABLED',
+                message: 'HTTP 403: Fitur unduh berkas asli dinonaktifkan untuk proyek ini.'
+            });
+        }
+
+        const reqFilename = path.basename(fileId || 'photo1.png');
+        const allowedPhotos = mockProjectFixtures[clientSession.projectToken] || [];
+        if (!allowedPhotos.includes(reqFilename)) {
+            return reply(403, {
+                status: 'error',
+                code: 'CROSS_PROJECT_FORBIDDEN',
+                message: `HTTP 403: Berkas ${reqFilename} bukan milik proyek ini (Cross-project access denied).`
+            });
+        }
+
+        // Handle synthetic media files for Phase 6 range delivery tests
+        if (reqFilename.startsWith('synthetic-')) {
+            let synthSize = 1024 * 1024;
+            if (reqFilename === 'synthetic-6mb.jpg') synthSize = 6 * 1024 * 1024;
+            else if (reqFilename === 'synthetic-18mb.jpg') synthSize = 18 * 1024 * 1024;
+            const fullBuf = generateSyntheticJpeg(synthSize);
+            const rangeHeader = req.headers['range'];
+            if (rangeHeader) {
+                const match = rangeHeader.trim().match(/^bytes=(\d+)-(\d+)?$/);
+                if (match) {
+                    const start = parseInt(match[1], 10);
+                    let end = match[2] ? parseInt(match[2], 10) : synthSize - 1;
+                    if (end >= synthSize) end = synthSize - 1;
+                    const chunkSize = end - start + 1;
+                    const slice = fullBuf.subarray(start, end + 1);
+                    res.writeHead(206, {
+                        'Content-Type': 'image/jpeg',
+                        'Content-Length': chunkSize,
+                        'Content-Range': `bytes ${start}-${end}/${synthSize}`,
+                        'Accept-Ranges': 'bytes',
+                        'Content-Disposition': `attachment; filename="${reqFilename}"`,
+                        'X-Content-Type-Options': 'nosniff'
+                    });
+                    return res.end(slice);
+                }
+            }
+            res.writeHead(200, {
+                'Content-Type': 'image/jpeg',
+                'Content-Length': synthSize,
+                'Accept-Ranges': 'bytes',
+                'Content-Disposition': `attachment; filename="${reqFilename}"`,
+                'X-Content-Type-Options': 'nosniff'
+            });
+            return res.end(fullBuf);
+        }
+
+        const filePath = path.join(FIXTURES_DIR, reqFilename);
+        if (!fs.existsSync(filePath)) {
+            return reply(404, {
+                status: 'error',
+                code: 'FILE_NOT_FOUND',
+                message: 'Berkas tidak ditemukan.'
+            });
+        }
+
+        const stat = fs.statSync(filePath);
+        const rangeHeader = req.headers['range'];
+        if (rangeHeader) {
+            const match = rangeHeader.trim().match(/^bytes=(\d+)-(\d+)?$/);
+            if (match) {
+                const start = parseInt(match[1], 10);
+                let end = match[2] ? parseInt(match[2], 10) : stat.size - 1;
+                if (end >= stat.size) end = stat.size - 1;
+                const chunkSize = end - start + 1;
+                res.writeHead(206, {
+                    'Content-Type': 'image/png',
+                    'Content-Length': chunkSize,
+                    'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+                    'Accept-Ranges': 'bytes',
+                    'Content-Disposition': `attachment; filename="${reqFilename}"`,
+                    'X-Content-Type-Options': 'nosniff'
+                });
+                const stream = fs.createReadStream(filePath, { start, end });
+                return stream.pipe(res);
+            }
+        }
+
+        res.writeHead(200, {
+            'Content-Type': 'image/png',
+            'Content-Length': stat.size,
+            'Accept-Ranges': 'bytes',
+            'Content-Disposition': `attachment; filename="${reqFilename}"`,
+            'X-Content-Type-Options': 'nosniff'
+        });
+        const stream = fs.createReadStream(filePath);
+        return stream.pipe(res);
+    }
+
+    if (action === 'getPreviewImage') {
+        const fileId = payload.fileId || payload.id;
+        let projectToken = payload.token || payload.projectToken;
+        if (!projectToken && req.headers && req.headers['x-client-token']) {
+            projectToken = req.headers['x-client-token'];
+        }
+
+        let sessionToken = '';
+        if (req.headers && req.headers['authorization']) {
+            const authParts = req.headers['authorization'].split(' ');
+            if (authParts.length === 2 && authParts[0].toLowerCase() === 'bearer') {
+                sessionToken = authParts[1].trim();
+            }
+        }
+        if (!sessionToken && payload.clientAccessToken) sessionToken = String(payload.clientAccessToken).trim();
+        if (!sessionToken && payload.sessionToken) sessionToken = String(payload.sessionToken).trim();
+
+        const clientSession = mockVerifiedSessions.get(sessionToken);
+        const staffSession = mockPhotographerSessions.get(sessionToken);
+        if (!clientSession && !staffSession) {
+            return reply(403, {
+                status: 'error',
+                code: 'SESSION_REQUIRED',
+                message: 'HTTP 403: Memerlukan otorisasi sesi untuk melihat preview.'
+            });
+        }
+
+        const reqFilename = path.basename(fileId || 'photo1.png');
+        const ext = path.extname(reqFilename).toLowerCase();
+
+        // Phase 6 Critical: RAW must NOT be returned as image/jpeg or browser preview
+        const rawExtensions = ['.cr2', '.cr3', '.arw', '.nef', '.dng', '.raw'];
+        if (rawExtensions.includes(ext)) {
+            return reply(415, {
+                status: 'error',
+                code: 'RAW_PREVIEW_UNSUPPORTED',
+                message: 'HTTP 415: RAW files cannot be converted to browser preview without specialized processing pipeline.'
+            });
+        }
+
+        if (clientSession) {
+            const allowedPhotos = mockProjectFixtures[clientSession.projectToken] || [];
+            if (!allowedPhotos.includes(reqFilename)) {
+                return reply(403, {
+                    status: 'error',
+                    code: 'CROSS_PROJECT_FORBIDDEN',
+                    message: `HTTP 403: Berkas ${reqFilename} bukan milik proyek ini (Cross-project preview denied).`
+                });
+            }
+        }
+
+        let contentType = 'image/jpeg';
+        if (ext === '.png') contentType = 'image/png';
+        else if (ext === '.webp') contentType = 'image/webp';
+
+        if (reqFilename.startsWith('synthetic-')) {
+            const synthBuf = generateSyntheticJpeg(64 * 1024);
+            res.writeHead(200, {
+                'Content-Type': 'image/jpeg',
+                'Content-Length': synthBuf.length,
+                'Cache-Control': 'private, max-age=3600',
+                'X-Content-Type-Options': 'nosniff'
+            });
+            return res.end(synthBuf);
+        }
+
+        const filePath = path.join(FIXTURES_DIR, reqFilename);
+        if (!fs.existsSync(filePath)) {
+            return reply(404, {
+                status: 'error',
+                code: 'FILE_NOT_FOUND',
+                message: 'Berkas tidak ditemukan.'
+            });
+        }
+
+        const stat = fs.statSync(filePath);
+        res.writeHead(200, {
+            'Content-Type': contentType,
+            'Content-Length': stat.size,
+            'Cache-Control': 'private, max-age=3600',
+            'X-Content-Type-Options': 'nosniff'
+        });
+        const stream = fs.createReadStream(filePath);
+        return stream.pipe(res);
     }
 
     // Default Fallback - Explicit Error for Unknown API Actions

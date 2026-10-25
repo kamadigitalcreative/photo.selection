@@ -11541,37 +11541,91 @@
             }
 
             try {
-                var res = null;
-                var retryCount = 0;
-                while (retryCount < 2) {
-                    try {
-                        var tokenVal = (typeof clientState !== 'undefined' && clientState.token) ? clientState.token : '';
-                        var sessionToken = (typeof getClientAccessToken === 'function' ? getClientAccessToken(tokenVal) : '') || (typeof clientState !== 'undefined' ? clientState.clientAccessToken : '');
-                        var clientHeaders = { 'Content-Type': 'application/json' };
-                        if (tokenVal) clientHeaders['X-Client-Token'] = tokenVal;
-                        if (sessionToken) clientHeaders['Authorization'] = 'Bearer ' + sessionToken;
+                var allImages = [];
+                var allFolders = [];
+                var seenImgKeys = new Set();
+                var seenFolderKeys = new Set();
+                var nextPageToken = null;
+                var hasMorePages = true;
+                var pageIndex = 0;
+                var fetchSuccess = false;
+                var lastErrorMsg = '';
 
-                        const response = await fetch(API_ENDPOINT, {
-                            method: 'POST',
-                            headers: clientHeaders,
-                            body: JSON.stringify({
-                                action: 'getDriveContent',
-                                folder_id: folderId,
-                                token: tokenVal || undefined,
-                                clientAccessToken: sessionToken || undefined
-                            })
-                        });
-                        res = await response.json();
-                        if (res && res.status === 'success') break;
-                    } catch (netErr) { }
-                    retryCount++;
-                    if (retryCount < 2) await new Promise(r => setTimeout(r, 1000));
+                while (hasMorePages && pageIndex < 30) {
+                    pageIndex++;
+                    var res = null;
+                    var retryCount = 0;
+                    while (retryCount < 2) {
+                        try {
+                            var tokenVal = (typeof clientState !== 'undefined' && clientState.token) ? clientState.token : '';
+                            var sessionToken = (typeof getClientAccessToken === 'function' ? getClientAccessToken(tokenVal) : '') || (typeof clientState !== 'undefined' ? clientState.clientAccessToken : '');
+                            var clientHeaders = { 'Content-Type': 'application/json' };
+                            if (tokenVal) clientHeaders['X-Client-Token'] = tokenVal;
+                            if (sessionToken) clientHeaders['Authorization'] = 'Bearer ' + sessionToken;
+
+                            const response = await fetch(API_ENDPOINT, {
+                                method: 'POST',
+                                headers: clientHeaders,
+                                body: JSON.stringify({
+                                    action: 'getDriveContent',
+                                    folder_id: folderId,
+                                    pageToken: nextPageToken || undefined,
+                                    token: tokenVal || undefined,
+                                    clientAccessToken: sessionToken || undefined
+                                })
+                            });
+                            res = await response.json();
+                            if (res && res.status === 'success') break;
+                            if (res && (res.message || res.error)) lastErrorMsg = res.message || res.error;
+                        } catch (netErr) {
+                            lastErrorMsg = netErr.message;
+                        }
+                        retryCount++;
+                        if (retryCount < 2) await new Promise(r => setTimeout(r, 1000));
+                    }
+
+                    if (res && res.status === 'success' && res.data) {
+                        fetchSuccess = true;
+                        var pImages = res.data.images || [];
+                        var pFolders = res.data.folders || [];
+
+                        // Deduplicate images
+                        for (var i = 0; i < pImages.length; i++) {
+                            var img = pImages[i];
+                            var iKey = (img.id || img.name) + '__' + (img.name || '');
+                            if (!seenImgKeys.has(iKey)) {
+                                seenImgKeys.add(iKey);
+                                allImages.push(img);
+                            }
+                        }
+
+                        // Deduplicate folders
+                        for (var f = 0; f < pFolders.length; f++) {
+                            var fld = pFolders[f];
+                            var fKey = fld.id || fld.name;
+                            if (!seenFolderKeys.has(fKey)) {
+                                seenFolderKeys.add(fKey);
+                                allFolders.push(fld);
+                            }
+                        }
+
+                        if (res.data.nextPageToken) {
+                            nextPageToken = res.data.nextPageToken;
+                        } else {
+                            hasMorePages = false;
+                        }
+                    } else {
+                        hasMorePages = false;
+                        if (pageIndex === 1) {
+                            fetchSuccess = false;
+                        }
+                    }
                 }
 
                 endLoading();
 
-                if (res && res.status === 'success' && res.data) {
-                    clientState.currentContent = { folders: res.data.folders || [], images: res.data.images || [] };
+                if (fetchSuccess) {
+                    clientState.currentContent = { folders: allFolders, images: allImages };
                     try { sessionStorage.setItem(cacheFolderKey, JSON.stringify(clientState.currentContent)); } catch (e) { }
                     renderClientGallery();
                     var isSubmitted = (typeof hasClientSubmitted !== 'undefined' && hasClientSubmitted) ||
@@ -11580,12 +11634,11 @@
                         pingClientStatus('Sedang Memilih');
                     }
                 } else {
-                    // Jika data foto sudah aktif ditampilkan di layar dari cache, jangan pernah ganggu klien dengan popup error
                     if (clientState.currentContent && ((clientState.currentContent.images && clientState.currentContent.images.length > 0) || (clientState.currentContent.folders && clientState.currentContent.folders.length > 0))) {
-                        console.warn("Background sync paused during sleep/wake:", res);
+                        console.warn("Background sync paused during sleep/wake:", lastErrorMsg);
                         return;
                     }
-                    var errorMsg = (res && (res.message || res.error)) || (res && res.data ? res.data.message : '') || 'Gagal memuat isi folder Google Drive.';
+                    var errorMsg = lastErrorMsg || 'Gagal memuat isi folder Google Drive.';
                     Swal.fire({
                         icon: 'error',
                         title: 'Gagal Memuat Galeri',
@@ -12120,7 +12173,50 @@
             });
         }
 
+        // Phase 6 Preview Object URL Management
+        var activePreviewObjectUrls = new Set();
+        function revokeActivePreviewObjectUrls() {
+            activePreviewObjectUrls.forEach(function (u) {
+                try { URL.revokeObjectURL(u); } catch (_) { }
+            });
+            activePreviewObjectUrls.clear();
+        }
+
+        async function loadAuthenticatedPreview(imgEl, rawUrl, fallbackUrl) {
+            if (!rawUrl || rawUrl.startsWith('data:')) {
+                imgEl.src = rawUrl || fallbackUrl;
+                return;
+            }
+            try {
+                var parsed = new URL(rawUrl, window.location.origin);
+                var isSameOrigin = parsed.origin === window.location.origin;
+                if (!isSameOrigin) {
+                    imgEl.src = rawUrl;
+                    return;
+                }
+                var tokenVal = (typeof clientState !== 'undefined' && clientState.token) ? clientState.token : '';
+                var sessionToken = (typeof getClientAccessToken === 'function' ? getClientAccessToken(tokenVal) : '') || (typeof clientState !== 'undefined' ? clientState.clientAccessToken : '');
+
+                var headers = {};
+                if (tokenVal) headers['X-Client-Token'] = tokenVal;
+                if (sessionToken) headers['Authorization'] = 'Bearer ' + sessionToken;
+
+                var res = await fetch(rawUrl, { headers: headers });
+                if (!res.ok) {
+                    imgEl.src = fallbackUrl;
+                    return;
+                }
+                var blob = await res.blob();
+                var objectUrl = URL.createObjectURL(blob);
+                activePreviewObjectUrls.add(objectUrl);
+                imgEl.src = objectUrl;
+            } catch (e) {
+                imgEl.src = fallbackUrl;
+            }
+        }
+
         function renderClientGallery() {
+            revokeActivePreviewObjectUrls();
             var container = document.getElementById('gallery-container');
             var emptyState = document.getElementById('gallery-empty');
 
@@ -12264,7 +12360,6 @@
                     }
 
                     var imgEl = document.createElement('img');
-                    imgEl.src = safeUrl;
                     imgEl.alt = imgData.name || '';
                     imgEl.loading = 'lazy';
                     imgEl.referrerPolicy = 'no-referrer';
@@ -12275,6 +12370,7 @@
                     imgEl.onclick = function (event) {
                         openImageViewer(displayUrl, imgData.name, event, index);
                     };
+                    loadAuthenticatedPreview(imgEl, safeUrl, localPlaceholderSvg);
                     card.appendChild(imgEl);
 
                     var overlay = document.createElement('div');
@@ -15147,9 +15243,6 @@
                     if (parsedTargetUrl.searchParams.has('session')) {
                         parsedTargetUrl.searchParams.delete('session');
                     }
-                    if (parsedTargetUrl.searchParams.has('token')) {
-                        parsedTargetUrl.searchParams.delete('token');
-                    }
                     fetchUrl = parsedTargetUrl.toString();
                 }
 
@@ -15164,9 +15257,20 @@
                 }
 
                 let response;
+                var isChunkedRange = false;
+                var chunksArray = [];
+                var expectedTotalSize = 0;
+                var detectedContentType = 'application/octet-stream';
+
                 try {
-                    var fetchOpts = { headers: headers };
+                    var fetchOpts = { headers: Object.assign({}, headers) };
                     if (controller) fetchOpts.signal = controller.signal;
+
+                    // Multi-range HTTP 206 chunked delivery for same-origin downloads
+                    if (isSameOrigin && fetchUrl.includes('action=downloadOriginalFile')) {
+                        fetchOpts.headers['Range'] = 'bytes=0-4194303'; // Initial <=4 MiB slice
+                    }
+
                     response = await fetch(fetchUrl, fetchOpts);
                 } catch (netErr) {
                     if (netErr.name === 'AbortError') {
@@ -15242,8 +15346,66 @@
                 if (contentType.includes('text/html') || contentType.includes('application/json')) {
                     throw new Error(isEn ? "Server returned an error response instead of an image." : "Server mengembalikan halaman web/error, bukan file gambar.");
                 }
+                detectedContentType = contentType || detectedContentType;
 
-                blob = await response.blob();
+                // Handle HTTP 206 Multi-Range Assembly
+                if (response.status === 206) {
+                    var crHeader = response.headers.get('content-range') || '';
+                    var crMatch = crHeader.match(/^bytes\s+(\d+)-(\d+)\/(\d+)$/i);
+                    expectedTotalSize = crMatch ? parseInt(crMatch[3], 10) : 0;
+
+                    var firstChunk = await response.blob();
+                    chunksArray.push(firstChunk);
+                    var totalLoaded = firstChunk.size;
+
+                    if (expectedTotalSize > 0 && totalLoaded < expectedTotalSize) {
+                        var sliceSize = 4 * 1024 * 1024;
+                        var currentStart = totalLoaded;
+
+                        while (currentStart < expectedTotalSize) {
+                            if (controller && controller.signal.aborted) {
+                                throw new Error(isEn ? "Download cancelled." : "Pengunduhan dibatalkan.");
+                            }
+                            var currentEnd = Math.min(currentStart + sliceSize - 1, expectedTotalSize - 1);
+                            var rangeSpec = 'bytes=' + currentStart + '-' + currentEnd;
+
+                            var sliceHeaders = Object.assign({}, headers, { 'Range': rangeSpec });
+                            var sliceRes = await fetch(fetchUrl, {
+                                headers: sliceHeaders,
+                                signal: controller ? controller.signal : undefined
+                            });
+
+                            if (sliceRes.status !== 206) {
+                                throw new Error("HTTP " + sliceRes.status + ": Expected HTTP 206 slice for " + rangeSpec);
+                            }
+
+                            var sliceBlob = await sliceRes.blob();
+                            var expectedSliceLen = currentEnd - currentStart + 1;
+                            if (sliceBlob.size !== expectedSliceLen) {
+                                throw new Error("CHUNK_TRUNCATED: Received " + sliceBlob.size + " bytes, expected " + expectedSliceLen);
+                            }
+
+                            chunksArray.push(sliceBlob);
+                            totalLoaded += sliceBlob.size;
+                            currentStart = currentEnd + 1;
+
+                            if (typeof opts.onProgress === 'function') {
+                                opts.onProgress({
+                                    loaded: totalLoaded,
+                                    total: expectedTotalSize,
+                                    percent: Math.round((totalLoaded / expectedTotalSize) * 100)
+                                });
+                            }
+                        }
+                    }
+
+                    blob = new Blob(chunksArray, { type: detectedContentType });
+                    if (expectedTotalSize > 0 && blob.size !== expectedTotalSize) {
+                        throw new Error("ASSEMBLED_SIZE_MISMATCH: Assembled " + blob.size + " bytes, expected " + expectedTotalSize);
+                    }
+                } else {
+                    blob = await response.blob();
+                }
             }
 
             if (!blob || blob.size === 0) {

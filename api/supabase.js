@@ -4,7 +4,24 @@
  */
 
 const crypto = require('crypto');
+const path = require('path');
 const { URL } = require('url');
+const { Readable, pipeline } = require('stream');
+const { getDriveProvider, urlParser, DownloadService, types } = require('./drive');
+
+function toNodeReadable(body) {
+  if (!body) return null;
+  if (typeof body.pipe === 'function') {
+    return body;
+  }
+  if (typeof Readable.fromWeb === 'function' && typeof body.getReader === 'function') {
+    return Readable.fromWeb(body);
+  }
+  if (body[Symbol.asyncIterator]) {
+    return Readable.from(body);
+  }
+  return null;
+}
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jqptagcbkyxxqqmxqusf.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_TL_Et1x8IlEwxKASjF0K8Q_t72R3f_9';
@@ -1653,6 +1670,18 @@ async function handler(req, res) {
       payload = {};
     }
 
+    if ((!payload.action) && req && req.url) {
+      try {
+        const u = new URL(req.url, 'http://localhost');
+        for (const [k, v] of u.searchParams.entries()) {
+          if (!payload[k]) payload[k] = v;
+        }
+      } catch (e) { }
+    }
+
+    // Security Gate: Strip any untrusted client-supplied authUser immediately
+    delete payload.authUser;
+
     let isWebhookRequest = false;
     if (payload.action === 'mayarWebhook') {
       isWebhookRequest = true;
@@ -1723,8 +1752,8 @@ async function handler(req, res) {
       case 'processPayment': return await handleProcessPayment(payload, res);
       case 'getDashboardStats': return await handleGetDashboardStats(payload, res);
       case 'logVisit': return await handleLogVisit(payload, res);
-      case 'getDriveContent': return await handleGetDriveContent(payload, res);
-      case 'getPhotos': return await handleGetDriveContent(payload, res);
+      case 'getDriveContent': return await handleGetDriveContent(payload, req, res);
+      case 'getPhotos': return await handleGetDriveContent(payload, req, res);
       case 'getAudioData': return await handleGetAudioData(payload, res);
       case 'submitFeedback': return await handleSubmitFeedback(payload, res);
       case 'getFeedbacks': return await handleGetFeedbacks(payload, res);
@@ -1733,6 +1762,8 @@ async function handler(req, res) {
       case 'markFeedbackRead': return await handleMarkFeedbackRead(payload, res);
       case 'getSystemUpdates': return await handleGetSystemUpdates(payload, res);
       case 'syncBackground': return await handleSyncBackground(payload, res);
+      case 'downloadOriginalFile': return await handleDownloadOriginalFile(payload, req, res);
+      case 'getPreviewImage': return await handleGetPreviewImage(payload, req, res);
       default: return error(res, `Unknown action: ${action}`, 404);
     }
   } catch (err) {
@@ -1742,6 +1773,9 @@ async function handler(req, res) {
 }
 
 module.exports = handler;
+module.exports.handleGetDriveContent = handleGetDriveContent;
+module.exports.handleGetPreviewImage = handleGetPreviewImage;
+module.exports.handleDownloadOriginalFile = handleDownloadOriginalFile;
 module.exports.parseAndValidateOrigin = parseAndValidateOrigin;
 module.exports.getAllowedOrigins = getAllowedOrigins;
 module.exports.handleCors = handleCors;
@@ -3802,84 +3836,421 @@ async function handleConfirmEmail(payload, res) {
   return success(res, { success: true, message: 'Email confirmed' });
 }
 
-async function handleGetDriveContent(payload, res) {
-  const folderUrlOrId = payload.folder_id || payload.folderId || payload.driveLink || payload.link;
-  if (!folderUrlOrId) return error(res, 'ID Folder tidak ditemukan.');
-
-  function extractFolderId(input) {
-    if (!input || typeof input !== 'string') return null;
-    const str = input.trim();
-    if (/[\u0000-\u001F\u007F]/.test(str)) return null;
-
-    if (str.startsWith('http://') || str.startsWith('https://')) {
-      if (!isSafeHttpsUrl(str)) return null;
-      try {
-        const u = new URL(str);
-        if (!isAllowedDriveHost(u.hostname)) return null;
-        const match = str.match(/[-\w]{25,}/);
-        return match ? match[0] : null;
-      } catch (_) {
-        return null;
-      }
-    }
-
-    if (/^[a-zA-Z0-9_-]{10,128}$/.test(str)) {
-      return str;
-    }
-    return null;
+async function handleGetDriveContent(payload, req, res) {
+  // Backwards compatibility if called with (payload, res)
+  if (!res && req && typeof req.writeHead === 'function') {
+    res = req;
+    req = null;
   }
 
-  const folderId = extractFolderId(folderUrlOrId);
-  if (!folderId || !/^[a-zA-Z0-9_-]{10,128}$/.test(folderId)) {
-    return error(res, 'Format link/ID Google Drive tidak valid.');
+  // 1. Resolve Session: Exclusively via authoritative server-side verifyUserSession (NEVER trust payload.authUser)
+  let authUser = null;
+  try {
+    authUser = await verifyUserSession(payload, req);
+  } catch (_) {
+    authUser = null;
+  }
+
+  const projectToken = (payload.token || payload.projectToken || '').trim();
+
+  // Extract client session token if provided
+  let clientSessionToken = '';
+  if (req && req.headers && req.headers['authorization']) {
+    const parts = req.headers['authorization'].split(' ');
+    if (parts.length === 2 && parts[0].toLowerCase() === 'bearer') {
+      clientSessionToken = parts[1].trim();
+    }
+  }
+  if (!clientSessionToken && payload.clientAccessToken) {
+    clientSessionToken = String(payload.clientAccessToken).trim();
+  }
+  if (!clientSessionToken && payload.sessionToken) {
+    clientSessionToken = String(payload.sessionToken).trim();
+  }
+  if (!clientSessionToken && payload.session) {
+    clientSessionToken = String(payload.session).trim();
+  }
+
+  let project = null;
+  let authoritativeFolderId = null;
+
+  // Case A: Photographer / Admin Session
+  if (authUser && authUser.username) {
+    if (projectToken) {
+      project = await findProjectForClient(projectToken);
+      if (!project) {
+        return error(res, 'Project tidak ditemukan.', 404);
+      }
+      const isOwner = project.Owner === authUser.username || authUser.role === 'Admin' || authUser.username === 'admin';
+      if (!isOwner) {
+        return error(res, 'Akses ditolak: Akun Anda tidak memiliki hak akses untuk project ini.', 403);
+      }
+      authoritativeFolderId = urlParser.extractFolderId(project['Drive Link'] || project.driveLink || project.DriveLink);
+    } else {
+      // Photographer previewing folder during project creation form
+      const clientFolderUrl = payload.folder_id || payload.folderId || payload.driveLink || payload.link;
+      if (clientFolderUrl) {
+        authoritativeFolderId = urlParser.extractFolderId(clientFolderUrl);
+      }
+
+      // Safe Folder Onboarding Boundary: Prevent Cross-Photographer Folder Enumeration
+      if (authoritativeFolderId && authUser.role !== 'Admin') {
+        // 1. Check if folder is already bound to another photographer's project in database
+        try {
+          const existingProjects = await supabaseQuery(`projects?or=(Drive%20Link.ilike.*${encodeURIComponent(authoritativeFolderId)}*,driveLink.ilike.*${encodeURIComponent(authoritativeFolderId)}*)&select=id,Owner`);
+          if (Array.isArray(existingProjects) && existingProjects.length > 0) {
+            const alien = existingProjects.find(p => p.Owner && String(p.Owner).toLowerCase().trim() !== String(authUser.username).toLowerCase().trim());
+            if (alien) {
+              return error(res, 'Akses ditolak: Folder Google Drive ini sudah terdaftar pada project milik fotografer lain.', 403);
+            }
+          }
+        } catch (_) { }
+
+        // 2. Check authoritative folder ownership with active drive provider
+        const prov = getDriveProvider();
+        if (prov && typeof prov.verifyFolderOwnership === 'function') {
+          const ownerCheck = await prov.verifyFolderOwnership(authoritativeFolderId, authUser.email || authUser.username);
+          if (!ownerCheck.verified) {
+            return error(res, `Akses ditolak: Folder Google Drive ini tidak dimiliki atau dibagikan oleh akun Anda (${authUser.username}).`, 403);
+          }
+        }
+      }
+    }
+  } else {
+    // Case B: Client Gallery Visitor
+    if (!projectToken) {
+      return error(res, 'Akses ditolak: Token project wajib disertakan.', 400);
+    }
+
+    // Client must have an active session
+    if (!clientSessionToken) {
+      return error(res, 'Akses ditolak: Memerlukan otorisasi sesi PIN terverifikasi atau login fotografer.', 403);
+    }
+
+    project = await findProjectForClient(projectToken);
+    if (!project) {
+      return error(res, 'Project tidak ditemukan.', 404);
+    }
+
+    const verifiedSession = await verifyClientGallerySession(clientSessionToken, project);
+    if (!verifiedSession) {
+      return error(res, 'Akses ditolak: Sesi galeri tidak valid atau telah kedaluwarsa.', 403);
+    }
+
+    // Authoritative folder ID from the server-side project record ONLY!
+    authoritativeFolderId = urlParser.extractFolderId(project['Drive Link'] || project.driveLink || project.DriveLink);
+  }
+
+  if (!authoritativeFolderId) {
+    return error(res, 'Link atau ID Google Drive pada project ini tidak valid atau belum diatur.', 400);
   }
 
   try {
-    const url = `https://drive.google.com/embeddedfolderview?id=${folderId}#list`;
-    const fetchRes = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      }
+    const provider = getDriveProvider();
+    const pageToken = payload.pageToken || payload.nextPageToken || null;
+    const pageSize = parseInt(payload.pageSize, 10) || 100;
+    const result = await provider.getFolderContent({
+      folderId: authoritativeFolderId,
+      projectToken,
+      pageToken,
+      pageSize
     });
-    const html = await fetchRes.text();
-
-    const images = [];
-    const folders = [];
-
-    const entryRegex = /<div class="flip-entry"[^>]*id="entry-([^"]+)"[^>]*>(.*?)<div class="flip-entry-title">([^<]+)<\/div>/g;
-    let m;
-    while ((m = entryRegex.exec(html)) !== null) {
-      const id = m[1];
-      const block = m[2];
-      const name = m[3].trim();
-      const isSubFolder = block.includes('/drive/folders/') || block.includes('folder');
-
-      if (isSubFolder) {
-        if (!name.startsWith('Selected Photos - ') && name !== 'MP3') {
-          folders.push({ id, name });
-        }
-      } else {
-        images.push({
-          id: id,
-          name: name,
-          url: `https://lh3.googleusercontent.com/d/${id}=w1000`
-        });
-      }
+    if (!result.success) {
+      const statusCode = result.code === 'FOLDER_NOT_FOUND' ? 404
+        : (result.code === 'FOLDER_ACCESS_DENIED' || result.code === 'SESSION_REQUIRED') ? 403
+        : 500;
+      return error(res, result.message, statusCode);
     }
-
-    images.sort((a, b) => a.name.localeCompare(b.name));
-    folders.sort((a, b) => a.name.localeCompare(b.name));
 
     return success(res, {
       success: true,
-      images: images,
-      folders: folders,
-      data: { images, folders }
+      images: result.data.images,
+      folders: result.data.folders,
+      rawFiles: result.data.rawFiles || [],
+      nextPageToken: result.data.nextPageToken || null,
+      isMockDrive: result.data.isMockDrive || false,
+      data: result.data
     });
   } catch (err) {
     console.error('Drive fetch error:', err);
     return error(res, 'Gagal memuat isi Google Drive.', 500);
   }
+}
+
+async function handleDownloadOriginalFile(payload, req, res) {
+  const fileId = payload.fileId || payload.id;
+  let projectToken = (payload.token || payload.projectToken || '').trim();
+  if (!projectToken && req && req.headers) {
+    projectToken = String(req.headers['x-client-token'] || req.headers['x-project-token'] || '').trim();
+  }
+
+  if (!fileId) {
+    return error(res, 'Parameter fileId wajib disertakan.', 400);
+  }
+
+  let sessionToken = '';
+  if (req && req.headers && req.headers['authorization']) {
+    const parts = req.headers['authorization'].split(' ');
+    if (parts.length === 2 && parts[0].toLowerCase() === 'bearer') {
+      sessionToken = parts[1].trim();
+    }
+  }
+  if (!sessionToken && payload.clientAccessToken) {
+    sessionToken = payload.clientAccessToken.trim();
+  }
+  if (!sessionToken && payload.sessionToken) {
+    sessionToken = payload.sessionToken.trim();
+  }
+  if (!sessionToken && payload.session) {
+    sessionToken = payload.session.trim();
+  }
+
+  if (!sessionToken) {
+    return error(res, 'Akses ditolak: Memerlukan otorisasi sesi untuk mengunduh berkas asli.', 403);
+  }
+
+  const provider = getDriveProvider();
+
+  const downloadService = new DownloadService({
+    driveProvider: provider,
+    sessionVerifier: async (token) => {
+      if (projectToken) {
+        const p = await findProjectForClient(projectToken);
+        if (p) {
+          const s = await verifyClientGallerySession(token, p);
+          if (s) {
+            return {
+              token: s.SessionID,
+              projectToken: projectToken,
+              isDownloadActive: String(p.AksesDownload || p.Akses_Download).toUpperCase() !== 'FALSE',
+              expiresAt: new Date(s.CreatedAt).getTime() + CLIENT_GALLERY_SESSION_TTL_MS
+            };
+          }
+        }
+      }
+      return null;
+    },
+    projectFinder: async (tok) => {
+      return await findProjectForClient(tok);
+    }
+  });
+
+  const authCheck = await downloadService.authorizeDownload({
+    sessionToken,
+    projectToken,
+    fileId,
+    provider
+  });
+
+  if (!authCheck.authorized) {
+    return error(res, authCheck.error.message, authCheck.error.status);
+  }
+
+  const rangeHeader = req && req.headers ? req.headers['range'] : null;
+
+  if (provider.name === 'google') {
+    const meta = await provider.getFileMetadata(fileId);
+    if (!meta) {
+      return error(res, 'Berkas foto tidak ditemukan di Google Drive.', 404);
+    }
+    const byteSize = parseInt(meta.size, 10) || 0;
+    const delivery = downloadService.evaluateDeliveryStrategy(byteSize);
+
+    const rangeInfo = downloadService.parseRangeHeader(rangeHeader, byteSize);
+    if (rangeInfo.invalid) {
+      res.writeHead(416, { 'Content-Range': `bytes */${byteSize}` });
+      return res.end();
+    }
+
+    if (!rangeInfo.isRange && delivery.isLarge && process.env.VERCEL) {
+      return error(res, delivery.message, 413);
+    }
+
+    const streamOpts = rangeInfo.isRange ? { range: `bytes=${rangeInfo.start}-${rangeInfo.end}` } : {};
+    const streamRes = await provider.fetchOriginalStream(fileId, streamOpts);
+    if (!streamRes.success) {
+      return error(res, streamRes.message, 500);
+    }
+
+    const cleanName = downloadService.sanitizeHeaderFilename(meta.name);
+    const nodeStream = toNodeReadable(streamRes.body);
+    if (!nodeStream) {
+      return error(res, 'Upstream stream tidak valid.', 502);
+    }
+
+    const resStatus = rangeInfo.isRange ? 206 : (streamRes.status || 200);
+    const headers = {
+      ...streamRes.headers,
+      'Content-Disposition': `attachment; filename="${cleanName}"`,
+      'X-Content-Type-Options': 'nosniff'
+    };
+    if (rangeInfo.isRange) {
+      headers['Content-Range'] = rangeInfo.contentRange;
+      headers['Content-Length'] = rangeInfo.chunkSize;
+    }
+
+    res.writeHead(resStatus, headers);
+    if (req) {
+      req.on('close', () => {
+        if (!res.writableEnded && typeof nodeStream.destroy === 'function') nodeStream.destroy();
+      });
+    }
+
+    pipeline(nodeStream, res, (err) => {
+      if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+        console.error('Download stream error:', err);
+        if (!res.headersSent) error(res, 'Gagal mengalirkan berkas.', 500);
+        else res.destroy(err);
+      }
+    });
+    return;
+  } else {
+    // Mock Provider delivery
+    let rangeOpts = null;
+    const preCheck = await provider.getFileBuffer({ fileId });
+    if (!preCheck.success) {
+      return error(res, preCheck.message, 404);
+    }
+
+    const rangeInfo = downloadService.parseRangeHeader(rangeHeader, preCheck.totalSize || preCheck.size);
+    if (rangeInfo.invalid) {
+      res.writeHead(416, { 'Content-Range': `bytes */${preCheck.totalSize || preCheck.size}` });
+      return res.end();
+    }
+
+    if (rangeInfo.isRange) {
+      rangeOpts = { start: rangeInfo.start, end: rangeInfo.end };
+    }
+
+    const fileRes = await provider.getFileBuffer({ fileId, range: rangeOpts });
+    if (!fileRes.success) {
+      return error(res, fileRes.message, 404);
+    }
+
+    const cleanName = downloadService.sanitizeHeaderFilename(fileRes.filename);
+    const resStatus = fileRes.isRange ? 206 : 200;
+    const respHeaders = {
+      'Content-Type': fileRes.mimeType,
+      'Content-Length': fileRes.size,
+      'Content-Disposition': `attachment; filename="${cleanName}"`,
+      'X-Content-Type-Options': 'nosniff',
+      'Accept-Ranges': 'bytes'
+    };
+    if (fileRes.contentRange) {
+      respHeaders['Content-Range'] = fileRes.contentRange;
+    }
+
+    res.writeHead(resStatus, respHeaders);
+    return res.end(fileRes.buffer);
+  }
+}
+
+async function handleGetPreviewImage(payload, req, res) {
+  const fileId = payload.fileId || payload.id;
+  let projectToken = (payload.token || payload.projectToken || '').trim();
+  if (!projectToken && req && req.headers) {
+    projectToken = String(req.headers['x-client-token'] || req.headers['x-project-token'] || '').trim();
+  }
+
+  if (!fileId) return error(res, 'Parameter fileId wajib disertakan.', 400);
+
+  // Reject RAW files from preview (RAW must not be returned as image/jpeg)
+  const previewExt = path.extname(fileId || '').toLowerCase();
+  const isRawFile = types.SUPPORTED_RAW_EXTENSIONS.includes(previewExt) || types.SUPPORTED_RAW_MIMES.includes(previewExt);
+  if (isRawFile) {
+    return error(res, 'Berkas RAW tidak dapat ditampilkan sebagai preview gambar langsung.', 415);
+  }
+
+  let sessionToken = '';
+  if (req && req.headers && req.headers['authorization']) {
+    const parts = req.headers['authorization'].split(' ');
+    if (parts.length === 2 && parts[0].toLowerCase() === 'bearer') {
+      sessionToken = parts[1].trim();
+    }
+  }
+  if (!sessionToken && payload.clientAccessToken) sessionToken = payload.clientAccessToken.trim();
+  if (!sessionToken && payload.sessionToken) sessionToken = payload.sessionToken.trim();
+  if (!sessionToken && payload.session) sessionToken = payload.session.trim();
+
+  // 1. Resolve Session: Exclusively via authoritative server-side verifyUserSession (NEVER trust payload.authUser)
+  let authUser = null;
+  try {
+    authUser = await verifyUserSession(payload, req);
+  } catch (_) {
+    authUser = null;
+  }
+
+  let project = null;
+  if (projectToken) {
+    project = await findProjectForClient(projectToken);
+  }
+
+  let isAuthorized = false;
+  if (authUser && authUser.username && project) {
+    if (project.Owner === authUser.username || authUser.role === 'Admin') isAuthorized = true;
+  } else if (sessionToken && project) {
+    const s = await verifyClientGallerySession(sessionToken, project);
+    if (s) isAuthorized = true;
+  }
+
+  if (!isAuthorized) {
+    return error(res, 'Akses ditolak: Memerlukan otorisasi sesi untuk melihat foto preview.', 403);
+  }
+
+  const provider = getDriveProvider();
+
+  const downloadService = new DownloadService({ driveProvider: provider });
+  const memCheck = await downloadService.verifyFileMembership({ project, session: { projectToken }, fileId, provider });
+  if (!memCheck.allowed) {
+    return error(res, memCheck.error.message, memCheck.error.status);
+  }
+
+  // Authoritative MIME resolution from metadata or extension
+  const metaName = (memCheck.meta && memCheck.meta.name) || fileId || '';
+  const metaExt = path.extname(metaName).toLowerCase();
+  const metaMime = (memCheck.meta && memCheck.meta.mimeType) || '';
+
+  // Reject RAW files from preview (authoritative metadata check)
+  const isAuthoritativeRaw = types.SUPPORTED_RAW_EXTENSIONS.includes(metaExt) ||
+    types.SUPPORTED_RAW_MIMES.includes(metaMime) ||
+    types.SUPPORTED_RAW_EXTENSIONS.includes(previewExt);
+  if (isAuthoritativeRaw) {
+    return error(res, 'Berkas RAW tidak dapat ditampilkan sebagai preview gambar langsung.', 415);
+  }
+
+  let previewMime = metaMime || (previewExt === '.png' ? 'image/png' : (previewExt === '.webp' ? 'image/webp' : 'image/jpeg'));
+  if (!previewMime.startsWith('image/')) previewMime = 'image/jpeg';
+
+  // Private size-bounded thumbnail streaming (Never send 25MB+ camera originals as gallery previews)
+  const streamRes = await provider.fetchThumbnailStream(fileId, { size: 1200 });
+  if (!streamRes.success) {
+    return error(res, streamRes.message || 'Gagal memuat thumbnail.', streamRes.status || 500);
+  }
+
+  const resHeaders = {
+    'Content-Type': streamRes.headers?.['Content-Type'] || previewMime,
+    'Cache-Control': 'private, max-age=86400',
+    'X-Content-Type-Options': 'nosniff'
+  };
+  if (streamRes.headers && streamRes.headers['Content-Length']) {
+    resHeaders['Content-Length'] = streamRes.headers['Content-Length'];
+  }
+
+  res.writeHead(200, resHeaders);
+
+  const nodeStream = toNodeReadable(streamRes.body);
+  if (!nodeStream) return error(res, 'Upstream stream tidak valid.', 502);
+
+  if (req) {
+    req.on('close', () => {
+      if (!res.writableEnded && typeof nodeStream.destroy === 'function') nodeStream.destroy();
+    });
+  }
+  pipeline(nodeStream, res, (err) => {
+    if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+      console.error('Preview stream error:', err);
+    }
+  });
 }
 
 async function handleGetAudioData(payload, res) {
