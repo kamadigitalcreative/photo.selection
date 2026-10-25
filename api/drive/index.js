@@ -21,16 +21,18 @@ const {
 
 const MockDriveProvider = require('./mockProvider');
 const GoogleDriveProvider = require('./googleProvider');
+const PublicDriveProvider = require('./publicProvider');
 const DownloadService = require('./downloadService');
 
 // Singleton provider instances
 let defaultMockProvider = null;
 let defaultGoogleProvider = null;
+let defaultPublicProvider = null;
 
 /**
  * Returns the active Drive provider according to server environment configuration.
- * @param {'mock'|'google'} [overrideType] 
- * @returns {MockDriveProvider|GoogleDriveProvider}
+ * @param {'mock'|'google'|'public'|'public_link'} [overrideType] 
+ * @returns {MockDriveProvider|GoogleDriveProvider|PublicDriveProvider}
  */
 function getDriveProvider(overrideType) {
   const isProd = process.env.NODE_ENV === 'production';
@@ -41,6 +43,10 @@ function getDriveProvider(overrideType) {
     if (cleanOverride === 'google') {
       if (!defaultGoogleProvider) defaultGoogleProvider = new GoogleDriveProvider();
       return defaultGoogleProvider;
+    }
+    if (cleanOverride === 'public' || cleanOverride === 'public_link' || cleanOverride === 'public_drive') {
+      if (!defaultPublicProvider) defaultPublicProvider = new PublicDriveProvider();
+      return defaultPublicProvider;
     }
     if (cleanOverride === 'mock') {
       if (isProd) {
@@ -58,6 +64,11 @@ function getDriveProvider(overrideType) {
   if (envType === 'google') {
     if (!defaultGoogleProvider) defaultGoogleProvider = new GoogleDriveProvider();
     return defaultGoogleProvider;
+  }
+
+  if (envType === 'public' || envType === 'public_link' || envType === 'public_drive' || process.env.ENABLE_PUBLIC_DRIVE === 'true') {
+    if (!defaultPublicProvider) defaultPublicProvider = new PublicDriveProvider();
+    return defaultPublicProvider;
   }
 
   if (envType === 'mock' || process.env.USE_MOCK_DRIVE === 'true') {
@@ -114,6 +125,7 @@ module.exports = {
   getDriveProvider,
   MockDriveProvider,
   GoogleDriveProvider,
+  PublicDriveProvider,
   DownloadService,
   urlParser: {
     isAllowedDriveHost,

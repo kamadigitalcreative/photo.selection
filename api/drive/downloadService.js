@@ -169,7 +169,7 @@ class DownloadService {
       };
     }
 
-    if (!provider || (provider.name !== 'mock' && provider.name !== 'google')) {
+    if (!provider || (provider.name !== 'mock' && provider.name !== 'google' && provider.name !== 'public_link' && provider.name !== 'public')) {
       return {
         allowed: false,
         error: { code: ERROR_CODES.DRIVE_CONFIG_ERROR, message: 'Drive provider tidak valid atau tidak dikenali.', status: 500 }
@@ -180,7 +180,7 @@ class DownloadService {
     const projectToken = project.Token || project.token || (session && session.projectToken);
 
     // Check in Mock Mode if not using authoritative metadata
-    const hasAuthoritativeMetadata = provider.name === 'google' || (provider.customFileMeta && provider.customFileMeta.has(fileId)) || (fileId.startsWith('file-') && typeof provider.getFileMetadata === 'function');
+    const hasAuthoritativeMetadata = provider.name === 'google' || provider.name === 'public_link' || provider.name === 'public' || (provider.customFileMeta && provider.customFileMeta.has(fileId)) || (fileId.startsWith('file-') && typeof provider.getFileMetadata === 'function');
 
     if (!hasAuthoritativeMetadata && provider.name === 'mock') {
       const ext = path.extname(safeFilename).toLowerCase();
@@ -254,7 +254,16 @@ class DownloadService {
 
     // Check in Google Drive Mode or any provider that implements getFileMetadata
     if (provider.name === 'google' || typeof provider.getFileMetadata === 'function') {
-      const meta = await provider.getFileMetadata(fileId);
+      let meta = await provider.getFileMetadata(fileId);
+
+      const rawFolder = project['Drive Link'] || project.driveLink || project.DriveLink || project.google_drive_folder_id || project.folderId || '';
+      const projectFolderId = extractFolderId(rawFolder) || rawFolder;
+
+      // Support cold serverless start: resolve file from project root if not in cache
+      if (!meta && projectFolderId && typeof provider.resolveProjectFile === 'function') {
+        meta = await provider.resolveProjectFile(fileId, projectFolderId);
+      }
+
       if (!meta) {
         return {
           allowed: false,
@@ -293,8 +302,6 @@ class DownloadService {
       }
 
       // FIX 2: Check parent folder ancestry up to authorized project root
-      const rawFolder = project['Drive Link'] || project.driveLink || project.DriveLink || project.google_drive_folder_id || project.folderId || '';
-      const projectFolderId = extractFolderId(rawFolder) || rawFolder;
       const parents = Array.isArray(meta.parents) ? meta.parents : [];
       let isAncestorVerified = false;
 
@@ -312,6 +319,10 @@ class DownloadService {
             break;
           }
         }
+      }
+
+      if (!isAncestorVerified && typeof provider.isProjectFile === 'function') {
+        isAncestorVerified = await provider.isProjectFile(fileId, projectFolderId);
       }
 
       if (!isAncestorVerified) {
@@ -451,11 +462,11 @@ class DownloadService {
     }
 
     const start = parseInt(match[1], 10);
-    if (isNaN(start) || start < 0 || start >= totalSize) {
+    if (isNaN(start) || start < 0 || (totalSize > 0 && start >= totalSize)) {
       return { isRange: false, invalid: true };
     }
 
-    let end = match[2] ? parseInt(match[2], 10) : totalSize - 1;
+    let end = match[2] ? parseInt(match[2], 10) : (totalSize > 0 ? totalSize - 1 : start + maxChunkSize - 1);
     if (isNaN(end) || end < start) {
       return { isRange: false, invalid: true };
     }
@@ -464,7 +475,7 @@ class DownloadService {
     if (end - start + 1 > maxChunkSize) {
       end = start + maxChunkSize - 1;
     }
-    if (end >= totalSize) {
+    if (totalSize > 0 && end >= totalSize) {
       end = totalSize - 1;
     }
 
@@ -475,7 +486,7 @@ class DownloadService {
       end,
       chunkSize,
       totalSize,
-      contentRange: `bytes ${start}-${end}/${totalSize}`
+      contentRange: totalSize > 0 ? `bytes ${start}-${end}/${totalSize}` : `bytes ${start}-${end}/*`
     };
   }
 
