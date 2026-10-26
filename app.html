@@ -12826,24 +12826,6 @@
                         imgEl.src = previewBlobCache.get(safeUrl);
                     } else {
                         imgEl.src = localPlaceholderSvg;
-                        if (index < 12) {
-                            if (typeof enqueueThumbnailFetch === 'function') {
-                                enqueueThumbnailFetch(imgEl, safeGridUrl, true);
-                            } else {
-                                loadAuthenticatedPreview(imgEl, safeGridUrl, localPlaceholderSvg);
-                            }
-                        } else {
-                            var obs = (typeof getPreviewObserver === 'function') ? getPreviewObserver() : null;
-                            if (obs) {
-                                obs.observe(imgEl);
-                            } else {
-                                if (typeof enqueueThumbnailFetch === 'function') {
-                                    enqueueThumbnailFetch(imgEl, safeGridUrl, false);
-                                } else {
-                                    loadAuthenticatedPreview(imgEl, safeGridUrl, localPlaceholderSvg);
-                                }
-                            }
-                        }
                     }
                     card.appendChild(imgEl);
 
@@ -12931,6 +12913,28 @@
                     card.appendChild(overlay);
 
                     if (container) container.appendChild(card);
+
+                    // Priority thumbnail loading: scheduled AFTER container.appendChild(card) so imgEl is attached to document
+                    if (!previewBlobCache.has(safeGridUrl) && !previewBlobCache.has(safeUrl)) {
+                        if (index < 12) {
+                            if (typeof enqueueThumbnailFetch === 'function') {
+                                enqueueThumbnailFetch(imgEl, safeGridUrl, true);
+                            } else {
+                                loadAuthenticatedPreview(imgEl, safeGridUrl, localPlaceholderSvg);
+                            }
+                        } else {
+                            var obs = (typeof getPreviewObserver === 'function') ? getPreviewObserver() : null;
+                            if (obs) {
+                                obs.observe(imgEl);
+                            } else {
+                                if (typeof enqueueThumbnailFetch === 'function') {
+                                    enqueueThumbnailFetch(imgEl, safeGridUrl, false);
+                                } else {
+                                    loadAuthenticatedPreview(imgEl, safeGridUrl, localPlaceholderSvg);
+                                }
+                            }
+                        }
+                    }
                 });
             }
 
@@ -15603,11 +15607,12 @@
                             sessionStorage.setItem(cacheKey, JSON.stringify(content));
                         } catch (e) { }
 
-                        // Background pre-warm the first 6 thumbnails with low concurrency
+                        // Background pre-warm the first 6 thumbnails with low concurrency (using canonical 800px adaptive URL)
                         if (content.images && content.images.length > 0) {
                             var firstSix = content.images.slice(0, 6);
                             firstSix.forEach(function (img) {
-                                var thumbUrl = img.previewUrl || img.url;
+                                var rawThumb = img.previewUrl || img.url;
+                                var thumbUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(rawThumb, 800) : rawThumb;
                                 if (thumbUrl && !previewBlobCache.has(thumbUrl)) {
                                     fetchAuthenticatedPreviewBlob(thumbUrl, { isHighPriority: false }).catch(function () {});
                                 }
@@ -15637,7 +15642,8 @@
                                             try { sessionStorage.setItem(subCacheKey, JSON.stringify(subContent)); } catch (_) {}
                                             if (subContent.images && subContent.images.length > 0) {
                                                 subContent.images.slice(0, 6).forEach(function (img) {
-                                                    var thumbUrl = img.previewUrl || img.url;
+                                                    var rawThumb = img.previewUrl || img.url;
+                                                    var thumbUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(rawThumb, 800) : rawThumb;
                                                     if (thumbUrl && !previewBlobCache.has(thumbUrl)) {
                                                         fetchAuthenticatedPreviewBlob(thumbUrl, { isHighPriority: false }).catch(function () {});
                                                     }
