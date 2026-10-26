@@ -119,6 +119,12 @@ class PublicDriveProvider {
 
     // Cache of folder contents: folderId -> Set of fileIds
     this.folderFileSet = new Map();
+
+    // Short-lived bounded cache of parsed folder content (60s TTL, max 50 entries)
+    this.folderContentCache = new Map();
+    this.inFlightFolderPromises = new Map();
+    this.FOLDER_CACHE_TTL_MS = 60 * 1000;
+    this.MAX_FOLDER_CACHE_ENTRIES = 50;
   }
 
   getFetch() {
@@ -146,10 +152,21 @@ class PublicDriveProvider {
       };
     }
 
+    const cacheKey = `${cleanFolderId}:${projectToken || ''}`;
+    const cached = this.folderContentCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < this.FOLDER_CACHE_TTL_MS)) {
+      return { success: true, data: cached.data };
+    }
+
+    if (this.inFlightFolderPromises.has(cacheKey)) {
+      return this.inFlightFolderPromises.get(cacheKey);
+    }
+
     const targetUrl = `https://drive.google.com/embeddedfolderview?id=${cleanFolderId}#list`;
     const fetchImpl = this.getFetch();
 
-    try {
+    const fetchPromise = (async () => {
+      try {
       const response = await fetchImpl(targetUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -246,14 +263,20 @@ class PublicDriveProvider {
 
         this.fileCache.set(id, metaItem);
 
+        const gridPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&size=800&token=${encodeURIComponent(projectToken || '')}`;
+        const highResPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&size=2048&token=${encodeURIComponent(projectToken || '')}`;
+        const originalDlUrl = `/api/bridge?action=downloadOriginalFile&fileId=${id}&token=${encodeURIComponent(projectToken || '')}`;
+
         if (isStandardImage) {
           images.push({
             id,
             name: title,
             mimeType: metaItem.mimeType,
             size: 0,
-            url: `/api/bridge?action=getPreviewImage&fileId=${id}&token=${encodeURIComponent(projectToken || '')}`,
-            originalUrl: `/api/bridge?action=downloadOriginalFile&fileId=${id}&token=${encodeURIComponent(projectToken || '')}`,
+            url: gridPreviewUrl,
+            previewUrl: gridPreviewUrl,
+            highResUrl: highResPreviewUrl,
+            originalUrl: originalDlUrl,
             isMockFixture: false,
             isRaw: false
           });
@@ -263,8 +286,10 @@ class PublicDriveProvider {
             name: title,
             mimeType: metaItem.mimeType,
             size: 0,
-            url: `/api/bridge?action=getPreviewImage&fileId=${id}&token=${encodeURIComponent(projectToken || '')}`,
-            originalUrl: `/api/bridge?action=downloadOriginalFile&fileId=${id}&token=${encodeURIComponent(projectToken || '')}`,
+            url: gridPreviewUrl,
+            previewUrl: gridPreviewUrl,
+            highResUrl: highResPreviewUrl,
+            originalUrl: originalDlUrl,
             isMockFixture: false,
             isRaw: true,
             downloadOnly: true
@@ -308,14 +333,20 @@ class PublicDriveProvider {
           };
           this.fileCache.set(id, metaItem);
 
+          const gridPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&size=800&token=${encodeURIComponent(projectToken || '')}`;
+          const highResPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&size=2048&token=${encodeURIComponent(projectToken || '')}`;
+          const originalDlUrl = `/api/bridge?action=downloadOriginalFile&fileId=${id}&token=${encodeURIComponent(projectToken || '')}`;
+
           if (isStandardImage) {
             images.push({
               id,
               name,
               mimeType: metaItem.mimeType,
               size: 0,
-              url: `/api/bridge?action=getPreviewImage&fileId=${id}&token=${encodeURIComponent(projectToken || '')}`,
-              originalUrl: `/api/bridge?action=downloadOriginalFile&fileId=${id}&token=${encodeURIComponent(projectToken || '')}`,
+              url: gridPreviewUrl,
+              previewUrl: gridPreviewUrl,
+              highResUrl: highResPreviewUrl,
+              originalUrl: originalDlUrl,
               isMockFixture: false,
               isRaw: false
             });
@@ -325,8 +356,10 @@ class PublicDriveProvider {
               name,
               mimeType: metaItem.mimeType,
               size: 0,
-              url: `/api/bridge?action=getPreviewImage&fileId=${id}&token=${encodeURIComponent(projectToken || '')}`,
-              originalUrl: `/api/bridge?action=downloadOriginalFile&fileId=${id}&token=${encodeURIComponent(projectToken || '')}`,
+              url: gridPreviewUrl,
+              previewUrl: gridPreviewUrl,
+              highResUrl: highResPreviewUrl,
+              originalUrl: originalDlUrl,
               isMockFixture: false,
               isRaw: true,
               downloadOnly: true
@@ -337,18 +370,26 @@ class PublicDriveProvider {
 
       this.folderFileSet.set(cleanFolderId, folderFiles);
 
+      const resultData = {
+        images,
+        folders,
+        rawFiles,
+        unsupportedFiles,
+        isMockDrive: false,
+        isEmpty: images.length === 0 && rawFiles.length === 0 && folders.length === 0,
+        nextPageToken: null,
+        total: images.length + rawFiles.length
+      };
+
+      if (this.folderContentCache.size >= this.MAX_FOLDER_CACHE_ENTRIES) {
+        const oldestKey = this.folderContentCache.keys().next().value;
+        if (oldestKey) this.folderContentCache.delete(oldestKey);
+      }
+      this.folderContentCache.set(cacheKey, { data: resultData, timestamp: Date.now() });
+
       return {
         success: true,
-        data: {
-          images,
-          folders,
-          rawFiles,
-          unsupportedFiles,
-          isMockDrive: false,
-          isEmpty: images.length === 0 && rawFiles.length === 0 && folders.length === 0,
-          nextPageToken: null,
-          total: images.length + rawFiles.length
-        }
+        data: resultData
       };
     } catch (netErr) {
       return {
@@ -357,7 +398,13 @@ class PublicDriveProvider {
         message: `Koneksi ke Google Drive gagal: ${netErr.message}`
       };
     }
-  }
+  })().finally(() => {
+    this.inFlightFolderPromises.delete(cacheKey);
+  });
+
+  this.inFlightFolderPromises.set(cacheKey, fetchPromise);
+  return fetchPromise;
+}
 
   /**
    * Retrieves file metadata. Returns cached record or null if not yet indexed.

@@ -4360,14 +4360,19 @@ async function handleGetPreviewImage(payload, req, res) {
   if (!previewMime.startsWith('image/')) previewMime = 'image/jpeg';
 
   // Private size-bounded thumbnail streaming (Never send 25MB+ camera originals as gallery previews)
-  const streamRes = await provider.fetchThumbnailStream(fileId, { size: 1200 });
+  let requestedSize = parseInt(payload.size || payload.width || payload.s || (req && req.query && (req.query.size || req.query.width || req.query.s)) || '1200', 10);
+  if (isNaN(requestedSize) || requestedSize <= 0) requestedSize = 1200;
+  if (requestedSize > 2400) requestedSize = 2400;
+  if (requestedSize < 100) requestedSize = 100;
+
+  const streamRes = await provider.fetchThumbnailStream(fileId, { size: requestedSize });
   if (!streamRes.success) {
     return error(res, streamRes.message || 'Gagal memuat thumbnail.', streamRes.status || 500);
   }
 
   const resHeaders = {
     'Content-Type': streamRes.headers?.['Content-Type'] || previewMime,
-    'Cache-Control': 'private, max-age=86400',
+    'Cache-Control': 'private, max-age=86400, stale-while-revalidate=3600',
     'X-Content-Type-Options': 'nosniff'
   };
   if (streamRes.headers && streamRes.headers['Content-Length']) {

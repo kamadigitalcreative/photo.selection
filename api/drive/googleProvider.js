@@ -238,14 +238,20 @@ class GoogleDriveProvider {
         const isRawImage = SUPPORTED_RAW_EXTENSIONS.includes(ext) || SUPPORTED_RAW_MIMES.includes(file.mimeType);
         const byteSize = parseInt(file.size, 10) || 0;
 
+        const gridPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${file.id}&size=800&token=${encodeURIComponent(projectToken || '')}`;
+        const highResPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${file.id}&size=2048&token=${encodeURIComponent(projectToken || '')}`;
+        const originalDlUrl = `/api/bridge?action=downloadOriginalFile&fileId=${file.id}&token=${encodeURIComponent(projectToken || '')}`;
+
         if (isStandardImage) {
           images.push({
             id: file.id,
             name: file.name,
             mimeType: file.mimeType || 'image/jpeg',
             size: byteSize,
-            url: `/api/bridge?action=getPreviewImage&fileId=${file.id}&token=${encodeURIComponent(projectToken || '')}`,
-            originalUrl: `/api/bridge?action=downloadOriginalFile&fileId=${file.id}&token=${encodeURIComponent(projectToken || '')}`,
+            url: gridPreviewUrl,
+            previewUrl: gridPreviewUrl,
+            highResUrl: highResPreviewUrl,
+            originalUrl: originalDlUrl,
             isMockFixture: false,
             isRaw: false,
             metadata: file.imageMediaMetadata || null
@@ -256,8 +262,10 @@ class GoogleDriveProvider {
             name: file.name,
             mimeType: file.mimeType || 'application/octet-stream',
             size: byteSize,
-            url: `/api/bridge?action=getPreviewImage&fileId=${file.id}&token=${encodeURIComponent(projectToken || '')}`,
-            originalUrl: `/api/bridge?action=downloadOriginalFile&fileId=${file.id}&token=${encodeURIComponent(projectToken || '')}`,
+            url: gridPreviewUrl,
+            previewUrl: gridPreviewUrl,
+            highResUrl: highResPreviewUrl,
+            originalUrl: originalDlUrl,
             isMockFixture: false,
             isRaw: true,
             downloadOnly: true,

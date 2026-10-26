@@ -11680,6 +11680,7 @@
         }
 
         function openSubFolder(fId, fName) {
+            if (typeof revokeActivePreviewObjectUrls === 'function') revokeActivePreviewObjectUrls();
             clientState.folderHistory.push({ id: clientState.currentFolderId, name: clientState.currentFolderName });
             clientState.currentFolderId = fId;
             clientState.currentFolderName = fName;
@@ -11687,6 +11688,7 @@
         }
 
         function goBackFolder() {
+            if (typeof revokeActivePreviewObjectUrls === 'function') revokeActivePreviewObjectUrls();
             if (clientState.folderHistory.length > 0) {
                 var prev = clientState.folderHistory.pop();
                 clientState.currentFolderId = prev.id;
@@ -11822,18 +11824,30 @@
             window.viewerLoadRequestId = (window.viewerLoadRequestId || 0) + 1;
             var currentReq = window.viewerLoadRequestId;
 
-            if (previewBlobCache.has(safeUrl)) {
+            var targetItem = window.viewerActiveList[window.currentViewerIndex] || {};
+            var targetRawUrl = (targetItem.url !== undefined && targetItem.url !== null) ? String(targetItem.url) : rawUrl;
+            var targetGridUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(targetRawUrl, 800) : targetRawUrl;
+            var highResUrl = (targetItem && targetItem.highResUrl) ? targetItem.highResUrl : ((typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(targetRawUrl, 2048) : targetRawUrl);
+
+            // 1. Instant visual feedback from cached high-res or cached grid thumbnail (0ms lag)
+            if (previewBlobCache.has(highResUrl)) {
+                img.src = previewBlobCache.get(highResUrl);
+            } else if (previewBlobCache.has(targetGridUrl)) {
+                img.src = previewBlobCache.get(targetGridUrl);
+            } else if (previewBlobCache.has(safeUrl)) {
                 img.src = previewBlobCache.get(safeUrl);
             } else {
                 img.src = safePlaceholder;
-                fetchAuthenticatedPreviewBlob(safeUrl).then(function (blobUrl) {
-                    if (window.viewerLoadRequestId === currentReq && img) {
-                        img.src = blobUrl || safePlaceholder;
+            }
+
+            // 2. High-resolution preview fetch for fullscreen & crisp zoom
+            if (!previewBlobCache.has(highResUrl)) {
+                fetchAuthenticatedPreviewBlob(highResUrl, { isHighPriority: true }).then(function (blobUrl) {
+                    if (window.viewerLoadRequestId === currentReq && img && blobUrl) {
+                        img.src = blobUrl;
                     }
                 }).catch(function () {
-                    if (window.viewerLoadRequestId === currentReq && img) {
-                        img.src = safePlaceholder;
-                    }
+                    // Gracefully keep current preview
                 });
             }
 
@@ -11897,18 +11911,28 @@
             window.viewerLoadRequestId = (window.viewerLoadRequestId || 0) + 1;
             var currentReq = window.viewerLoadRequestId;
 
-            if (previewBlobCache.has(safeUrl)) {
+            var nextGridUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(rawNextUrl, 800) : rawNextUrl;
+            var nextHighResUrl = (nextImg && nextImg.highResUrl) ? nextImg.highResUrl : ((typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(rawNextUrl, 2048) : rawNextUrl);
+
+            // 1. Instant visual feedback from cached high-res or cached grid thumbnail
+            if (previewBlobCache.has(nextHighResUrl)) {
+                imgEl.src = previewBlobCache.get(nextHighResUrl);
+            } else if (previewBlobCache.has(nextGridUrl)) {
+                imgEl.src = previewBlobCache.get(nextGridUrl);
+            } else if (previewBlobCache.has(safeUrl)) {
                 imgEl.src = previewBlobCache.get(safeUrl);
             } else {
                 imgEl.src = safePlaceholder;
-                fetchAuthenticatedPreviewBlob(safeUrl).then(function (blobUrl) {
-                    if (window.viewerLoadRequestId === currentReq && imgEl) {
-                        imgEl.src = blobUrl || safePlaceholder;
+            }
+
+            // 2. High-resolution preview fetch for fullscreen & crisp zoom
+            if (!previewBlobCache.has(nextHighResUrl)) {
+                fetchAuthenticatedPreviewBlob(nextHighResUrl, { isHighPriority: true }).then(function (blobUrl) {
+                    if (window.viewerLoadRequestId === currentReq && imgEl && blobUrl) {
+                        imgEl.src = blobUrl;
                     }
                 }).catch(function () {
-                    if (window.viewerLoadRequestId === currentReq && imgEl) {
-                        imgEl.src = safePlaceholder;
-                    }
+                    // Gracefully keep current preview
                 });
             }
 
@@ -12217,10 +12241,34 @@
             });
         }
 
-        // Phase 6 Preview Object URL & Blob Cache Management
+        // Phase 6 Preview Object URL, Adaptive Quality & Queue Management
         var previewBlobCache = new Map();
         var activePreviewObjectUrls = new Set();
-        var MAX_PREVIEW_CACHE = 100;
+        var inFlightRequests = new Map();
+        var pendingThumbnailQueue = [];
+        var activeFetchCount = 0;
+        var MAX_CONCURRENT_FETCHES = 4;
+        var MAX_PREVIEW_CACHE = 150;
+        var previewObserver = null;
+
+        function getAdaptivePreviewUrl(rawUrl, size) {
+            if (!rawUrl || typeof rawUrl !== 'string' || rawUrl.startsWith('data:') || rawUrl.startsWith('blob:')) {
+                return rawUrl;
+            }
+            try {
+                var parsed = new URL(rawUrl, window.location.origin);
+                if (size) {
+                    parsed.searchParams.set('size', String(size));
+                }
+                return parsed.pathname + parsed.search;
+            } catch (_) {
+                if (size && rawUrl.includes('/api/bridge')) {
+                    var sep = rawUrl.includes('?') ? '&' : '?';
+                    return rawUrl + sep + 'size=' + encodeURIComponent(String(size));
+                }
+                return rawUrl;
+            }
+        }
 
         function revokeActivePreviewObjectUrls() {
             activePreviewObjectUrls.forEach(function (u) {
@@ -12228,75 +12276,166 @@
             });
             activePreviewObjectUrls.clear();
             previewBlobCache.clear();
+            inFlightRequests.clear();
+            pendingThumbnailQueue = [];
+            activeFetchCount = 0;
         }
 
-        async function fetchAuthenticatedPreviewBlob(rawUrl) {
+        function getPreviewObserver() {
+            if (!previewObserver && typeof IntersectionObserver !== 'undefined') {
+                previewObserver = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) {
+                            var target = entry.target;
+                            previewObserver.unobserve(target);
+                            var targetUrl = target.dataset.src;
+                            if (targetUrl) {
+                                enqueueThumbnailFetch(target, targetUrl, false);
+                            }
+                        }
+                    });
+                }, {
+                    root: null,
+                    rootMargin: '250px 0px',
+                    threshold: 0.01
+                });
+            }
+            return previewObserver;
+        }
+
+        function enqueueThumbnailFetch(imgEl, url, isHighPriority) {
+            if (!url) return;
+            if (previewBlobCache.has(url)) {
+                if (imgEl) imgEl.src = previewBlobCache.get(url);
+                return;
+            }
+            var task = {
+                imgEl: imgEl,
+                url: url,
+                isHighPriority: Boolean(isHighPriority),
+                isCancelled: false
+            };
+            if (isHighPriority) {
+                pendingThumbnailQueue.unshift(task);
+            } else {
+                pendingThumbnailQueue.push(task);
+            }
+            processThumbnailQueue();
+        }
+
+        function processThumbnailQueue() {
+            while (activeFetchCount < MAX_CONCURRENT_FETCHES && pendingThumbnailQueue.length > 0) {
+                var task = pendingThumbnailQueue.shift();
+                if (!task || task.isCancelled) continue;
+                // If card element was unmounted or discarded during fast scrolling, skip obsolete work
+                if (task.imgEl && !document.body.contains(task.imgEl)) {
+                    continue;
+                }
+                if (previewBlobCache.has(task.url)) {
+                    if (task.imgEl) task.imgEl.src = previewBlobCache.get(task.url);
+                    continue;
+                }
+                executeThumbnailTask(task);
+            }
+        }
+
+        function executeThumbnailTask(task) {
+            activeFetchCount++;
+            fetchAuthenticatedPreviewBlob(task.url)
+                .then(function (blobUrl) {
+                    if (task.imgEl && blobUrl && document.body.contains(task.imgEl)) {
+                        task.imgEl.src = blobUrl;
+                    }
+                })
+                .catch(function () {})
+                .finally(function () {
+                    activeFetchCount--;
+                    processThumbnailQueue();
+                });
+        }
+
+        async function fetchAuthenticatedPreviewBlob(rawUrl, options) {
+            options = options || {};
             if (!rawUrl || rawUrl.startsWith('data:') || rawUrl.startsWith('blob:')) {
                 return rawUrl;
             }
             if (previewBlobCache.has(rawUrl)) {
                 return previewBlobCache.get(rawUrl);
             }
-
-            try {
-                var parsed = new URL(rawUrl, window.location.origin);
-                var isSameOrigin = parsed.origin === window.location.origin;
-                if (!isSameOrigin) {
-                    return rawUrl;
-                }
-
-                // Strip session secrets from query params (never expose session tokens in URL)
-                var queryToken = parsed.searchParams.get('token') || '';
-                parsed.searchParams.delete('clientAccessToken');
-                parsed.searchParams.delete('sessionToken');
-                parsed.searchParams.delete('session');
-                parsed.searchParams.delete('auth');
-                var fetchUrl = parsed.pathname + parsed.search;
-
-                var tokenVal = (typeof clientState !== 'undefined' && clientState.token) ? clientState.token : queryToken;
-                var sessionToken = (typeof getClientAccessToken === 'function' ? getClientAccessToken(tokenVal) : '') ||
-                    (typeof clientRouteIdentifier !== 'undefined' && clientRouteIdentifier ? getClientAccessToken(clientRouteIdentifier) : '') ||
-                    (typeof clientState !== 'undefined' ? (clientState.clientAccessToken || clientState.sessionToken) : '') ||
-                    (typeof adminState !== 'undefined' && adminState.sessionToken ? adminState.sessionToken : '');
-
-                var headers = {};
-                if (tokenVal) headers['X-Client-Token'] = tokenVal;
-                if (sessionToken) headers['Authorization'] = 'Bearer ' + sessionToken;
-
-                var res = await fetch(fetchUrl, { headers: headers });
-                if (!res.ok) {
-                    if (res.status === 401 || res.status === 403) {
-                        console.warn('[PreviewAuth] Unauthorized or session expired (HTTP ' + res.status + ')');
-                    }
-                    return null;
-                }
-
-                var blob = await res.blob();
-                var objectUrl = URL.createObjectURL(blob);
-
-                // Enforce cache size ceiling (LRU eviction)
-                if (previewBlobCache.size >= MAX_PREVIEW_CACHE) {
-                    var firstKey = previewBlobCache.keys().next().value;
-                    if (firstKey) {
-                        var oldUrl = previewBlobCache.get(firstKey);
-                        previewBlobCache.delete(firstKey);
-                        activePreviewObjectUrls.delete(oldUrl);
-                        try { URL.revokeObjectURL(oldUrl); } catch (_) { }
-                    }
-                }
-
-                activePreviewObjectUrls.add(objectUrl);
-                previewBlobCache.set(rawUrl, objectUrl);
-                return objectUrl;
-            } catch (err) {
-                console.warn('[PreviewAuth] Failed to load preview blob:', err);
-                return null;
+            if (inFlightRequests.has(rawUrl)) {
+                return inFlightRequests.get(rawUrl);
             }
+
+            var fetchPromise = (async function () {
+                try {
+                    var parsed = new URL(rawUrl, window.location.origin);
+                    var isSameOrigin = parsed.origin === window.location.origin;
+                    if (!isSameOrigin) {
+                        return rawUrl;
+                    }
+
+                    // Strip session secrets from query params (never expose session tokens in URL)
+                    var queryToken = parsed.searchParams.get('token') || '';
+                    parsed.searchParams.delete('clientAccessToken');
+                    parsed.searchParams.delete('sessionToken');
+                    parsed.searchParams.delete('session');
+                    parsed.searchParams.delete('auth');
+                    var fetchUrl = parsed.pathname + parsed.search;
+
+                    var tokenVal = (typeof clientState !== 'undefined' && clientState.token) ? clientState.token : queryToken;
+                    var sessionToken = (typeof getClientAccessToken === 'function' ? getClientAccessToken(tokenVal) : '') ||
+                        (typeof clientRouteIdentifier !== 'undefined' && clientRouteIdentifier ? getClientAccessToken(clientRouteIdentifier) : '') ||
+                        (typeof clientState !== 'undefined' ? (clientState.clientAccessToken || clientState.sessionToken) : '') ||
+                        (typeof adminState !== 'undefined' && adminState.sessionToken ? adminState.sessionToken : '');
+
+                    var headers = {};
+                    if (tokenVal) headers['X-Client-Token'] = tokenVal;
+                    if (sessionToken) headers['Authorization'] = 'Bearer ' + sessionToken;
+
+                    var res = await fetch(fetchUrl, { headers: headers });
+                    if (!res.ok) {
+                        if (res.status === 401 || res.status === 403) {
+                            console.warn('[PreviewAuth] Unauthorized or session expired (HTTP ' + res.status + ')');
+                        }
+                        return null;
+                    }
+
+                    var blob = await res.blob();
+                    var objectUrl = URL.createObjectURL(blob);
+
+                    // Enforce cache size ceiling (LRU eviction: bounded memory)
+                    if (previewBlobCache.size >= MAX_PREVIEW_CACHE) {
+                        var firstKey = previewBlobCache.keys().next().value;
+                        if (firstKey) {
+                            var oldUrl = previewBlobCache.get(firstKey);
+                            previewBlobCache.delete(firstKey);
+                            activePreviewObjectUrls.delete(oldUrl);
+                            try { URL.revokeObjectURL(oldUrl); } catch (_) { }
+                        }
+                    }
+
+                    activePreviewObjectUrls.add(objectUrl);
+                    previewBlobCache.set(rawUrl, objectUrl);
+                    return objectUrl;
+                } catch (err) {
+                    console.warn('[PreviewAuth] Failed to load preview blob:', err);
+                    return null;
+                } finally {
+                    inFlightRequests.delete(rawUrl);
+                }
+            })();
+
+            inFlightRequests.set(rawUrl, fetchPromise);
+            return fetchPromise;
         }
 
         async function loadAuthenticatedPreview(imgEl, rawUrl, fallbackUrl) {
             if (!rawUrl || rawUrl.startsWith('data:') || rawUrl.startsWith('blob:')) {
                 if (imgEl) imgEl.src = rawUrl || fallbackUrl;
+                return;
+            }
+            if (previewBlobCache.has(rawUrl)) {
+                if (imgEl) imgEl.src = previewBlobCache.get(rawUrl);
                 return;
             }
             try {
@@ -12314,15 +12453,18 @@
             if (index < 0 || index >= window.viewerActiveList.length) return;
             var target = window.viewerActiveList[index];
             if (target && target.url) {
-                var safeUrl = safeImageUrl(String(target.url), '');
-                if (safeUrl) {
-                    fetchAuthenticatedPreviewBlob(safeUrl).catch(function () {});
+                var rawUrl = String(target.url);
+                var highResUrl = target.highResUrl || getAdaptivePreviewUrl(rawUrl, 2048);
+                var gridUrl = getAdaptivePreviewUrl(rawUrl, 800);
+                var urlToPreload = highResUrl || gridUrl;
+                if (urlToPreload && !previewBlobCache.has(urlToPreload)) {
+                    enqueueThumbnailFetch(null, urlToPreload, false);
                 }
             }
         }
 
         function renderClientGallery() {
-            revokeActivePreviewObjectUrls();
+            // Retain loaded preview blobs across layout and filter changes (Zero re-downloading)
             var container = document.getElementById('gallery-container');
             var emptyState = document.getElementById('gallery-empty');
 
@@ -12465,10 +12607,14 @@
                         };
                     }
 
+                    var gridUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(displayUrl, 800) : displayUrl;
+                    var safeGridUrl = safeImageUrl(gridUrl, localPlaceholderSvg);
+
                     var imgEl = document.createElement('img');
                     imgEl.alt = imgData.name || '';
                     imgEl.loading = 'lazy';
                     imgEl.referrerPolicy = 'no-referrer';
+                    imgEl.dataset.src = safeGridUrl;
                     imgEl.onerror = function () {
                         this.onerror = null;
                         this.src = localPlaceholderSvg;
@@ -12476,7 +12622,24 @@
                     imgEl.onclick = function (event) {
                         openImageViewer(displayUrl, imgData.name, event, index);
                     };
-                    loadAuthenticatedPreview(imgEl, safeUrl, localPlaceholderSvg);
+
+                    if (previewBlobCache.has(safeGridUrl)) {
+                        imgEl.src = previewBlobCache.get(safeGridUrl);
+                    } else if (previewBlobCache.has(safeUrl)) {
+                        imgEl.src = previewBlobCache.get(safeUrl);
+                    } else {
+                        imgEl.src = localPlaceholderSvg;
+                        var obs = (typeof getPreviewObserver === 'function') ? getPreviewObserver() : null;
+                        if (obs) {
+                            obs.observe(imgEl);
+                        } else {
+                            if (typeof enqueueThumbnailFetch === 'function') {
+                                enqueueThumbnailFetch(imgEl, safeGridUrl, false);
+                            } else {
+                                loadAuthenticatedPreview(imgEl, safeGridUrl, localPlaceholderSvg);
+                            }
+                        }
+                    }
                     card.appendChild(imgEl);
 
                     var overlay = document.createElement('div');
