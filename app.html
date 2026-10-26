@@ -11982,21 +11982,26 @@
             var targetGridUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(targetRawUrl, 800) : targetRawUrl;
             var highResUrl = (targetItem && targetItem.highResUrl) ? targetItem.highResUrl : ((typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(targetRawUrl, 2048) : targetRawUrl);
 
-            // 1. Instant visual feedback from cached high-res or cached grid thumbnail (0ms lag)
+            // 1. Instant visual feedback from cached high-res, direct CDN, or cached grid thumbnail (0ms lag)
+            var isHighResCdn = highResUrl && (highResUrl.includes('googleusercontent.com') || highResUrl.includes('drive.google.com'));
             if (originalBlobCache.has(targetItem.id)) {
                 img.src = originalBlobCache.get(targetItem.id);
             } else if (previewBlobCache.has(highResUrl)) {
                 img.src = previewBlobCache.get(highResUrl);
+            } else if (isHighResCdn) {
+                img.src = highResUrl;
             } else if (previewBlobCache.has(targetGridUrl)) {
                 img.src = previewBlobCache.get(targetGridUrl);
             } else if (previewBlobCache.has(safeUrl)) {
                 img.src = previewBlobCache.get(safeUrl);
+            } else if (targetGridUrl && (targetGridUrl.includes('googleusercontent.com') || targetGridUrl.includes('drive.google.com'))) {
+                img.src = targetGridUrl;
             } else {
                 img.src = safePlaceholder;
             }
 
-            // 2. High-resolution preview fetch for fullscreen & crisp zoom
-            if (!previewBlobCache.has(highResUrl) && !originalBlobCache.has(targetItem.id)) {
+            // 2. High-resolution preview fetch for fullscreen & crisp zoom (for proxy/bridge URLs)
+            if (!isHighResCdn && !previewBlobCache.has(highResUrl) && !originalBlobCache.has(targetItem.id)) {
                 fetchAuthenticatedPreviewBlob(highResUrl, { isHighPriority: true }).then(function (blobUrl) {
                     if (window.viewerLoadRequestId === currentReq && img && blobUrl && !originalBlobCache.has(targetItem.id)) {
                         img.src = blobUrl;
@@ -12440,6 +12445,18 @@
                 return rawUrl;
             }
             try {
+                if (rawUrl.includes('googleusercontent.com') || rawUrl.includes('drive.google.com')) {
+                    if (size) {
+                        if (/=[sw]\d+/i.test(rawUrl)) {
+                            return rawUrl.replace(/=[sw]\d+/i, '=s' + size);
+                        } else if (rawUrl.includes('?')) {
+                            return rawUrl + '&size=' + encodeURIComponent(String(size));
+                        } else {
+                            return rawUrl + '=s' + size;
+                        }
+                    }
+                    return rawUrl;
+                }
                 var parsed = new URL(rawUrl, window.location.origin);
                 if (size) {
                     parsed.searchParams.set('size', String(size));
@@ -12655,7 +12672,13 @@
                 var gridUrl = getAdaptivePreviewUrl(rawUrl, 800);
                 var urlToPreload = highResUrl || gridUrl;
                 if (urlToPreload && !previewBlobCache.has(urlToPreload)) {
-                    enqueueThumbnailFetch(null, urlToPreload, false);
+                    if (urlToPreload.includes('googleusercontent.com') || urlToPreload.includes('drive.google.com')) {
+                        var preImg = new Image();
+                        preImg.referrerPolicy = 'no-referrer';
+                        preImg.src = urlToPreload;
+                    } else {
+                        enqueueThumbnailFetch(null, urlToPreload, false);
+                    }
                 }
             }
         }
@@ -12806,26 +12829,45 @@
 
                     var gridUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(displayUrl, 800) : displayUrl;
                     var safeGridUrl = safeImageUrl(gridUrl, localPlaceholderSvg);
+                    var isDirectCdn = safeGridUrl.includes('googleusercontent.com') || safeGridUrl.includes('drive.google.com');
 
                     var imgEl = document.createElement('img');
                     imgEl.alt = imgData.name || '';
                     imgEl.loading = 'lazy';
                     imgEl.referrerPolicy = 'no-referrer';
                     imgEl.dataset.src = safeGridUrl;
-                    imgEl.onerror = function () {
-                        this.onerror = null;
-                        this.src = localPlaceholderSvg;
-                    };
                     imgEl.onclick = function (event) {
                         openImageViewer(displayUrl, imgData.name, event, index);
                     };
 
-                    if (previewBlobCache.has(safeGridUrl)) {
+                    if (isDirectCdn) {
+                        imgEl.src = safeGridUrl;
+                        imgEl.onerror = function () {
+                            this.onerror = null;
+                            if (imgData.proxyUrl) {
+                                this.src = imgData.proxyUrl;
+                            } else {
+                                this.src = localPlaceholderSvg;
+                            }
+                        };
+                    } else if (previewBlobCache.has(safeGridUrl)) {
                         imgEl.src = previewBlobCache.get(safeGridUrl);
+                        imgEl.onerror = function () {
+                            this.onerror = null;
+                            this.src = localPlaceholderSvg;
+                        };
                     } else if (previewBlobCache.has(safeUrl)) {
                         imgEl.src = previewBlobCache.get(safeUrl);
+                        imgEl.onerror = function () {
+                            this.onerror = null;
+                            this.src = localPlaceholderSvg;
+                        };
                     } else {
                         imgEl.src = localPlaceholderSvg;
+                        imgEl.onerror = function () {
+                            this.onerror = null;
+                            this.src = localPlaceholderSvg;
+                        };
                     }
                     card.appendChild(imgEl);
 
@@ -12915,7 +12957,8 @@
                     if (container) container.appendChild(card);
 
                     // Priority thumbnail loading: scheduled AFTER container.appendChild(card) so imgEl is attached to document
-                    if (!previewBlobCache.has(safeGridUrl) && !previewBlobCache.has(safeUrl)) {
+                    // Direct Google CDN images are loaded natively by the browser without JS queue overhead
+                    if (!isDirectCdn && !previewBlobCache.has(safeGridUrl) && !previewBlobCache.has(safeUrl)) {
                         if (index < 12) {
                             if (typeof enqueueThumbnailFetch === 'function') {
                                 enqueueThumbnailFetch(imgEl, safeGridUrl, true);

@@ -263,6 +263,8 @@ class PublicDriveProvider {
 
         this.fileCache.set(id, metaItem);
 
+        const directCdnUrl = `https://lh3.googleusercontent.com/d/${id}=w1000`;
+        const directHighResUrl = `https://lh3.googleusercontent.com/d/${id}=s2048`;
         const gridPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&folderId=${encodeURIComponent(cleanFolderId)}&size=800&token=${encodeURIComponent(projectToken || '')}`;
         const highResPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&folderId=${encodeURIComponent(cleanFolderId)}&size=2048&token=${encodeURIComponent(projectToken || '')}`;
         const originalDlUrl = `/api/bridge?action=downloadOriginalFile&fileId=${id}&folderId=${encodeURIComponent(cleanFolderId)}&token=${encodeURIComponent(projectToken || '')}`;
@@ -274,9 +276,11 @@ class PublicDriveProvider {
             folder: cleanFolderId,
             mimeType: metaItem.mimeType,
             size: 0,
-            url: gridPreviewUrl,
-            previewUrl: gridPreviewUrl,
-            highResUrl: highResPreviewUrl,
+            url: directCdnUrl,
+            previewUrl: directCdnUrl,
+            highResUrl: directHighResUrl,
+            proxyUrl: gridPreviewUrl,
+            proxyHighResUrl: highResPreviewUrl,
             originalUrl: originalDlUrl,
             isMockFixture: false,
             isRaw: false
@@ -335,6 +339,8 @@ class PublicDriveProvider {
           };
           this.fileCache.set(id, metaItem);
 
+          const directCdnUrl = `https://lh3.googleusercontent.com/d/${id}=w1000`;
+          const directHighResUrl = `https://lh3.googleusercontent.com/d/${id}=s2048`;
           const gridPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&folderId=${encodeURIComponent(cleanFolderId)}&size=800&token=${encodeURIComponent(projectToken || '')}`;
           const highResPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&folderId=${encodeURIComponent(cleanFolderId)}&size=2048&token=${encodeURIComponent(projectToken || '')}`;
           const originalDlUrl = `/api/bridge?action=downloadOriginalFile&fileId=${id}&folderId=${encodeURIComponent(cleanFolderId)}&token=${encodeURIComponent(projectToken || '')}`;
@@ -346,9 +352,11 @@ class PublicDriveProvider {
               folder: cleanFolderId,
               mimeType: metaItem.mimeType,
               size: 0,
-              url: gridPreviewUrl,
-              previewUrl: gridPreviewUrl,
-              highResUrl: highResPreviewUrl,
+              url: directCdnUrl,
+              previewUrl: directCdnUrl,
+              highResUrl: directHighResUrl,
+              proxyUrl: gridPreviewUrl,
+              proxyHighResUrl: highResPreviewUrl,
               originalUrl: originalDlUrl,
               isMockFixture: false,
               isRaw: false
