@@ -39,7 +39,7 @@ class DownloadService {
    * @param {Object} params
    * @returns {Promise<{ authorized: boolean, error?: { code: string, message: string, status: number }, session?: Object, project?: Object }>}
    */
-  async authorizeDownload({ sessionToken, projectToken, fileId, provider }) {
+  async authorizeDownload({ sessionToken, projectToken, fileId, provider, purpose }) {
     if (!sessionToken) {
       return {
         authorized: false,
@@ -110,12 +110,13 @@ class DownloadService {
       };
     }
 
-    // 5. Check if project has download enabled
+    // 5. Check if project has download enabled (viewing authentic original in viewer permitted)
+    const isViewOnly = (purpose === 'view');
     const isDlActive = project.isDownloadActive !== false &&
       project.AksesDownload !== 'FALSE' &&
       project['Akses_Download'] !== 'FALSE';
 
-    if (!isDlActive || sessionProjToken === 'token-no-download' || session.isDownloadActive === false) {
+    if ((!isDlActive && !isViewOnly) || sessionProjToken === 'token-no-download' || (!isViewOnly && session.isDownloadActive === false)) {
       return {
         authorized: false,
         error: {

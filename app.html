@@ -4837,6 +4837,7 @@
                 </div>
 
                 <p id="viewerCaption" class="text-white font-semibold text-sm tracking-wide"></p>
+                <span id="viewer-original-status" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-300 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5"><i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Memuat Original...</span></span>
                 <div id="viewerDivider" class="w-px h-6 bg-white/20 hidden sm:block"></div>
                 <div id="viewerDirectNote"
                     class="hidden max-w-md px-3 py-1.5 bg-amber-500/20 border border-amber-400/40 rounded-xl text-amber-300 text-xs font-medium flex items-center gap-2">
@@ -11277,13 +11278,14 @@
                 if (cachedSel) localSelections = JSON.parse(cachedSel) || [];
             } catch (e) { }
 
-            if (Array.isArray(localSelections) && localSelections.length > serverSelections.length) {
+            // Reconcile selections: If server has saved selections, server is authoritative; if server has 0 but local has unsaved draft, preserve local and sync
+            if (Array.isArray(localSelections) && localSelections.length > 0 && (!serverSelections || serverSelections.length === 0)) {
                 clientState.selectedImages = localSelections;
                 setTimeout(function () {
                     pingClientStatus(clientState.statusClient || 'Sedang Memilih', '', true);
                 }, 800);
             } else {
-                clientState.selectedImages = serverSelections;
+                clientState.selectedImages = serverSelections || [];
             }
 
             try {
@@ -11491,6 +11493,27 @@
                     }
                 }
             } catch (e) { }
+
+            // If prefetch is in flight for this folder, await it before cold network start
+            if (!hasCached && prefetchPromise && prefetchedFolderId === folderId) {
+                try {
+                    var prefetched = await prefetchPromise;
+                    if (prefetched && ((prefetched.images && prefetched.images.length > 0) || (prefetched.folders && prefetched.folders.length > 0))) {
+                        clientState.currentContent = prefetched;
+                        renderClientGallery();
+                        hasCached = true;
+                    }
+                } catch (_) { }
+            }
+
+            if (hasCached) {
+                var isSubmitted = (typeof hasClientSubmitted !== 'undefined' && hasClientSubmitted) ||
+                    (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran'));
+                if (!isSubmitted) {
+                    pingClientStatus('Sedang Memilih');
+                }
+                return;
+            }
 
             if (!hasCached) {
                 startLoading("Memuat Data...");
@@ -11795,6 +11818,68 @@
             applyViewerTransform();
         }
 
+        var originalBlobCache = new Map();
+        var MAX_ORIGINAL_CACHE = 8; // Bounded memory: max 8 full-size authentic original blobs in memory
+
+        function loadViewerAuthenticOriginal(item, reqId) {
+            var img = document.getElementById('viewerImage');
+            var statusEl = document.getElementById('viewer-original-status');
+            var fileId = (item && item.id) || (item && item.url && (item.url.match(/[?&]fileId=([-\w]{10,128})/)?.[1] || item.url.match(/https:\/\/lh3\.googleusercontent\.com\/d\/([-\w]{10,128})/)?.[1]));
+            var origUrl = (item && item.originalUrl) || (fileId ? ('/api/bridge?action=downloadOriginalFile&fileId=' + fileId + '&token=' + encodeURIComponent((clientState && clientState.token) || '') + '&purpose=view') : null);
+
+            if (!origUrl || !fileId) {
+                if (statusEl) {
+                    statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
+                    statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span>';
+                }
+                return;
+            }
+
+            // Check if already in originalBlobCache
+            if (originalBlobCache.has(fileId)) {
+                var cachedBlobUrl = originalBlobCache.get(fileId);
+                if (img) img.src = cachedBlobUrl;
+                if (statusEl) {
+                    statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 backdrop-blur-md border border-emerald-500/30 hidden sm:flex items-center gap-1.5';
+                    statusEl.innerHTML = '<i class="fa-solid fa-circle-check text-xs text-emerald-400"></i> <span>Original 100%</span>';
+                }
+                return;
+            }
+
+            if (statusEl) {
+                statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-black/60 text-amber-300 backdrop-blur-md border border-white/10 animate-pulse hidden sm:flex items-center gap-1.5';
+                statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Memuat Original...</span>';
+            }
+
+            fetchAuthorizedOriginalBlob(origUrl, item.name || 'photo.jpg', { requireOriginal: true, purpose: 'view' })
+                .then(function (blob) {
+                    if (window.viewerLoadRequestId === reqId && img && blob && blob.size > 0) {
+                        var bUrl = URL.createObjectURL(blob);
+                        if (originalBlobCache.size >= MAX_ORIGINAL_CACHE) {
+                            var oldestKey = originalBlobCache.keys().next().value;
+                            var oldUrl = originalBlobCache.get(oldestKey);
+                            if (oldUrl) URL.revokeObjectURL(oldUrl);
+                            originalBlobCache.delete(oldestKey);
+                        }
+                        originalBlobCache.set(fileId, bUrl);
+                        img.src = bUrl;
+
+                        var sizeStr = blob.size > 1048576 ? (blob.size / 1048576).toFixed(1) + ' MB' : Math.round(blob.size / 1024) + ' KB';
+                        if (statusEl) {
+                            statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 backdrop-blur-md border border-emerald-500/30 hidden sm:flex items-center gap-1.5';
+                            statusEl.innerHTML = '<i class="fa-solid fa-circle-check text-xs text-emerald-400"></i> <span>Original 100% (' + sizeStr + ')</span>';
+                        }
+                    }
+                })
+                .catch(function () {
+                    // Honest fallback: keep preview without claiming it is original
+                    if (statusEl) {
+                        statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
+                        statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span>';
+                    }
+                });
+        }
+
         function openImageViewer(url, name, event, index, customList) {
             if (event) event.stopPropagation();
 
@@ -11830,7 +11915,9 @@
             var highResUrl = (targetItem && targetItem.highResUrl) ? targetItem.highResUrl : ((typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(targetRawUrl, 2048) : targetRawUrl);
 
             // 1. Instant visual feedback from cached high-res or cached grid thumbnail (0ms lag)
-            if (previewBlobCache.has(highResUrl)) {
+            if (originalBlobCache.has(targetItem.id)) {
+                img.src = originalBlobCache.get(targetItem.id);
+            } else if (previewBlobCache.has(highResUrl)) {
                 img.src = previewBlobCache.get(highResUrl);
             } else if (previewBlobCache.has(targetGridUrl)) {
                 img.src = previewBlobCache.get(targetGridUrl);
@@ -11841,15 +11928,18 @@
             }
 
             // 2. High-resolution preview fetch for fullscreen & crisp zoom
-            if (!previewBlobCache.has(highResUrl)) {
+            if (!previewBlobCache.has(highResUrl) && !originalBlobCache.has(targetItem.id)) {
                 fetchAuthenticatedPreviewBlob(highResUrl, { isHighPriority: true }).then(function (blobUrl) {
-                    if (window.viewerLoadRequestId === currentReq && img && blobUrl) {
+                    if (window.viewerLoadRequestId === currentReq && img && blobUrl && !originalBlobCache.has(targetItem.id)) {
                         img.src = blobUrl;
                     }
                 }).catch(function () {
                     // Gracefully keep current preview
                 });
             }
+
+            // 3. Authentic Original Photo Load for Detailed Evaluation, Fullscreen & Sharpness Zoom
+            loadViewerAuthenticOriginal(targetItem, currentReq);
 
             if (typeof preloadViewerImage === 'function') {
                 preloadViewerImage(window.currentViewerIndex + 1);
@@ -11914,8 +12004,10 @@
             var nextGridUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(rawNextUrl, 800) : rawNextUrl;
             var nextHighResUrl = (nextImg && nextImg.highResUrl) ? nextImg.highResUrl : ((typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(rawNextUrl, 2048) : rawNextUrl);
 
-            // 1. Instant visual feedback from cached high-res or cached grid thumbnail
-            if (previewBlobCache.has(nextHighResUrl)) {
+            // 1. Instant visual feedback from cached authentic original, cached high-res or cached grid thumbnail
+            if (originalBlobCache.has(nextImg.id)) {
+                imgEl.src = originalBlobCache.get(nextImg.id);
+            } else if (previewBlobCache.has(nextHighResUrl)) {
                 imgEl.src = previewBlobCache.get(nextHighResUrl);
             } else if (previewBlobCache.has(nextGridUrl)) {
                 imgEl.src = previewBlobCache.get(nextGridUrl);
@@ -11926,15 +12018,18 @@
             }
 
             // 2. High-resolution preview fetch for fullscreen & crisp zoom
-            if (!previewBlobCache.has(nextHighResUrl)) {
+            if (!previewBlobCache.has(nextHighResUrl) && !originalBlobCache.has(nextImg.id)) {
                 fetchAuthenticatedPreviewBlob(nextHighResUrl, { isHighPriority: true }).then(function (blobUrl) {
-                    if (window.viewerLoadRequestId === currentReq && imgEl && blobUrl) {
+                    if (window.viewerLoadRequestId === currentReq && imgEl && blobUrl && !originalBlobCache.has(nextImg.id)) {
                         imgEl.src = blobUrl;
                     }
                 }).catch(function () {
                     // Gracefully keep current preview
                 });
             }
+
+            // 3. Authentic Original Photo Load for Detailed Evaluation, Fullscreen & Sharpness Zoom
+            loadViewerAuthenticOriginal(nextImg, currentReq);
 
             if (typeof preloadViewerImage === 'function') {
                 preloadViewerImage(window.currentViewerIndex + 1);
@@ -12734,7 +12829,7 @@
             updateGalleryLock();
         }
 
-        function toggleSelection(cardElement, filename, url) {
+        function toggleSelection(cardElement, filename, url, fileId) {
             var isEn = localStorage.getItem('ps_lang') === 'en';
 
             if (clientState.galleryMode === 'download') {
@@ -12817,7 +12912,7 @@
                             }).then((result) => {
                                 if (result.isConfirmed) {
                                     clientState.agreedToExtraCharge = true;
-                                    performSelectionData(cardElement, filename, url, 'Default', btnPilih, isEn);
+                                    performSelectionData(cardElement, filename, url, 'Default', btnPilih, isEn, fileId);
                                 }
                             });
                             return;
@@ -12834,7 +12929,7 @@
                     }
                 }
 
-                performSelectionData(cardElement, filename, url, 'Default', btnPilih, isEn);
+                performSelectionData(cardElement, filename, url, 'Default', btnPilih, isEn, fileId);
             } else {
                 // DESELECT
                 clientState.selectedImages = clientState.selectedImages.filter(function (sel) {
@@ -12863,14 +12958,42 @@
         }
 
         var saveSelectionTimer = null;
+        var isSavingSelections = false;
+        var pendingSaveSelections = false;
+
         function queueSaveSelections() {
             if (saveSelectionTimer) clearTimeout(saveSelectionTimer);
             saveSelectionTimer = setTimeout(function () {
-                var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
-                if (!isSubmitted && clientState.galleryMode !== 'download') {
-                    pingClientStatus('Sedang Memilih', '', true);
-                }
+                triggerSaveSelections();
             }, 400);
+        }
+
+        async function triggerSaveSelections() {
+            var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
+            if (isSubmitted || clientState.galleryMode === 'download') return;
+
+            if (isSavingSelections) {
+                pendingSaveSelections = true;
+                return;
+            }
+
+            isSavingSelections = true;
+            pendingSaveSelections = false;
+
+            try {
+                var res = await pingClientStatus('Sedang Memilih', '', true);
+                if (res && res.status === 'success') {
+                    var counterEl = document.getElementById('bottom-counter');
+                    if (counterEl) counterEl.dataset.synced = 'true';
+                }
+            } catch (err) {
+                console.warn('Selection persistence queued for retry:', err);
+            } finally {
+                isSavingSelections = false;
+                if (pendingSaveSelections) {
+                    triggerSaveSelections();
+                }
+            }
         }
 
         // BGM Toggle Function
@@ -12908,14 +13031,15 @@
             }
         };
 
-        function performSelectionData(cardElement, filename, url, category, btnPilih, isEn) {
+        function performSelectionData(cardElement, filename, url, category, btnPilih, isEn, fileId) {
             // Guard against duplicate selection events
             var alreadySelected = clientState.selectedImages.some(function (sel) {
                 return sel.name === filename && (sel.folder === clientState.currentFolderName || !sel.folder || !clientState.currentFolderName);
             });
             if (alreadySelected) return;
 
-            clientState.selectedImages.push({ name: filename, folder: clientState.currentFolderName, url: url, category: category });
+            var resolvedFileId = fileId || (url && (url.match(/[?&]fileId=([-\w]{10,128})/)?.[1] || url.match(/https:\/\/lh3\.googleusercontent\.com\/d\/([-\w]{10,128})/)?.[1] || url.match(/[?&]id=([-\w]{10,128})/)?.[1])) || '';
+            clientState.selectedImages.push({ id: resolvedFileId, name: filename, folder: clientState.currentFolderName, url: url, category: category });
             if (clientState.token) {
                 try { localStorage.setItem('ps_client_selected_' + clientState.token, JSON.stringify(clientState.selectedImages)); } catch (e) { }
             }
@@ -14158,10 +14282,16 @@
             // Hanya sertakan array foto jika dipanggil saat aksi klik memilih foto
             if (sendSelections) {
                 var compactList = (clientState.selectedImages || []).map(function (img) {
-                    var u = img.url || '';
-                    var m = u.match(/https:\/\/lh3\.googleusercontent\.com\/d\/([-\w]+)/);
-                    if (m && m[1]) {
-                        u = m[1];
+                    var u = img.id || '';
+                    if (!u && img.url) {
+                        var mFile = img.url.match(/[?&]fileId=([-\w]{10,128})/);
+                        var mLh3 = img.url.match(/https:\/\/lh3\.googleusercontent\.com\/d\/([-\w]{10,128})/);
+                        var mId = img.url.match(/[?&]id=([-\w]{10,128})/);
+                        if (mFile && mFile[1]) u = mFile[1];
+                        else if (mLh3 && mLh3[1]) u = mLh3[1];
+                        else if (mId && mId[1]) u = mId[1];
+                        else if (/^[A-Za-z0-9_-]{10,128}$/.test(img.url)) u = img.url;
+                        else u = img.url;
                     }
                     return {
                         n: img.name || '',
@@ -15248,11 +15378,81 @@
             return str;
         }
 
-        // --- LOGIKA MODE & DOWNLOAD --- //
+        // --- LOGIKA MODE & DOWNLOAD (WORKSTREAM B PREFETCH) --- //
+        var prefetchPromise = null;
+        var prefetchedFolderId = null;
+
+        async function prefetchRootGalleryContent(folderId, folderName) {
+            if (!folderId || !clientState.token) return null;
+            var cacheKey = 'ps_folder_cache_' + folderId;
+            var cached = sessionStorage.getItem(cacheKey);
+            if (cached) {
+                try {
+                    return JSON.parse(cached);
+                } catch (_) { }
+            }
+
+            if (prefetchPromise && prefetchedFolderId === folderId) {
+                return prefetchPromise;
+            }
+
+            prefetchedFolderId = folderId;
+            prefetchPromise = (async function () {
+                try {
+                    var tokenVal = (typeof clientState !== 'undefined' && clientState.token) ? clientState.token : '';
+                    var sessionToken = (typeof getClientAccessToken === 'function' ? getClientAccessToken(tokenVal) : '') ||
+                        (typeof clientState !== 'undefined' ? (clientState.clientAccessToken || clientState.sessionToken) : '');
+                    var clientHeaders = { 'Content-Type': 'application/json' };
+                    if (tokenVal) clientHeaders['X-Client-Token'] = tokenVal;
+                    if (sessionToken) clientHeaders['Authorization'] = 'Bearer ' + sessionToken;
+
+                    var response = await fetch(API_ENDPOINT, {
+                        method: 'POST',
+                        headers: clientHeaders,
+                        body: JSON.stringify({
+                            action: 'getDriveContent',
+                            folder_id: folderId,
+                            token: tokenVal,
+                            clientAccessToken: sessionToken
+                        })
+                    });
+                    var res = await response.json();
+                    if (res && res.status === 'success' && res.data) {
+                        var content = {
+                            folders: res.data.folders || [],
+                            images: res.data.images || []
+                        };
+                        try {
+                            sessionStorage.setItem(cacheKey, JSON.stringify(content));
+                        } catch (e) { }
+
+                        // Background pre-warm the first 6 thumbnails with low concurrency
+                        if (content.images && content.images.length > 0) {
+                            var firstSix = content.images.slice(0, 6);
+                            firstSix.forEach(function (img) {
+                                var thumbUrl = img.previewUrl || img.url;
+                                if (thumbUrl && !previewBlobCache.has(thumbUrl)) {
+                                    fetchAuthenticatedPreviewBlob(thumbUrl, { isHighPriority: false }).catch(function () {});
+                                }
+                            });
+                        }
+                        return content;
+                    }
+                } catch (err) {
+                    console.log('Background prefetch note:', err.message);
+                }
+                return null;
+            })();
+            return prefetchPromise;
+        }
+
         function showClientModeSelection() {
             clientState.currentFolderId = extractDriveFolderId(clientState.driveLink) || clientState.driveLink;
             clientState.currentFolderName = clientState.namaClient;
             showView('client-mode-view');
+            if (clientState.currentFolderId && clientState.token) {
+                prefetchRootGalleryContent(clientState.currentFolderId, clientState.currentFolderName);
+            }
         }
 
         function selectClientMode(mode) {
@@ -15469,8 +15669,8 @@
             var isEn = localStorage.getItem('ps_lang') === 'en';
             var opts = options || {};
 
-            // Guard: Otorisasi download aktif pada proyek
-            if (typeof clientState !== 'undefined' && clientState.isDownloadActive === false) {
+            // Guard: Otorisasi download aktif pada proyek (evaluating authentic original in viewer permitted)
+            if (typeof clientState !== 'undefined' && clientState.isDownloadActive === false && opts.purpose !== 'view') {
                 throw new Error(isEn ? "HTTP 403: Direct photo download is disabled for this gallery." : "HTTP 403: Fitur unduh berkas asli dinonaktifkan untuk proyek ini.");
             }
 
@@ -15524,6 +15724,9 @@
                     // TASK E: Do NOT leak session secrets in URL query parameters when header transport is supported
                     if (parsedTargetUrl.searchParams.has('session')) {
                         parsedTargetUrl.searchParams.delete('session');
+                    }
+                    if (opts.purpose) {
+                        parsedTargetUrl.searchParams.set('purpose', opts.purpose);
                     }
                     fetchUrl = parsedTargetUrl.toString();
                 }

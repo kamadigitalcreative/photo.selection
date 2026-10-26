@@ -1779,6 +1779,8 @@ module.exports = handler;
 module.exports.handleGetDriveContent = handleGetDriveContent;
 module.exports.handleGetPreviewImage = handleGetPreviewImage;
 module.exports.handleDownloadOriginalFile = handleDownloadOriginalFile;
+module.exports.handleUpdateClientStatus = handleUpdateClientStatus;
+module.exports.handleGetProjects = handleGetProjects;
 module.exports.parseAndValidateOrigin = parseAndValidateOrigin;
 module.exports.getAllowedOrigins = getAllowedOrigins;
 module.exports.handleCors = handleCors;
@@ -2885,8 +2887,17 @@ async function handleUpdateClientStatus(payload, res) {
         if (/[\u0000-\u001F\u007F]/.test(refStr)) {
           return error(res, 'URL atau ID file foto mengandung karakter kontrol tidak valid.', 400);
         }
+        const fileIdMatch = refStr.match(/[?&]fileId=([a-zA-Z0-9_-]{10,128})/);
+        const ucIdMatch = refStr.match(/[?&]id=([a-zA-Z0-9_-]{10,128})/);
+        const lh3Match = refStr.match(/lh3\.googleusercontent\.com\/d\/([a-zA-Z0-9_-]{10,128})/);
         if (/^[a-zA-Z0-9_-]{10,128}$/.test(refStr)) {
           cleanRef = refStr;
+        } else if (fileIdMatch) {
+          cleanRef = fileIdMatch[1];
+        } else if (ucIdMatch) {
+          cleanRef = ucIdMatch[1];
+        } else if (lh3Match) {
+          cleanRef = lh3Match[1];
         } else if (isSafeHttpsUrl(refStr)) {
           cleanRef = refStr;
         } else {
@@ -4090,11 +4101,13 @@ async function handleDownloadOriginalFile(payload, req, res) {
     })
   });
 
+  const purpose = payload.purpose || (req && req.query && req.query.purpose) || '';
   const authCheck = await downloadService.authorizeDownload({
     sessionToken,
     projectToken,
     fileId,
-    provider
+    provider,
+    purpose
   });
 
   if (!authCheck.authorized) {
