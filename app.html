@@ -5700,12 +5700,13 @@
             });
         }
 
-        // --- CENTRAL SAFE URL & IMAGE HELPERS (PHASE 4.6X) ---
+        // --- CENTRAL SAFE URL & IMAGE HELPERS (PHASE 4.6X & PHASE 6) ---
         function isSafeHttpsUrl(urlStr) {
             if (!urlStr || typeof urlStr !== 'string') return false;
             try {
-                const parsed = new URL(urlStr.trim());
-                return parsed.protocol === 'https:';
+                var baseOrigin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'http://localhost';
+                var parsed = new URL(urlStr.trim(), baseOrigin);
+                return parsed.protocol === 'https:' || (parsed.protocol === 'http:' && (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1'));
             } catch (_) {
                 return false;
             }
@@ -5717,10 +5718,16 @@
             return /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(str);
         }
 
+        function isSafeRelativeUrl(urlStr) {
+            if (!urlStr || typeof urlStr !== 'string') return false;
+            var trimmed = urlStr.trim();
+            return trimmed.startsWith('/') && !trimmed.startsWith('//');
+        }
+
         function safeImageUrl(urlStr, fallback) {
             if (!urlStr || typeof urlStr !== 'string') return fallback || '';
             const trimmed = urlStr.trim();
-            if (isSafeHttpsUrl(trimmed) || isSafeDataImageUrl(trimmed)) {
+            if (isSafeHttpsUrl(trimmed) || isSafeDataImageUrl(trimmed) || isSafeRelativeUrl(trimmed)) {
                 return trimmed;
             }
             return fallback || '';
@@ -10950,23 +10957,29 @@
 
         function getClientAccessToken(token) {
             var t = token || (clientState && clientState.token) || '';
-            if (!t) return '';
-            try {
-                return sessionStorage.getItem('ps_client_access_' + t) || '';
-            } catch (e) {
-                return '';
+            var tok = '';
+            if (t) {
+                try { tok = sessionStorage.getItem('ps_client_access_' + t) || ''; } catch (e) { }
             }
+            if (!tok && typeof clientRouteIdentifier !== 'undefined' && clientRouteIdentifier) {
+                try { tok = sessionStorage.getItem('ps_client_access_' + clientRouteIdentifier) || ''; } catch (e) { }
+            }
+            if (!tok && typeof clientState !== 'undefined' && clientState) {
+                tok = clientState.clientAccessToken || clientState.sessionToken || '';
+            }
+            return tok || '';
         }
 
         function setClientAccessToken(token, accessToken) {
-            var t = token || (clientState && clientState.token) || '';
-            if (!t) return;
+            var keys = [token, (typeof clientState !== 'undefined' && clientState && clientState.token), (typeof clientRouteIdentifier !== 'undefined' && clientRouteIdentifier)].filter(Boolean);
             try {
-                if (accessToken) {
-                    sessionStorage.setItem('ps_client_access_' + t, accessToken);
-                } else {
-                    sessionStorage.removeItem('ps_client_access_' + t);
-                }
+                keys.forEach(function (k) {
+                    if (accessToken) {
+                        sessionStorage.setItem('ps_client_access_' + k, accessToken);
+                    } else {
+                        sessionStorage.removeItem('ps_client_access_' + k);
+                    }
+                });
             } catch (e) { }
         }
 
@@ -11558,7 +11571,9 @@
                     while (retryCount < 2) {
                         try {
                             var tokenVal = (typeof clientState !== 'undefined' && clientState.token) ? clientState.token : '';
-                            var sessionToken = (typeof getClientAccessToken === 'function' ? getClientAccessToken(tokenVal) : '') || (typeof clientState !== 'undefined' ? clientState.clientAccessToken : '');
+                            var sessionToken = (typeof getClientAccessToken === 'function' ? getClientAccessToken(tokenVal) : '') ||
+                                (typeof clientState !== 'undefined' ? (clientState.clientAccessToken || clientState.sessionToken) : '') ||
+                                (typeof adminState !== 'undefined' && adminState.sessionToken ? adminState.sessionToken : '');
                             var clientHeaders = { 'Content-Type': 'application/json' };
                             if (tokenVal) clientHeaders['X-Client-Token'] = tokenVal;
                             if (sessionToken) clientHeaders['Authorization'] = 'Bearer ' + sessionToken;
@@ -12230,14 +12245,17 @@
                     return rawUrl;
                 }
 
-                // Strip access token from query params if accidentally present (never expose tokens in URL)
+                // Strip session secrets from query params (never expose session tokens in URL)
                 var queryToken = parsed.searchParams.get('token') || '';
-                if (parsed.searchParams.has('clientAccessToken')) parsed.searchParams.delete('clientAccessToken');
-                if (parsed.searchParams.has('sessionToken')) parsed.searchParams.delete('sessionToken');
+                parsed.searchParams.delete('clientAccessToken');
+                parsed.searchParams.delete('sessionToken');
+                parsed.searchParams.delete('session');
+                parsed.searchParams.delete('auth');
                 var fetchUrl = parsed.pathname + parsed.search;
 
                 var tokenVal = (typeof clientState !== 'undefined' && clientState.token) ? clientState.token : queryToken;
                 var sessionToken = (typeof getClientAccessToken === 'function' ? getClientAccessToken(tokenVal) : '') ||
+                    (typeof clientRouteIdentifier !== 'undefined' && clientRouteIdentifier ? getClientAccessToken(clientRouteIdentifier) : '') ||
                     (typeof clientState !== 'undefined' ? (clientState.clientAccessToken || clientState.sessionToken) : '') ||
                     (typeof adminState !== 'undefined' && adminState.sessionToken ? adminState.sessionToken : '');
 

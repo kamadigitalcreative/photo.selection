@@ -1633,7 +1633,7 @@ function handleCors(req, res) {
   if (validatedOrigin && allowedOrigins.has(validatedOrigin)) {
     res.setHeader('Access-Control-Allow-Origin', validatedOrigin);
     res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-Client-Token, X-Project-Token');
     res.setHeader('Access-Control-Max-Age', '86400');
 
     if (req.method === 'OPTIONS') {
@@ -3854,7 +3854,10 @@ async function handleGetDriveContent(payload, req, res) {
     authUser = null;
   }
 
-  const projectToken = (payload.token || payload.projectToken || '').trim();
+  let projectToken = (payload.token || payload.projectToken || '').trim();
+  if (!projectToken && req && req.headers) {
+    projectToken = String(req.headers['x-client-token'] || req.headers['x-project-token'] || '').trim();
+  }
 
   // Extract client session token if provided
   let clientSessionToken = '';
@@ -4000,9 +4003,10 @@ async function handleGetDriveContent(payload, req, res) {
     const provider = getDriveProvider();
     const pageToken = payload.pageToken || payload.nextPageToken || null;
     const pageSize = parseInt(payload.pageSize, 10) || 100;
+    const canonicalProjectToken = (project && project.Token) || projectToken;
     const result = await provider.getFolderContent({
       folderId: authoritativeFolderId,
-      projectToken,
+      projectToken: canonicalProjectToken,
       pageToken,
       pageSize
     });
@@ -4314,8 +4318,15 @@ async function handleGetPreviewImage(payload, req, res) {
 
   let isAuthorized = false;
   if (authUser && authUser.username && project) {
-    if (project.Owner === authUser.username || authUser.role === 'Admin') isAuthorized = true;
-  } else if (sessionToken && project) {
+    const isOwner = (
+      String(project.Owner || '').toLowerCase().trim() === String(authUser.username || '').toLowerCase().trim() ||
+      authUser.role === 'Admin' ||
+      String(authUser.username || '').toLowerCase().trim() === 'admin'
+    );
+    if (isOwner) isAuthorized = true;
+  }
+
+  if (!isAuthorized && sessionToken && project) {
     const s = await verifyClientGallerySession(sessionToken, project);
     if (s) isAuthorized = true;
   }
