@@ -2608,7 +2608,10 @@ function buildAuthorizedProjectData(p, ownerBrand, clientAccessToken) {
     bankName: ownerBrand.bankName,
     bankAccount: ownerBrand.bankAccount,
     bankAccountName: ownerBrand.bankAccountName,
-    isPremiumAddon: ownerBrand.isPremiumAddon
+    isPremiumAddon: ownerBrand.isPremiumAddon,
+    theme: p.Theme || p.theme || ownerBrand.theme || ownerBrand.Theme || 'noir',
+    studioTheme: p.Theme || p.theme || ownerBrand.theme || ownerBrand.Theme || 'noir',
+    ownerTheme: p.Theme || p.theme || ownerBrand.theme || ownerBrand.Theme || 'noir'
   };
 }
 
@@ -2627,6 +2630,7 @@ async function handleGetProjectForClient(payload, res) {
     bankName: '',
     bankAccount: '',
     bankAccountName: '',
+    theme: '',
     isPremiumAddon: false
   };
 
@@ -2643,6 +2647,7 @@ async function handleGetProjectForClient(payload, res) {
           bankName: o.BankName || '',
           bankAccount: o.BankAccount || '',
           bankAccountName: o.BankAccountName || '',
+          theme: o.Theme || o.theme || '',
           isPremiumAddon: ownerPro.isPro
         };
       }
@@ -2686,6 +2691,7 @@ async function handleGetProjectForClient(payload, res) {
   }
 
   // SAFE PUBLIC / PRE-AUTH RESPONSE
+  const resolvedPublicTheme = p.Theme || p.theme || ownerBrand.theme || 'noir';
   const publicData = {
     token: p.Token,
     slug: p['Short Slug'] || p.Slug || p.Token,
@@ -2695,7 +2701,10 @@ async function handleGetProjectForClient(payload, res) {
     needsPassword: true,
     accessGranted: false,
     brandName: ownerBrand.brandName,
-    brandLogo: ownerBrand.brandLogo
+    brandLogo: ownerBrand.brandLogo,
+    theme: resolvedPublicTheme,
+    studioTheme: resolvedPublicTheme,
+    ownerTheme: resolvedPublicTheme
   };
 
   return success(res, {
@@ -2730,6 +2739,7 @@ async function handleVerifyClientPassword(payload, res) {
     bankName: '',
     bankAccount: '',
     bankAccountName: '',
+    theme: '',
     isPremiumAddon: false
   };
 
@@ -2746,6 +2756,7 @@ async function handleVerifyClientPassword(payload, res) {
           bankName: o.BankName || '',
           bankAccount: o.BankAccount || '',
           bankAccountName: o.BankAccountName || '',
+          theme: o.Theme || o.theme || '',
           isPremiumAddon: ownerPro.isPro
         };
       }

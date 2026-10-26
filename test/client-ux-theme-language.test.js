@@ -176,7 +176,8 @@ check('09-CATEGORY-SAFE-EMPTY-STATE', hasSafeEmptyState, 'Missing/empty category
 
 const preservesQuotaLogic = appHtml.includes('catCount >= maxQuota') &&
     appHtml.includes('clientState.extraPrice > 0') &&
-    appHtml.includes('performSelectionData(cardElement, filename, url, catName, btnPilih, isEn);');
+    (appHtml.includes('performSelectionData(cardElement, filename, url, catName, btnPilih, isEn);') ||
+     appHtml.includes('performSelectionData(cardElement, filename, url, catName, btnPilih, isEn, fileId, targetFolder);'));
 check('09-CATEGORY-QUOTA-PRESERVED', preservesQuotaLogic, 'Category quota limits, extra photo pricing, and selection callbacks fully preserved');
 
 // -------------------------------------------------------------

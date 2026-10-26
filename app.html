@@ -85,9 +85,9 @@
 
 <body>
 
-    <div id="global-loader">
+    <div id="global-loader" style="display: none;">
         <div id="lottie-global-loader" class="w-20 h-20 mb-4 drop-shadow-md"></div>
-        <p id="loader-text" class="text-kama-800 font-bold tracking-widest text-xs uppercase opacity-80">MEMUAT...</p>
+        <p id="loader-text" class="font-bold tracking-widest text-xs uppercase">MEMUAT...</p>
     </div>
 
     <div id="auth-view" class="view-section flex-col h-full w-full hero-pattern-bg">
@@ -8787,28 +8787,28 @@
                 var modal = document.getElementById('photographerPreviewModal');
                 if (!modal) {
                     var modalHtml =
-                        '<div id="photographerPreviewModal" class="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex flex-col hidden opacity-0 transition-opacity duration-300">' +
-                        '  <div class="px-4 py-3 sm:px-6 sm:py-4 bg-white border-b border-gray-200 flex items-center justify-between shrink-0 shadow-sm">' +
+                        '<div id="photographerPreviewModal" class="fixed inset-0 z-[100] bg-black/70 backdrop-blur-md flex flex-col hidden opacity-0 transition-opacity duration-300">' +
+                        '  <div class="px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between shrink-0 shadow-md border-b" style="background: var(--panel, #17181b); border-color: var(--stroke, rgba(223,186,123,0.2)); color: var(--text, #f4f0e9);">' +
                         '    <div class="flex items-center gap-3">' +
-                        '      <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shrink-0"><i class="fa-solid fa-images text-lg"></i></div>' +
+                        '      <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border" style="background: var(--accentwash, rgba(223,186,123,0.1)); border-color: var(--border-champagne, rgba(223,186,123,0.3)); color: var(--gold, #dfba7b);"><i class="fa-solid fa-images text-lg"></i></div>' +
                         '      <div>' +
-                        '        <h2 class="text-base sm:text-lg font-bold text-gray-800 flex items-center gap-2">' +
-                        '          <span>Pilihan: <span id="photo-preview-client-name" class="text-indigo-600"></span></span>' +
-                        '          <span id="photo-preview-count-badge" class="bg-indigo-50 text-indigo-700 text-xs px-2.5 py-0.5 rounded-full font-extrabold border border-indigo-200">0 Foto</span>' +
+                        '        <h2 class="text-base sm:text-lg font-bold flex items-center gap-2" style="color: var(--text, #f4f0e9);">' +
+                        '          <span>Pilihan: <span id="photo-preview-client-name" style="color: var(--gold, #dfba7b);"></span></span>' +
+                        '          <span id="photo-preview-count-badge" class="text-xs px-2.5 py-0.5 rounded-full font-extrabold border" style="background: var(--accentwash, rgba(223,186,123,0.12)); color: var(--gold, #dfba7b); border-color: var(--border-champagne, rgba(223,186,123,0.3));">0 Foto</span>' +
                         '        </h2>' +
-                        '        <p class="text-xs text-gray-400">Klik foto untuk memperbesar / zoom</p>' +
+                        '        <p class="text-xs" style="color: var(--muted, #a8a39c);">Klik foto untuk memperbesar / zoom</p>' +
                         '      </div>' +
                         '    </div>' +
                         '    <div class="flex items-center gap-2">' +
-                        '      <button id="btn-copy-preview-names" class="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-xl text-xs font-bold transition-all border border-indigo-200" title="Salin Semua Nama File">' +
+                        '      <button id="btn-copy-preview-names" class="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer" style="background: var(--accentwash, rgba(223,186,123,0.1)); color: var(--gold, #dfba7b); border-color: var(--border-champagne, rgba(223,186,123,0.3));" title="Salin Semua Nama File">' +
                         '        <i class="fa-regular fa-copy"></i> Salin Nama File' +
                         '      </button>' +
-                        '      <button onclick="closePhotographerPreview()" class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors">' +
+                        '      <button onclick="closePhotographerPreview()" class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-colors cursor-pointer border" style="background: var(--panel2, #212226); color: var(--muted, #a8a39c); border-color: var(--stroke, #35363b);">' +
                         '        <i class="fa-solid fa-xmark text-lg sm:text-xl"></i>' +
                         '      </button>' +
                         '    </div>' +
                         '  </div>' +
-                        '  <div class="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50" id="photographerPreviewScroll">' +
+                        '  <div class="flex-1 overflow-y-auto p-4 sm:p-6" style="background: var(--bg, #0e0f10);" id="photographerPreviewScroll">' +
                         '    <div id="photographer-preview-grid" class="gallery-grid max-w-[1600px] mx-auto"></div>' +
                         '  </div>' +
                         '</div>';
@@ -8845,9 +8845,11 @@
                     var globalIndex = 0;
                     for (var c in groupedCat) {
                         var headerDiv = document.createElement('div');
-                        headerDiv.className = "col-span-full mt-3 mb-2 px-4 py-2.5 bg-blue-50/80 border-l-4 border-blue-500 rounded-r-xl shadow-sm";
+                        headerDiv.className = "col-span-full mt-3 mb-2 px-4 py-2.5 rounded-r-xl shadow-sm border-l-4";
+                        headerDiv.style.cssText = "background: var(--panel2, #212226); border-color: var(--gold, #dfba7b);";
                         var h3 = document.createElement('h3');
-                        h3.className = "font-bold text-blue-800 text-sm sm:text-base uppercase tracking-wider flex items-center gap-2";
+                        h3.className = "font-bold text-sm sm:text-base uppercase tracking-wider flex items-center gap-2";
+                        h3.style.cssText = "color: var(--gold, #dfba7b);";
                         h3.innerHTML = '<i class="fa-solid fa-tag"></i> ';
                         h3.appendChild(document.createTextNode(c + ' (' + groupedCat[c].length + ')'));
                         headerDiv.appendChild(h3);
@@ -8855,7 +8857,8 @@
 
                         groupedCat[c].forEach(function (img) {
                             var card = document.createElement('div');
-                            card.className = "photo-card border border-gray-200 group bg-white shadow-sm hover:shadow-md transition-all";
+                            card.className = "photo-card group shadow-sm hover:shadow-md transition-all border";
+                            card.style.cssText = "background: var(--panel, #17181b); border-color: var(--stroke, rgba(223,186,123,0.2));";
                             var safeUrl = safeImageUrl(img.url, 'https://placehold.co/400x400?text=' + encodeURIComponent(img.name || 'Foto'));
                             var shortName = (img.name && img.name.length > 22) ? img.name.substring(0, 19) + '...' : (img.name || 'Foto');
 
@@ -8898,7 +8901,8 @@
                 } else {
                     list.forEach(function (img, index) {
                         var card = document.createElement('div');
-                        card.className = "photo-card border border-gray-200 group bg-white shadow-sm hover:shadow-md transition-all";
+                        card.className = "photo-card group shadow-sm hover:shadow-md transition-all border";
+                        card.style.cssText = "background: var(--panel, #17181b); border-color: var(--stroke, rgba(223,186,123,0.2));";
                         var safeUrl = safeImageUrl(img.url, 'https://placehold.co/400x400?text=' + encodeURIComponent(img.name || 'Foto'));
                         var shortName = (img.name && img.name.length > 22) ? img.name.substring(0, 19) + '...' : (img.name || 'Foto');
 
@@ -11139,7 +11143,14 @@
                         applyBranding();
 
                         // Sync Client Gallery Theme from Project Owner branding / metadata
-                        var clientTheme = projectPayload.theme || projectPayload.studioTheme || projectPayload.ownerTheme || 'noir';
+                        var clientTheme = projectPayload.theme || projectPayload.studioTheme || projectPayload.ownerTheme || '';
+                        if (!clientTheme && clientState.isPreviewMode) {
+                            try { clientTheme = localStorage.getItem('ps_theme') || localStorage.getItem('ps_admin_theme') || ''; } catch (e) { }
+                        }
+                        if (!clientTheme && clientState.token) {
+                            try { clientTheme = localStorage.getItem('ps_client_theme_' + clientState.token) || ''; } catch (e) { }
+                        }
+                        if (!clientTheme) clientTheme = 'noir';
                         applyTheme(clientTheme, false);
 
                         var btnBackAuth = document.getElementById('btn-back-dashboard-auth');
@@ -11366,9 +11377,15 @@
 
             // Sync Client Gallery Theme from Project Owner branding / metadata (Task C & D)
             var photographerTheme = projectData.theme || projectData.studioTheme || projectData.ownerTheme || 'noir';
+            if (photographerTheme === 'noir' && clientState.isPreviewMode) {
+                try {
+                    var localStudioTheme = localStorage.getItem('ps_theme') || localStorage.getItem('ps_admin_theme');
+                    if (localStudioTheme) photographerTheme = localStudioTheme;
+                } catch (e) { }
+            }
             clientState.photographerTheme = photographerTheme;
             var clientOverrideTheme = null;
-            if (projectData.token) {
+            if (projectData.token && !clientState.isPreviewMode) {
                 try {
                     clientOverrideTheme = localStorage.getItem('ps_client_theme_' + projectData.token);
                 } catch (e) { }
@@ -11530,6 +11547,7 @@
                 if (!isSubmitted) {
                     pingClientStatus('Sedang Memilih');
                 }
+                endLoading();
                 return;
             }
 
@@ -11735,6 +11753,11 @@
                 clientState.currentFolderId = prev.id;
                 clientState.currentFolderName = prev.name;
                 fetchClientContent(prev.id, prev.name);
+            } else {
+                endLoading();
+                if (typeof showClientModeSelection === 'function') {
+                    showClientModeSelection();
+                }
             }
         }
 
@@ -11864,13 +11887,29 @@
                 return;
             }
 
+            // Abort any previous in-flight original fetch on photo switch
+            if (window.__viewerOriginalController) {
+                try { window.__viewerOriginalController.abort(); } catch (_) { }
+                window.__viewerOriginalController = null;
+            }
+
             if (statusEl) {
                 statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-black/60 text-amber-300 backdrop-blur-md border border-white/10 animate-pulse hidden sm:flex items-center gap-1.5';
                 statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Memuat Original...</span>';
             }
 
-            fetchAuthorizedOriginalBlob(origUrl, item.name || 'photo.jpg', { requireOriginal: true, purpose: 'view' })
+            var viewerCtrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+            window.__viewerOriginalController = viewerCtrl;
+
+            fetchAuthorizedOriginalBlob(origUrl, item.name || 'photo.jpg', {
+                requireOriginal: true,
+                purpose: 'view',
+                controller: viewerCtrl
+            })
                 .then(function (res) {
+                    if (window.__viewerOriginalController === viewerCtrl) {
+                        window.__viewerOriginalController = null;
+                    }
                     var actualBlob = (res && res.blob) ? res.blob : res;
                     var isValidBlob = actualBlob && (typeof Blob !== 'undefined' ? (actualBlob instanceof Blob) : (actualBlob && typeof actualBlob.slice === 'function'));
                     if (window.viewerLoadRequestId === reqId && img && isValidBlob && actualBlob.size > 0) {
@@ -11898,8 +11937,11 @@
                     }
                 })
                 .catch(function () {
+                    if (window.__viewerOriginalController === viewerCtrl) {
+                        window.__viewerOriginalController = null;
+                    }
                     // Honest fallback: keep preview without claiming it is original
-                    if (statusEl) {
+                    if (statusEl && window.viewerLoadRequestId === reqId) {
                         statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
                         statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span>';
                     }
@@ -11986,6 +12028,11 @@
             var img = document.getElementById('viewerImage');
             var wrapper = document.getElementById('viewerImageWrapper');
 
+            if (window.__viewerOriginalController) {
+                try { window.__viewerOriginalController.abort(); } catch (_) { }
+                window.__viewerOriginalController = null;
+            }
+
             resetZoom(); // Reset gambar ke ukuran asli sebelum ditutup
 
             modal.classList.add('opacity-0');
@@ -12002,6 +12049,11 @@
 
         function navigateViewer(direction, e) {
             if (e) e.stopPropagation(); // Amankan klik agar tidak menutup modal
+
+            if (window.__viewerOriginalController) {
+                try { window.__viewerOriginalController.abort(); } catch (_) { }
+                window.__viewerOriginalController = null;
+            }
 
             if (!window.viewerActiveList || window.viewerActiveList.length === 0) return;
             var total = window.viewerActiveList.length;
@@ -12482,7 +12534,7 @@
 
         function executeThumbnailTask(task) {
             activeFetchCount++;
-            fetchAuthenticatedPreviewBlob(task.url)
+            fetchAuthenticatedPreviewBlob(task.url, { isHighPriority: task.isHighPriority })
                 .then(function (blobUrl) {
                     if (task.imgEl && blobUrl && document.body.contains(task.imgEl)) {
                         task.imgEl.src = blobUrl;
@@ -12774,14 +12826,22 @@
                         imgEl.src = previewBlobCache.get(safeUrl);
                     } else {
                         imgEl.src = localPlaceholderSvg;
-                        var obs = (typeof getPreviewObserver === 'function') ? getPreviewObserver() : null;
-                        if (obs) {
-                            obs.observe(imgEl);
-                        } else {
+                        if (index < 12) {
                             if (typeof enqueueThumbnailFetch === 'function') {
-                                enqueueThumbnailFetch(imgEl, safeGridUrl, false);
+                                enqueueThumbnailFetch(imgEl, safeGridUrl, true);
                             } else {
                                 loadAuthenticatedPreview(imgEl, safeGridUrl, localPlaceholderSvg);
+                            }
+                        } else {
+                            var obs = (typeof getPreviewObserver === 'function') ? getPreviewObserver() : null;
+                            if (obs) {
+                                obs.observe(imgEl);
+                            } else {
+                                if (typeof enqueueThumbnailFetch === 'function') {
+                                    enqueueThumbnailFetch(imgEl, safeGridUrl, false);
+                                } else {
+                                    loadAuthenticatedPreview(imgEl, safeGridUrl, localPlaceholderSvg);
+                                }
                             }
                         }
                     }
@@ -15552,6 +15612,41 @@
                                     fetchAuthenticatedPreviewBlob(thumbUrl, { isHighPriority: false }).catch(function () {});
                                 }
                             });
+                        } else if (content.folders && content.folders.length > 0) {
+                            // If root folder contains subfolders (e.g. CAM 1, CAM 2) and no direct images,
+                            // pre-warm the first subfolder so opening CAM 1 is instantaneous
+                            var firstSub = content.folders[0];
+                            if (firstSub && firstSub.id) {
+                                var subCacheKey = 'ps_folder_cache_' + firstSub.id;
+                                if (!sessionStorage.getItem(subCacheKey)) {
+                                    fetch(API_ENDPOINT, {
+                                        method: 'POST',
+                                        headers: clientHeaders,
+                                        body: JSON.stringify({
+                                            action: 'getDriveContent',
+                                            folder_id: firstSub.id,
+                                            token: tokenVal,
+                                            clientAccessToken: sessionToken
+                                        })
+                                    }).then(function (r) { return r.json(); }).then(function (subRes) {
+                                        if (subRes && subRes.status === 'success' && subRes.data) {
+                                            var subContent = {
+                                                folders: subRes.data.folders || [],
+                                                images: subRes.data.images || []
+                                            };
+                                            try { sessionStorage.setItem(subCacheKey, JSON.stringify(subContent)); } catch (_) {}
+                                            if (subContent.images && subContent.images.length > 0) {
+                                                subContent.images.slice(0, 6).forEach(function (img) {
+                                                    var thumbUrl = img.previewUrl || img.url;
+                                                    if (thumbUrl && !previewBlobCache.has(thumbUrl)) {
+                                                        fetchAuthenticatedPreviewBlob(thumbUrl, { isHighPriority: false }).catch(function () {});
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    }).catch(function () {});
+                                }
+                            }
                         }
                         return content;
                     }
@@ -15564,6 +15659,7 @@
         }
 
         function showClientModeSelection() {
+            endLoading();
             clientState.currentFolderId = extractDriveFolderId(clientState.driveLink) || clientState.driveLink;
             clientState.currentFolderName = clientState.namaClient;
             showView('client-mode-view');
@@ -15850,11 +15946,11 @@
 
                 // TASK D: Bounded network wait with AbortController timeout (15 seconds)
                 var timeoutMs = (opts && opts.timeout) || 15000;
-                var controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+                var controller = (opts && opts.controller) ? opts.controller : ((typeof AbortController !== 'undefined') ? new AbortController() : null);
                 var timeoutId = null;
                 if (controller) {
                     timeoutId = setTimeout(function () {
-                        controller.abort();
+                        try { controller.abort(); } catch (_) { }
                     }, timeoutMs);
                 }
 
@@ -15979,11 +16075,29 @@
                             var currentEnd = Math.min(currentStart + sliceSize - 1, expectedTotalSize - 1);
                             var rangeSpec = 'bytes=' + currentStart + '-' + currentEnd;
 
-                            var sliceHeaders = Object.assign({}, headers, { 'Range': rangeSpec });
-                            var sliceRes = await fetch(fetchUrl, {
-                                headers: sliceHeaders,
-                                signal: controller ? controller.signal : undefined
-                            });
+                            var sliceTimeoutId = null;
+                            var sliceRes;
+                            try {
+                                if (controller) {
+                                    sliceTimeoutId = setTimeout(function () {
+                                        try { controller.abort(); } catch (_) { }
+                                    }, timeoutMs);
+                                }
+                                var sliceHeaders = Object.assign({}, headers, { 'Range': rangeSpec });
+                                sliceRes = await fetch(fetchUrl, {
+                                    headers: sliceHeaders,
+                                    signal: controller ? controller.signal : undefined
+                                });
+                            } catch (sliceNetErr) {
+                                if (sliceNetErr.name === 'AbortError') {
+                                    var toErr = new Error(isEn ? "Request timed out while downloading original photo slice." : "Waktu permintaan habis saat mengunduh bagian berkas foto asli.");
+                                    toErr.isTimeout = true;
+                                    throw toErr;
+                                }
+                                throw sliceNetErr;
+                            } finally {
+                                if (sliceTimeoutId) clearTimeout(sliceTimeoutId);
+                            }
 
                             if (sliceRes.status !== 206) {
                                 throw new Error("HTTP " + sliceRes.status + ": Expected HTTP 206 slice for " + rangeSpec);

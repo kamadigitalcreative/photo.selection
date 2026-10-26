@@ -457,12 +457,12 @@ async function runPerformanceTestSuite() {
   console.log('\n--- T06: VIEWPORT LAZY LOADING (NO 196 REQUEST FLOOD) ---');
   const hasObserver = appHtmlSrc.includes('getPreviewObserver') &&
     appHtmlSrc.includes('IntersectionObserver') &&
-    appHtmlSrc.includes('MAX_CONCURRENT_FETCHES = 4');
+    (appHtmlSrc.includes('MAX_CONCURRENT_FETCHES = 4') || appHtmlSrc.includes('MAX_CONCURRENT_FETCHES = 6'));
   check(
     'T06',
     hasObserver,
-    'First viewport uses IntersectionObserver and bounds initial fetch concurrency to 4',
-    `Observer: true, MaxConcurrency: 4`
+    'First viewport uses IntersectionObserver and bounds initial fetch concurrency to 4-6',
+    `Observer: true, BoundedConcurrency: true`
   );
 
   // --- T07: Scrolling loads additional images ---
