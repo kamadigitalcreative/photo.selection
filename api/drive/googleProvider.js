@@ -308,6 +308,13 @@ class GoogleDriveProvider {
    */
   async getFileMetadata(fileId) {
     if (!fileId) return null;
+    if (!this.metadataCache) {
+      this.metadataCache = new Map();
+    }
+    const cached = this.metadataCache.get(fileId);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.data;
+    }
     if (!this.hasCredentials()) return null;
 
     try {
@@ -327,7 +334,9 @@ class GoogleDriveProvider {
       const apiUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?${urlParams.toString()}`;
       const res = await fetch(apiUrl, { headers });
       if (!res.ok) return null;
-      return await res.json();
+      const data = await res.json();
+      this.metadataCache.set(fileId, { data, expiresAt: Date.now() + 300000 });
+      return data;
     } catch (_) {
       return null;
     }

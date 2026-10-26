@@ -2489,6 +2489,8 @@ async function issueClientGallerySession(project) {
   return token;
 }
 
+const _clientSessionCache = new Map();
+
 async function verifyClientGallerySession(clientAccessToken, project) {
   if (!clientAccessToken || typeof clientAccessToken !== 'string') return null;
   const token = clientAccessToken.trim();
@@ -2496,6 +2498,13 @@ async function verifyClientGallerySession(clientAccessToken, project) {
 
   const stableId = getStableProjectId(project);
   if (!stableId) return null;
+
+  const cacheKey = `${token}:${stableId}`;
+  const now = Date.now();
+  const cached = _clientSessionCache.get(cacheKey);
+  if (cached && cached.expiresAt > now) {
+    return cached.session;
+  }
 
   let sessionRows = null;
   try {
@@ -2541,9 +2550,14 @@ async function verifyClientGallerySession(clientAccessToken, project) {
         method: 'DELETE'
       });
     } catch (delErr) { }
+    _clientSessionCache.delete(cacheKey);
     return null;
   }
 
+  _clientSessionCache.set(cacheKey, {
+    session: s,
+    expiresAt: Math.min(now + 60000, createdTime + CLIENT_GALLERY_SESSION_TTL_MS)
+  });
   return s;
 }
 
@@ -4131,6 +4145,7 @@ async function handleDownloadOriginalFile(payload, req, res) {
 
   const provider = payload.testProviderOverride || getDriveProvider();
 
+  const tAuthStart = Date.now();
   const downloadService = new DownloadService({
     driveProvider: provider,
     sessionVerifier: payload.testSessionVerifier || (async (token) => {
@@ -4142,6 +4157,7 @@ async function handleDownloadOriginalFile(payload, req, res) {
             return {
               token: s.SessionID,
               projectToken: projectToken,
+              project: p,
               isDownloadActive: String(p.AksesDownload || p.Akses_Download).toUpperCase() !== 'FALSE',
               expiresAt: new Date(s.CreatedAt).getTime() + CLIENT_GALLERY_SESSION_TTL_MS
             };
@@ -4165,6 +4181,7 @@ async function handleDownloadOriginalFile(payload, req, res) {
     purpose,
     folderId
   });
+  const tAuth = Date.now() - tAuthStart;
 
   if (!authCheck.authorized) {
     return error(res, authCheck.error.message, authCheck.error.status);
@@ -4173,6 +4190,7 @@ async function handleDownloadOriginalFile(payload, req, res) {
   const rangeHeader = req && req.headers ? (req.headers['range'] || payload.range) : payload.range;
 
   if (provider.name === 'google' || provider.isStreamingProvider || payload.forceStreamDelivery) {
+    const tMetaStart = Date.now();
     let meta = authCheck.meta || await provider.getFileMetadata(fileId);
     if (!meta && typeof provider.resolveProjectFile === 'function' && authCheck.project) {
       const rawFolder = authCheck.project['Drive Link'] || authCheck.project.driveLink || authCheck.project.DriveLink || authCheck.project.google_drive_folder_id || authCheck.project.folderId || '';
@@ -4181,6 +4199,8 @@ async function handleDownloadOriginalFile(payload, req, res) {
         meta = await provider.resolveProjectFile(fileId, projectFolderId, folderId);
       }
     }
+    const tMeta = Date.now() - tMetaStart;
+
     if (!meta) {
       return error(res, 'Berkas foto tidak ditemukan di Google Drive.', 404);
     }
@@ -4193,12 +4213,15 @@ async function handleDownloadOriginalFile(payload, req, res) {
       return res.end();
     }
 
-    if (!rangeInfo.isRange && delivery.isLarge && process.env.VERCEL) {
-      return error(res, delivery.message, 413);
-    }
+    // Direct authentic streaming is supported on all environments including Vercel
+    // via Node.js stream/pipeline chunked transfer encoding (no 4.5MB buffered limit).
+    // If range is NOT requested, stream full authentic original without artificial 413.
 
     const streamOpts = rangeInfo.isRange ? { range: `bytes=${rangeInfo.start}-${rangeInfo.end}` } : {};
+    const tStreamStart = Date.now();
     const streamRes = await provider.fetchOriginalStream(fileId, streamOpts);
+    const tStreamInit = Date.now() - tStreamStart;
+
     if (!streamRes.success) {
       return error(res, streamRes.message, streamRes.status || 500, streamRes.code ? { code: streamRes.code } : null);
     }
@@ -4246,7 +4269,7 @@ async function handleDownloadOriginalFile(payload, req, res) {
       }
       verifiedUpstreamCr = cr;
     } else {
-      expectedChunkBytes = meta.size ? parseInt(meta.size, 10) : 0;
+      expectedChunkBytes = meta.size ? parseInt(meta.size, 10) : (byteSize || 0);
     }
 
     const cleanName = downloadService.sanitizeHeaderFilename(meta.name);
@@ -4260,11 +4283,16 @@ async function handleDownloadOriginalFile(payload, req, res) {
       'Content-Type': streamRes.headers?.['Content-Type'] || streamRes.headers?.['content-type'] || 'application/octet-stream',
       'Content-Disposition': `attachment; filename="${cleanName}"`,
       'Accept-Ranges': 'bytes',
-      'X-Content-Type-Options': 'nosniff'
+      'X-Content-Type-Options': 'nosniff',
+      'X-Delivery-Mode': rangeInfo.isRange ? 'CHUNKED_RANGE' : 'DIRECT_STREAM',
+      'X-Original-Transport': 'phase6-stream-v2',
+      'Server-Timing': `auth;dur=${tAuth}, meta;dur=${tMeta}, stream_init;dur=${tStreamInit}`
     };
     if (rangeInfo.isRange) {
       // Forward genuine verified upstream Content-Range (never fabricate mismatched expected headers)
       headers['Content-Range'] = verifiedUpstreamCr;
+      headers['Content-Length'] = String(expectedChunkBytes);
+    } else if (expectedChunkBytes > 0) {
       headers['Content-Length'] = String(expectedChunkBytes);
     } else if (streamRes.headers?.['Content-Length'] || streamRes.headers?.['content-length']) {
       headers['Content-Length'] = streamRes.headers['Content-Length'] || streamRes.headers['content-length'];

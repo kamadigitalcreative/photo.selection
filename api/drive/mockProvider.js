@@ -337,14 +337,30 @@ class MockDriveProvider {
    * Fetches stream for mock file.
    */
   async fetchOriginalStream(fileId, options = {}) {
-    const res = await this.getFileBuffer({ fileId, range: options.range ? { start: 0 } : null });
+    let rangeArg = null;
+    if (options.range) {
+      if (typeof options.range === 'string') {
+        const m = options.range.match(/bytes=(\d+)-(\d+)?/i);
+        if (m) {
+          rangeArg = {
+            start: parseInt(m[1], 10),
+            end: m[2] ? parseInt(m[2], 10) : undefined
+          };
+        } else {
+          rangeArg = { start: 0 };
+        }
+      } else if (typeof options.range === 'object') {
+        rangeArg = options.range;
+      }
+    }
+    const res = await this.getFileBuffer({ fileId, range: rangeArg });
     if (!res.success) return res;
     return {
       success: true,
-      status: res.status || 200,
+      status: res.status || (rangeArg ? 206 : 200),
       headers: {
         'Content-Type': res.mimeType,
-        'Content-Length': res.size,
+        'Content-Length': String(res.size),
         ...(res.contentRange ? { 'Content-Range': res.contentRange } : {})
       },
       body: Readable.from([res.buffer])

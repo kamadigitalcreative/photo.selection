@@ -94,8 +94,8 @@ class DownloadService {
     }
 
     // 4. Resolve authoritative server-side project record (MANDATORY: fail closed if missing)
-    let project = null;
-    if (typeof this.projectFinder === 'function') {
+    let project = (session && session.project) ? session.project : null;
+    if (!project && typeof this.projectFinder === 'function') {
       project = await this.projectFinder(sessionProjToken);
     }
 
