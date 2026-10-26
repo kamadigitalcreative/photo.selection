@@ -738,13 +738,21 @@ class PublicDriveProvider {
     }
 
     const downloadUrl = `https://drive.google.com/uc?export=download&id=${cleanId}`;
-    const fetchHeaders = {};
+    const fetchHeaders = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+      'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Sec-Fetch-Dest': 'empty',
+      'Sec-Fetch-Mode': 'cors',
+      'Sec-Fetch-Site': 'cross-site'
+    };
     const rangeVal = options.range || options.rangeHeader;
     if (rangeVal) {
       fetchHeaders['Range'] = rangeVal;
     }
 
     const fetchImpl = this.getFetch();
+    const cookieJar = new Map();
 
     // Helper: Safely follow and validate redirects for a given starting URL
     const executeValidatedFetch = async (startUrl) => {
@@ -778,10 +786,27 @@ class PublicDriveProvider {
         }
         visitedUrls.add(currentUrl);
 
+        const requestHeaders = Object.assign({}, fetchHeaders);
+        if (cookieJar.size > 0) {
+          requestHeaders['Cookie'] = Array.from(cookieJar.entries()).map(([k, v]) => `${k}=${v}`).join('; ');
+        }
+
         res = await fetchImpl(currentUrl, {
-          headers: fetchHeaders,
+          headers: requestHeaders,
           redirect: 'manual'
         });
+
+        // Record any Set-Cookie headers for subsequent redirect or confirmation requests
+        const setCookie = res.headers && typeof res.headers.get === 'function' ? res.headers.get('set-cookie') : null;
+        if (setCookie) {
+          const cookieStrings = Array.isArray(setCookie) ? setCookie : [setCookie];
+          for (const cStr of cookieStrings) {
+            const match = String(cStr).match(/^([^=;]+)=([^;]+)/);
+            if (match) {
+              cookieJar.set(match[1].trim(), match[2].trim());
+            }
+          }
+        }
 
         // Handle 301/302/303/307/308 Google CDN redirects
         if (res.status >= 300 && res.status < 400) {
@@ -871,15 +896,38 @@ class PublicDriveProvider {
       if (contentType.includes('text/html')) {
         const html = await res.text();
 
-        // Attempt to extract confirmation token: confirm=xxxx
-        const confirmMatch = html.match(/confirm=([a-zA-Z0-9_-]+)/i) ||
-          html.match(/name="confirm"\s+value="([^"]+)"/i) ||
+        // Check for download form action or confirmation tokens
+        const formActionMatch = html.match(/<form[^>]+action="([^"]+)"[^>]*>/i);
+        const uuidMatch = html.match(/name="uuid"\s+value="([^"]+)"/i);
+        const confirmValMatch = html.match(/name="confirm"\s+value="([^"]+)"/i) ||
+          html.match(/confirm=([a-zA-Z0-9_-]+)/i) ||
           html.match(/href="[^"]*[?&]confirm=([^"&]+)/i);
 
-        if (confirmMatch && confirmMatch[1]) {
-          const confirmToken = confirmMatch[1];
-          const confirmedUrl = `https://drive.google.com/uc?export=download&confirm=${confirmToken}&id=${cleanId}`;
+        let confirmedUrl = null;
+        if (formActionMatch && formActionMatch[1] && confirmValMatch && confirmValMatch[1]) {
+          let formAction = formActionMatch[1].replace(/&amp;/g, '&');
+          if (formAction.startsWith('/')) {
+            formAction = 'https://drive.google.com' + formAction;
+          }
+          try {
+            const formUrl = new URL(formAction);
+            formUrl.searchParams.set('id', cleanId);
+            formUrl.searchParams.set('export', 'download');
+            formUrl.searchParams.set('confirm', confirmValMatch[1]);
+            if (uuidMatch && uuidMatch[1]) {
+              formUrl.searchParams.set('uuid', uuidMatch[1]);
+            }
+            confirmedUrl = formUrl.toString();
+          } catch (_) {
+            confirmedUrl = null;
+          }
+        }
 
+        if (!confirmedUrl && confirmValMatch && confirmValMatch[1]) {
+          confirmedUrl = `https://drive.google.com/uc?export=download&confirm=${confirmValMatch[1]}&id=${cleanId}`;
+        }
+
+        if (confirmedUrl && isAllowedGoogleDownloadUrl(confirmedUrl)) {
           // Validate confirmation retry redirects manually with the exact same strict policy
           const retryFetchResult = await executeValidatedFetch(confirmedUrl);
           if (!retryFetchResult.error && retryFetchResult.res && retryFetchResult.res.ok) {

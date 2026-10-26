@@ -11666,6 +11666,9 @@
                         // Deduplicate images
                         for (var i = 0; i < pImages.length; i++) {
                             var img = pImages[i];
+                            if (folderId && !img.folderId) {
+                                img.folderId = folderId;
+                            }
                             var iKey = (img.id || img.name) + '__' + (img.name || '');
                             if (!seenImgKeys.has(iKey)) {
                                 seenImgKeys.add(iKey);
@@ -11920,7 +11923,8 @@
             if (originalBlobCache.has(nKey) || inFlightOriginalRequests.has(nKey)) return;
 
             var nFileId = neighborItem.id;
-            var nOrigUrl = neighborItem.originalUrl || (nFileId ? ('/api/bridge?action=downloadOriginalFile&fileId=' + nFileId + '&token=' + encodeURIComponent((clientState && clientState.token) || '') + '&purpose=view') : null);
+            var nFolder = (neighborItem && (neighborItem.folderId || neighborItem.folder)) || (clientState && clientState.currentFolderId) || '';
+            var nOrigUrl = (neighborItem && neighborItem.originalUrl) ? (neighborItem.originalUrl + (neighborItem.originalUrl.includes('purpose=') ? '' : '&purpose=view') + (!neighborItem.originalUrl.includes('folderId=') && nFolder ? ('&folderId=' + encodeURIComponent(nFolder)) : '')) : (nFileId ? ('/api/bridge?action=downloadOriginalFile&fileId=' + nFileId + '&token=' + encodeURIComponent((clientState && clientState.token) || '') + (nFolder ? ('&folderId=' + encodeURIComponent(nFolder)) : '') + '&purpose=view') : null);
             if (!nOrigUrl || !nFileId) return;
 
             var nCtrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
@@ -11964,7 +11968,8 @@
             var img = document.getElementById('viewerImage');
             var statusEl = document.getElementById('viewer-original-status');
             var fileId = (item && item.id) || (item && item.url && (item.url.match(/[?&]fileId=([-\w]{10,128})/)?.[1] || item.url.match(/https:\/\/lh3\.googleusercontent\.com\/d\/([-\w]{10,128})/)?.[1]));
-            var origUrl = (item && item.originalUrl) || (fileId ? ('/api/bridge?action=downloadOriginalFile&fileId=' + fileId + '&token=' + encodeURIComponent((clientState && clientState.token) || '') + '&purpose=view') : null);
+            var itemFolder = (item && (item.folderId || item.folder)) || (clientState && clientState.currentFolderId) || '';
+            var origUrl = (item && item.originalUrl) ? (item.originalUrl + (item.originalUrl.includes('purpose=') ? '' : '&purpose=view') + (!item.originalUrl.includes('folderId=') && itemFolder ? ('&folderId=' + encodeURIComponent(itemFolder)) : '')) : (fileId ? ('/api/bridge?action=downloadOriginalFile&fileId=' + fileId + '&token=' + encodeURIComponent((clientState && clientState.token) || '') + (itemFolder ? ('&folderId=' + encodeURIComponent(itemFolder)) : '') + '&purpose=view') : null);
 
             if (!origUrl || !fileId) {
                 if (statusEl) {
@@ -12085,10 +12090,13 @@
                         statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
                         statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span>';
                     }
-                }).catch(function () {
+                }).catch(function (err) {
                     if (statusEl && window.viewerLoadRequestId === reqId) {
+                        var errStatus = (err && err.status) || 0;
+                        var errCode = (err && err.code) || 'PREVIEW_FALLBACK';
+                        var badgeCode = errStatus ? (errStatus + ':' + errCode) : errCode;
                         statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
-                        statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span>';
+                        statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span><span class="text-[10px] text-amber-400/90 font-mono ml-1 px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">[' + badgeCode + ']</span>';
                     }
                 });
                 return;
@@ -12210,28 +12218,40 @@
                     if (typeof verifiedOriginalKeys !== 'undefined') {
                         verifiedOriginalKeys.delete(cacheKey);
                     }
-                    var failureCat = err.isTimeout ? 'TIMEOUT' : (err.isAuthError ? 'AUTH_FAILED' : (err.name === 'AbortError' ? 'ABORTED' : 'FETCH_ERROR'));
+                    var errStatus = (err && err.status) || (err && err.isTimeout ? 408 : (err && err.name === 'AbortError' ? 499 : 0));
+                    var errCode = (err && err.code) || (err && err.isTimeout ? 'TIMEOUT' : (err && err.isAuthError ? 'AUTH_FAILED' : (err && err.name === 'AbortError' ? 'ABORTED' : 'FETCH_ERROR')));
+                    var providerName = (err && err.provider) || 'public_link';
+                    var failureCat = (err && err.isTimeout) ? 'TIMEOUT' : ((err && err.isAuthError) ? 'AUTH_FAILED' : ((err && err.name === 'AbortError') ? 'ABORTED' : (errCode || 'FETCH_ERROR')));
+
                     if (typeof window !== 'undefined') {
                         window.__viewerDiagnostics = {
                             fileId: fileId,
+                            filename: (item && item.name) || '',
+                            provider: providerName,
                             cacheHit: false,
                             verifiedOriginal: false,
                             failureCategory: failureCat,
-                            errorMessage: err.message || String(err),
+                            httpStatus: errStatus,
+                            errorCode: errCode,
+                            errorMessage: err ? (err.message || String(err)) : '',
                             timings: {
                                 totalViewerOriginalMs: Math.round(((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - tViewerStart)
                             }
                         };
                         console.warn('[ViewerDiagnostics] Original load failed:', {
                             fileId: fileId,
+                            provider: providerName,
+                            status: errStatus,
+                            code: errCode,
                             category: failureCat,
-                            error: err.message
+                            error: err ? err.message : ''
                         });
                     }
-                    // Honest fallback: keep preview without claiming it is original
+                    // Honest fallback: keep preview without claiming it is original, but display sanitized error code for developer observability
                     if (statusEl && window.viewerLoadRequestId === reqId) {
                         statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
-                        statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span>';
+                        var badgeCode = errStatus ? (errStatus + ':' + errCode) : errCode;
+                        statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span><span class="text-[10px] text-amber-400/90 font-mono ml-1 px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20" title="' + encodeURIComponent(badgeCode) + '">[' + badgeCode + ']</span>';
                     }
                     throw err;
                 })
@@ -16377,7 +16397,7 @@
                     try {
                         var errJson = await response.json();
                         if (errJson) {
-                            errCode = errJson.code || errCode;
+                            errCode = errJson.code || (errJson.data && errJson.data.code) || errCode;
                             errDetail = errJson.message || '';
                         }
                     } catch (_) { }
@@ -16423,10 +16443,19 @@
                         generalAuthErr.code = errCode;
                         throw generalAuthErr;
                     }
+                    var provName = (response.headers && response.headers.get('x-drive-provider')) || 'public_link';
                     if (response.status === 404) {
-                        throw new Error(isEn ? "HTTP 404: Original photo file was not found on server." : "HTTP 404: Berkas foto asli tidak ditemukan di server.");
+                        var notFoundErr = new Error(isEn ? "HTTP 404: Original photo file was not found on server." : "HTTP 404: Berkas foto asli tidak ditemukan di server.");
+                        notFoundErr.status = 404;
+                        notFoundErr.code = errCode !== 'FORBIDDEN' ? errCode : 'FILE_NOT_FOUND';
+                        notFoundErr.provider = provName;
+                        throw notFoundErr;
                     }
-                    throw new Error("HTTP " + response.status + ": " + (isEn ? "Failed to retrieve photo from server." : "Gagal mengambil berkas foto dari server."));
+                    var httpErr = new Error("HTTP " + response.status + ": " + (errDetail || (isEn ? "Failed to retrieve photo from server." : "Gagal mengambil berkas foto dari server.")));
+                    httpErr.status = response.status;
+                    httpErr.code = errCode !== 'FORBIDDEN' ? errCode : ('HTTP_' + response.status);
+                    httpErr.provider = provName;
+                    throw httpErr;
                 }
 
                 // Cegah pengunduhan file error (HTML 404/500 atau JSON) yang dinamai sebagai gambar
@@ -16436,7 +16465,11 @@
                         clearTimeout(timeoutId);
                         timeoutId = null;
                     }
-                    throw new Error(isEn ? "Server returned an error response instead of an image." : "Server mengembalikan halaman web/error, bukan file gambar.");
+                    var htmlErr = new Error(isEn ? "Server returned an error response instead of an image." : "Server mengembalikan halaman web/error, bukan file gambar.");
+                    htmlErr.status = response.status || 502;
+                    htmlErr.code = 'UNEXPECTED_HTML_RESPONSE';
+                    htmlErr.provider = (response.headers && response.headers.get('x-drive-provider')) || 'public_link';
+                    throw htmlErr;
                 }
                 detectedContentType = contentType || detectedContentType;
 

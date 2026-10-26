@@ -649,7 +649,11 @@ function success(res, data, message = 'Success') {
 }
 
 function error(res, message = 'Error occurred', statusCode = 400, data = null) {
-  return sendJSON(res, statusCode, { status: 'error', message: message, data: data });
+  const payload = { status: 'error', message: message, data: data };
+  if (data && typeof data === 'object' && !Array.isArray(data) && data.code) {
+    payload.code = data.code;
+  }
+  return sendJSON(res, statusCode, payload);
 }
 
 // =========================================================================
@@ -4270,6 +4274,9 @@ async function handleDownloadOriginalFile(payload, req, res) {
       verifiedUpstreamCr = cr;
     } else {
       expectedChunkBytes = meta.size ? parseInt(meta.size, 10) : (byteSize || 0);
+      if (!expectedChunkBytes && (streamRes.contentLength || streamRes.headers?.['Content-Length'] || streamRes.headers?.['content-length'])) {
+        expectedChunkBytes = parseInt(streamRes.contentLength || streamRes.headers?.['Content-Length'] || streamRes.headers?.['content-length'], 10) || 0;
+      }
     }
 
     const cleanName = downloadService.sanitizeHeaderFilename(meta.name);
