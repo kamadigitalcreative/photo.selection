@@ -11861,6 +11861,66 @@
 
         var originalBlobCache = new Map();
         var MAX_ORIGINAL_CACHE = 8; // Bounded memory: max 8 full-size authentic original blobs in memory
+        var inFlightOriginalRequests = new Map();
+
+        function getOriginalCacheKey(item, token) {
+            var pTok = (token || (typeof clientState !== 'undefined' && clientState.token) || 'default').trim();
+            var fId = (item && (item.id || item.fileId)) || '';
+            if (!fId && item && item.url) {
+                var m = item.url.match(/[?&]fileId=([-\w]{10,128})/i) || item.url.match(/https:\/\/lh3\.googleusercontent\.com\/d\/([-\w]{10,128})/i);
+                if (m) fId = m[1];
+            }
+            return pTok + ':' + fId;
+        }
+
+        function prefetchNeighborOriginal(neighborIndex) {
+            if (!window.viewerActiveList || neighborIndex < 0 || neighborIndex >= window.viewerActiveList.length) return;
+            var neighborItem = window.viewerActiveList[neighborIndex];
+            if (!neighborItem) return;
+            var projectToken = (typeof clientState !== 'undefined' && clientState.token) ? clientState.token : '';
+            var nKey = getOriginalCacheKey(neighborItem, projectToken);
+            if (originalBlobCache.has(nKey) || inFlightOriginalRequests.has(nKey)) return;
+
+            var nFileId = neighborItem.id;
+            var nOrigUrl = neighborItem.originalUrl || (nFileId ? ('/api/bridge?action=downloadOriginalFile&fileId=' + nFileId + '&token=' + encodeURIComponent((clientState && clientState.token) || '') + '&purpose=view') : null);
+            if (!nOrigUrl || !nFileId) return;
+
+            var nCtrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+            window.__viewerPrefetchController = nCtrl;
+
+            var pPromise = fetchAuthorizedOriginalBlob(nOrigUrl, neighborItem.name || 'photo.jpg', {
+                requireOriginal: true,
+                purpose: 'view',
+                controller: nCtrl,
+                isPrefetch: true
+            }).then(function (res) {
+                var actualBlob = (res && res.blob) ? res.blob : res;
+                if (actualBlob && actualBlob.size > 0) {
+                    var bUrl = URL.createObjectURL(actualBlob);
+                    if (originalBlobCache.size >= MAX_ORIGINAL_CACHE) {
+                        var oldestKey = originalBlobCache.keys().next().value;
+                        var oldUrl = originalBlobCache.get(oldestKey);
+                        if (oldUrl) {
+                            if (typeof oldUrl === 'string') URL.revokeObjectURL(oldUrl);
+                            else if (oldUrl.blobUrl) URL.revokeObjectURL(oldUrl.blobUrl);
+                        }
+                        originalBlobCache.delete(oldestKey);
+                    }
+                    var sizeStr = actualBlob.size > 1048576 ? (actualBlob.size / 1048576).toFixed(1) + ' MB' : Math.round(actualBlob.size / 1024) + ' KB';
+                    originalBlobCache.set(nKey, bUrl);
+                    originalBlobCache.set(nFileId, bUrl);
+                }
+            }).catch(function () {
+                // Silently discard background prefetch failure
+            }).finally(function () {
+                inFlightOriginalRequests.delete(nKey);
+                if (window.__viewerPrefetchController === nCtrl) {
+                    window.__viewerPrefetchController = null;
+                }
+            });
+
+            inFlightOriginalRequests.set(nKey, pPromise);
+        }
 
         function loadViewerAuthenticOriginal(item, reqId) {
             var img = document.getElementById('viewerImage');
@@ -11876,9 +11936,15 @@
                 return;
             }
 
-            // Check if already in originalBlobCache
-            if (originalBlobCache.has(fileId)) {
-                var cachedBlobUrl = originalBlobCache.get(fileId);
+            var projectToken = (typeof clientState !== 'undefined' && clientState.token) ? clientState.token : '';
+            var cacheKey = getOriginalCacheKey(item, projectToken);
+
+            // Check if already in originalBlobCache (0ms instant cache hit)
+            if (originalBlobCache.has(cacheKey) || originalBlobCache.has(fileId)) {
+                var cachedBlobUrl = originalBlobCache.get(cacheKey) || originalBlobCache.get(fileId);
+                if (cachedBlobUrl && typeof cachedBlobUrl !== 'string' && cachedBlobUrl.blobUrl) {
+                    cachedBlobUrl = cachedBlobUrl.blobUrl;
+                }
                 if (img) img.src = cachedBlobUrl;
                 if (statusEl) {
                     statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 backdrop-blur-md border border-emerald-500/30 hidden sm:flex items-center gap-1.5';
@@ -11887,10 +11953,44 @@
                 return;
             }
 
+            // In-flight request deduplication: reuse active promise without refetching
+            if (inFlightOriginalRequests.has(cacheKey)) {
+                if (statusEl) {
+                    statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-black/60 text-amber-300 backdrop-blur-md border border-white/10 animate-pulse hidden sm:flex items-center gap-1.5';
+                    statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Memuat Original...</span>';
+                }
+                inFlightOriginalRequests.get(cacheKey).then(async function (res) {
+                    var actualBlob = (res && res.blob) ? res.blob : res;
+                    if (window.viewerLoadRequestId === reqId && img && actualBlob) {
+                        var bUrl = originalBlobCache.get(cacheKey) || originalBlobCache.get(fileId);
+                        if (bUrl) {
+                            img.src = bUrl;
+                            if (typeof img.decode === 'function') {
+                                try { await img.decode(); } catch (_) { }
+                            }
+                            if (statusEl && window.viewerLoadRequestId === reqId) {
+                                statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 backdrop-blur-md border border-emerald-500/30 hidden sm:flex items-center gap-1.5';
+                                statusEl.innerHTML = '<i class="fa-solid fa-circle-check text-xs text-emerald-400"></i> <span>Original 100%</span>';
+                            }
+                        }
+                    }
+                }).catch(function () {
+                    if (statusEl && window.viewerLoadRequestId === reqId) {
+                        statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
+                        statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span>';
+                    }
+                });
+                return;
+            }
+
             // Abort any previous in-flight original fetch on photo switch
             if (window.__viewerOriginalController) {
                 try { window.__viewerOriginalController.abort(); } catch (_) { }
                 window.__viewerOriginalController = null;
+            }
+            if (window.__viewerPrefetchController) {
+                try { window.__viewerPrefetchController.abort(); } catch (_) { }
+                window.__viewerPrefetchController = null;
             }
 
             if (statusEl) {
@@ -11901,12 +12001,18 @@
             var viewerCtrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
             window.__viewerOriginalController = viewerCtrl;
 
-            fetchAuthorizedOriginalBlob(origUrl, item.name || 'photo.jpg', {
+            var origPromise = fetchAuthorizedOriginalBlob(origUrl, item.name || 'photo.jpg', {
                 requireOriginal: true,
                 purpose: 'view',
-                controller: viewerCtrl
+                controller: viewerCtrl,
+                onProgress: function (p) {
+                    if (window.viewerLoadRequestId === reqId && statusEl) {
+                        statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-black/60 text-amber-300 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
+                        statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Memuat Original... ' + p.percent + '%</span>';
+                    }
+                }
             })
-                .then(function (res) {
+                .then(async function (res) {
                     if (window.__viewerOriginalController === viewerCtrl) {
                         window.__viewerOriginalController = null;
                     }
@@ -11917,16 +12023,28 @@
                         if (originalBlobCache.size >= MAX_ORIGINAL_CACHE) {
                             var oldestKey = originalBlobCache.keys().next().value;
                             var oldUrl = originalBlobCache.get(oldestKey);
-                            if (oldUrl) URL.revokeObjectURL(oldUrl);
+                            if (oldUrl) {
+                                if (typeof oldUrl === 'string') URL.revokeObjectURL(oldUrl);
+                                else if (oldUrl.blobUrl) URL.revokeObjectURL(oldUrl.blobUrl);
+                            }
                             originalBlobCache.delete(oldestKey);
                         }
+                        originalBlobCache.set(cacheKey, bUrl);
                         originalBlobCache.set(fileId, bUrl);
                         img.src = bUrl;
+                        if (typeof img.decode === 'function') {
+                            try { await img.decode(); } catch (_) { }
+                        }
 
                         var sizeStr = actualBlob.size > 1048576 ? (actualBlob.size / 1048576).toFixed(1) + ' MB' : Math.round(actualBlob.size / 1024) + ' KB';
-                        if (statusEl) {
+                        if (statusEl && window.viewerLoadRequestId === reqId) {
                             statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 backdrop-blur-md border border-emerald-500/30 hidden sm:flex items-center gap-1.5';
                             statusEl.innerHTML = '<i class="fa-solid fa-circle-check text-xs text-emerald-400"></i> <span>Original 100% (' + sizeStr + ')</span>';
+                        }
+
+                        // Background prefetch at most one neighboring original photo (+1)
+                        if (typeof prefetchNeighborOriginal === 'function') {
+                            prefetchNeighborOriginal(window.currentViewerIndex + 1);
                         }
                     } else if (window.viewerLoadRequestId === reqId) {
                         // Honest fallback: keep preview without claiming it is original
@@ -11935,8 +12053,9 @@
                             statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span>';
                         }
                     }
+                    return res;
                 })
-                .catch(function () {
+                .catch(function (err) {
                     if (window.__viewerOriginalController === viewerCtrl) {
                         window.__viewerOriginalController = null;
                     }
@@ -11945,7 +12064,13 @@
                         statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
                         statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span>';
                     }
+                    throw err;
+                })
+                .finally(function () {
+                    inFlightOriginalRequests.delete(cacheKey);
                 });
+
+            inFlightOriginalRequests.set(cacheKey, origPromise);
         }
 
         function openImageViewer(url, name, event, index, customList) {
@@ -11984,8 +12109,12 @@
 
             // 1. Instant visual feedback from cached high-res, direct CDN, or cached grid thumbnail (0ms lag)
             var isHighResCdn = highResUrl && (highResUrl.includes('googleusercontent.com') || highResUrl.includes('drive.google.com'));
-            if (originalBlobCache.has(targetItem.id)) {
-                img.src = originalBlobCache.get(targetItem.id);
+            var origKey = getOriginalCacheKey(targetItem, clientState ? clientState.token : '');
+            var cachedOriginal = originalBlobCache.get(origKey) || originalBlobCache.get(targetItem.id);
+            var cachedOriginalUrl = (cachedOriginal && cachedOriginal.blobUrl) ? cachedOriginal.blobUrl : cachedOriginal;
+
+            if (cachedOriginalUrl) {
+                img.src = cachedOriginalUrl;
             } else if (previewBlobCache.has(highResUrl)) {
                 img.src = previewBlobCache.get(highResUrl);
             } else if (isHighResCdn) {
@@ -12001,9 +12130,9 @@
             }
 
             // 2. High-resolution preview fetch for fullscreen & crisp zoom (for proxy/bridge URLs)
-            if (!isHighResCdn && !previewBlobCache.has(highResUrl) && !originalBlobCache.has(targetItem.id)) {
+            if (!isHighResCdn && !previewBlobCache.has(highResUrl) && !cachedOriginalUrl) {
                 fetchAuthenticatedPreviewBlob(highResUrl, { isHighPriority: true }).then(function (blobUrl) {
-                    if (window.viewerLoadRequestId === currentReq && img && blobUrl && !originalBlobCache.has(targetItem.id)) {
+                    if (window.viewerLoadRequestId === currentReq && img && blobUrl && !originalBlobCache.has(origKey) && !originalBlobCache.has(targetItem.id)) {
                         img.src = blobUrl;
                     }
                 }).catch(function () {
@@ -12088,10 +12217,17 @@
             var nextHighResUrl = (nextImg && nextImg.highResUrl) ? nextImg.highResUrl : ((typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(rawNextUrl, 2048) : rawNextUrl);
 
             // 1. Instant visual feedback from cached authentic original, cached high-res or cached grid thumbnail
-            if (originalBlobCache.has(nextImg.id)) {
-                imgEl.src = originalBlobCache.get(nextImg.id);
+            var isNextHighResCdn = nextHighResUrl && (nextHighResUrl.includes('googleusercontent.com') || nextHighResUrl.includes('drive.google.com'));
+            var nextOrigKey = getOriginalCacheKey(nextImg, clientState ? clientState.token : '');
+            var cachedNextOrig = originalBlobCache.get(nextOrigKey) || originalBlobCache.get(nextImg.id);
+            var cachedNextOrigUrl = (cachedNextOrig && cachedNextOrig.blobUrl) ? cachedNextOrig.blobUrl : cachedNextOrig;
+
+            if (cachedNextOrigUrl) {
+                imgEl.src = cachedNextOrigUrl;
             } else if (previewBlobCache.has(nextHighResUrl)) {
                 imgEl.src = previewBlobCache.get(nextHighResUrl);
+            } else if (isNextHighResCdn) {
+                imgEl.src = nextHighResUrl;
             } else if (previewBlobCache.has(nextGridUrl)) {
                 imgEl.src = previewBlobCache.get(nextGridUrl);
             } else if (previewBlobCache.has(safeUrl)) {
@@ -12101,9 +12237,9 @@
             }
 
             // 2. High-resolution preview fetch for fullscreen & crisp zoom
-            if (!previewBlobCache.has(nextHighResUrl) && !originalBlobCache.has(nextImg.id)) {
+            if (!isNextHighResCdn && !previewBlobCache.has(nextHighResUrl) && !cachedNextOrigUrl) {
                 fetchAuthenticatedPreviewBlob(nextHighResUrl, { isHighPriority: true }).then(function (blobUrl) {
-                    if (window.viewerLoadRequestId === currentReq && imgEl && blobUrl && !originalBlobCache.has(nextImg.id)) {
+                    if (window.viewerLoadRequestId === currentReq && imgEl && blobUrl && !originalBlobCache.has(nextOrigKey) && !originalBlobCache.has(nextImg.id)) {
                         imgEl.src = blobUrl;
                     }
                 }).catch(function () {
@@ -16117,69 +16253,130 @@
                         var sliceSize = 4 * 1024 * 1024;
                         var currentStart = totalLoaded;
 
+                        // Build remaining chunk task list
+                        var remainingTasks = [];
+                        var chunkIndex = 1;
                         while (currentStart < expectedTotalSize) {
-                            if (controller && controller.signal.aborted) {
-                                throw new Error(isEn ? "Download cancelled." : "Pengunduhan dibatalkan.");
-                            }
                             var currentEnd = Math.min(currentStart + sliceSize - 1, expectedTotalSize - 1);
-                            var rangeSpec = 'bytes=' + currentStart + '-' + currentEnd;
-
-                            var sliceTimeoutId = null;
-                            var sliceRes;
-                            try {
-                                if (controller) {
-                                    sliceTimeoutId = setTimeout(function () {
-                                        try { controller.abort(); } catch (_) { }
-                                    }, timeoutMs);
-                                }
-                                var sliceHeaders = Object.assign({}, headers, { 'Range': rangeSpec });
-                                sliceRes = await fetch(fetchUrl, {
-                                    headers: sliceHeaders,
-                                    signal: controller ? controller.signal : undefined
-                                });
-                            } catch (sliceNetErr) {
-                                if (sliceNetErr.name === 'AbortError') {
-                                    var toErr = new Error(isEn ? "Request timed out while downloading original photo slice." : "Waktu permintaan habis saat mengunduh bagian berkas foto asli.");
-                                    toErr.isTimeout = true;
-                                    throw toErr;
-                                }
-                                throw sliceNetErr;
-                            } finally {
-                                if (sliceTimeoutId) clearTimeout(sliceTimeoutId);
-                            }
-
-                            if (sliceRes.status !== 206) {
-                                throw new Error("HTTP " + sliceRes.status + ": Expected HTTP 206 slice for " + rangeSpec);
-                            }
-
-                            var sliceCr = sliceRes.headers.get('content-range') || '';
-                            var sliceCrMatch = sliceCr.match(/^bytes\s+(\d+)-(\d+)\/(\d+)$/i);
-                            if (!sliceCrMatch) {
-                                throw new Error("INVALID_CONTENT_RANGE: Missing Content-Range on chunk slice " + rangeSpec);
-                            }
-                            var sStart = parseInt(sliceCrMatch[1], 10);
-                            var sEnd = parseInt(sliceCrMatch[2], 10);
-                            var sTotal = parseInt(sliceCrMatch[3], 10);
-                            if (sStart !== currentStart || sEnd !== currentEnd || sTotal !== expectedTotalSize) {
-                                throw new Error("INVALID_CONTENT_RANGE: Content-Range mismatch for chunk " + rangeSpec + " (got " + sliceCr + ")");
-                            }
-
-                            var sliceBlob = await sliceRes.blob();
-                            var expectedSliceLen = currentEnd - currentStart + 1;
-                            if (sliceBlob.size !== expectedSliceLen) {
-                                throw new Error("CHUNK_TRUNCATED: Received " + sliceBlob.size + " bytes, expected " + expectedSliceLen);
-                            }
-
-                            chunksArray.push(sliceBlob);
-                            totalLoaded += sliceBlob.size;
+                            remainingTasks.push({
+                                index: chunkIndex++,
+                                start: currentStart,
+                                end: currentEnd,
+                                rangeSpec: 'bytes=' + currentStart + '-' + currentEnd,
+                                expectedLength: currentEnd - currentStart + 1
+                            });
                             currentStart = currentEnd + 1;
+                        }
 
-                            if (typeof opts.onProgress === 'function') {
-                                opts.onProgress({
-                                    loaded: totalLoaded,
-                                    total: expectedTotalSize,
-                                    percent: Math.round((totalLoaded / expectedTotalSize) * 100)
-                                });
+                        // Prepare chunksArray with exact slot positions (preserves order regardless of completion order)
+                        chunksArray = new Array(remainingTasks.length + 1);
+                        chunksArray[0] = firstChunk;
+
+                        // Bounded concurrency pool (CONCURRENCY = 2 for safe parallel download)
+                        var CONCURRENCY = (opts && opts.concurrency) || 2;
+                        var taskCursor = 0;
+                        var activePoolError = null;
+
+                        async function downloadChunkWorker() {
+                            while (taskCursor < remainingTasks.length && !activePoolError) {
+                                if (controller && controller.signal && controller.signal.aborted) {
+                                    throw new Error(isEn ? "Download cancelled." : "Pengunduhan dibatalkan.");
+                                }
+                                var task = remainingTasks[taskCursor++];
+                                if (!task) break;
+
+                                var rangeSpec = task.rangeSpec;
+                                var currentStart = task.start;
+                                var currentEnd = task.end;
+                                var sliceTimeoutId = null;
+                                var sliceRes;
+                                try {
+                                    if (controller) {
+                                        sliceTimeoutId = setTimeout(function () {
+                                            try { controller.abort(); } catch (_) { }
+                                        }, timeoutMs);
+                                    }
+                                    var sliceHeaders = Object.assign({}, headers, { 'Range': rangeSpec });
+                                    sliceRes = await fetch(fetchUrl, {
+                                        headers: sliceHeaders,
+                                        signal: controller ? controller.signal : undefined
+                                    });
+
+                                    // Transient backoff retry for HTTP 429/503
+                                    if (!sliceRes.ok && (sliceRes.status === 429 || sliceRes.status === 503) && !opts._sliceRetry) {
+                                        await new Promise(function(r) { setTimeout(r, 400); });
+                                        sliceRes = await fetch(fetchUrl, {
+                                            headers: sliceHeaders,
+                                            signal: controller ? controller.signal : undefined
+                                        });
+                                    }
+                                } catch (sliceNetErr) {
+                                    if (sliceNetErr.name === 'AbortError') {
+                                        var toErr = new Error(isEn ? "Request timed out while downloading original photo slice." : "Waktu permintaan habis saat mengunduh bagian berkas foto asli.");
+                                        toErr.isTimeout = true;
+                                        throw toErr;
+                                    }
+                                    throw sliceNetErr;
+                                } finally {
+                                    if (sliceTimeoutId) clearTimeout(sliceTimeoutId);
+                                }
+
+                                if (sliceRes.status !== 206) {
+                                    throw new Error("HTTP " + sliceRes.status + ": Expected HTTP 206 slice for " + rangeSpec);
+                                }
+
+                                var sliceCr = sliceRes.headers.get('content-range') || '';
+                                var sliceCrMatch = sliceCr.match(/^bytes\s+(\d+)-(\d+)\/(\d+)$/i);
+                                if (!sliceCrMatch) {
+                                    throw new Error("INVALID_CONTENT_RANGE: Missing Content-Range on chunk slice " + rangeSpec);
+                                }
+                                var sStart = parseInt(sliceCrMatch[1], 10);
+                                var sEnd = parseInt(sliceCrMatch[2], 10);
+                                var sTotal = parseInt(sliceCrMatch[3], 10);
+                                if (sStart !== currentStart || sEnd !== currentEnd || sTotal !== expectedTotalSize) {
+                                    throw new Error("INVALID_CONTENT_RANGE: Content-Range mismatch for chunk " + rangeSpec + " (got " + sliceCr + ")");
+                                }
+
+                                var sliceBlob = await sliceRes.blob();
+                                var expectedSliceLen = currentEnd - currentStart + 1;
+                                if (sliceBlob.size !== expectedSliceLen) {
+                                    throw new Error("CHUNK_TRUNCATED: Received " + sliceBlob.size + " bytes, expected " + expectedSliceLen);
+                                }
+
+                                chunksArray[task.index] = sliceBlob;
+                                totalLoaded += sliceBlob.size;
+
+                                if (typeof opts.onProgress === 'function') {
+                                    opts.onProgress({
+                                        loaded: totalLoaded,
+                                        total: expectedTotalSize,
+                                        percent: Math.min(Math.round((totalLoaded / expectedTotalSize) * 100), 99)
+                                    });
+                                }
+                            }
+                        }
+
+                        // Run bounded concurrency pool
+                        var workerPromises = [];
+                        var poolSize = Math.min(CONCURRENCY, remainingTasks.length);
+                        for (var w = 0; w < poolSize; w++) {
+                            workerPromises.push(downloadChunkWorker());
+                        }
+
+                        try {
+                            await Promise.all(workerPromises);
+                        } catch (poolErr) {
+                            activePoolError = poolErr;
+                            if (controller) {
+                                try { controller.abort(); } catch (_) { }
+                            }
+                            throw poolErr;
+                        }
+
+                        // Verify all chunks are present and contiguous
+                        for (var cIdx = 0; cIdx < chunksArray.length; cIdx++) {
+                            if (!chunksArray[cIdx] || typeof chunksArray[cIdx].size !== 'number') {
+                                throw new Error("CHUNK_MISSING: Chunk index " + cIdx + " failed to assemble.");
                             }
                         }
                     }
