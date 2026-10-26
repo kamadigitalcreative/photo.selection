@@ -4841,7 +4841,6 @@
 
                 <p id="viewerCaption" class="text-white font-semibold text-sm tracking-wide"></p>
                 <span id="viewer-original-status" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-300 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5"><i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Memuat Original...</span></span>
-                <a id="viewer-external-drive-link" href="#" target="_blank" rel="noopener noreferrer" class="hidden px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-900/40 hover:bg-blue-800/60 text-blue-300 backdrop-blur-md border border-blue-500/30 items-center gap-1 transition-colors" title="Buka berkas di Google Drive (Tampilan Eksternal)"><i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> <span>Buka di Drive (Eksternal)</span></a>
                 <div id="viewerDivider" class="w-px h-6 bg-white/20 hidden sm:block"></div>
                 <div id="viewerDirectNote"
                     class="hidden max-w-md px-3 py-1.5 bg-amber-500/20 border border-amber-400/40 rounded-xl text-amber-300 text-xs font-medium flex items-center gap-2">
@@ -11968,12 +11967,6 @@
             var tViewerStart = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
             var img = document.getElementById('viewerImage');
             var statusEl = document.getElementById('viewer-original-status');
-            var extLink = document.getElementById('viewer-external-drive-link');
-            if (extLink && extLink.classList) {
-                extLink.classList.add('hidden');
-                extLink.classList.remove('inline-flex');
-                if (extLink.removeAttribute) extLink.removeAttribute('href');
-            }
             var fileId = (item && item.id) || (item && item.url && (item.url.match(/[?&]fileId=([-\w]{10,128})/)?.[1] || item.url.match(/https:\/\/lh3\.googleusercontent\.com\/d\/([-\w]{10,128})/)?.[1]));
             var itemFolder = (item && (item.folderId || item.folder)) || (clientState && clientState.currentFolderId) || '';
             var origUrl = (item && item.originalUrl) ? (item.originalUrl + (item.originalUrl.includes('purpose=') ? '' : '&purpose=view') + (!item.originalUrl.includes('folderId=') && itemFolder ? ('&folderId=' + encodeURIComponent(itemFolder)) : '')) : (fileId ? ('/api/bridge?action=downloadOriginalFile&fileId=' + fileId + '&token=' + encodeURIComponent((clientState && clientState.token) || '') + (itemFolder ? ('&folderId=' + encodeURIComponent(itemFolder)) : '') + '&purpose=view') : null);
@@ -12260,11 +12253,6 @@
                         var badgeCode = errStatus ? (errStatus + ':' + errCode) : errCode;
                         statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span><span class="text-[10px] text-amber-400/90 font-mono ml-1 px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20" title="' + encodeURIComponent(badgeCode) + '">[' + badgeCode + ']</span>';
                     }
-                    if (extLink && extLink.classList && fileId && window.viewerLoadRequestId === reqId) {
-                        extLink.href = 'https://drive.google.com/file/d/' + encodeURIComponent(fileId) + '/view';
-                        extLink.classList.remove('hidden');
-                        extLink.classList.add('inline-flex');
-                    }
                     throw err;
                 })
                 .finally(function () {
@@ -12378,13 +12366,6 @@
             }
 
             resetZoom(); // Reset gambar ke ukuran asli sebelum ditutup
-
-            var extLink = document.getElementById('viewer-external-drive-link');
-            if (extLink && extLink.classList) {
-                extLink.classList.add('hidden');
-                extLink.classList.remove('inline-flex');
-                if (extLink.removeAttribute) extLink.removeAttribute('href');
-            }
 
             modal.classList.add('opacity-0');
             wrapper.classList.remove('scale-100');
