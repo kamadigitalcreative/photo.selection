@@ -11721,7 +11721,7 @@
         }
 
         function openSubFolder(fId, fName) {
-            if (typeof revokeActivePreviewObjectUrls === 'function') revokeActivePreviewObjectUrls();
+            if (typeof cancelPendingThumbnailQueue === 'function') cancelPendingThumbnailQueue();
             clientState.folderHistory.push({ id: clientState.currentFolderId, name: clientState.currentFolderName });
             clientState.currentFolderId = fId;
             clientState.currentFolderName = fName;
@@ -11729,7 +11729,7 @@
         }
 
         function goBackFolder() {
-            if (typeof revokeActivePreviewObjectUrls === 'function') revokeActivePreviewObjectUrls();
+            if (typeof cancelPendingThumbnailQueue === 'function') cancelPendingThumbnailQueue();
             if (clientState.folderHistory.length > 0) {
                 var prev = clientState.folderHistory.pop();
                 clientState.currentFolderId = prev.id;
@@ -11870,9 +11870,11 @@
             }
 
             fetchAuthorizedOriginalBlob(origUrl, item.name || 'photo.jpg', { requireOriginal: true, purpose: 'view' })
-                .then(function (blob) {
-                    if (window.viewerLoadRequestId === reqId && img && blob && blob.size > 0) {
-                        var bUrl = URL.createObjectURL(blob);
+                .then(function (res) {
+                    var actualBlob = (res && res.blob) ? res.blob : res;
+                    var isValidBlob = actualBlob && (typeof Blob !== 'undefined' ? (actualBlob instanceof Blob) : (actualBlob && typeof actualBlob.slice === 'function'));
+                    if (window.viewerLoadRequestId === reqId && img && isValidBlob && actualBlob.size > 0) {
+                        var bUrl = URL.createObjectURL(actualBlob);
                         if (originalBlobCache.size >= MAX_ORIGINAL_CACHE) {
                             var oldestKey = originalBlobCache.keys().next().value;
                             var oldUrl = originalBlobCache.get(oldestKey);
@@ -11882,10 +11884,16 @@
                         originalBlobCache.set(fileId, bUrl);
                         img.src = bUrl;
 
-                        var sizeStr = blob.size > 1048576 ? (blob.size / 1048576).toFixed(1) + ' MB' : Math.round(blob.size / 1024) + ' KB';
+                        var sizeStr = actualBlob.size > 1048576 ? (actualBlob.size / 1048576).toFixed(1) + ' MB' : Math.round(actualBlob.size / 1024) + ' KB';
                         if (statusEl) {
                             statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 backdrop-blur-md border border-emerald-500/30 hidden sm:flex items-center gap-1.5';
                             statusEl.innerHTML = '<i class="fa-solid fa-circle-check text-xs text-emerald-400"></i> <span>Original 100% (' + sizeStr + ')</span>';
+                        }
+                    } else if (window.viewerLoadRequestId === reqId) {
+                        // Honest fallback: keep preview without claiming it is original
+                        if (statusEl) {
+                            statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
+                            statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span>';
                         }
                     }
                 })
@@ -12394,14 +12402,23 @@
             }
         }
 
+        function cancelPendingThumbnailQueue() {
+            if (Array.isArray(pendingThumbnailQueue)) {
+                pendingThumbnailQueue.forEach(function (task) {
+                    if (task) task.isCancelled = true;
+                });
+                pendingThumbnailQueue = [];
+            }
+        }
+
         function revokeActivePreviewObjectUrls() {
+            cancelPendingThumbnailQueue();
             activePreviewObjectUrls.forEach(function (u) {
                 try { URL.revokeObjectURL(u); } catch (_) { }
             });
             activePreviewObjectUrls.clear();
             previewBlobCache.clear();
             inFlightRequests.clear();
-            pendingThumbnailQueue = [];
             activeFetchCount = 0;
         }
 
@@ -13011,7 +13028,7 @@
                 ind.innerHTML = '<i class="fa-solid fa-circle-check text-[10px]"></i> <span>' + (msg || (isEn ? 'Saved' : 'Tersimpan')) + '</span>';
             } else if (state === 'error') {
                 ind.className = 'text-[10px] mt-0.5 flex items-center gap-1 text-rose-500 transition-all duration-200';
-                ind.innerHTML = '<button type="button" onclick="triggerSaveSelections(true)" class="flex items-center gap-1 text-rose-500 hover:text-rose-600 font-semibold underline cursor-pointer"><i class="fa-solid fa-triangle-exclamation text-[10px]"></i> <span>' + (msg || (isEn ? 'Save failed (Retry)' : 'Gagal menyimpan (Coba lagi)')) + '</span></button>';
+                ind.innerHTML = '<button type="button" onclick="triggerSaveSelections()" class="flex items-center gap-1 text-rose-500 hover:text-rose-600 font-semibold underline cursor-pointer"><i class="fa-solid fa-triangle-exclamation text-[10px]"></i> <span>' + (msg || (isEn ? 'Save failed (Retry)' : 'Gagal menyimpan (Coba lagi)')) + '</span></button>';
             } else {
                 ind.className = 'text-[10px] mt-0.5 flex items-center gap-1 text-gray-400 transition-all duration-200';
                 ind.innerHTML = '';
@@ -13026,7 +13043,7 @@
             }, 400);
         }
 
-        async function triggerSaveSelections(forceRetry) {
+        async function triggerSaveSelections() {
             var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
             if (isSubmitted || clientState.galleryMode === 'download') return;
 
@@ -13035,7 +13052,8 @@
                 autoRetrySaveTimer = null;
             }
 
-            if (isSavingSelections && !forceRetry) {
+            // Strict mutex: Never allow concurrent saves or retry bypasses
+            if (isSavingSelections) {
                 pendingSaveSelections = true;
                 return;
             }
@@ -13047,13 +13065,14 @@
 
             try {
                 var res = await pingClientStatus('Sedang Memilih', '', true);
-                if (res && (res.status === 'success' || res.success)) {
+                if (res && (res.status === 'success' || res.success) && res.data && res.data.fotoTerpilih !== undefined) {
                     lastSavedRevision = currentRevision;
                     var counterEl = document.getElementById('bottom-counter');
                     if (counterEl) counterEl.dataset.synced = 'true';
                     if (selectionRevision === currentRevision) {
                         setSelectionSaveStatus('saved');
                     } else {
+                        // User modified selections during in-flight network roundtrip; sync latest revision immediately
                         queueSaveSelections();
                     }
                 } else {
@@ -13061,14 +13080,14 @@
                     console.warn('Selection persistence failed:', errMsg);
                     setSelectionSaveStatus('error');
                     autoRetrySaveTimer = setTimeout(function () {
-                        triggerSaveSelections(true);
+                        triggerSaveSelections();
                     }, 3000);
                 }
             } catch (err) {
                 console.warn('Selection persistence exception:', err);
                 setSelectionSaveStatus('error');
                 autoRetrySaveTimer = setTimeout(function () {
-                    triggerSaveSelections(true);
+                    triggerSaveSelections();
                 }, 3000);
             } finally {
                 isSavingSelections = false;

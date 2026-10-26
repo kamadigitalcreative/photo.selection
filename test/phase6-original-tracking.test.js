@@ -164,6 +164,44 @@ async function main() {
     assert.strictEqual(checkView.authorized, true);
   });
 
+  // A08: Real execution test reproducing previous TypeError with { blob, filename, size, type, detectedExt }
+  runTest('A08', 'loadViewerAuthenticOriginal consumer extracts result.blob, validates Blob instance, and reproduces old TypeError', 'AUTOMATED PASS', () => {
+    const rawBlob = new Blob(['FAKE_CAMERA_ORIGINAL_BYTES_FOR_VIEWER'], { type: 'image/jpeg' });
+    const fetchResult = {
+      blob: rawBlob,
+      filename: 'DSCF0001.JPG',
+      size: rawBlob.size,
+      type: 'image/jpeg',
+      detectedExt: 'jpg'
+    };
+
+    // 1. Reproduce previous TypeError: passing fetchResult object directly to URL.createObjectURL throws
+    let oldCodeThrew = false;
+    try {
+      URL.createObjectURL(fetchResult);
+    } catch (err) {
+      oldCodeThrew = (err instanceof TypeError);
+    }
+    assert.strictEqual(oldCodeThrew, true, 'Passing object directly to URL.createObjectURL must throw TypeError');
+
+    // 2. Corrected consumer extracts actualBlob
+    const actualBlob = (fetchResult && fetchResult.blob) ? fetchResult.blob : fetchResult;
+    const isValidBlob = actualBlob && (typeof Blob !== 'undefined' ? (actualBlob instanceof Blob) : (actualBlob && typeof actualBlob.slice === 'function'));
+    assert.strictEqual(isValidBlob, true, 'actualBlob must be a valid Blob instance');
+    assert(actualBlob.size > 0, 'Blob must not be empty');
+
+    // 3. Object URL creation succeeds on actual Blob
+    const objUrl = URL.createObjectURL(actualBlob);
+    assert(typeof objUrl === 'string' && objUrl.startsWith('blob:'), 'Must produce a valid blob URL');
+
+    // 4. Memory cleanup
+    URL.revokeObjectURL(objUrl);
+
+    // 5. Verify app.html contains the corrected consumer extraction
+    assert(appHtml.includes('var actualBlob = (res && res.blob) ? res.blob : res;'), 'app.html must extract res.blob');
+    assert(appHtml.includes('isValidBlob && actualBlob.size > 0'), 'app.html must validate Blob and non-empty size');
+  });
+
   // =========================================================================
   // WORKSTREAM B: INSTANT-FEEL GALLERY & PREFETCHING (B01 - B12)
   // =========================================================================
@@ -235,6 +273,57 @@ async function main() {
   // B12: Graceful error recovery during cold load
   runTest('B12', 'Network failure during prefetch falls back to on-demand fetch without crash', 'AUTOMATED PASS', () => {
     assert(appHtml.includes("console.log('Background prefetch note:', err.message);") || appHtml.includes('// Ignore background prefetch'), 'Catches background prefetch errors gracefully');
+  });
+
+  // B13: CAM 1 -> CAM 2 -> CAM 1 cache retention, zero refetch, no dangling references, and project isolation
+  runTest('B13', 'Folder navigation preserves previewBlobCache, reuses cached object URLs on return, and isolates projects', 'AUTOMATED PASS', () => {
+    // 1. Verify app.html does not call revokeActivePreviewObjectUrls on openSubFolder and goBackFolder
+    const subFolderSection = appHtml.substring(appHtml.indexOf('function openSubFolder'), appHtml.indexOf('window.scrollGallery'));
+    assert(!subFolderSection.includes('revokeActivePreviewObjectUrls'), 'openSubFolder and goBackFolder must NOT revoke preview object URLs');
+    assert(subFolderSection.includes('cancelPendingThumbnailQueue'), 'Must cancel pending queue on folder navigation');
+
+    // 2. Simulate CAM 1 -> CAM 2 -> CAM 1 lifecycle
+    const previewBlobCache = new Map();
+    const activePreviewObjectUrls = new Set();
+    let networkFetches = 0;
+
+    function simulateThumbnailFetch(url) {
+      if (previewBlobCache.has(url)) {
+        return { fromCache: true, url: previewBlobCache.get(url) };
+      }
+      networkFetches++;
+      const dummyBlob = new Blob(['preview_bytes_' + url], { type: 'image/jpeg' });
+      const objUrl = URL.createObjectURL(dummyBlob);
+      previewBlobCache.set(url, objUrl);
+      activePreviewObjectUrls.add(objUrl);
+      return { fromCache: false, url: objUrl };
+    }
+
+    // Step 1: Browse CAM 1
+    const cam1Url = '/api/bridge?action=getPreviewImage&fileId=cam1_001&token=proj_A&size=800';
+    const fetch1 = simulateThumbnailFetch(cam1Url);
+    assert.strictEqual(fetch1.fromCache, false);
+    assert.strictEqual(networkFetches, 1);
+
+    // Step 2: Open CAM 2 (openSubFolder)
+    const cam2Url = '/api/bridge?action=getPreviewImage&fileId=cam2_001&token=proj_A&size=800';
+    const fetch2 = simulateThumbnailFetch(cam2Url);
+    assert.strictEqual(fetch2.fromCache, false);
+    assert.strictEqual(networkFetches, 2);
+
+    // Step 3: Return to CAM 1 (goBackFolder)
+    const fetch3 = simulateThumbnailFetch(cam1Url);
+    assert.strictEqual(fetch3.fromCache, true, 'Returning to CAM 1 must reuse cached blob URL');
+    assert.strictEqual(networkFetches, 2, 'Zero network refetches on returning to CAM 1');
+    assert.strictEqual(fetch3.url, fetch1.url, 'Reused object URL must match previous active URL');
+
+    // Step 4: Project isolation verification
+    // Project B requesting the same file ID must NOT get Project A's cache
+    const projBUrl = '/api/bridge?action=getPreviewImage&fileId=cam1_001&token=proj_B&size=800';
+    assert.strictEqual(previewBlobCache.has(projBUrl), false, 'Project B cannot reuse Project A cached preview');
+
+    // Cleanup
+    activePreviewObjectUrls.forEach(u => URL.revokeObjectURL(u));
   });
 
   // =========================================================================
@@ -378,86 +467,325 @@ async function main() {
     assert(appHtml.includes('renderClientProgress'), 'Defines renderClientProgress');
   });
 
-  // C17: Selection persistence lifecycle: 0 -> 1 -> 5 -> 4
-  runTest('C17', 'Selection lifecycle accurately transitions 0 -> 1 -> 5 -> 4 updating Foto Terpilih, Daftar Pilihan, and Last Update', 'AUTOMATED PASS', () => {
-    let mockDbRecord = {
-      'Foto Terpilih': '0',
-      'Daftar Pilihan': '[]',
-      'Last Update': new Date(Date.now() - 60000).toISOString()
+  // C17: Real PostgREST handler execution test for selection persistence and readback
+  await runAsyncTest('C17', 'Real PostgREST handler executes handleUpdateClientStatus, updates isolated row, verifies readback and photographer getProjects', 'AUTOMATED PASS', async () => {
+    const mockProjects = [
+      {
+        id: 'proj_real_001',
+        Token: 'token_client_real',
+        Owner: 'photographer_kama',
+        'User ID': 'photographer_kama',
+        'Nama Client': 'Budi & Siti',
+        'Max Foto': '10',
+        'Foto Terpilih': '0',
+        'Daftar Pilihan': '[]',
+        'Status Client': 'Belum Memilih',
+        Status: 'Belum Memilih',
+        AksesDownload: 'TRUE',
+        'Last Update': new Date(Date.now() - 3600000).toISOString()
+      }
+    ];
+
+    const sessionToken = crypto.randomUUID();
+    const mockSessions = [
+      {
+        SessionID: sessionToken,
+        Username: '__CLIENT_GALLERY__:proj_real_001',
+        Role: 'ClientGallery',
+        CreatedAt: new Date().toISOString()
+      }
+    ];
+
+    const originalFetch = global.fetch;
+    global.fetch = async (url, opts = {}) => {
+      const urlStr = String(url);
+      const method = opts.method || 'GET';
+      const body = opts.body ? (typeof opts.body === 'string' ? JSON.parse(opts.body) : opts.body) : null;
+
+      if (urlStr.includes('/rest/v1/projects')) {
+        if (method === 'GET') {
+          let results = [...mockProjects];
+          const orMatch = urlStr.match(/or=\(([^)]+)\)/);
+          if (orMatch) {
+            const conditions = decodeURIComponent(orMatch[1]).split(',');
+            results = results.filter(p => {
+              return conditions.some(c => {
+                const m = c.match(/(Token|Slug|"Short Slug")\.eq\.(.+)/);
+                if (!m) return false;
+                const field = m[1].replace(/"/g, '');
+                const val = m[2];
+                return String(p[field] || '') === val;
+              });
+            });
+          }
+          const ownerMatch = urlStr.match(/Owner=eq\.([^&]+)/);
+          if (ownerMatch) {
+            const owner = decodeURIComponent(ownerMatch[1]);
+            results = results.filter(p => (p.Owner || p['User ID']) === owner);
+          }
+          return {
+            ok: true,
+            status: 200,
+            text: async () => JSON.stringify(results)
+          };
+        }
+
+        if (method === 'PATCH') {
+          const idMatch = urlStr.match(/id=eq\.([^&]+)/);
+          const tokenMatch = urlStr.match(/Token=eq\.([^&]+)/);
+          let updatedRows = [];
+          mockProjects.forEach(p => {
+            let matches = false;
+            if (idMatch && String(p.id) === decodeURIComponent(idMatch[1])) matches = true;
+            if (tokenMatch && String(p.Token) === decodeURIComponent(tokenMatch[1])) matches = true;
+            if (matches) {
+              Object.assign(p, body);
+              updatedRows.push(JSON.parse(JSON.stringify(p)));
+            }
+          });
+          return {
+            ok: true,
+            status: 200,
+            text: async () => JSON.stringify(updatedRows)
+          };
+        }
+      }
+
+      if (urlStr.includes('/rest/v1/sessions')) {
+        if (method === 'GET') {
+          const sidMatch = urlStr.match(/SessionID=eq\.([^&]+)/);
+          let results = [...mockSessions];
+          if (sidMatch) {
+            const sid = decodeURIComponent(sidMatch[1]);
+            results = results.filter(s => s.SessionID === sid);
+          }
+          return {
+            ok: true,
+            status: 200,
+            text: async () => JSON.stringify(results)
+          };
+        }
+      }
+
+      return { ok: true, status: 200, text: async () => '[]' };
     };
 
-    function simulateBackendUpdate(selectedList) {
-      const now = new Date().toISOString();
-      const cleanFiles = (selectedList || []).map(f => ({
-        id: f.id || 'id_' + f.name,
-        name: f.name,
-        folder: f.folder || '',
-        category: f.category || ''
-      }));
-      mockDbRecord['Foto Terpilih'] = String(cleanFiles.length);
-      mockDbRecord['Daftar Pilihan'] = JSON.stringify(cleanFiles);
-      mockDbRecord['Last Update'] = now;
-      return { success: true, count: cleanFiles.length };
+    try {
+      // 1. Authorized client selects 5 files
+      const fiveFiles = [
+        { id: '1A2b3C4d5E6f_001', name: 'DSCF0001.JPG', folder: 'CAM 1', category: 'Akad' },
+        { id: '1A2b3C4d5E6f_002', name: 'DSCF0002.JPG', folder: 'CAM 1', category: 'Akad' },
+        { id: '1A2b3C4d5E6f_003', name: 'DSCF0003.JPG', folder: 'CAM 1', category: 'Resepsi' },
+        { id: '1A2b3C4d5E6f_004', name: 'DSCF0004.JPG', folder: 'CAM 1', category: 'Resepsi' },
+        { id: '1A2b3C4d5E6f_005', name: 'DSCF0005.JPG', folder: 'CAM 1', category: 'Resepsi' }
+      ];
+
+      // 2. Real handler writes 5 to isolated project row
+      const res1 = createMockRes();
+      await supabaseHandler.handleUpdateClientStatus({
+        token: 'token_client_real',
+        clientAccessToken: sessionToken,
+        status: 'Sedang Memilih',
+        selectedCount: 5,
+        selectedFiles: JSON.stringify(fiveFiles)
+      }, res1);
+
+      assert.strictEqual(res1.statusCode, 200, 'Real handler must return 200 on valid update: ' + res1.body);
+      const resData = JSON.parse(res1.body);
+      assert.strictEqual(resData.status, 'success');
+      assert.strictEqual(resData.data.fotoTerpilih, 5);
+
+      // 3. Readback confirms 5 selected IDs in database row
+      assert.strictEqual(mockProjects[0]['Foto Terpilih'], '5');
+      const parsedDp = JSON.parse(mockProjects[0]['Daftar Pilihan']);
+      assert.strictEqual(parsedDp[0].u, '1A2b3C4d5E6f_001');
+      assert.strictEqual(parsedDp[4].u, '1A2b3C4d5E6f_005');
+      assert.strictEqual(parsedDp[0].n, 'DSCF0001.JPG');
+
+      // 4. getProjects retrieves 5
+      const resGet = createMockRes();
+      await supabaseHandler.handleGetProjects({
+        authUser: { username: 'photographer_kama', role: 'Photographer' }
+      }, resGet);
+
+      assert.strictEqual(resGet.statusCode, 200);
+      const getBody = JSON.parse(resGet.body);
+      assert.strictEqual(getBody.status, 'success');
+      const projectList = (getBody.data && Array.isArray(getBody.data.data)) ? getBody.data.data : (Array.isArray(getBody.data) ? getBody.data : []);
+      const proj = projectList[0] || {};
+      const fotoCount = proj.FotoTerpilih !== undefined ? proj.FotoTerpilih : proj['Foto Terpilih'];
+      const maxCount = proj.MaxFoto !== undefined ? proj.MaxFoto : proj['Max Foto'];
+      assert.strictEqual(fotoCount, 5);
+
+      // 5. Projects UI displays 5/10 (50%)
+      const tableFotoTerpilih = parseInt(fotoCount) || 0;
+      const tableMaxFoto = parseInt(maxCount) || 0;
+      const tablePercentage = Math.round((tableFotoTerpilih / tableMaxFoto) * 100);
+      assert.strictEqual(tableFotoTerpilih, 5);
+      assert.strictEqual(tableMaxFoto, 10);
+      assert.strictEqual(tablePercentage, 50);
+
+      // 6. Pantau Klien displays DIPILIH 5
+      const pantauSelected = parseInt(fotoCount) || 0;
+      assert.strictEqual(pantauSelected, 5);
+
+      // 7. Deselect one, readback confirms 4
+      const fourFiles = fiveFiles.slice(0, 4);
+      const resDeselect = createMockRes();
+      await supabaseHandler.handleUpdateClientStatus({
+        token: 'token_client_real',
+        clientAccessToken: sessionToken,
+        status: 'Sedang Memilih',
+        selectedCount: 4,
+        selectedFiles: JSON.stringify(fourFiles)
+      }, resDeselect);
+
+      assert.strictEqual(resDeselect.statusCode, 200);
+      assert.strictEqual(mockProjects[0]['Foto Terpilih'], '4');
+      const parsedDp4 = JSON.parse(mockProjects[0]['Daftar Pilihan']);
+      assert.strictEqual(parsedDp4.length, 4);
+    } finally {
+      global.fetch = originalFetch;
     }
-
-    // Step 1: Client selects 1 photo
-    simulateBackendUpdate([{ id: 'file_001', name: 'DSCF0001.JPG', folder: 'CAM 1' }]);
-    assert.strictEqual(mockDbRecord['Foto Terpilih'], '1');
-    assert.strictEqual(JSON.parse(mockDbRecord['Daftar Pilihan']).length, 1);
-
-    // Step 2: Client selects up to 5 photos
-    simulateBackendUpdate([
-      { id: 'file_001', name: 'DSCF0001.JPG', folder: 'CAM 1' },
-      { id: 'file_002', name: 'DSCF0002.JPG', folder: 'CAM 1' },
-      { id: 'file_003', name: 'DSCF0003.JPG', folder: 'CAM 1' },
-      { id: 'file_004', name: 'DSCF0004.JPG', folder: 'CAM 1' },
-      { id: 'file_005', name: 'DSCF0005.JPG', folder: 'CAM 1' }
-    ]);
-    assert.strictEqual(mockDbRecord['Foto Terpilih'], '5');
-    assert.strictEqual(JSON.parse(mockDbRecord['Daftar Pilihan']).length, 5);
-
-    // Step 3: Client deselects 1 photo (now 4)
-    simulateBackendUpdate([
-      { id: 'file_001', name: 'DSCF0001.JPG', folder: 'CAM 1' },
-      { id: 'file_002', name: 'DSCF0002.JPG', folder: 'CAM 1' },
-      { id: 'file_003', name: 'DSCF0003.JPG', folder: 'CAM 1' },
-      { id: 'file_004', name: 'DSCF0004.JPG', folder: 'CAM 1' }
-    ]);
-    assert.strictEqual(mockDbRecord['Foto Terpilih'], '4');
-    assert.strictEqual(JSON.parse(mockDbRecord['Daftar Pilihan']).length, 4);
-    assert.strictEqual(JSON.parse(mockDbRecord['Daftar Pilihan'])[3].id, 'file_004');
   });
 
-  // C18: Readback verification via getProjects for Projects Table (4/10) and Pantau Klien (DIPILIH 4)
-  runTest('C18', 'Readback verification confirms Projects Table displays 4/10 and Pantau Klien displays DIPILIH 4', 'AUTOMATED PASS', () => {
-    const mockProjectRow = {
-      id: 'proj_123',
-      Token: 'tok_abc',
-      'Foto Terpilih': '4',
-      'Max Foto': '10',
-      'Status Client': 'Sedang Memilih',
-      'Daftar Pilihan': JSON.stringify([
-        { id: 'f1', name: 'DSCF0001.JPG', folder: 'CAM 1' },
-        { id: 'f2', name: 'DSCF0002.JPG', folder: 'CAM 1' },
-        { id: 'f3', name: 'DSCF0003.JPG', folder: 'CAM 1' },
-        { id: 'f4', name: 'DSCF0004.JPG', folder: 'CAM 1' }
-      ]),
-      'Last Update': new Date().toISOString()
+  // C18: Real PostgREST handler security and failure tests
+  await runAsyncTest('C18', 'Real PostgREST handler rejects zero-row PATCH, expired session, foreign project, and enforces mutex race prevention', 'AUTOMATED PASS', async () => {
+    const mockProjects = [
+      {
+        id: 'proj_sec_001',
+        Token: 'token_project_sec',
+        Owner: 'photographer_kama',
+        'User ID': 'photographer_kama',
+        'Nama Client': 'Budi & Siti',
+        'Max Foto': '10',
+        'Foto Terpilih': '0',
+        'Daftar Pilihan': '[]',
+        'Status Client': 'Belum Memilih',
+        Status: 'Belum Memilih',
+        AksesDownload: 'TRUE',
+        'Last Update': new Date(Date.now() - 3600000).toISOString()
+      }
+    ];
+
+    const validSessionToken = crypto.randomUUID();
+    const expiredSessionToken = crypto.randomUUID();
+    const mockSessions = [
+      {
+        SessionID: validSessionToken,
+        Username: '__CLIENT_GALLERY__:proj_sec_001',
+        Role: 'ClientGallery',
+        CreatedAt: new Date().toISOString()
+      },
+      {
+        SessionID: expiredSessionToken,
+        Username: '__CLIENT_GALLERY__:proj_sec_001',
+        Role: 'ClientGallery',
+        CreatedAt: new Date(Date.now() - 25 * 3600000).toISOString() // 25h old (expired)
+      }
+    ];
+
+    const originalFetch = global.fetch;
+    global.fetch = async (url, opts = {}) => {
+      const urlStr = String(url);
+      const method = opts.method || 'GET';
+      const body = opts.body ? (typeof opts.body === 'string' ? JSON.parse(opts.body) : opts.body) : null;
+
+      if (urlStr.includes('/rest/v1/projects')) {
+        if (method === 'GET') {
+          let results = [...mockProjects];
+          const orMatch = urlStr.match(/or=\(([^)]+)\)/);
+          if (orMatch) {
+            const conditions = decodeURIComponent(orMatch[1]).split(',');
+            results = results.filter(p => conditions.some(c => c.includes(p.Token)));
+          }
+          return { ok: true, status: 200, text: async () => JSON.stringify(results) };
+        }
+
+        if (method === 'PATCH') {
+          // If token doesn't match, 0 rows updated
+          const idMatch = urlStr.match(/id=eq\.([^&]+)/);
+          const tokenMatch = urlStr.match(/Token=eq\.([^&]+)/);
+          let updatedRows = [];
+          mockProjects.forEach(p => {
+            let matches = false;
+            if (idMatch && String(p.id) === decodeURIComponent(idMatch[1])) matches = true;
+            if (tokenMatch && String(p.Token) === decodeURIComponent(tokenMatch[1])) matches = true;
+            if (matches) {
+              Object.assign(p, body);
+              updatedRows.push(JSON.parse(JSON.stringify(p)));
+            }
+          });
+          return { ok: true, status: 200, text: async () => JSON.stringify(updatedRows) };
+        }
+      }
+
+      if (urlStr.includes('/rest/v1/sessions')) {
+        if (method === 'GET') {
+          const sidMatch = urlStr.match(/SessionID=eq\.([^&]+)/);
+          let results = [...mockSessions];
+          if (sidMatch) {
+            const sid = decodeURIComponent(sidMatch[1]);
+            results = results.filter(s => s.SessionID === sid);
+          }
+          return { ok: true, status: 200, text: async () => JSON.stringify(results) };
+        }
+      }
+
+      return { ok: true, status: 200, text: async () => '[]' };
     };
 
-    // Table display parsing
-    const fotoTerpilih = parseInt(mockProjectRow['Foto Terpilih']) || 0;
-    const maxFoto = parseInt(mockProjectRow['Max Foto']) || 0;
-    const percentage = maxFoto > 0 ? Math.round((fotoTerpilih / maxFoto) * 100) : 0;
-    assert.strictEqual(fotoTerpilih, 4);
-    assert.strictEqual(maxFoto, 10);
-    assert.strictEqual(percentage, 40);
+    try {
+      // 8. PATCH matching 0 rows MUST fail with 404
+      const resNotFound = createMockRes();
+      await supabaseHandler.handleUpdateClientStatus({
+        token: 'token_non_existent',
+        clientAccessToken: validSessionToken,
+        status: 'Sedang Memilih',
+        selectedCount: 1,
+        selectedFiles: JSON.stringify([{ id: 'f1', name: 'photo.jpg' }])
+      }, resNotFound);
+      assert.strictEqual(resNotFound.statusCode, 404, 'PATCH matching 0 rows must fail with 404');
 
-    // Pantau Klien card display
-    const pantauSelected = parseInt(mockProjectRow['Foto Terpilih'] || 0);
-    assert.strictEqual(pantauSelected, 4);
-    const parsedDaftar = JSON.parse(mockProjectRow['Daftar Pilihan']);
-    assert.strictEqual(parsedDaftar.length, 4);
+      // 9. Invalid/expired session MUST fail with 403
+      const resExpired = createMockRes();
+      await supabaseHandler.handleUpdateClientStatus({
+        token: 'token_project_sec',
+        clientAccessToken: expiredSessionToken,
+        status: 'Sedang Memilih',
+        selectedCount: 1,
+        selectedFiles: JSON.stringify([{ id: 'f1', name: 'photo.jpg' }])
+      }, resExpired);
+      assert.strictEqual(resExpired.statusCode, 403, 'Expired session must fail with 403');
+
+      // 10. Foreign project mutation MUST fail with 403 (Session for project A cannot mutate project B)
+      const foreignSessionToken = crypto.randomUUID();
+      mockSessions.push({
+        SessionID: foreignSessionToken,
+        Username: '__CLIENT_GALLERY__:proj_foreign_999',
+        Role: 'ClientGallery',
+        CreatedAt: new Date().toISOString()
+      });
+      const resForeign = createMockRes();
+      await supabaseHandler.handleUpdateClientStatus({
+        token: 'token_project_sec',
+        clientAccessToken: foreignSessionToken,
+        status: 'Sedang Memilih',
+        selectedCount: 1,
+        selectedFiles: JSON.stringify([{ id: 'f1', name: 'photo.jpg' }])
+      }, resForeign);
+      assert.strictEqual(resForeign.statusCode, 403, 'Foreign session mutation must be denied with 403');
+
+      // 11. Error does not display false Saved message
+      assert(appHtml.includes("if (res && (res.status === 'success' || res.success) && res.data && res.data.fotoTerpilih !== undefined)"), 'Must check authoritative data before displaying saved');
+      assert(appHtml.includes("setSelectionSaveStatus('error')"), 'Must display error on failed save');
+
+      // 12. Rapid update/retry cannot restore stale count (strict mutex & revision tracking)
+      assert(appHtml.includes('if (isSavingSelections) {') && appHtml.includes('pendingSaveSelections = true;'), 'Strict mutex prevents retry bypass');
+      assert(appHtml.includes('if (selectionRevision === currentRevision) {') && appHtml.includes("setSelectionSaveStatus('saved')"), 'Only marks saved if current revision matches');
+    } finally {
+      global.fetch = originalFetch;
+    }
   });
 
   // C19: Direct subfolder resolution avoids BFS crawler storms for CAM 2

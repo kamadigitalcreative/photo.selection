@@ -3027,12 +3027,51 @@ async function handleUpdateClientStatus(payload, res) {
   updateBody['Last Update'] = nowIso;
 
   const filter = getProjectMutationFilter(project);
-  await supabaseQuery(`projects?${filter}`, {
+  const patchResult = await supabaseQuery(`projects?${filter}`, {
     method: 'PATCH',
     body: updateBody
   });
 
-  return success(res, { success: true, status: currentStatus, maxFoto: currentMax, isDownloadActive: isDownloadActive });
+  // Verify PATCH affected exactly the expected authorized project row
+  if (!Array.isArray(patchResult) || patchResult.length === 0) {
+    return error(res, 'Gagal memperbarui status: Proyek tidak ditemukan atau akses tidak diizinkan.', 404);
+  }
+
+  if (patchResult.length > 1) {
+    console.error(`[SECURITY ALERT] Multiple projects (${patchResult.length}) matched mutation filter ${filter}`);
+    return error(res, 'Kesalahan integritas server: Operasi pembaruan dibatalkan.', 500);
+  }
+
+  const updatedProject = patchResult[0];
+
+  // Verify canonical project ID / token match
+  const expectedId = String(project.id || '').trim();
+  const updatedId = String(updatedProject.id || '').trim();
+  if (expectedId && updatedId && expectedId !== updatedId) {
+    return error(res, 'Kesalahan integritas: ID proyek tidak cocok.', 500);
+  }
+  const expectedToken = String(project.Token || '').trim();
+  const updatedToken = String(updatedProject.Token || '').trim();
+  if (expectedToken && updatedToken && expectedToken !== updatedToken) {
+    return error(res, 'Kesalahan integritas: Token proyek tidak cocok.', 500);
+  }
+
+  // Authoritative readback values from persisted row
+  const persistedCount = Number(updatedProject['Foto Terpilih']) || 0;
+  let persistedDaftar = updatedProject['Daftar Pilihan'] || '[]';
+  if (typeof persistedDaftar !== 'string') {
+    try { persistedDaftar = JSON.stringify(persistedDaftar); } catch (_) { persistedDaftar = '[]'; }
+  }
+
+  return success(res, {
+    success: true,
+    status: currentStatus,
+    maxFoto: currentMax,
+    isDownloadActive: isDownloadActive,
+    fotoTerpilih: persistedCount,
+    daftarPilihan: persistedDaftar,
+    lastUpdate: updatedProject['Last Update'] || nowIso
+  });
 }
 
 async function handleReleaseClientSession(payload, res) {
