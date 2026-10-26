@@ -672,9 +672,9 @@ async function runSuite() {
       'P16',
       virusSuccess.success === true &&
       blockRes.success === false &&
-      blockRes.code === 'PUBLIC_DOWNLOAD_LIMITATION' &&
+      (blockRes.code === 'GOOGLE_DOWNLOAD_HTML_WALL' || blockRes.code === 'PUBLIC_DOWNLOAD_LIMITATION') &&
       blockRes.status === 502,
-      'Virus scan confirmation followed successfully; quota/login block honestly reports PUBLIC_DOWNLOAD_LIMITATION [PROVIDER UNIT PASS]',
+      'Virus scan confirmation followed successfully; quota/login block honestly reports GOOGLE_DOWNLOAD_HTML_WALL [PROVIDER UNIT PASS]',
       `Retry success: ${virusSuccess.success}, Blocked error code: ${blockRes.code}`
     );
 

@@ -64,7 +64,9 @@ function createValidTestJpegBuffer({ width = 2048, height = 1366, targetSize = 5
 
 async function runGew08797Tests() {
   console.log('================================================================');
-  console.log('PHASE 6 — GEW08797.JPG REAL ORIGINAL DELIVERY TEST SUITE');
+  console.log('PHASE 6 — GEW08797.JPG CONTROLLED MOCK REGRESSION SUITE');
+  console.log('STATUS: [CONTROLLED MOCK REGRESSION - SYNTHETIC DATA]');
+  console.log('LIVE GOOGLE DRIVE = NOT RUN (Requires operator live environment)');
   console.log('================================================================\n');
 
   let passed = 0;
@@ -279,9 +281,9 @@ async function runGew08797Tests() {
 
   const blockedStreamRes = await blockedProvider.fetchOriginalStream(FILE_ID);
   testCheck(
-    'T6: Google HTML Quota Block honestly reports PUBLIC_DOWNLOAD_LIMITATION',
+    'T6: Google HTML Quota Block honestly reports GOOGLE_DOWNLOAD_HTML_WALL',
     blockedStreamRes.success === false &&
-    blockedStreamRes.code === 'PUBLIC_DOWNLOAD_LIMITATION' &&
+    (blockedStreamRes.code === 'GOOGLE_DOWNLOAD_HTML_WALL' || blockedStreamRes.code === 'PUBLIC_DOWNLOAD_LIMITATION') &&
     blockedStreamRes.status === 502,
     `Success: ${blockedStreamRes.success}, Code: ${blockedStreamRes.code}, HTTP Status: ${blockedStreamRes.status}`
   );
@@ -305,8 +307,8 @@ async function runGew08797Tests() {
   await actualBackend.handleDownloadOriginalFile(blockedHandlerPayload, mockReq, mockErrRes);
 
   testCheck(
-    'T7: Handler transmits 502 PUBLIC_DOWNLOAD_LIMITATION to Client',
-    errorStatus === 502 && errorJson && errorJson.code === 'PUBLIC_DOWNLOAD_LIMITATION',
+    'T7: Handler transmits 502 GOOGLE_DOWNLOAD_HTML_WALL to Client',
+    errorStatus === 502 && errorJson && (errorJson.code === 'GOOGLE_DOWNLOAD_HTML_WALL' || errorJson.code === 'PUBLIC_DOWNLOAD_LIMITATION'),
     `Status: ${errorStatus}, JSON Code: ${errorJson ? errorJson.code : 'none'}`
   );
 

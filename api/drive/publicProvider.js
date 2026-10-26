@@ -882,11 +882,30 @@ class PublicDriveProvider {
 
       if (!res.ok) {
         await safelyDiscardBody(res.body);
+        let errorCode = ERROR_CODES.GOOGLE_ORIGINAL_UPSTREAM_DENIED;
+        let errorStatus = 502;
+        let errorMsg = `Google Drive menolak pengunduhan berkas asli (HTTP ${res.status}).`;
+
+        if (res.status === 404) {
+          errorCode = ERROR_CODES.GOOGLE_ORIGINAL_NOT_FOUND;
+          errorStatus = 404;
+          errorMsg = `Berkas foto tidak ditemukan di Google Drive (HTTP 404).`;
+        } else if (res.status === 429) {
+          errorCode = ERROR_CODES.GOOGLE_ORIGINAL_RATE_LIMIT;
+          errorStatus = 502;
+          errorMsg = `Google Drive membatasi frekuensi pengunduhan berkas ini (HTTP 429 Rate Limit).`;
+        } else if (res.status === 401 || res.status === 403) {
+          errorCode = ERROR_CODES.GOOGLE_ORIGINAL_UPSTREAM_DENIED;
+          errorStatus = 502;
+          errorMsg = `Google Drive menolak pengunduhan publik berkas ini (HTTP ${res.status} Upstream Forbidden / Akses Ditolak oleh Google).`;
+        }
+
         return {
           success: false,
-          code: res.status === 404 ? ERROR_CODES.FILE_NOT_FOUND : ERROR_CODES.FOLDER_ACCESS_DENIED,
-          status: res.status,
-          message: `Gagal mengunduh berkas dari Google Drive (HTTP ${res.status}).`
+          code: errorCode,
+          status: errorStatus,
+          upstreamStatus: res.status,
+          message: errorMsg
         };
       }
 
@@ -946,7 +965,7 @@ class PublicDriveProvider {
       if (contentType.includes('text/html')) {
         return {
           success: false,
-          code: 'PUBLIC_DOWNLOAD_LIMITATION',
+          code: ERROR_CODES.GOOGLE_DOWNLOAD_HTML_WALL,
           status: 502,
           message: 'Google Drive membatasi pengunduhan langsung berkas ini tanpa otentikasi akun (Batas kuota publik / virus scan wall).'
         };
@@ -1009,7 +1028,7 @@ class PublicDriveProvider {
     } catch (err) {
       return {
         success: false,
-        code: ERROR_CODES.DRIVE_NETWORK_ERROR,
+        code: ERROR_CODES.GOOGLE_ORIGINAL_NETWORK_ERROR,
         status: 502,
         message: `Gagal mengunduh berkas: ${err.message}`
       };

@@ -4144,7 +4144,7 @@ async function handleDownloadOriginalFile(payload, req, res) {
   }
 
   if (!sessionToken) {
-    return error(res, 'Akses ditolak: Memerlukan otorisasi sesi untuk mengunduh berkas asli.', 403);
+    return error(res, 'Akses ditolak: Memerlukan otorisasi sesi untuk mengunduh berkas asli.', 403, { code: 'KMBC_SESSION_DENIED' });
   }
 
   const provider = payload.testProviderOverride || getDriveProvider();
@@ -4188,7 +4188,9 @@ async function handleDownloadOriginalFile(payload, req, res) {
   const tAuth = Date.now() - tAuthStart;
 
   if (!authCheck.authorized) {
-    return error(res, authCheck.error.message, authCheck.error.status);
+    const isSessionErr = (authCheck.error && (authCheck.error.code === 'SESSION_REQUIRED' || authCheck.error.code === 'INVALID_SESSION' || authCheck.error.code === 'SESSION_EXPIRED'));
+    const safeCode = isSessionErr ? 'KMBC_SESSION_DENIED' : 'KMBC_PROJECT_FILE_DENIED';
+    return error(res, authCheck.error.message, authCheck.error.status || 403, { code: safeCode, originalCode: authCheck.error?.code });
   }
 
   const rangeHeader = req && req.headers ? (req.headers['range'] || payload.range) : payload.range;
@@ -4206,7 +4208,7 @@ async function handleDownloadOriginalFile(payload, req, res) {
     const tMeta = Date.now() - tMetaStart;
 
     if (!meta) {
-      return error(res, 'Berkas foto tidak ditemukan di Google Drive.', 404);
+      return error(res, 'Berkas foto tidak ditemukan di Google Drive.', 404, { code: 'GOOGLE_ORIGINAL_NOT_FOUND' });
     }
     const byteSize = parseInt(meta.size, 10) || 0;
     const delivery = downloadService.evaluateDeliveryStrategy(byteSize);
@@ -4227,7 +4229,11 @@ async function handleDownloadOriginalFile(payload, req, res) {
     const tStreamInit = Date.now() - tStreamStart;
 
     if (!streamRes.success) {
-      return error(res, streamRes.message, streamRes.status || 500, streamRes.code ? { code: streamRes.code } : null);
+      const errStatus = streamRes.status || 502;
+      return error(res, streamRes.message, errStatus, {
+        code: streamRes.code || 'GOOGLE_ORIGINAL_UPSTREAM_DENIED',
+        upstreamStatus: streamRes.upstreamStatus || streamRes.status || 502
+      });
     }
 
     // FIX 3: Upstream status verification when Range requested — If 200 returned for <=4.5MB, safely serve full response!

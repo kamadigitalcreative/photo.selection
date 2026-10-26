@@ -4841,6 +4841,7 @@
 
                 <p id="viewerCaption" class="text-white font-semibold text-sm tracking-wide"></p>
                 <span id="viewer-original-status" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-300 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5"><i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Memuat Original...</span></span>
+                <a id="viewer-external-drive-link" href="#" target="_blank" rel="noopener noreferrer" class="hidden px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-900/40 hover:bg-blue-800/60 text-blue-300 backdrop-blur-md border border-blue-500/30 items-center gap-1 transition-colors" title="Buka berkas di Google Drive (Tampilan Eksternal)"><i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> <span>Buka di Drive (Eksternal)</span></a>
                 <div id="viewerDivider" class="w-px h-6 bg-white/20 hidden sm:block"></div>
                 <div id="viewerDirectNote"
                     class="hidden max-w-md px-3 py-1.5 bg-amber-500/20 border border-amber-400/40 rounded-xl text-amber-300 text-xs font-medium flex items-center gap-2">
@@ -11967,6 +11968,12 @@
             var tViewerStart = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
             var img = document.getElementById('viewerImage');
             var statusEl = document.getElementById('viewer-original-status');
+            var extLink = document.getElementById('viewer-external-drive-link');
+            if (extLink && extLink.classList) {
+                extLink.classList.add('hidden');
+                extLink.classList.remove('inline-flex');
+                if (extLink.removeAttribute) extLink.removeAttribute('href');
+            }
             var fileId = (item && item.id) || (item && item.url && (item.url.match(/[?&]fileId=([-\w]{10,128})/)?.[1] || item.url.match(/https:\/\/lh3\.googleusercontent\.com\/d\/([-\w]{10,128})/)?.[1]));
             var itemFolder = (item && (item.folderId || item.folder)) || (clientState && clientState.currentFolderId) || '';
             var origUrl = (item && item.originalUrl) ? (item.originalUrl + (item.originalUrl.includes('purpose=') ? '' : '&purpose=view') + (!item.originalUrl.includes('folderId=') && itemFolder ? ('&folderId=' + encodeURIComponent(itemFolder)) : '')) : (fileId ? ('/api/bridge?action=downloadOriginalFile&fileId=' + fileId + '&token=' + encodeURIComponent((clientState && clientState.token) || '') + (itemFolder ? ('&folderId=' + encodeURIComponent(itemFolder)) : '') + '&purpose=view') : null);
@@ -12253,6 +12260,11 @@
                         var badgeCode = errStatus ? (errStatus + ':' + errCode) : errCode;
                         statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span><span class="text-[10px] text-amber-400/90 font-mono ml-1 px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20" title="' + encodeURIComponent(badgeCode) + '">[' + badgeCode + ']</span>';
                     }
+                    if (extLink && extLink.classList && fileId && window.viewerLoadRequestId === reqId) {
+                        extLink.href = 'https://drive.google.com/file/d/' + encodeURIComponent(fileId) + '/view';
+                        extLink.classList.remove('hidden');
+                        extLink.classList.add('inline-flex');
+                    }
                     throw err;
                 })
                 .finally(function () {
@@ -12366,6 +12378,13 @@
             }
 
             resetZoom(); // Reset gambar ke ukuran asli sebelum ditutup
+
+            var extLink = document.getElementById('viewer-external-drive-link');
+            if (extLink && extLink.classList) {
+                extLink.classList.add('hidden');
+                extLink.classList.remove('inline-flex');
+                if (extLink.removeAttribute) extLink.removeAttribute('href');
+            }
 
             modal.classList.add('opacity-0');
             wrapper.classList.remove('scale-100');
@@ -16402,14 +16421,17 @@
                         }
                     } catch (_) { }
 
+                    var provName = (response.headers && response.headers.get('x-drive-provider')) || 'public_link';
                     if (response.status === 401 || response.status === 403) {
-                        if (errCode === 'SESSION_EXPIRED' || errCode === 'INVALID_SESSION' || errCode === 'SESSION_REQUIRED') {
+                        if (errCode === 'SESSION_EXPIRED' || errCode === 'INVALID_SESSION' || errCode === 'SESSION_REQUIRED' || errCode === 'KMBC_SESSION_DENIED') {
                             var retryCount = (opts && opts._retryCount) || 0;
                             if (retryCount >= 1) {
                                 // TASK C: Limit automatic reauthentication retry to ONE renewal attempt per operation
-                                var maxRetryErr = new Error("HTTP 403 (" + errCode + "): " + (isEn ? "Session renewed but authorization rejected. Please verify PIN." : "Sesi diperbarui namun otorisasi ditolak. Silakan verifikasi PIN."));
+                                var maxRetryErr = new Error("HTTP " + response.status + " (" + errCode + "): " + (isEn ? "Session renewed but authorization rejected. Please verify PIN." : "Sesi diperbarui namun otorisasi ditolak. Silakan verifikasi PIN."));
+                                maxRetryErr.status = response.status;
                                 maxRetryErr.isAuthError = true;
                                 maxRetryErr.code = errCode;
+                                maxRetryErr.provider = provName;
                                 throw maxRetryErr;
                             }
                             var reauthed = await reauthenticateClientSession(errCode, isEn);
@@ -16418,32 +16440,41 @@
                                 return await fetchAuthorizedOriginalBlob(url, filename, nextOpts);
                             }
                             var cancelErr = new Error(isEn ? "PIN verification was cancelled." : "Verifikasi PIN dibatalkan.");
+                            cancelErr.status = response.status;
                             cancelErr.isCancelled = true;
                             cancelErr.isAuthError = true;
                             cancelErr.code = errCode;
+                            cancelErr.provider = provName;
                             throw cancelErr;
                         } else if (errCode === 'DOWNLOAD_DISABLED') {
-                            var dlDisErr = new Error("HTTP 403 (DOWNLOAD_DISABLED): " + (isEn ? "Direct photo download is disabled for this gallery." : "Fitur unduh berkas asli dinonaktifkan untuk proyek ini."));
+                            var dlDisErr = new Error("HTTP " + response.status + " (DOWNLOAD_DISABLED): " + (isEn ? "Direct photo download is disabled for this gallery." : "Fitur unduh berkas asli dinonaktifkan untuk proyek ini."));
+                            dlDisErr.status = response.status;
                             dlDisErr.isAuthError = true;
                             dlDisErr.code = 'DOWNLOAD_DISABLED';
+                            dlDisErr.provider = provName;
                             throw dlDisErr;
-                        } else if (errCode === 'CROSS_PROJECT_FORBIDDEN') {
-                            var cpErr = new Error("HTTP 403 (CROSS_PROJECT_FORBIDDEN): " + (isEn ? "Photo does not belong to this project." : "Berkas bukan milik proyek ini."));
+                        } else if (errCode === 'CROSS_PROJECT_FORBIDDEN' || errCode === 'KMBC_PROJECT_FILE_DENIED') {
+                            var cpErr = new Error("HTTP " + response.status + " (" + errCode + "): " + (isEn ? "Photo does not belong to this project." : "Berkas bukan milik proyek ini."));
+                            cpErr.status = response.status;
                             cpErr.isAuthError = true;
-                            cpErr.code = 'CROSS_PROJECT_FORBIDDEN';
+                            cpErr.code = errCode;
+                            cpErr.provider = provName;
                             throw cpErr;
                         } else if (errCode === 'PROJECT_MISMATCH') {
-                            var pmErr = new Error("HTTP 403 (PROJECT_MISMATCH): " + (isEn ? "Session does not match this project." : "Sesi tidak cocok dengan proyek galeri ini."));
+                            var pmErr = new Error("HTTP " + response.status + " (PROJECT_MISMATCH): " + (isEn ? "Session does not match this project." : "Sesi tidak cocok dengan proyek galeri ini."));
+                            pmErr.status = response.status;
                             pmErr.isAuthError = true;
                             pmErr.code = 'PROJECT_MISMATCH';
+                            pmErr.provider = provName;
                             throw pmErr;
                         }
-                        var generalAuthErr = new Error("HTTP 403 (" + errCode + "): " + (errDetail || (isEn ? "Access to original photo is forbidden." : "Akses ke berkas asli ditolak atau fitur unduh dinonaktifkan.")));
+                        var generalAuthErr = new Error("HTTP " + response.status + " (" + errCode + "): " + (errDetail || (isEn ? "Access to original photo is forbidden." : "Akses ke berkas asli ditolak atau fitur unduh dinonaktifkan.")));
+                        generalAuthErr.status = response.status;
                         generalAuthErr.isAuthError = true;
                         generalAuthErr.code = errCode;
+                        generalAuthErr.provider = provName;
                         throw generalAuthErr;
                     }
-                    var provName = (response.headers && response.headers.get('x-drive-provider')) || 'public_link';
                     if (response.status === 404) {
                         var notFoundErr = new Error(isEn ? "HTTP 404: Original photo file was not found on server." : "HTTP 404: Berkas foto asli tidak ditemukan di server.");
                         notFoundErr.status = 404;
