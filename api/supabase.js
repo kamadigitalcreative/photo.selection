@@ -3895,16 +3895,22 @@ async function handleGetDriveContent(payload, req, res) {
 
       // ISSUE 3: Authorized subfolder navigation for photographer
       let targetFolderId = rootFolderId;
-      const requestedFolderId = (payload.folder_id || payload.folderId || '').trim();
-      if (requestedFolderId && requestedFolderId !== rootFolderId) {
-        const prov = getDriveProvider();
-        if (typeof prov.verifyFolderHierarchy === 'function') {
-          const hierCheck = await prov.verifyFolderHierarchy({ folderId: requestedFolderId, rootFolderId });
-          if (!hierCheck.allowed) {
-            return error(res, 'Akses ditolak: Folder ini bukan bagian dari proyek galeri ini (Cross-project / invalid subfolder).', 403);
-          }
+      const rawRequested = (payload.folder_id || payload.folderId || '').trim();
+      if (rawRequested) {
+        const canonicalRequested = urlParser.extractFolderId(rawRequested);
+        if (!canonicalRequested) {
+          return error(res, 'Format link atau ID Google Drive subfolder tidak valid.', 400);
         }
-        targetFolderId = requestedFolderId;
+        if (canonicalRequested !== rootFolderId) {
+          const prov = getDriveProvider();
+          if (typeof prov.verifyFolderHierarchy === 'function') {
+            const hierCheck = await prov.verifyFolderHierarchy({ folderId: canonicalRequested, rootFolderId });
+            if (!hierCheck || !hierCheck.allowed) {
+              return error(res, 'Akses ditolak: Folder ini bukan bagian dari proyek galeri ini (Cross-project / invalid subfolder).', 403);
+            }
+          }
+          targetFolderId = canonicalRequested;
+        }
       }
       authoritativeFolderId = targetFolderId;
     } else {
@@ -3966,16 +3972,22 @@ async function handleGetDriveContent(payload, req, res) {
 
     // ISSUE 3: Authorized subfolder navigation for verified client gallery visitor
     let targetFolderId = rootFolderId;
-    const requestedFolderId = (payload.folder_id || payload.folderId || '').trim();
-    if (requestedFolderId && requestedFolderId !== rootFolderId) {
-      const prov = getDriveProvider();
-      if (typeof prov.verifyFolderHierarchy === 'function') {
-        const hierCheck = await prov.verifyFolderHierarchy({ folderId: requestedFolderId, rootFolderId });
-        if (!hierCheck.allowed) {
-          return error(res, 'Akses ditolak: Folder ini bukan bagian dari proyek galeri ini (Cross-project / invalid subfolder).', 403);
-        }
+    const rawRequested = (payload.folder_id || payload.folderId || '').trim();
+    if (rawRequested) {
+      const canonicalRequested = urlParser.extractFolderId(rawRequested);
+      if (!canonicalRequested) {
+        return error(res, 'Format link atau ID Google Drive subfolder tidak valid.', 400);
       }
-      targetFolderId = requestedFolderId;
+      if (canonicalRequested !== rootFolderId) {
+        const prov = getDriveProvider();
+        if (typeof prov.verifyFolderHierarchy === 'function') {
+          const hierCheck = await prov.verifyFolderHierarchy({ folderId: canonicalRequested, rootFolderId });
+          if (!hierCheck || !hierCheck.allowed) {
+            return error(res, 'Akses ditolak: Folder ini bukan bagian dari proyek galeri ini (Cross-project / invalid subfolder).', 403);
+          }
+        }
+        targetFolderId = canonicalRequested;
+      }
     }
     authoritativeFolderId = targetFolderId;
   }

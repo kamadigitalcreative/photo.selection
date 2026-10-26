@@ -15054,9 +15054,22 @@
             }
         }
 
+        function extractDriveFolderId(input) {
+            if (!input || typeof input !== 'string') return '';
+            var str = input.trim();
+            var folderMatch = str.match(/\/folders\/([a-zA-Z0-9_-]{10,128})/);
+            if (folderMatch && folderMatch[1]) return folderMatch[1];
+            var idMatch = str.match(/[?&]id=([a-zA-Z0-9_-]{10,128})/);
+            if (idMatch && idMatch[1]) return idMatch[1];
+            if (/^[a-zA-Z0-9_-]{10,128}$/.test(str)) return str;
+            var genericMatch = str.match(/[-\w]{25,128}/);
+            if (genericMatch && genericMatch[0]) return genericMatch[0];
+            return str;
+        }
+
         // --- LOGIKA MODE & DOWNLOAD --- //
         function showClientModeSelection() {
-            clientState.currentFolderId = clientState.driveLink;
+            clientState.currentFolderId = extractDriveFolderId(clientState.driveLink) || clientState.driveLink;
             clientState.currentFolderName = clientState.namaClient;
             showView('client-mode-view');
         }

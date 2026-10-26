@@ -15,6 +15,7 @@ const {
   SUPPORTED_RAW_MIMES,
   VERCEL_MAX_RESPONSE_BYTES
 } = require('./types');
+const urlParser = require('./urlParser');
 
 class GoogleDriveProvider {
   constructor(options = {}) {
@@ -701,7 +702,9 @@ class GoogleDriveProvider {
     if (!folderId || !rootFolderId) {
       return { allowed: false, reason: 'MISSING_PARAMETERS' };
     }
-    if (folderId === rootFolderId) {
+    const cleanFolderId = urlParser.extractFolderId(folderId) || String(folderId).trim();
+    const cleanRootId = urlParser.extractFolderId(rootFolderId) || String(rootFolderId).trim();
+    if (cleanFolderId === cleanRootId) {
       return { allowed: true, depth: 0 };
     }
     if (!this.hasCredentials()) {
@@ -712,7 +715,7 @@ class GoogleDriveProvider {
       const accessToken = await this.getAccessToken();
       if (!accessToken) return { allowed: false, reason: 'AUTH_FAILED' };
 
-      let currentId = folderId;
+      let currentId = cleanFolderId;
       let depth = 0;
       const visited = new Set([currentId]);
 
@@ -740,7 +743,7 @@ class GoogleDriveProvider {
           return { allowed: false, reason: 'NOT_A_SUBFOLDER' };
         }
 
-        if (parents.includes(rootFolderId)) {
+        if (parents.includes(cleanRootId)) {
           return { allowed: true, depth, folderName: data.name };
         }
 

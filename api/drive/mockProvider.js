@@ -9,6 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const { Readable } = require('stream');
 const { ERROR_CODES, SUPPORTED_IMAGE_MIMES, SUPPORTED_RAW_EXTENSIONS } = require('./types');
+const urlParser = require('./urlParser');
 
 const FIXTURES_DIR = path.resolve(__dirname, '..', '..', 'test', 'phase55-fixtures');
 
@@ -438,7 +439,9 @@ class MockDriveProvider {
     if (!folderId || !rootFolderId) {
       return { allowed: false, reason: 'MISSING_PARAMETERS' };
     }
-    if (folderId === rootFolderId) {
+    const cleanFolderId = urlParser.extractFolderId(folderId) || String(folderId).trim();
+    const cleanRootId = urlParser.extractFolderId(rootFolderId) || String(rootFolderId).trim();
+    if (cleanFolderId === cleanRootId) {
       return { allowed: true, depth: 0 };
     }
 
@@ -453,7 +456,7 @@ class MockDriveProvider {
       'alien-subfolder': 'alienProjectFolderId'
     };
 
-    let currentId = folderId;
+    let currentId = cleanFolderId;
     let depth = 0;
     const visited = new Set([currentId]);
 
@@ -470,7 +473,7 @@ class MockDriveProvider {
         return { allowed: false, reason: 'NOT_A_SUBFOLDER' };
       }
 
-      if (parent === rootFolderId) {
+      if (parent === cleanRootId) {
         return { allowed: true, depth };
       }
 

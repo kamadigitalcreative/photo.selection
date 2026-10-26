@@ -850,8 +850,8 @@ class PublicDriveProvider {
     if (!folderId || !rootFolderId) {
       return { allowed: false, reason: 'MISSING_FOLDER_ID' };
     }
-    const cleanChild = String(folderId).trim();
-    const cleanRoot = String(rootFolderId).trim();
+    const cleanChild = extractFolderId(folderId) || String(folderId).trim();
+    const cleanRoot = extractFolderId(rootFolderId) || String(rootFolderId).trim();
 
     if (cleanChild === cleanRoot) {
       return { allowed: true };
