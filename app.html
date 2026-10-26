@@ -11860,6 +11860,7 @@
         }
 
         var originalBlobCache = new Map();
+        var verifiedOriginalKeys = new Set();
         var MAX_ORIGINAL_CACHE = 8; // Bounded memory: max 8 full-size authentic original blobs in memory
         var inFlightOriginalRequests = new Map();
 
@@ -11902,6 +11903,9 @@
                     else if (oldUrl.blobUrl) URL.revokeObjectURL(oldUrl.blobUrl);
                 }
                 originalBlobCache.delete(oldestKey);
+                if (typeof verifiedOriginalKeys !== 'undefined') {
+                    verifiedOriginalKeys.delete(oldestKey);
+                }
             }
             originalBlobCache.set(cacheKey, bUrl);
             return bUrl;
@@ -11979,15 +11983,22 @@
                 if (cachedBlobUrl && typeof cachedBlobUrl !== 'string' && cachedBlobUrl.blobUrl) {
                     cachedBlobUrl = cachedBlobUrl.blobUrl;
                 }
+                var isVerified = (typeof verifiedOriginalKeys !== 'undefined') ? verifiedOriginalKeys.has(cacheKey) : true;
                 if (img) img.src = cachedBlobUrl;
                 if (statusEl) {
-                    statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 backdrop-blur-md border border-emerald-500/30 hidden sm:flex items-center gap-1.5';
-                    statusEl.innerHTML = '<i class="fa-solid fa-circle-check text-xs text-emerald-400"></i> <span>Original 100%</span>';
+                    if (isVerified) {
+                        statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 backdrop-blur-md border border-emerald-500/30 hidden sm:flex items-center gap-1.5';
+                        statusEl.innerHTML = '<i class="fa-solid fa-circle-check text-xs text-emerald-400"></i> <span>Original 100%</span>';
+                    } else {
+                        statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
+                        statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span>';
+                    }
                 }
                 if (typeof window !== 'undefined') {
                     window.__viewerDiagnostics = {
                         fileId: fileId,
                         cacheHit: true,
+                        verifiedOriginal: isVerified,
                         transportMode: 'CACHE',
                         requestsCount: 0,
                         timings: {
@@ -12119,14 +12130,14 @@
                     var actualBlob = (res && res.blob) ? res.blob : res;
                     var isValidBlob = actualBlob && (typeof Blob !== 'undefined' ? (actualBlob instanceof Blob) : (actualBlob && typeof actualBlob.slice === 'function'));
                     if (window.viewerLoadRequestId === reqId && img && isValidBlob && actualBlob.size > 0) {
-                        var bUrl = saveToOriginalBlobCache(cacheKey, actualBlob);
-                        img.src = bUrl;
+                        var bUrl = (typeof URL !== 'undefined' && URL.createObjectURL) ? URL.createObjectURL(actualBlob) : actualBlob;
+                        img.src = (typeof bUrl === 'string') ? bUrl : (bUrl.blobUrl || bUrl);
                         var decodeSuccessful = false;
                         var tDecodeStart = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
                         if (typeof img.decode === 'function') {
                             try {
                                 await img.decode();
-                                decodeSuccessful = true;
+                                decodeSuccessful = (img.naturalWidth === undefined || img.naturalWidth > 0);
                             } catch (_) {
                                 decodeSuccessful = false;
                             }
@@ -12137,6 +12148,10 @@
 
                         if (window.viewerLoadRequestId === reqId) {
                             if (decodeSuccessful) {
+                                saveToOriginalBlobCache(cacheKey, bUrl);
+                                if (typeof verifiedOriginalKeys !== 'undefined') {
+                                    verifiedOriginalKeys.add(cacheKey);
+                                }
                                 var sizeStr = actualBlob.size > 1048576 ? (actualBlob.size / 1048576).toFixed(1) + ' MB' : Math.round(actualBlob.size / 1024) + ' KB';
                                 if (statusEl) {
                                     statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 backdrop-blur-md border border-emerald-500/30 hidden sm:flex items-center gap-1.5';
@@ -12147,6 +12162,8 @@
                                     window.__viewerDiagnostics.timings = window.__viewerDiagnostics.timings || {};
                                     window.__viewerDiagnostics.timings.decodeDurationMs = Math.round(tDecodeEnd - tDecodeStart);
                                     window.__viewerDiagnostics.timings.totalViewerOriginalMs = Math.round(tDecodeEnd - tViewerStart);
+                                    window.__viewerDiagnostics.verifiedOriginal = true;
+                                    window.__viewerDiagnostics.dimensions = { width: img.naturalWidth || 0, height: img.naturalHeight || 0 };
                                 }
 
                                 // Background prefetch at most one neighboring original photo (+1)
@@ -12154,15 +12171,30 @@
                                     prefetchNeighborOriginal(window.currentViewerIndex + 1);
                                 }
                             } else {
-                                // BUG 4 FIX: Decode failed -> truthful Mode Preview
+                                // BUG 4 & 7 FIX: Decode failed -> purge from cache, revoke URL, truthful Mode Preview
+                                originalBlobCache.delete(cacheKey);
+                                if (typeof verifiedOriginalKeys !== 'undefined') {
+                                    verifiedOriginalKeys.delete(cacheKey);
+                                }
+                                if (typeof URL !== 'undefined' && URL.revokeObjectURL && typeof bUrl === 'string') {
+                                    try { URL.revokeObjectURL(bUrl); } catch (_) { }
+                                }
                                 if (statusEl) {
                                     statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
                                     statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span>';
                                 }
+                                if (typeof window !== 'undefined') {
+                                    window.__viewerDiagnostics = window.__viewerDiagnostics || {};
+                                    window.__viewerDiagnostics.verifiedOriginal = false;
+                                    window.__viewerDiagnostics.failureCategory = 'DECODE_FAILED';
+                                }
                             }
                         }
                     } else if (window.viewerLoadRequestId === reqId) {
-                        // Honest fallback: keep preview without claiming it is original
+                        originalBlobCache.delete(cacheKey);
+                        if (typeof verifiedOriginalKeys !== 'undefined') {
+                            verifiedOriginalKeys.delete(cacheKey);
+                        }
                         if (statusEl) {
                             statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
                             statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span>';
@@ -12173,6 +12205,28 @@
                 .catch(function (err) {
                     if (window.__viewerOriginalController === viewerCtrl) {
                         window.__viewerOriginalController = null;
+                    }
+                    originalBlobCache.delete(cacheKey);
+                    if (typeof verifiedOriginalKeys !== 'undefined') {
+                        verifiedOriginalKeys.delete(cacheKey);
+                    }
+                    var failureCat = err.isTimeout ? 'TIMEOUT' : (err.isAuthError ? 'AUTH_FAILED' : (err.name === 'AbortError' ? 'ABORTED' : 'FETCH_ERROR'));
+                    if (typeof window !== 'undefined') {
+                        window.__viewerDiagnostics = {
+                            fileId: fileId,
+                            cacheHit: false,
+                            verifiedOriginal: false,
+                            failureCategory: failureCat,
+                            errorMessage: err.message || String(err),
+                            timings: {
+                                totalViewerOriginalMs: Math.round(((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - tViewerStart)
+                            }
+                        };
+                        console.warn('[ViewerDiagnostics] Original load failed:', {
+                            fileId: fileId,
+                            category: failureCat,
+                            error: err.message
+                        });
                     }
                     // Honest fallback: keep preview without claiming it is original
                     if (statusEl && window.viewerLoadRequestId === reqId) {
@@ -12252,8 +12306,9 @@
                 img.src = safePlaceholder;
             }
 
-            // 2. High-resolution preview fetch for fullscreen & crisp zoom (for proxy/bridge URLs)
-            if (!isHighResCdn && !previewBlobCache.has(highResUrl) && !cachedOriginalUrl) {
+            // 2. High-resolution preview fetch only if no authentic original available (eliminates bandwidth competition)
+            var hasAuthenticOriginal = Boolean(targetItem && (targetItem.originalUrl || targetItem.id || (targetItem.url && (targetItem.url.includes('fileId=') || targetItem.url.includes('/d/')))));
+            if (!isHighResCdn && !previewBlobCache.has(highResUrl) && !cachedOriginalUrl && !hasAuthenticOriginal) {
                 fetchAuthenticatedPreviewBlob(highResUrl, { isHighPriority: true }).then(function (blobUrl) {
                     if (window.viewerLoadRequestId === currentReq && img && blobUrl && !originalBlobCache.has(origKey)) {
                         img.src = blobUrl;
@@ -12359,8 +12414,9 @@
                 imgEl.src = safePlaceholder;
             }
 
-            // 2. High-resolution preview fetch for fullscreen & crisp zoom
-            if (!isNextHighResCdn && !previewBlobCache.has(nextHighResUrl) && !cachedNextOrigUrl) {
+            // 2. High-resolution preview fetch only if no authentic original available (eliminates bandwidth competition)
+            var hasNextAuthenticOriginal = Boolean(nextImg && (nextImg.originalUrl || nextImg.id || (nextImg.url && (nextImg.url.includes('fileId=') || nextImg.url.includes('/d/')))));
+            if (!isNextHighResCdn && !previewBlobCache.has(nextHighResUrl) && !cachedNextOrigUrl && !hasNextAuthenticOriginal) {
                 fetchAuthenticatedPreviewBlob(nextHighResUrl, { isHighPriority: true }).then(function (blobUrl) {
                     if (window.viewerLoadRequestId === currentReq && imgEl && blobUrl && !originalBlobCache.has(nextOrigKey)) {
                         imgEl.src = blobUrl;
@@ -16252,14 +16308,24 @@
                     fetchUrl = parsedTargetUrl.toString();
                 }
 
-                // TASK D: Bounded network wait with AbortController timeout (15 seconds)
-                var timeoutMs = (opts && opts.timeout) || 15000;
+                // TASK D: Bounded network wait with activity-tracked AbortController timeout
+                var isExplicitTimeout = Boolean(opts && opts.timeout);
+                var timeoutMs = isExplicitTimeout ? opts.timeout : 30000;
                 var controller = (opts && opts.controller) ? opts.controller : ((typeof AbortController !== 'undefined') ? new AbortController() : null);
                 var timeoutId = null;
+                function resetActivityTimer(ms) {
+                    if (timeoutId) {
+                        clearTimeout(timeoutId);
+                        timeoutId = null;
+                    }
+                    if (controller) {
+                        timeoutId = setTimeout(function () {
+                            try { controller.abort(); } catch (_) { }
+                        }, ms || timeoutMs);
+                    }
+                }
                 if (controller) {
-                    timeoutId = setTimeout(function () {
-                        try { controller.abort(); } catch (_) { }
-                    }, timeoutMs);
+                    resetActivityTimer(timeoutMs);
                 }
 
                 let response;
@@ -16567,6 +16633,9 @@
                                 var sChunk = await reader.read();
                                 if (sChunk.done) break;
                                 if (sChunk.value) {
+                                    if (!isExplicitTimeout) {
+                                        resetActivityTimer(30000);
+                                    }
                                     streamChunks.push(sChunk.value);
                                     streamLoaded += sChunk.value.length;
                                     if (typeof opts.onProgress === 'function' && clStreamTotal > 0) {
@@ -16659,10 +16728,13 @@
 
             if (opts.purpose === 'view' && typeof window !== 'undefined') {
                 var fileIdMatch = (url && (url.match(/[?&]fileId=([-\w]{10,128})/)?.[1] || url.match(/https:\/\/lh3\.googleusercontent\.com\/d\/([-\w]{10,128})/)?.[1])) || filename || '';
+                var driveProvider = (response && response.headers && response.headers.get('x-drive-provider')) || 'unknown';
                 window.__viewerDiagnostics = {
                     fileId: fileIdMatch,
                     cacheHit: false,
                     deliveryMode: deliveryMode,
+                    provider: driveProvider,
+                    contentType: (response && response.headers && response.headers.get('content-type')) || blob.type,
                     serverTiming: serverTiming,
                     transportMarker: transportMarker,
                     totalBytes: blob.size,

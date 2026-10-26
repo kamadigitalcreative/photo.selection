@@ -4278,14 +4278,26 @@ async function handleDownloadOriginalFile(payload, req, res) {
       return error(res, 'Upstream stream tidak valid.', 502);
     }
 
+    const isViewOnly = (purpose === 'view');
+    let responseMime = streamRes.headers?.['Content-Type'] || streamRes.headers?.['content-type'] || (meta && meta.mimeType);
+    if (!responseMime || responseMime === 'application/octet-stream') {
+      const ext = path.extname(cleanName || '').toLowerCase();
+      if (ext === '.jpg' || ext === '.jpeg') responseMime = 'image/jpeg';
+      else if (ext === '.png') responseMime = 'image/png';
+      else if (ext === '.webp') responseMime = 'image/webp';
+      else responseMime = 'application/octet-stream';
+    }
+
     const resStatus = rangeInfo.isRange ? 206 : (streamRes.status || 200);
     const headers = {
-      'Content-Type': streamRes.headers?.['Content-Type'] || streamRes.headers?.['content-type'] || 'application/octet-stream',
-      'Content-Disposition': `attachment; filename="${cleanName}"`,
+      'Content-Type': responseMime,
+      'Content-Disposition': `${isViewOnly ? 'inline' : 'attachment'}; filename="${cleanName}"`,
       'Accept-Ranges': 'bytes',
       'X-Content-Type-Options': 'nosniff',
       'X-Delivery-Mode': rangeInfo.isRange ? 'CHUNKED_RANGE' : 'DIRECT_STREAM',
       'X-Original-Transport': 'phase6-stream-v2',
+      'X-Drive-Provider': provider.name || 'unknown',
+      'Cache-Control': 'private, max-age=300',
       'Server-Timing': `auth;dur=${tAuth}, meta;dur=${tMeta}, stream_init;dur=${tStreamInit}`
     };
     if (rangeInfo.isRange) {
@@ -4372,14 +4384,19 @@ async function handleDownloadOriginalFile(payload, req, res) {
       return error(res, fileRes.message, 404);
     }
 
+    const isViewOnly = (purpose === 'view');
     const cleanName = downloadService.sanitizeHeaderFilename(fileRes.filename);
     const resStatus = fileRes.isRange ? 206 : 200;
     const respHeaders = {
       'Content-Type': fileRes.mimeType,
       'Content-Length': fileRes.size,
-      'Content-Disposition': `attachment; filename="${cleanName}"`,
+      'Content-Disposition': `${isViewOnly ? 'inline' : 'attachment'}; filename="${cleanName}"`,
       'X-Content-Type-Options': 'nosniff',
-      'Accept-Ranges': 'bytes'
+      'Accept-Ranges': 'bytes',
+      'X-Drive-Provider': provider.name || 'mock',
+      'X-Delivery-Mode': fileRes.isRange ? 'CHUNKED_RANGE' : 'DIRECT_STREAM',
+      'X-Original-Transport': 'phase6-stream-v2',
+      'Cache-Control': 'private, max-age=300'
     };
     if (fileRes.contentRange) {
       respHeaders['Content-Range'] = fileRes.contentRange;
