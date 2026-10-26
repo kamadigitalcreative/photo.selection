@@ -4710,6 +4710,9 @@
                     <span class="font-bold text-xl sm:text-2xl text-kama-800 leading-none" id="bottom-counter">0</span>
                     <span class="text-sm font-medium text-gray-500">terpilih</span>
                 </div>
+                <div id="selection-save-indicator" class="text-[10px] mt-0.5 flex items-center gap-1 text-gray-400 transition-all duration-200">
+                    <i class="fa-solid fa-circle-check text-emerald-500 text-[10px]"></i> <span id="selection-save-text">Tersimpan</span>
+                </div>
             </div>
             <div id="action-selection-mode" class="controls flex gap-1.5 sm:gap-3 items-center">
                 <button id="btn-client-reset" onclick="resetSelection()"
@@ -8717,7 +8720,22 @@
                     url = 'https://placehold.co/400x400?text=' + encodeURIComponent(name);
                 }
 
+                var fileId = '';
+                if (item.id && /^[A-Za-z0-9_-]{5,128}$/.test(String(item.id).trim())) {
+                    fileId = String(item.id).trim();
+                } else if (/^[A-Za-z0-9_-]{10,128}$/.test(rawUrl)) {
+                    fileId = rawUrl;
+                } else if (rawUrl) {
+                    var mF = rawUrl.match(/[?&]fileId=([a-zA-Z0-9_-]{10,128})/);
+                    var mL = rawUrl.match(/lh3\.googleusercontent\.com\/d\/([a-zA-Z0-9_-]{10,128})/);
+                    var mI = rawUrl.match(/[?&]id=([a-zA-Z0-9_-]{10,128})/);
+                    if (mF && mF[1]) fileId = mF[1];
+                    else if (mL && mL[1]) fileId = mL[1];
+                    else if (mI && mI[1]) fileId = mI[1];
+                }
+
                 return {
+                    id: fileId,
                     name: name,
                     folder: folder,
                     url: url,
@@ -12167,7 +12185,11 @@
                 var activeCard = null;
                 cards.forEach(function (c) { if (c.dataset.filename === filename) activeCard = c; });
 
-                toggleSelection(activeCard, filename, url);
+                var activeImg = window.viewerActiveList ? window.viewerActiveList[window.currentViewerIndex] : null;
+                var folderName = activeImg ? (activeImg.folder || clientState.currentFolderName || '') : (clientState.currentFolderName || '');
+                var canonicalFileId = activeImg ? activeImg.id : null;
+
+                toggleSelection(activeCard, filename, url, canonicalFileId, folderName);
                 updateViewerUI(filename, url);
             };
         }
@@ -12275,7 +12297,7 @@
                     }
 
                     clientState.notes[fileId] = val;
-                    clientState.selectedImages.push({ name: activeImg.name, folder: folder, url: activeImg.url, category: activeImg.category });
+                    clientState.selectedImages.push({ id: activeImg.id || '', name: activeImg.name, folder: folder, url: activeImg.url, category: activeImg.category });
                     var cards = document.querySelectorAll('.photo-card');
                     cards.forEach(function (c) {
                         if (c.dataset.filename === activeImg.name) c.classList.add('selected');
@@ -12297,8 +12319,15 @@
         }
 
         // --- TASK E: SELECTION RECONCILIATION HELPERS ---
-        function isPhotoMatch(sel, targetFilename, currentFolder) {
-            if (!sel || !targetFilename) return false;
+        function isPhotoMatch(sel, targetFilename, currentFolder, targetId) {
+            if (!sel) return false;
+            // 0. If both have canonical fileId, match strictly on fileId!
+            var sId = (sel.id || '').trim();
+            var tId = (targetId || '').trim();
+            if (sId && tId && sId === tId) {
+                return true;
+            }
+            if (!targetFilename) return false;
             var sName = (sel.name || '').trim();
             var tName = targetFilename.trim();
             if (!sName || !tName) return false;
@@ -12316,23 +12345,23 @@
             }
             if (!matched) return false;
 
-            // Folder comparison: match if folders are identical, either is empty/root,
-            // or user is at the root gallery level (folderHistory empty)
+            // Folder comparison: if both items specify a folder, and they differ, they DO NOT MATCH!
+            // (Operator requirement: Avoid using filename alone as a unique key for files in different subfolders)
             var sFolder = (sel.folder || '').trim().toLowerCase();
             var cFolder = (currentFolder || '').trim().toLowerCase();
-            if (!sFolder || !cFolder) return true;
-            if (sFolder === cFolder) return true;
-            if (typeof clientState !== 'undefined' && (!clientState.folderHistory || clientState.folderHistory.length === 0)) {
-                return true;
+            if (sFolder && cFolder && sFolder !== cFolder) {
+                return false;
             }
-            return false;
+            return true;
         }
 
         function isPhotoSelectedInList(list, imgData, currentFolder) {
             if (!Array.isArray(list) || !imgData) return false;
             var targetName = imgData.name || '';
+            var targetId = imgData.id || '';
+            var targetFolder = imgData.folder || currentFolder || '';
             return list.some(function (sel) {
-                return isPhotoMatch(sel, targetName, currentFolder);
+                return isPhotoMatch(sel, targetName, targetFolder, targetId);
             });
         }
 
@@ -12488,6 +12517,10 @@
                     if (sessionToken) headers['Authorization'] = 'Bearer ' + sessionToken;
 
                     var res = await fetch(fetchUrl, { headers: headers });
+                    if (!res.ok && (res.status === 429 || res.status >= 500) && !options.isRetry) {
+                        await new Promise(r => setTimeout(r, 350));
+                        res = await fetch(fetchUrl, { headers: headers });
+                    }
                     if (!res.ok) {
                         if (res.status === 401 || res.status === 403) {
                             console.warn('[PreviewAuth] Unauthorized or session expired (HTTP ' + res.status + ')');
@@ -12693,7 +12726,7 @@
                     if (heartBadge) {
                         heartBadge.onclick = function (e) {
                             e.stopPropagation();
-                            toggleSelection(card, imgData.name, clientState.galleryMode === 'download' ? originalUrl : displayUrl);
+                            toggleSelection(card, imgData.name, clientState.galleryMode === 'download' ? originalUrl : displayUrl, imgData.id, imgData.folder || clientState.currentFolderName);
                         };
                         heartBadge.onkeydown = function (e) {
                             if (e.key === 'Enter' || e.key === ' ') {
@@ -12770,7 +12803,7 @@
                     btnPilih.innerHTML = btnText;
                     btnPilih.onclick = function (e) {
                         e.stopPropagation();
-                        toggleSelection(card, imgData.name, clientState.galleryMode === 'download' ? originalUrl : displayUrl);
+                        toggleSelection(card, imgData.name, clientState.galleryMode === 'download' ? originalUrl : displayUrl, imgData.id, imgData.folder || clientState.currentFolderName);
                     };
 
                     if (clientState.galleryMode === 'download') {
@@ -12829,18 +12862,19 @@
             updateGalleryLock();
         }
 
-        function toggleSelection(cardElement, filename, url, fileId) {
+        function toggleSelection(cardElement, filename, url, fileId, folderName) {
             var isEn = localStorage.getItem('ps_lang') === 'en';
+            var currentFolder = folderName || clientState.currentFolderName || '';
 
             if (clientState.galleryMode === 'download') {
                 var dIndex = clientState.downloadImages.findIndex(function (sel) {
-                    return isPhotoMatch(sel, filename, clientState.currentFolderName);
+                    return isPhotoMatch(sel, filename, currentFolder, fileId);
                 });
                 var btnPilih = cardElement ? cardElement.querySelector('.btn-pilih-foto') : null;
                 var heartBadge = cardElement ? cardElement.querySelector('.heart-btn') : null;
 
                 if (dIndex === -1) {
-                    clientState.downloadImages.push({ name: filename, folder: clientState.currentFolderName, url: url, originalUrl: url });
+                    clientState.downloadImages.push({ id: fileId || '', name: filename, folder: currentFolder, url: url, originalUrl: url });
                     if (cardElement && cardElement.classList) cardElement.classList.add('selected');
                     if (btnPilih) btnPilih.innerHTML = '<i class="fa-solid fa-check mr-1.5"></i> ' + (isEn ? 'Selected' : 'Dipilih');
                     if (heartBadge) {
@@ -12882,7 +12916,7 @@
             }
 
             var index = clientState.selectedImages.findIndex(function (sel) {
-                return isPhotoMatch(sel, filename, clientState.currentFolderName);
+                return isPhotoMatch(sel, filename, currentFolder, fileId);
             });
 
             var btnPilih = cardElement ? cardElement.querySelector('.btn-pilih-foto') : null;
@@ -12890,7 +12924,7 @@
             if (index === -1) {
                 // Mau SELECT
                 if (clientState.categories && clientState.categories.length > 0 && clientState.galleryMode !== 'download') {
-                    showCategorySelector(cardElement, filename, url);
+                    showCategorySelector(cardElement, filename, url, fileId, currentFolder);
                     return;
                 }
 
@@ -12912,7 +12946,7 @@
                             }).then((result) => {
                                 if (result.isConfirmed) {
                                     clientState.agreedToExtraCharge = true;
-                                    performSelectionData(cardElement, filename, url, 'Default', btnPilih, isEn, fileId);
+                                    performSelectionData(cardElement, filename, url, 'Default', btnPilih, isEn, fileId, currentFolder);
                                 }
                             });
                             return;
@@ -12929,11 +12963,12 @@
                     }
                 }
 
-                performSelectionData(cardElement, filename, url, 'Default', btnPilih, isEn, fileId);
+                performSelectionData(cardElement, filename, url, 'Default', btnPilih, isEn, fileId, currentFolder);
             } else {
                 // DESELECT
+                selectionRevision++;
                 clientState.selectedImages = clientState.selectedImages.filter(function (sel) {
-                    return !isPhotoMatch(sel, filename, clientState.currentFolderName);
+                    return !isPhotoMatch(sel, filename, currentFolder, fileId);
                 });
                 if (cardElement && cardElement.classList) cardElement.classList.remove('selected');
                 var targetBtn = btnPilih || (cardElement ? cardElement.querySelector('.btn-pilih-foto') : null);
@@ -12957,37 +12992,84 @@
             }
         }
 
+        var selectionRevision = 0;
+        var lastSavedRevision = 0;
         var saveSelectionTimer = null;
         var isSavingSelections = false;
         var pendingSaveSelections = false;
+        var autoRetrySaveTimer = null;
+
+        function setSelectionSaveStatus(state, msg) {
+            var ind = document.getElementById('selection-save-indicator');
+            if (!ind) return;
+            var isEn = localStorage.getItem('ps_lang') === 'en';
+            if (state === 'saving') {
+                ind.className = 'text-[10px] mt-0.5 flex items-center gap-1 text-amber-500 transition-all duration-200';
+                ind.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-[10px]"></i> <span>' + (msg || (isEn ? 'Saving...' : 'Menyimpan...')) + '</span>';
+            } else if (state === 'saved') {
+                ind.className = 'text-[10px] mt-0.5 flex items-center gap-1 text-emerald-500 transition-all duration-200';
+                ind.innerHTML = '<i class="fa-solid fa-circle-check text-[10px]"></i> <span>' + (msg || (isEn ? 'Saved' : 'Tersimpan')) + '</span>';
+            } else if (state === 'error') {
+                ind.className = 'text-[10px] mt-0.5 flex items-center gap-1 text-rose-500 transition-all duration-200';
+                ind.innerHTML = '<button type="button" onclick="triggerSaveSelections(true)" class="flex items-center gap-1 text-rose-500 hover:text-rose-600 font-semibold underline cursor-pointer"><i class="fa-solid fa-triangle-exclamation text-[10px]"></i> <span>' + (msg || (isEn ? 'Save failed (Retry)' : 'Gagal menyimpan (Coba lagi)')) + '</span></button>';
+            } else {
+                ind.className = 'text-[10px] mt-0.5 flex items-center gap-1 text-gray-400 transition-all duration-200';
+                ind.innerHTML = '';
+            }
+        }
 
         function queueSaveSelections() {
+            setSelectionSaveStatus('saving');
             if (saveSelectionTimer) clearTimeout(saveSelectionTimer);
             saveSelectionTimer = setTimeout(function () {
                 triggerSaveSelections();
             }, 400);
         }
 
-        async function triggerSaveSelections() {
+        async function triggerSaveSelections(forceRetry) {
             var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
             if (isSubmitted || clientState.galleryMode === 'download') return;
 
-            if (isSavingSelections) {
+            if (autoRetrySaveTimer) {
+                clearTimeout(autoRetrySaveTimer);
+                autoRetrySaveTimer = null;
+            }
+
+            if (isSavingSelections && !forceRetry) {
                 pendingSaveSelections = true;
                 return;
             }
 
             isSavingSelections = true;
             pendingSaveSelections = false;
+            var currentRevision = selectionRevision;
+            setSelectionSaveStatus('saving');
 
             try {
                 var res = await pingClientStatus('Sedang Memilih', '', true);
-                if (res && res.status === 'success') {
+                if (res && (res.status === 'success' || res.success)) {
+                    lastSavedRevision = currentRevision;
                     var counterEl = document.getElementById('bottom-counter');
                     if (counterEl) counterEl.dataset.synced = 'true';
+                    if (selectionRevision === currentRevision) {
+                        setSelectionSaveStatus('saved');
+                    } else {
+                        queueSaveSelections();
+                    }
+                } else {
+                    var errMsg = (res && res.message) ? res.message : '';
+                    console.warn('Selection persistence failed:', errMsg);
+                    setSelectionSaveStatus('error');
+                    autoRetrySaveTimer = setTimeout(function () {
+                        triggerSaveSelections(true);
+                    }, 3000);
                 }
             } catch (err) {
-                console.warn('Selection persistence queued for retry:', err);
+                console.warn('Selection persistence exception:', err);
+                setSelectionSaveStatus('error');
+                autoRetrySaveTimer = setTimeout(function () {
+                    triggerSaveSelections(true);
+                }, 3000);
             } finally {
                 isSavingSelections = false;
                 if (pendingSaveSelections) {
@@ -13031,15 +13113,17 @@
             }
         };
 
-        function performSelectionData(cardElement, filename, url, category, btnPilih, isEn, fileId) {
+        function performSelectionData(cardElement, filename, url, category, btnPilih, isEn, fileId, folderName) {
+            var targetFolder = folderName || clientState.currentFolderName || '';
             // Guard against duplicate selection events
             var alreadySelected = clientState.selectedImages.some(function (sel) {
-                return sel.name === filename && (sel.folder === clientState.currentFolderName || !sel.folder || !clientState.currentFolderName);
+                return isPhotoMatch(sel, filename, targetFolder, fileId);
             });
             if (alreadySelected) return;
 
-            var resolvedFileId = fileId || (url && (url.match(/[?&]fileId=([-\w]{10,128})/)?.[1] || url.match(/https:\/\/lh3\.googleusercontent\.com\/d\/([-\w]{10,128})/)?.[1] || url.match(/[?&]id=([-\w]{10,128})/)?.[1])) || '';
-            clientState.selectedImages.push({ id: resolvedFileId, name: filename, folder: clientState.currentFolderName, url: url, category: category });
+            var resolvedFileId = fileId || (url && (url.match(/[?&]fileId=([a-zA-Z0-9_-]{10,128})/)?.[1] || url.match(/https:\/\/lh3\.googleusercontent\.com\/d\/([a-zA-Z0-9_-]{10,128})/)?.[1] || url.match(/[?&]id=([a-zA-Z0-9_-]{10,128})/)?.[1])) || '';
+            selectionRevision++;
+            clientState.selectedImages.push({ id: resolvedFileId, name: filename, folder: targetFolder, url: url, category: category });
             if (clientState.token) {
                 try { localStorage.setItem('ps_client_selected_' + clientState.token, JSON.stringify(clientState.selectedImages)); } catch (e) { }
             }
@@ -13061,8 +13145,9 @@
             }
         }
 
-        function showCategorySelector(cardElement, filename, url) {
+        function showCategorySelector(cardElement, filename, url, fileId, folderName) {
             var isEn = (clientState.token && localStorage.getItem('ps_client_lang_' + clientState.token) === 'en') || (localStorage.getItem('ps_lang') === 'en');
+            var targetFolder = folderName || clientState.currentFolderName || '';
             var previewImg = document.getElementById('catSelImagePreview');
             if (previewImg) previewImg.src = url || '';
             var previewName = document.getElementById('catSelImageName');
@@ -13078,7 +13163,7 @@
             list.innerHTML = '';
 
             var existingSelection = clientState.selectedImages.find(function (s) {
-                return s.name === filename && (s.folder === clientState.currentFolderName || !s.folder || !clientState.currentFolderName);
+                return isPhotoMatch(s, filename, targetFolder, fileId);
             });
             var currentCategoryName = existingSelection ? existingSelection.category : null;
 
@@ -13136,7 +13221,7 @@
                         btn.onclick = function () {
                             var btnPilih = cardElement ? cardElement.querySelector('.btn-pilih-foto') : null;
                             document.getElementById('categorySelectorModal').classList.add('hidden');
-                            performSelectionData(cardElement, filename, url, catName, btnPilih, isEn);
+                            performSelectionData(cardElement, filename, url, catName, btnPilih, isEn, fileId, targetFolder);
                             closeCategorySelector();
                         };
                     } else {
@@ -13161,7 +13246,7 @@
                                 }).then((result) => {
                                     if (result.isConfirmed) {
                                         document.getElementById('categorySelectorModal').classList.add('hidden');
-                                        performSelectionData(cardElement, filename, url, catName, btnPilih, isEn);
+                                        performSelectionData(cardElement, filename, url, catName, btnPilih, isEn, fileId, targetFolder);
                                         closeCategorySelector();
                                     }
                                 });
@@ -14101,9 +14186,14 @@
                     payloadHeartbeat.status = 'Sedang Memilih';
                 }
 
+                var heartbeatHeaders = { 'Content-Type': 'application/json' };
+                if (payloadHeartbeat.clientAccessToken) {
+                    heartbeatHeaders['Authorization'] = 'Bearer ' + payloadHeartbeat.clientAccessToken;
+                }
+
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: heartbeatHeaders,
                     body: JSON.stringify(payloadHeartbeat)
                 });
                 if (response.status === 401 || response.status === 403) {
@@ -14291,7 +14381,11 @@
                         else if (mLh3 && mLh3[1]) u = mLh3[1];
                         else if (mId && mId[1]) u = mId[1];
                         else if (/^[A-Za-z0-9_-]{10,128}$/.test(img.url)) u = img.url;
-                        else u = img.url;
+                        else if (img.url.startsWith('http://') || img.url.startsWith('https://')) u = img.url;
+                        else u = '';
+                    }
+                    if (typeof u === 'string' && (u.startsWith('blob:') || u.startsWith('data:'))) {
+                        u = '';
                     }
                     return {
                         n: img.name || '',
@@ -14306,10 +14400,14 @@
             }
 
             try {
+                var pingHeaders = { 'Content-Type': 'application/json' };
+                if (clientAccessToken) {
+                    pingHeaders['Authorization'] = 'Bearer ' + clientAccessToken;
+                }
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     keepalive: true,
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: pingHeaders,
                     body: JSON.stringify(payload)
                 });
                 if (response.status === 401 || response.status === 403) {

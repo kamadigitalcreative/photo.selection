@@ -39,7 +39,7 @@ class DownloadService {
    * @param {Object} params
    * @returns {Promise<{ authorized: boolean, error?: { code: string, message: string, status: number }, session?: Object, project?: Object }>}
    */
-  async authorizeDownload({ sessionToken, projectToken, fileId, provider, purpose }) {
+  async authorizeDownload({ sessionToken, projectToken, fileId, provider, purpose, folderId = null }) {
     if (!sessionToken) {
       return {
         authorized: false,
@@ -128,12 +128,14 @@ class DownloadService {
     }
 
     // 6. Authoritative file membership verification
+    let resolvedMeta = null;
     if (fileId) {
       const membership = await this.verifyFileMembership({
         project,
         session,
         fileId,
-        provider: provider || this.driveProvider
+        provider: provider || this.driveProvider,
+        folderId
       });
 
       if (!membership.allowed) {
@@ -142,12 +144,14 @@ class DownloadService {
           error: membership.error
         };
       }
+      resolvedMeta = membership.meta;
     }
 
     return {
       authorized: true,
       session,
-      project
+      project,
+      meta: resolvedMeta
     };
   }
 
@@ -155,7 +159,7 @@ class DownloadService {
    * Verifies file membership against the exact project's authoritative Drive folder or fixtures.
    * Treats Google Drive fileId as an opaque identifier and checks authoritative metadata.
    */
-  async verifyFileMembership({ project, session, fileId, provider }) {
+  async verifyFileMembership({ project, session, fileId, provider, folderId = null }) {
     if (!project) {
       return {
         allowed: false,
@@ -260,9 +264,9 @@ class DownloadService {
       const rawFolder = project['Drive Link'] || project.driveLink || project.DriveLink || project.google_drive_folder_id || project.folderId || '';
       const projectFolderId = extractFolderId(rawFolder) || rawFolder;
 
-      // Support cold serverless start: resolve file from project root if not in cache
+      // Support cold serverless start: resolve file from project root or direct folder if not in cache
       if (!meta && projectFolderId && typeof provider.resolveProjectFile === 'function') {
-        meta = await provider.resolveProjectFile(fileId, projectFolderId);
+        meta = await provider.resolveProjectFile(fileId, projectFolderId, folderId);
       }
 
       if (!meta) {

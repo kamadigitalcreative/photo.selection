@@ -263,14 +263,15 @@ class PublicDriveProvider {
 
         this.fileCache.set(id, metaItem);
 
-        const gridPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&size=800&token=${encodeURIComponent(projectToken || '')}`;
-        const highResPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&size=2048&token=${encodeURIComponent(projectToken || '')}`;
-        const originalDlUrl = `/api/bridge?action=downloadOriginalFile&fileId=${id}&token=${encodeURIComponent(projectToken || '')}`;
+        const gridPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&folderId=${encodeURIComponent(cleanFolderId)}&size=800&token=${encodeURIComponent(projectToken || '')}`;
+        const highResPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&folderId=${encodeURIComponent(cleanFolderId)}&size=2048&token=${encodeURIComponent(projectToken || '')}`;
+        const originalDlUrl = `/api/bridge?action=downloadOriginalFile&fileId=${id}&folderId=${encodeURIComponent(cleanFolderId)}&token=${encodeURIComponent(projectToken || '')}`;
 
         if (isStandardImage) {
           images.push({
             id,
             name: title,
+            folder: cleanFolderId,
             mimeType: metaItem.mimeType,
             size: 0,
             url: gridPreviewUrl,
@@ -284,6 +285,7 @@ class PublicDriveProvider {
           rawFiles.push({
             id,
             name: title,
+            folder: cleanFolderId,
             mimeType: metaItem.mimeType,
             size: 0,
             url: gridPreviewUrl,
@@ -333,14 +335,15 @@ class PublicDriveProvider {
           };
           this.fileCache.set(id, metaItem);
 
-          const gridPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&size=800&token=${encodeURIComponent(projectToken || '')}`;
-          const highResPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&size=2048&token=${encodeURIComponent(projectToken || '')}`;
-          const originalDlUrl = `/api/bridge?action=downloadOriginalFile&fileId=${id}&token=${encodeURIComponent(projectToken || '')}`;
+          const gridPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&folderId=${encodeURIComponent(cleanFolderId)}&size=800&token=${encodeURIComponent(projectToken || '')}`;
+          const highResPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&folderId=${encodeURIComponent(cleanFolderId)}&size=2048&token=${encodeURIComponent(projectToken || '')}`;
+          const originalDlUrl = `/api/bridge?action=downloadOriginalFile&fileId=${id}&folderId=${encodeURIComponent(cleanFolderId)}&token=${encodeURIComponent(projectToken || '')}`;
 
           if (isStandardImage) {
             images.push({
               id,
               name,
+              folder: cleanFolderId,
               mimeType: metaItem.mimeType,
               size: 0,
               url: gridPreviewUrl,
@@ -354,6 +357,7 @@ class PublicDriveProvider {
             rawFiles.push({
               id,
               name,
+              folder: cleanFolderId,
               mimeType: metaItem.mimeType,
               size: 0,
               url: gridPreviewUrl,
@@ -424,17 +428,18 @@ class PublicDriveProvider {
    * even on a cold serverless instance with an empty in-memory cache.
    * Performs bounded BFS search (depth <= 3, max folders <= 20) with cycle detection.
    */
-  async resolveProjectFile(fileId, rootFolderId) {
+  async resolveProjectFile(fileId, rootFolderId, directFolderId = null) {
     if (!fileId || !rootFolderId) return null;
     const cleanFileId = String(fileId).trim();
     const cleanRoot = String(rootFolderId).trim();
+    const cleanDirect = directFolderId ? String(directFolderId).trim() : null;
 
-    // If already indexed and parent hierarchy verifies to cleanRoot
-    // If already indexed and parent hierarchy verifies to cleanRoot
+    // 1. If already indexed and parent hierarchy verifies to cleanRoot
     if (this.fileCache.has(cleanFileId)) {
       const meta = this.fileCache.get(cleanFileId);
       const parentId = meta.parents && meta.parents[0];
       if (parentId) {
+        if (parentId === cleanRoot) return meta;
         const isAncestor = await this.verifyFolderHierarchy({
           folderId: parentId,
           rootFolderId: cleanRoot
@@ -445,9 +450,45 @@ class PublicDriveProvider {
       }
     }
 
-    // Bounded search starting from cleanRoot
+    // 2. Direct folder shortcut (e.g. CAM 1 or CAM 2 passed via directFolderId)
+    // Prevents cold-start BFS crawler storms on serverless instances
+    if (cleanDirect) {
+      let isDirectAllowed = (cleanDirect === cleanRoot);
+      if (!isDirectAllowed) {
+        const hierCheck = await this.verifyFolderHierarchy({
+          folderId: cleanDirect,
+          rootFolderId: cleanRoot
+        });
+        if (hierCheck && hierCheck.allowed) {
+          isDirectAllowed = true;
+        } else {
+          // On cold instances, check root folder listing first to discover direct children
+          const rootContent = await this.getFolderContent({ folderId: cleanRoot });
+          if (rootContent && rootContent.success && rootContent.data && rootContent.data.folders) {
+            if (rootContent.data.folders.some(f => f.id === cleanDirect)) {
+              this.folderHierarchy.set(cleanDirect, cleanRoot);
+              isDirectAllowed = true;
+            }
+          }
+        }
+      }
+
+      if (isDirectAllowed) {
+        const directContent = await this.getFolderContent({ folderId: cleanDirect });
+        if (directContent && directContent.success && directContent.data) {
+          const filesInDirect = [...(directContent.data.images || []), ...(directContent.data.rawFiles || [])];
+          const matched = filesInDirect.find(i => i.id === cleanFileId);
+          if (matched) {
+            return this.fileCache.get(cleanFileId) || matched;
+          }
+        }
+      }
+    }
+
+    // 3. Fallback: Bounded BFS search starting from cleanRoot
     const queue = [{ folderId: cleanRoot, depth: 0 }];
     const visited = new Set([cleanRoot]);
+    if (cleanDirect) visited.add(cleanDirect);
     const MAX_DEPTH = 3;
     const MAX_FOLDERS = 20;
 
@@ -527,11 +568,22 @@ class PublicDriveProvider {
     const fetchImpl = this.getFetch();
 
     try {
-      const res = await fetchImpl(thumbUrl, {
+      let res = await fetchImpl(thumbUrl, {
         headers: {
           'Accept': 'image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
         }
       });
+
+      // Transient Google CDN rate limit (429) or upstream error (500/502/503/504) retry with backoff
+      if (!res.ok && (res.status === 429 || res.status >= 500) && !options.isRetry) {
+        await safelyDiscardBody(res.body);
+        await new Promise(r => setTimeout(r, 300));
+        res = await fetchImpl(thumbUrl, {
+          headers: {
+            'Accept': 'image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+          }
+        });
+      }
 
       if (!res.ok) {
         await safelyDiscardBody(res.body);
@@ -679,8 +731,9 @@ class PublicDriveProvider {
 
     const downloadUrl = `https://drive.google.com/uc?export=download&id=${cleanId}`;
     const fetchHeaders = {};
-    if (options.range) {
-      fetchHeaders['Range'] = options.range;
+    const rangeVal = options.range || options.rangeHeader;
+    if (rangeVal) {
+      fetchHeaders['Range'] = rangeVal;
     }
 
     const fetchImpl = this.getFetch();
@@ -844,21 +897,37 @@ class PublicDriveProvider {
       }
 
       // Enforce Range validation if partial content requested
-      const isRangeRequested = Boolean(options.range);
+      const isRangeRequested = Boolean(options.range || options.rangeHeader);
       if (isRangeRequested && res.status !== 206) {
-        await safelyDiscardBody(res.body);
-        return {
-          success: false,
-          code: 'UNEXPECTED_FULL_RESPONSE',
-          status: 502,
-          message: 'Upstream Google Drive mengabaikan header Range dan mengirimkan respons penuh.'
-        };
+        if (res.status === 200) {
+          const cl = parseInt(res.headers.get('content-length'), 10);
+          const MAX_VERCEL_BYTES = 4.5 * 1024 * 1024;
+          if (cl && cl <= MAX_VERCEL_BYTES) {
+            // Google returned full 200 within Vercel's payload limit; allow it through
+          } else {
+            await safelyDiscardBody(res.body);
+            return {
+              success: false,
+              code: 'UNEXPECTED_FULL_RESPONSE',
+              status: 502,
+              message: 'Upstream Google Drive mengabaikan header Range dan mengirimkan respons penuh.'
+            };
+          }
+        } else {
+          await safelyDiscardBody(res.body);
+          return {
+            success: false,
+            code: 'UNEXPECTED_FULL_RESPONSE',
+            status: 502,
+            message: 'Upstream Google Drive mengabaikan header Range dan mengirimkan respons penuh.'
+          };
+        }
       }
 
       const contentLength = res.headers.get('content-length');
       const contentRange = res.headers.get('content-range');
 
-      if (isRangeRequested && !contentRange) {
+      if (isRangeRequested && res.status === 206 && !contentRange) {
         await safelyDiscardBody(res.body);
         return {
           success: false,
@@ -871,13 +940,15 @@ class PublicDriveProvider {
       return {
         success: true,
         status: res.status,
+        contentLength: contentLength ? parseInt(contentLength, 10) : undefined,
         headers: {
           'Content-Type': contentType || 'application/octet-stream',
           'Content-Length': contentLength,
           'Content-Range': contentRange,
           'Accept-Ranges': 'bytes'
         },
-        body: res.body
+        body: res.body,
+        stream: res.body
       };
     } catch (err) {
       return {

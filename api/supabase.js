@@ -2860,7 +2860,11 @@ async function handleUpdateClientStatus(payload, res) {
       }
       const rawName = f.name !== undefined && f.name !== null ? f.name : (f.n !== undefined && f.n !== null ? f.n : (f.filename || f.fileName || ''));
       const rawFolder = f.folder !== undefined && f.folder !== null ? f.folder : (f.f !== undefined && f.f !== null ? f.f : '');
-      const rawRef = f.url !== undefined && f.url !== null ? f.url : (f.u !== undefined && f.u !== null ? f.u : (f.id !== undefined && f.id !== null ? f.id : ''));
+      const rawRef = (f.id !== undefined && f.id !== null && String(f.id).trim() !== '')
+        ? f.id
+        : (f.u !== undefined && f.u !== null && !String(f.u).startsWith('blob:') && !String(f.u).startsWith('data:')
+          ? f.u
+          : (f.url !== undefined && f.url !== null && !String(f.url).startsWith('blob:') && !String(f.url).startsWith('data:') ? f.url : (f.id || '')));
       const rawCat = f.category !== undefined && f.category !== null ? f.category : (f.c !== undefined && f.c !== null ? f.c : (f.kategori !== undefined && f.kategori !== null ? f.kategori : ''));
 
       const name = cleanPlainString(String(rawName), false);
@@ -4102,12 +4106,14 @@ async function handleDownloadOriginalFile(payload, req, res) {
   });
 
   const purpose = payload.purpose || (req && req.query && req.query.purpose) || '';
+  const folderId = payload.folderId || (req && req.query && req.query.folderId) || null;
   const authCheck = await downloadService.authorizeDownload({
     sessionToken,
     projectToken,
     fileId,
     provider,
-    purpose
+    purpose,
+    folderId
   });
 
   if (!authCheck.authorized) {
@@ -4117,7 +4123,14 @@ async function handleDownloadOriginalFile(payload, req, res) {
   const rangeHeader = req && req.headers ? (req.headers['range'] || payload.range) : payload.range;
 
   if (provider.name === 'google' || provider.isStreamingProvider || payload.forceStreamDelivery) {
-    const meta = await provider.getFileMetadata(fileId);
+    let meta = authCheck.meta || await provider.getFileMetadata(fileId);
+    if (!meta && typeof provider.resolveProjectFile === 'function' && authCheck.project) {
+      const rawFolder = authCheck.project['Drive Link'] || authCheck.project.driveLink || authCheck.project.DriveLink || authCheck.project.google_drive_folder_id || authCheck.project.folderId || '';
+      const projectFolderId = extractFolderId(rawFolder) || rawFolder;
+      if (projectFolderId) {
+        meta = await provider.resolveProjectFile(fileId, projectFolderId, folderId);
+      }
+    }
     if (!meta) {
       return error(res, 'Berkas foto tidak ditemukan di Google Drive.', 404);
     }
@@ -4140,9 +4153,19 @@ async function handleDownloadOriginalFile(payload, req, res) {
       return error(res, streamRes.message, streamRes.status || 500, streamRes.code ? { code: streamRes.code } : null);
     }
 
-    // FIX 3: Upstream status verification when Range requested — Never label full 200 response as 206!
+    // FIX 3: Upstream status verification when Range requested — If 200 returned for <=4.5MB, safely serve full response!
     if (rangeInfo.isRange && streamRes.status !== 206) {
-      return error(res, 'Upstream Google Drive mengabaikan header Range dan mengirim respons penuh.', 502, { code: 'UNEXPECTED_FULL_RESPONSE' });
+      if (streamRes.status === 200) {
+        const contentLength = parseInt(streamRes.headers?.['Content-Length'] || streamRes.headers?.['content-length'], 10) || byteSize;
+        const MAX_VERCEL_BYTES = 4.5 * 1024 * 1024;
+        if (contentLength > 0 && contentLength <= MAX_VERCEL_BYTES) {
+          rangeInfo.isRange = false;
+        } else {
+          return error(res, 'Upstream Google Drive mengabaikan header Range dan mengirim respons penuh.', 502, { code: 'UNEXPECTED_FULL_RESPONSE' });
+        }
+      } else {
+        return error(res, 'Upstream Google Drive mengabaikan header Range dan mengirim respons penuh.', 502, { code: 'UNEXPECTED_FULL_RESPONSE' });
+      }
     }
 
     // FIX 3: Parse and verify upstream Content-Range against requested bounds and authoritative file size
@@ -4351,7 +4374,8 @@ async function handleGetPreviewImage(payload, req, res) {
   const provider = getDriveProvider();
 
   const downloadService = new DownloadService({ driveProvider: provider });
-  const memCheck = await downloadService.verifyFileMembership({ project, session: { projectToken }, fileId, provider });
+  const folderId = payload.folderId || (req && req.query && req.query.folderId) || null;
+  const memCheck = await downloadService.verifyFileMembership({ project, session: { projectToken }, fileId, provider, folderId });
   if (!memCheck.allowed) {
     return error(res, memCheck.error.message, memCheck.error.status);
   }
