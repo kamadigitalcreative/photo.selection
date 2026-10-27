@@ -1937,6 +1937,66 @@ html:not(.dark) #modalHeroCustomizerContent {
     color: var(--text, #27231e);
 }
 
+/* Theme-adaptive storage info callout for hero customizer */
+.hero-storage-info-box {
+    background: rgba(223, 186, 123, 0.12) !important;
+    border: 1px solid rgba(223, 186, 123, 0.35) !important;
+    color: #f4f0e9 !important;
+}
+.hero-storage-info-box .info-title {
+    color: var(--gold, #dfba7b) !important;
+}
+.hero-storage-info-box .info-label {
+    color: #ffffff !important;
+}
+.hero-storage-info-box .info-subtext {
+    color: #dfba7b !important;
+}
+.hero-storage-info-box code {
+    background: rgba(0, 0, 0, 0.45) !important;
+    color: #ffd899 !important;
+}
+
+[data-theme="ivory"] .hero-storage-info-box,
+[data-theme="olive"] .hero-storage-info-box,
+html.theme-ivory .hero-storage-info-box,
+html.theme-olive .hero-storage-info-box,
+html:not(.dark) .hero-storage-info-box {
+    background: rgba(180, 120, 40, 0.1) !important;
+    border-color: rgba(180, 120, 40, 0.3) !important;
+    color: #3e2e1c !important;
+}
+[data-theme="ivory"] .hero-storage-info-box .info-title,
+[data-theme="olive"] .hero-storage-info-box .info-title,
+html.theme-ivory .hero-storage-info-box .info-title,
+html.theme-olive .hero-storage-info-box .info-title,
+html:not(.dark) .hero-storage-info-box .info-title {
+    color: #78350f !important;
+}
+[data-theme="ivory"] .hero-storage-info-box .info-label,
+[data-theme="olive"] .hero-storage-info-box .info-label,
+html.theme-ivory .hero-storage-info-box .info-label,
+html.theme-olive .hero-storage-info-box .info-label,
+html:not(.dark) .hero-storage-info-box .info-label {
+    color: #1a1714 !important;
+    font-weight: 700 !important;
+}
+[data-theme="ivory"] .hero-storage-info-box .info-subtext,
+[data-theme="olive"] .hero-storage-info-box .info-subtext,
+html.theme-ivory .hero-storage-info-box .info-subtext,
+html.theme-olive .hero-storage-info-box .info-subtext,
+html:not(.dark) .hero-storage-info-box .info-subtext {
+    color: #92400e !important;
+}
+[data-theme="ivory"] .hero-storage-info-box code,
+[data-theme="olive"] .hero-storage-info-box code,
+html.theme-ivory .hero-storage-info-box code,
+html.theme-olive .hero-storage-info-box code,
+html:not(.dark) .hero-storage-info-box code {
+    background: rgba(146, 64, 14, 0.14) !important;
+    color: #78350f !important;
+}
+
 /* ==========================================================================
    SORTIR LOKAL - RINGKASAN DETEKSI CONTRAST HARMONIZATION (TASK C)
    ========================================================================== */

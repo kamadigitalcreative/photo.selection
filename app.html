@@ -2203,19 +2203,20 @@
                                             <input type="text" id="settings-brand-name"
                                                 class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
                                                 placeholder="Contoh: Kama Creative">
-                                        </div>
-                                        <div>
+                                                                      <div>
                                             <label id="tx-st-logo-url"
                                                 class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">URL
-                                                Logo (Opsional)</label>
-                                            <input type="text" id="settings-logo-url"
-                                                oninput="document.getElementById('settings-avatar-preview').src = this.value || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23dfba7b\'%3E%3Cpath d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/%3E%3C/svg%3E'"
-                                                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                                                placeholder="https://contoh.com/logo.png">
+                                                Logo / Foto Profil (Google Drive / Web URL)</label>
+                                            <div class="relative">
+                                                <input type="text" id="settings-logo-url"
+                                                    oninput="updateAvatarPreviewFromInput(this.value)"
+                                                    class="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-4 py-3 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                                                    placeholder="Paste link Google Drive atau URL foto langsung">
+                                                <i class="fa-brands fa-google-drive absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                            </div>
                                             <p id="tx-st-logo-desc" class="text-[10px] text-gray-500 mt-1.5"><i
-                                                    class="fa-solid fa-circle-info mr-1"></i> Kosongkan jika ingin
-                                                menggunakan logo inisial.</p>
-                                        </div>
+                                                    class="fa-solid fa-circle-info mr-1"></i> Mendukung Link Google Drive pribadi Anda (pastikan akses: "Siapa saja yang memiliki link"). Bebas kuota admin.</p>
+                                        </div>            </div>
                                         <div class="hidden">
                                             <label id="tx-st-watermark-url"
                                                 class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">URL
@@ -3103,13 +3104,43 @@
                 <!-- Controls & Adjustments -->
                 <div class="space-y-3.5 mb-5">
                     <!-- Upload File & Preset Picker -->
-                    <div>
-                        <div class="flex items-center justify-between mb-1.5">
+                    <div class="space-y-2.5">
+                        <div class="flex items-center justify-between mb-0.5">
                             <label class="text-[11px] font-bold text-[var(--muted2,#c9c4bc)]">Pilih Sumber Foto Banner</label>
-                            <span class="text-[10px] text-[var(--muted,#a8a39c)]">Maks 3MB &bull; JPG, PNG, WebP</span>
+                            <span class="text-[10px] text-[var(--gold,#dfba7b)] font-semibold">0 Byte Kuota Admin</span>
                         </div>
+
+                        <!-- Option 1: Google Drive Link (Recommended - 0 admin storage) -->
+                        <div class="p-2.5 rounded-xl border border-[var(--stroke,#35363b)] bg-[var(--panel2,#212226)] space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10.5px] font-bold text-[var(--text,#f4f0e9)] flex items-center gap-1.5">
+                                    <i class="fa-brands fa-google-drive text-[var(--gold,#dfba7b)]"></i>
+                                    <span>Link Google Drive Pribadi (Rekomendasi)</span>
+                                </span>
+                                <span class="text-[9px] px-1.5 py-0.5 rounded bg-[var(--accentwash,rgba(223,186,123,0.15))] text-[var(--gold,#dfba7b)] font-bold">Cloud Sync</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <div class="relative flex-1">
+                                    <input type="text" id="heroDriveUrlInput" 
+                                        placeholder="Paste link sharing file Google Drive Anda..." 
+                                        class="w-full py-2 pl-7 pr-3 text-xs rounded-lg border border-[var(--stroke,#35363b)] bg-[var(--panel,#16171a)] text-[var(--text,#f4f0e9)] placeholder-[var(--muted,#73716d)] focus:outline-none focus:border-[var(--gold,#dfba7b)] transition-all">
+                                    <i class="fa-solid fa-link absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[var(--muted,#73716d)]"></i>
+                                </div>
+                                <button type="button" onclick="applyHeroDriveLink()" 
+                                    class="py-2 px-3 shrink-0 rounded-lg bg-[var(--gold,#dfba7b)] hover:bg-[var(--goldhi,#ffdfab)] text-[var(--goldtxt,#241b11)] text-xs font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer">
+                                    <i class="fa-solid fa-check"></i>
+                                    <span>Terapkan</span>
+                                </button>
+                            </div>
+                            <p class="text-[9.5px] text-[var(--muted,#a8a39c)] flex items-center gap-1">
+                                <i class="fa-solid fa-circle-info text-[9px] shrink-0"></i>
+                                <span>Akses link file disetel: <strong>"Siapa saja yang memiliki link"</strong> (Publik).</span>
+                            </p>
+                        </div>
+
+                        <!-- Option 2: Upload Device & Reset -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <label class="flex items-center justify-center gap-2 py-2 px-3 rounded-xl border border-dashed border-[var(--stroke,#35363b)] hover:border-[var(--gold,#dfba7b)] bg-[var(--panel2,#212226)] text-[var(--text,#f4f0e9)] text-xs font-bold cursor-pointer transition-colors shadow-xs">
+                            <label class="flex items-center justify-center gap-2 py-2 px-3 rounded-xl border border-dashed border-[var(--stroke,#35363b)] hover:border-[var(--gold,#dfba7b)] bg-[var(--panel2,#212226)] text-[var(--text,#f4f0e9)] text-xs font-semibold cursor-pointer transition-colors shadow-xs">
                                 <i class="fa-solid fa-cloud-arrow-up text-[var(--gold,#dfba7b)]"></i>
                                 <span>Upload dari Perangkat</span>
                                 <input type="file" id="heroFileInput" accept="image/jpeg,image/png,image/webp" class="hidden" onchange="handleHeroBannerUpload(event)">
@@ -3173,14 +3204,14 @@
                         </div>
                     </div>
 
-                    <!-- Storage Capability Gate Info (Truthful Transparency) -->
-                    <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-300 flex items-start gap-2.5">
-                        <i class="fa-solid fa-triangle-exclamation mt-0.5 text-xs shrink-0"></i>
+                    <!-- Storage Capability Gate Info (Theme-Adaptive & Truthful Transparency) -->
+                    <div class="hero-storage-info-box p-3 rounded-xl text-[11px] flex items-start gap-2.5">
+                        <i class="fa-solid fa-shield-halved mt-0.5 text-xs shrink-0 info-title"></i>
                         <div class="leading-relaxed space-y-1">
-                            <div><strong class="font-bold">Tingkat Penyimpanan Banner:</strong></div>
-                            <div>&bull; <span class="font-semibold text-white">Live Preview:</span> Pratinjau langsung pada frame dialog ini.</div>
-                            <div>&bull; <span class="font-semibold text-white">Simpan Lokal:</span> Tersimpan pada profil browser perangkat ini (<code class="text-[10px] bg-black/40 px-1 py-0.5 rounded text-amber-200">localStorage</code> per-fotografer). Bersihkan cache/data browser dapat menghapusnya.</div>
-                            <div>&bull; <span class="font-semibold text-white">Cloud Lintas-Perangkat:</span> <span class="underline font-bold text-amber-200">BLOCKED (menunggu migrasi bucket storage &amp; persetujuan Operator)</span>. Foto tidak disinkronkan ke HP/PC lain.</div>
+                            <div><strong class="font-bold info-title">Tingkat Penyimpanan Banner:</strong></div>
+                            <div>&bull; <span class="font-semibold info-label">Link Google Drive Pribadi:</span> Foto tersimpan aman di Google Drive fotografer sendiri (<strong class="info-title">0 byte kuota admin</strong>) dan otomatis aktif di semua perangkat.</div>
+                            <div>&bull; <span class="font-semibold info-label">Simpan Lokal:</span> Hasil upload perangkat disimpan pada browser lokal perangkat ini (<code>localStorage</code> per-fotografer).</div>
+                            <div>&bull; <span class="font-semibold info-label">Live Preview:</span> Posisi fokus dan zoom dapat disesuaikan langsung untuk tampilan Desktop &amp; HP.</div>
                         </div>
                     </div>
                 </div>
@@ -9433,9 +9464,39 @@
             }
         }
 
+        function extractGoogleDriveFileId(url) {
+            if (!url || typeof url !== 'string') return null;
+            var trimmed = url.trim();
+            var match = trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ||
+                        trimmed.match(/\/d\/([a-zA-Z0-9_-]+)/) ||
+                        trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (match && match[1]) return match[1];
+            if (/^[a-zA-Z0-9_-]{25,60}$/.test(trimmed)) return trimmed;
+            return null;
+        }
+
+        function resolveDirectImageUrl(url) {
+            if (!url || typeof url !== 'string') return '';
+            var trimmed = url.trim();
+            var fileId = extractGoogleDriveFileId(trimmed);
+            if (fileId) {
+                return 'https://lh3.googleusercontent.com/d/' + fileId;
+            }
+            return trimmed;
+        }
+
+        function updateAvatarPreviewFromInput(val) {
+            var resolved = resolveDirectImageUrl(val);
+            var preview = document.getElementById('settings-avatar-preview');
+            if (preview) {
+                preview.src = resolved || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23dfba7b\'%3E%3Cpath d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/%3E%3C/svg%3E';
+            }
+        }
+
         function loadSettings() {
             var brandName = (typeof currentUser !== 'undefined' && currentUser && currentUser.brandName) ? currentUser.brandName : (typeof appBranding !== 'undefined' ? appBranding.name : '');
-            var logoUrl = (typeof currentUser !== 'undefined' && currentUser && currentUser.logoUrl) ? currentUser.logoUrl : (typeof appBranding !== 'undefined' ? appBranding.logo : '');
+            var rawLogo = (typeof currentUser !== 'undefined' && currentUser && currentUser.logoUrl) ? currentUser.logoUrl : (typeof appBranding !== 'undefined' ? appBranding.logo : '');
+            var logoUrl = resolveDirectImageUrl(rawLogo);
             var watermarkUrl = (typeof currentUser !== 'undefined' && currentUser && currentUser.watermarkUrl) ? currentUser.watermarkUrl : '';
             var lang = localStorage.getItem('ps_lang') || 'id';
 
@@ -9444,7 +9505,7 @@
             var bankOwner = (typeof currentUser !== 'undefined' && currentUser && currentUser.bankAccountName) ? currentUser.bankAccountName : '';
 
             document.getElementById('settings-brand-name').value = brandName;
-            document.getElementById('settings-logo-url').value = logoUrl;
+            document.getElementById('settings-logo-url').value = rawLogo || '';
             document.getElementById('settings-watermark-url').value = watermarkUrl;
             document.getElementById('settings-lang').value = lang;
 
@@ -9487,7 +9548,8 @@
         function saveSettings() {
             var brandName = document.getElementById('settings-brand-name').value;
             var watermarkUrl = document.getElementById('settings-watermark-url').value;
-            var logoUrl = document.getElementById('settings-logo-url').value;
+            var rawLogo = document.getElementById('settings-logo-url').value;
+            var logoUrl = resolveDirectImageUrl(rawLogo);
             var lang = document.getElementById('settings-lang').value;
 
             var bankName = document.getElementById('settings-bank-name') ? document.getElementById('settings-bank-name').value : '';
@@ -21392,6 +21454,15 @@
                 heroCustomizerState.isDefault = true;
             }
 
+            var driveInput = document.getElementById('heroDriveUrlInput');
+            if (driveInput) {
+                if (saved && saved.imageUrl && !saved.imageUrl.startsWith('data:')) {
+                    driveInput.value = saved.imageUrl;
+                } else {
+                    driveInput.value = '';
+                }
+            }
+
             setHeroPreviewMode('desktop');
 
             modal.classList.remove('hidden');
@@ -21588,11 +21659,59 @@
             heroCustomizerState.mobile = { focalX: 50, focalY: 50, zoom: 100 };
             heroCustomizerState.isDefault = true;
 
+            var driveInput = document.getElementById('heroDriveUrlInput');
+            if (driveInput) driveInput.value = '';
+
             var frame = document.getElementById('heroPreviewFrame');
             if (frame) {
                 frame.style.backgroundImage = '';
             }
             setHeroPreviewMode(heroCustomizerState.previewMode || 'desktop');
+        }
+
+        function applyHeroDriveLink() {
+            var input = document.getElementById('heroDriveUrlInput');
+            if (!input) return;
+            var raw = (input.value || '').trim();
+            if (!raw) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Link Kosong',
+                        text: 'Silakan masukkan tautan foto Google Drive Anda.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+                return;
+            }
+
+            var resolved = resolveDirectImageUrl(raw);
+            if (!resolved || (!resolved.startsWith('http') && !resolved.startsWith('data:'))) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Link Tidak Dikenali',
+                        text: 'Pastikan format link Google Drive atau URL foto valid.',
+                        confirmButtonText: 'Mengerti'
+                    });
+                }
+                return;
+            }
+
+            heroCustomizerState.imageUrl = resolved;
+            heroCustomizerState.isDefault = false;
+            updateHeroBannerFocalPoint();
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Link Drive Terhubung',
+                    text: 'Foto Google Drive pribadi Anda berhasil dimuat untuk banner.',
+                    timer: 1800,
+                    showConfirmButton: false
+                });
+            }
         }
 
         function applyHeroBannerSettings() {
