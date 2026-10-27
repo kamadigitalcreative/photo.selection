@@ -4684,6 +4684,22 @@
                     <h1 id="client-banner-heading">Pilih Foto Favorit Anda<br><em>Seleksi Foto Eksklusif.</em></h1>
                     <p id="client-banner-instruction">Ketuk foto untuk memilihnya. Ketuk kembali untuk membatalkan pilihan.</p>
                 </div>
+                <!-- Dynamic Client Folder Animated Slideshow -->
+                <div id="banner-slideshow-container" class="banner-slideshow-wrap hidden">
+                    <div class="banner-slideshow-stack-back"></div>
+                    <div class="banner-slideshow-frame" id="banner-slideshow-frame" onclick="openCurrentBannerSlideViewer(event)" title="Klik untuk membuka foto di layar penuh">
+                        <div class="banner-slideshow-media">
+                            <img id="banner-slide-img-a" class="banner-slide-img is-active" src="" alt="Slideshow Preview A" />
+                            <img id="banner-slide-img-b" class="banner-slide-img" src="" alt="Slideshow Preview B" />
+                            <div class="banner-slideshow-overlay">
+                                <div class="banner-slideshow-badge">
+                                    <span class="banner-pulse-dot"></span>
+                                    <span id="banner-slide-badge-text">Foto 1</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </section>
             <div class="client-simple-steps max-w-[1600px] mx-auto px-2 sm:px-4">
                 <div class="client-step active"><b>01</b> <span id="client-step-1">Eksplorasi Galeri</span></div>
@@ -13028,6 +13044,152 @@
             }
         }
 
+        // =====================================================================
+        // CLIENT HERO BANNER DYNAMIC FOLDER SLIDESHOW ANIMATION
+        // =====================================================================
+        var bannerSlideshowState = {
+            images: [],
+            folderId: null,
+            currentIndex: 0,
+            activeLayer: 'A',
+            intervalId: null,
+            intervalMs: 3200
+        };
+
+        function initBannerSlideshow(folderImages, folderId) {
+            var container = document.getElementById('banner-slideshow-container');
+            var imgA = document.getElementById('banner-slide-img-a');
+            var imgB = document.getElementById('banner-slide-img-b');
+            var badgeText = document.getElementById('banner-slide-badge-text');
+
+            if (!container || !imgA || !imgB) return;
+
+            if (bannerSlideshowState.intervalId) {
+                clearInterval(bannerSlideshowState.intervalId);
+                bannerSlideshowState.intervalId = null;
+            }
+
+            var validImages = (Array.isArray(folderImages)) ? folderImages.filter(function (img) {
+                return img && (img.url || img.previewUrl || img.proxyUrl);
+            }) : [];
+
+            if (validImages.length === 0) {
+                container.classList.add('hidden');
+                container.style.display = 'none';
+                bannerSlideshowState.images = [];
+                bannerSlideshowState.folderId = null;
+                return;
+            }
+
+            container.classList.remove('hidden');
+            container.style.display = 'flex';
+
+            bannerSlideshowState.images = validImages;
+            bannerSlideshowState.folderId = folderId || (clientState && clientState.currentFolderId) || 'root';
+            bannerSlideshowState.currentIndex = 0;
+            bannerSlideshowState.activeLayer = 'A';
+
+            var firstItem = validImages[0];
+            var firstRawUrl = firstItem.url || firstItem.previewUrl || firstItem.proxyUrl || '';
+            var firstUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(firstRawUrl, 600) : firstRawUrl;
+
+            imgA.src = firstUrl;
+            imgA.classList.add('is-active');
+            imgB.classList.remove('is-active');
+            imgB.src = '';
+
+            if (badgeText) {
+                badgeText.textContent = '1 / ' + validImages.length;
+            }
+
+            if (validImages.length > 1) {
+                var secondItem = validImages[1];
+                var secondRawUrl = secondItem.url || secondItem.previewUrl || secondItem.proxyUrl || '';
+                var secondUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(secondRawUrl, 600) : secondRawUrl;
+                var preImg = new Image();
+                preImg.src = secondUrl;
+
+                bannerSlideshowState.intervalId = setInterval(advanceBannerSlideshow, bannerSlideshowState.intervalMs);
+            }
+        }
+
+        function advanceBannerSlideshow() {
+            if (typeof document !== 'undefined' && document.hidden) return;
+            var viewerModal = document.getElementById('imageViewerModal');
+            if (viewerModal && !viewerModal.classList.contains('hidden')) return;
+
+            var images = bannerSlideshowState.images;
+            if (!images || images.length <= 1) return;
+
+            var nextIdx = (bannerSlideshowState.currentIndex + 1) % images.length;
+            var nextItem = images[nextIdx];
+            if (!nextItem) return;
+
+            var nextRawUrl = nextItem.url || nextItem.previewUrl || nextItem.proxyUrl || '';
+            var nextUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(nextRawUrl, 600) : nextRawUrl;
+
+            var imgA = document.getElementById('banner-slide-img-a');
+            var imgB = document.getElementById('banner-slide-img-b');
+            var badgeText = document.getElementById('banner-slide-badge-text');
+
+            if (!imgA || !imgB) return;
+
+            var currentLayer = bannerSlideshowState.activeLayer;
+            var incomingImg = (currentLayer === 'A') ? imgB : imgA;
+            var outgoingImg = (currentLayer === 'A') ? imgA : imgB;
+
+            var didTransition = false;
+            function triggerTransition() {
+                if (didTransition) return;
+                didTransition = true;
+                incomingImg.onload = null;
+                incomingImg.onerror = null;
+                incomingImg.classList.add('is-active');
+                outgoingImg.classList.remove('is-active');
+                bannerSlideshowState.activeLayer = (currentLayer === 'A') ? 'B' : 'A';
+                bannerSlideshowState.currentIndex = nextIdx;
+                if (badgeText) {
+                    badgeText.textContent = (nextIdx + 1) + ' / ' + images.length;
+                }
+
+                var afterIdx = (nextIdx + 1) % images.length;
+                var afterItem = images[afterIdx];
+                if (afterItem) {
+                    var afterRaw = afterItem.url || afterItem.previewUrl || afterItem.proxyUrl || '';
+                    var afterUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(afterRaw, 600) : afterRaw;
+                    var pre = new Image();
+                    pre.src = afterUrl;
+                }
+            }
+
+            incomingImg.onload = triggerTransition;
+            incomingImg.onerror = function () {
+                incomingImg.onload = null;
+                incomingImg.onerror = null;
+                bannerSlideshowState.currentIndex = nextIdx;
+            };
+            incomingImg.src = nextUrl;
+
+            if (incomingImg.complete && incomingImg.naturalWidth > 0) {
+                triggerTransition();
+            }
+        }
+
+        function openCurrentBannerSlideViewer(event) {
+            if (event) event.stopPropagation();
+            var images = bannerSlideshowState.images;
+            var idx = bannerSlideshowState.currentIndex;
+            if (images && images.length && images[idx]) {
+                var cur = images[idx];
+                var rawUrl = cur.url || cur.previewUrl || '';
+                if (typeof openImageViewer === 'function') {
+                    openImageViewer(rawUrl, cur.name, event, idx, images);
+                }
+            }
+        }
+        window.openCurrentBannerSlideViewer = openCurrentBannerSlideViewer;
+        window.initBannerSlideshow = initBannerSlideshow;
+
         function renderClientGallery() {
             // Retain loaded preview blobs across layout and filter changes (Zero re-downloading)
             var container = document.getElementById('gallery-container');
@@ -13059,6 +13221,9 @@
 
             if (!hasFolders && !hasImages) {
                 if (emptyState && emptyState.classList) emptyState.classList.remove('hidden');
+                if (typeof initBannerSlideshow === 'function') {
+                    initBannerSlideshow([], clientState ? clientState.currentFolderId : null);
+                }
                 return;
             }
             if (emptyState && emptyState.classList) emptyState.classList.add('hidden');
@@ -13332,6 +13497,9 @@
             var scrollArea = document.getElementById('gallery-scroll-area');
             if (scrollArea) scrollArea.scrollTop = 0;
             updateGalleryLock();
+            if (typeof initBannerSlideshow === 'function') {
+                initBannerSlideshow(clientState && clientState.currentContent ? clientState.currentContent.images : [], clientState ? clientState.currentFolderId : null);
+            }
         }
 
         function toggleSelection(cardElement, filename, url, fileId, folderName) {

@@ -333,6 +333,16 @@
     padding: 18px 24px;
     margin: 12px auto 14px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 20px !important;
+    position: relative !important;
+}
+
+#client-gallery-view .client-banner-luxury .client-text {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
 }
 
 #client-gallery-view .client-banner-luxury .eyebrow {
@@ -363,6 +373,138 @@
     margin: 0;
     line-height: 1.55;
     max-width: 640px;
+}
+
+/* Dynamic Client Folder Animated Slideshow */
+.banner-slideshow-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.banner-slideshow-frame {
+    position: relative;
+    width: 200px;
+    height: 110px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0d0e11;
+    border: 1px solid rgba(223, 186, 123, 0.35);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(223, 186, 123, 0.08);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+    cursor: pointer;
+    user-select: none;
+}
+
+.banner-slideshow-frame:hover {
+    transform: translateY(-2px) scale(1.02);
+    border-color: rgba(255, 223, 171, 0.65);
+    box-shadow: 0 16px 35px rgba(0, 0, 0, 0.65), 0 0 24px rgba(223, 186, 123, 0.2);
+}
+
+.banner-slideshow-stack-back {
+    position: absolute;
+    inset: -3px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(223, 186, 123, 0.18), rgba(255, 255, 255, 0.03));
+    z-index: 0;
+    filter: blur(1px);
+    transform: rotate(1.5deg);
+    pointer-events: none;
+}
+
+.banner-slideshow-media {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 11px;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.banner-slide-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transform: scale(1);
+    transition: opacity 0.85s cubic-bezier(0.4, 0, 0.2, 1), transform 5s ease-out;
+    pointer-events: none;
+    backface-visibility: hidden;
+    will-change: opacity, transform;
+}
+
+.banner-slide-img.is-active {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.banner-slideshow-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,0.75) 100%);
+    pointer-events: none;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 6px 8px;
+    z-index: 2;
+}
+
+.banner-slideshow-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    background: rgba(14, 15, 17, 0.78);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    font-size: 10px;
+    font-weight: 600;
+    color: #fff8ef;
+    letter-spacing: 0.02em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.banner-pulse-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--gold, #dfba7b);
+    box-shadow: 0 0 6px var(--gold, #dfba7b);
+    animation: bannerPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes bannerPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+@media (max-width: 639px) {
+    #client-gallery-view .client-banner-luxury {
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 10px !important;
+    }
+    .banner-slideshow-frame {
+        width: 84px !important;
+        height: 64px !important;
+        border-radius: 8px !important;
+    }
+    .banner-slideshow-overlay {
+        padding: 3px 4px !important;
+    }
+    .banner-slideshow-badge {
+        font-size: 8px !important;
+        padding: 1px 4px !important;
+        gap: 3px !important;
+    }
+    .banner-pulse-dot {
+        width: 4px !important;
+        height: 4px !important;
+    }
 }
 
 /* 3-Step Visual Instruction Guide (Compact & Clean) */
