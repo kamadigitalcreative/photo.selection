@@ -2002,33 +2002,45 @@ async function handleRegister(payload, res) {
     } catch (e) { }
   }
 
-  // Kirim email notifikasi ke Admin (kamabalicreative@gmail.com)
-  sendEmailViaGAS({
-    to: ADMIN_EMAIL,
-    subject: `Pendaftaran Fotografer Baru - Photo Selection (${nama})`,
-    htmlBody: buildAdminNewUserEmail({
-      nama: nama,
-      username: username,
-      email: email,
-      nohp: nohp,
-      paket: paket,
-      status: initialStatus
-    })
-  }).catch(e => console.error('[MAILER] Error kirim email ke Admin:', e));
+  // Kirim email notifikasi ke Admin & Fotografer pendaftar secara paralel dan pastikan tuntas sebelum fungsi serverless selesai
+  try {
+    const adminEmailSubject = isDemo
+      ? `Pendaftaran Akun Demo Baru - Photo Selection (${nama})`
+      : `Pendaftaran Fotografer Baru - Photo Selection (${nama})`;
 
-  // Kirim email notifikasi ke Fotografer pendaftar
-  sendEmailViaGAS({
-    to: email,
-    subject: `Pendaftaran Akun Berhasil - Photo Selection`,
-    htmlBody: buildPhotographerWelcomeEmail({
-      nama: nama,
-      username: username,
-      email: email,
-      paket: paket,
-      status: initialStatus,
-      paymentUrl: paymentUrl
-    })
-  }).catch(e => console.error('[MAILER] Error kirim email ke Fotografer:', e));
+    const userEmailSubject = isDemo
+      ? `Selamat Datang di Photo Selection - Akun Demo Aktif 🎉`
+      : `Pendaftaran Akun Berhasil - Photo Selection`;
+
+    await Promise.allSettled([
+      sendEmailViaGAS({
+        to: ADMIN_EMAIL,
+        subject: adminEmailSubject,
+        htmlBody: buildAdminNewUserEmail({
+          nama: nama,
+          username: username,
+          email: email,
+          nohp: nohp,
+          paket: paket,
+          status: initialStatus
+        })
+      }),
+      sendEmailViaGAS({
+        to: email,
+        subject: userEmailSubject,
+        htmlBody: buildPhotographerWelcomeEmail({
+          nama: nama,
+          username: username,
+          email: email,
+          paket: paket,
+          status: initialStatus,
+          paymentUrl: paymentUrl
+        })
+      })
+    ]);
+  } catch (mailErr) {
+    console.error('[MAILER] Error saat pengiriman email pendaftaran:', mailErr);
+  }
 
   return success(res, { success: true, paymentUrl: paymentUrl, eventId: eventId }, 'Pendaftaran berhasil');
 }
@@ -3608,7 +3620,7 @@ async function handleApproveUser(payload, res) {
     if (users && users.length > 0) {
       const u = users[0];
       if (u.Email) {
-        sendEmailViaGAS({
+        await sendEmailViaGAS({
           to: u.Email,
           subject: `Akun Photo Selection Anda Telah Aktif! 🎉`,
           htmlBody: buildPhotographerActivatedEmail({
@@ -3618,7 +3630,7 @@ async function handleApproveUser(payload, res) {
             paket: u.Paket || '1 Bulan',
             expiredAt: expiredAt
           })
-        }).catch(e => console.error('[MAILER] Error kirim email aktivasi ke user:', e));
+        });
       }
     }
   } catch (e) { }
