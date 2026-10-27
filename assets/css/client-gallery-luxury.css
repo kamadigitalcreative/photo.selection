@@ -330,12 +330,12 @@
     background: linear-gradient(90deg, rgba(14, 15, 17, 0.98) 0%, rgba(22, 23, 26, 0.96) 45%, rgba(30, 31, 36, 0.92) 100%) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 14px;
-    padding: 24px 32px;
-    margin: 12px auto 14px;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+    padding: 16px 24px;
+    margin: 10px auto 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
     position: relative !important;
     overflow: hidden !important;
-    min-height: 195px;
+    min-height: 140px;
     display: flex !important;
     align-items: center !important;
     justify-content: flex-start !important;
@@ -345,7 +345,7 @@
 
 #client-gallery-view .client-banner-luxury:hover {
     border-color: rgba(223, 186, 123, 0.35) !important;
-    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.6), 0 0 25px rgba(223, 186, 123, 0.08);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55), 0 0 20px rgba(223, 186, 123, 0.08);
 }
 
 #client-gallery-view .client-banner-luxury .client-text {
@@ -365,10 +365,10 @@
 
 #client-gallery-view .client-banner-luxury h1 {
     font-family: var(--font-serif, 'Playfair Display', Georgia, serif) !important;
-    font-size: clamp(20px, 2.2vw, 28px);
+    font-size: clamp(19px, 2vw, 26px);
     line-height: 1.18;
     color: #fff8ef !important;
-    margin: 6px 0 8px;
+    margin: 5px 0 6px;
     letter-spacing: -0.01em;
 }
 
@@ -381,11 +381,11 @@
     font-size: 12px !important;
     color: #d6d0c7 !important;
     margin: 0;
-    line-height: 1.55;
+    line-height: 1.5;
     max-width: 640px;
 }
 
-/* Full-Height Hero Slideshow with Seamless Luxury Gradient */
+/* 16:9 Aspect Ratio Hero Slideshow with Seamless Luxury Gradient */
 .banner-hero-slideshow {
     position: absolute !important;
     inset: 0 !important;
@@ -401,8 +401,9 @@
     top: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
-    width: 65% !important;
     height: 100% !important;
+    aspect-ratio: 16 / 9 !important;
+    width: auto !important;
     overflow: hidden !important;
 }
 
@@ -412,7 +413,7 @@
     width: 100% !important;
     height: 100% !important;
     object-fit: cover !important;
-    object-position: center 20% !important;
+    object-position: center center !important;
     opacity: 0;
     transform: scale(1);
     transition: opacity 1.1s cubic-bezier(0.4, 0, 0.2, 1), transform 8s ease-out !important;
@@ -425,7 +426,7 @@
     transform: scale(1.05) !important;
 }
 
-/* Seamless Luxury Gradient: Fades from solid dark on left to transparent on right */
+/* Seamless Luxury Gradient: Fades from solid dark on left of 16:9 photo to transparent on right */
 .banner-hero-gradient-overlay {
     position: absolute !important;
     inset: 0 !important;
@@ -433,11 +434,10 @@
     pointer-events: none !important;
     background: linear-gradient(90deg, 
         #0e0f11 0%, 
-        #0e0f11 28%, 
-        rgba(14, 15, 17, 0.94) 42%, 
-        rgba(14, 15, 17, 0.58) 58%, 
-        rgba(14, 15, 17, 0.15) 75%, 
-        rgba(14, 15, 17, 0) 90%
+        rgba(14, 15, 17, 0.95) 12%, 
+        rgba(14, 15, 17, 0.55) 38%, 
+        rgba(14, 15, 17, 0.12) 68%, 
+        rgba(14, 15, 17, 0) 86%
     ) !important;
 }
 
@@ -446,11 +446,10 @@
 html[data-theme="ivory"] #client-gallery-view .banner-hero-gradient-overlay {
     background: linear-gradient(90deg, 
         #fffdf9 0%, 
-        #fffdf9 28%, 
-        rgba(255, 253, 249, 0.94) 42%, 
-        rgba(255, 253, 249, 0.58) 58%, 
-        rgba(255, 253, 249, 0.15) 75%, 
-        rgba(255, 253, 249, 0) 90%
+        rgba(255, 253, 249, 0.95) 12%, 
+        rgba(255, 253, 249, 0.55) 38%, 
+        rgba(255, 253, 249, 0.12) 68%, 
+        rgba(255, 253, 249, 0) 86%
     ) !important;
 }
 
@@ -458,11 +457,10 @@ html[data-theme="ivory"] #client-gallery-view .banner-hero-gradient-overlay {
 html[data-theme="sapphire"] #client-gallery-view .banner-hero-gradient-overlay {
     background: linear-gradient(90deg, 
         #0c1527 0%, 
-        #0c1527 28%, 
-        rgba(12, 21, 39, 0.94) 42%, 
-        rgba(12, 21, 39, 0.58) 58%, 
-        rgba(12, 21, 39, 0.15) 75%, 
-        rgba(12, 21, 39, 0) 90%
+        rgba(12, 21, 39, 0.95) 12%, 
+        rgba(12, 21, 39, 0.55) 38%, 
+        rgba(12, 21, 39, 0.12) 68%, 
+        rgba(12, 21, 39, 0) 86%
     ) !important;
 }
 
@@ -470,11 +468,10 @@ html[data-theme="sapphire"] #client-gallery-view .banner-hero-gradient-overlay {
 html[data-theme="olive"] #client-gallery-view .banner-hero-gradient-overlay {
     background: linear-gradient(90deg, 
         #111611 0%, 
-        #111611 28%, 
-        rgba(17, 22, 17, 0.94) 42%, 
-        rgba(17, 22, 17, 0.58) 58%, 
-        rgba(17, 22, 17, 0.15) 75%, 
-        rgba(17, 22, 17, 0) 90%
+        rgba(17, 22, 17, 0.95) 12%, 
+        rgba(17, 22, 17, 0.55) 38%, 
+        rgba(17, 22, 17, 0.12) 68%, 
+        rgba(17, 22, 17, 0) 86%
     ) !important;
 }
 
@@ -512,27 +509,28 @@ html[data-theme="olive"] #client-gallery-view .banner-hero-gradient-overlay {
 
 @media (max-width: 639px) {
     #client-gallery-view .client-banner-luxury {
-        min-height: 145px !important;
-        padding: 14px 16px !important;
+        min-height: 120px !important;
+        padding: 12px 14px !important;
     }
 
     #client-gallery-view .client-banner-luxury .client-text {
-        max-width: 68% !important;
+        max-width: 62% !important;
     }
 
     .banner-hero-media {
-        width: 75% !important;
+        height: 100% !important;
+        aspect-ratio: 16 / 9 !important;
         right: 0 !important;
+        width: auto !important;
     }
 
     .banner-hero-gradient-overlay {
         background: linear-gradient(90deg, 
             #0e0f11 0%, 
-            #0e0f11 25%, 
-            rgba(14, 15, 17, 0.94) 45%, 
-            rgba(14, 15, 17, 0.6) 65%, 
-            rgba(14, 15, 17, 0.2) 85%, 
-            rgba(14, 15, 17, 0) 100%
+            rgba(14, 15, 17, 0.95) 14%, 
+            rgba(14, 15, 17, 0.55) 40%, 
+            rgba(14, 15, 17, 0.15) 70%, 
+            rgba(14, 15, 17, 0) 88%
         ) !important;
     }
 
@@ -540,11 +538,10 @@ html[data-theme="olive"] #client-gallery-view .banner-hero-gradient-overlay {
     html[data-theme="ivory"] #client-gallery-view .banner-hero-gradient-overlay {
         background: linear-gradient(90deg, 
             #fffdf9 0%, 
-            #fffdf9 25%, 
-            rgba(255, 253, 249, 0.94) 45%, 
-            rgba(255, 253, 249, 0.6) 65%, 
-            rgba(255, 253, 249, 0.2) 85%, 
-            rgba(255, 253, 249, 0) 100%
+            rgba(255, 253, 249, 0.95) 14%, 
+            rgba(255, 253, 249, 0.55) 40%, 
+            rgba(255, 253, 249, 0.15) 70%, 
+            rgba(255, 253, 249, 0) 88%
         ) !important;
     }
 
@@ -552,11 +549,10 @@ html[data-theme="olive"] #client-gallery-view .banner-hero-gradient-overlay {
     html[data-theme="sapphire"] #client-gallery-view .banner-hero-gradient-overlay {
         background: linear-gradient(90deg, 
             #0c1527 0%, 
-            #0c1527 25%, 
-            rgba(12, 21, 39, 0.94) 45%, 
-            rgba(12, 21, 39, 0.6) 65%, 
-            rgba(12, 21, 39, 0.2) 85%, 
-            rgba(12, 21, 39, 0) 100%
+            rgba(12, 21, 39, 0.95) 14%, 
+            rgba(12, 21, 39, 0.55) 40%, 
+            rgba(12, 21, 39, 0.15) 70%, 
+            rgba(12, 21, 39, 0) 88%
         ) !important;
     }
 
@@ -564,18 +560,17 @@ html[data-theme="olive"] #client-gallery-view .banner-hero-gradient-overlay {
     html[data-theme="olive"] #client-gallery-view .banner-hero-gradient-overlay {
         background: linear-gradient(90deg, 
             #111611 0%, 
-            #111611 25%, 
-            rgba(17, 22, 17, 0.94) 45%, 
-            rgba(17, 22, 17, 0.6) 65%, 
-            rgba(17, 22, 17, 0.2) 85%, 
-            rgba(17, 22, 17, 0) 100%
+            rgba(17, 22, 17, 0.95) 14%, 
+            rgba(17, 22, 17, 0.55) 40%, 
+            rgba(17, 22, 17, 0.15) 70%, 
+            rgba(17, 22, 17, 0) 88%
         ) !important;
     }
 
     .banner-hero-badge {
-        font-size: 9px !important;
-        padding: 2px 7px !important;
-        margin-top: 6px !important;
+        font-size: 8.5px !important;
+        padding: 1.5px 6px !important;
+        margin-top: 5px !important;
     }
 }
 
