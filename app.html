@@ -4678,26 +4678,25 @@
                 <i class="fa-solid fa-chevron-right"></i>
             </button>
             <!-- CLIENT EDITORIAL BANNER & 3-STEP GUIDE -->
-            <section class="client-banner-luxury max-w-[1600px] mx-auto">
+            <section class="client-banner-luxury max-w-[1600px] mx-auto cursor-pointer" onclick="openCurrentBannerSlideViewer(event)" title="Klik untuk membuka foto di layar penuh">
+                <!-- Dynamic Client Folder Full-Height Hero Slideshow with Seamless Gradient -->
+                <div id="banner-slideshow-container" class="banner-hero-slideshow hidden">
+                    <div class="banner-hero-media">
+                        <img id="banner-slide-img-a" class="banner-slide-img is-active" src="" alt="Hero Preview A" />
+                        <img id="banner-slide-img-b" class="banner-slide-img" src="" alt="Hero Preview B" />
+                    </div>
+                    <div class="banner-hero-gradient-overlay"></div>
+                </div>
+
+                <!-- Text Content on Left Foreground -->
                 <div class="client-text">
                     <div class="eyebrow" id="client-eyebrow-brand">GALERI FOTO KLIEN</div>
                     <h1 id="client-banner-heading">Pilih Foto Favorit Anda<br><em>Seleksi Foto Eksklusif.</em></h1>
                     <p id="client-banner-instruction">Ketuk foto untuk memilihnya. Ketuk kembali untuk membatalkan pilihan.</p>
-                </div>
-                <!-- Dynamic Client Folder Animated Slideshow -->
-                <div id="banner-slideshow-container" class="banner-slideshow-wrap hidden">
-                    <div class="banner-slideshow-stack-back"></div>
-                    <div class="banner-slideshow-frame" id="banner-slideshow-frame" onclick="openCurrentBannerSlideViewer(event)" title="Klik untuk membuka foto di layar penuh">
-                        <div class="banner-slideshow-media">
-                            <img id="banner-slide-img-a" class="banner-slide-img is-active" src="" alt="Slideshow Preview A" />
-                            <img id="banner-slide-img-b" class="banner-slide-img" src="" alt="Slideshow Preview B" />
-                            <div class="banner-slideshow-overlay">
-                                <div class="banner-slideshow-badge">
-                                    <span class="banner-pulse-dot"></span>
-                                    <span id="banner-slide-badge-text">Foto 1</span>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="banner-hero-badge mt-2.5 sm:mt-3" id="banner-slide-badge-wrap">
+                        <span class="banner-pulse-dot"></span>
+                        <span id="banner-slide-badge-text">1 / 1</span>
+                        <span class="text-[9px] opacity-60 ml-1 hidden sm:inline">• Klik untuk perbesar</span>
                     </div>
                 </div>
             </section>
@@ -13053,7 +13052,7 @@
             currentIndex: 0,
             activeLayer: 'A',
             intervalId: null,
-            intervalMs: 3200
+            intervalMs: 3800
         };
 
         function initBannerSlideshow(folderImages, folderId) {
@@ -13082,7 +13081,7 @@
             }
 
             container.classList.remove('hidden');
-            container.style.display = 'flex';
+            container.style.display = 'block';
 
             bannerSlideshowState.images = validImages;
             bannerSlideshowState.folderId = folderId || (clientState && clientState.currentFolderId) || 'root';
@@ -13091,7 +13090,7 @@
 
             var firstItem = validImages[0];
             var firstRawUrl = firstItem.url || firstItem.previewUrl || firstItem.proxyUrl || '';
-            var firstUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(firstRawUrl, 600) : firstRawUrl;
+            var firstUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(firstRawUrl, 1400) : firstRawUrl;
 
             imgA.src = firstUrl;
             imgA.classList.add('is-active');
@@ -13105,7 +13104,7 @@
             if (validImages.length > 1) {
                 var secondItem = validImages[1];
                 var secondRawUrl = secondItem.url || secondItem.previewUrl || secondItem.proxyUrl || '';
-                var secondUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(secondRawUrl, 600) : secondRawUrl;
+                var secondUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(secondRawUrl, 1400) : secondRawUrl;
                 var preImg = new Image();
                 preImg.src = secondUrl;
 
@@ -13126,7 +13125,7 @@
             if (!nextItem) return;
 
             var nextRawUrl = nextItem.url || nextItem.previewUrl || nextItem.proxyUrl || '';
-            var nextUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(nextRawUrl, 600) : nextRawUrl;
+            var nextUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(nextRawUrl, 1400) : nextRawUrl;
 
             var imgA = document.getElementById('banner-slide-img-a');
             var imgB = document.getElementById('banner-slide-img-b');
@@ -13156,7 +13155,7 @@
                 var afterItem = images[afterIdx];
                 if (afterItem) {
                     var afterRaw = afterItem.url || afterItem.previewUrl || afterItem.proxyUrl || '';
-                    var afterUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(afterRaw, 600) : afterRaw;
+                    var afterUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(afterRaw, 1400) : afterRaw;
                     var pre = new Image();
                     pre.src = afterUrl;
                 }
