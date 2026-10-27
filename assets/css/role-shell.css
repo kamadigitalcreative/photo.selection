@@ -270,19 +270,38 @@ html:not(.dark) #admin-view {
 }
 
 /* Sidebar PRO Upgrade Box */
-#admin-view #sidebar-desktop .p-4.mt-auto>div {
+#admin-view #sidebar-desktop .p-4.mt-auto>div,
+#sidebar-upgrade-card>div {
     background: linear-gradient(135deg, var(--panel2, #1b1c1e), var(--accentwash, rgba(223, 186, 123, 0.12))) !important;
     border: 1px solid var(--stroke, rgba(239, 215, 174, 0.15)) !important;
     border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     padding: 16px;
 }
 
-#admin-view #sidebar-desktop .p-4.mt-auto>div i.fa-crown {
+#admin-view #sidebar-desktop .p-4.mt-auto>div i.fa-crown:not(.absolute),
+#sidebar-upgrade-card i.fa-crown:not(.absolute) {
     color: var(--gold, #dfba7b) !important;
 }
 
-#admin-view #sidebar-desktop .p-4.mt-auto button {
+#admin-view #sidebar-desktop .p-4.mt-auto>div i.fa-crown.absolute,
+#sidebar-upgrade-card i.fa-crown.absolute {
+    color: var(--gold, #dfba7b) !important;
+    opacity: 0.12 !important;
+}
+
+#admin-view #sidebar-desktop .p-4.mt-auto h3,
+#sidebar-upgrade-card h3 {
+    color: var(--text, #f9f3ea) !important;
+}
+
+#admin-view #sidebar-desktop .p-4.mt-auto p,
+#sidebar-upgrade-card p {
+    color: var(--muted2, #c5bdb1) !important;
+}
+
+#admin-view #sidebar-desktop .p-4.mt-auto button,
+#sidebar-upgrade-card button {
     border-radius: 8px;
     border: 1px solid var(--stroke, rgba(239, 215, 174, 0.18));
     background: var(--accentwash, rgba(223, 186, 123, 0.095));
@@ -293,10 +312,32 @@ html:not(.dark) #admin-view {
     transition: all 0.2s ease;
 }
 
-#admin-view #sidebar-desktop .p-4.mt-auto button:hover {
+#admin-view #sidebar-desktop .p-4.mt-auto button:hover,
+#sidebar-upgrade-card button:hover {
     background: var(--gold, #dfba7b);
     color: var(--goldtxt, #22180e);
     border-color: var(--gold, #dfba7b);
+}
+
+/* Explicit contrast rules for Ivory and Olive light themes */
+[data-theme="ivory"] #sidebar-upgrade-card h3,
+html[data-theme="ivory"] #sidebar-upgrade-card h3 {
+    color: #27231e !important;
+}
+
+[data-theme="ivory"] #sidebar-upgrade-card p,
+html[data-theme="ivory"] #sidebar-upgrade-card p {
+    color: #6d6256 !important;
+}
+
+[data-theme="olive"] #sidebar-upgrade-card h3,
+html[data-theme="olive"] #sidebar-upgrade-card h3 {
+    color: #203327 !important;
+}
+
+[data-theme="olive"] #sidebar-upgrade-card p,
+html[data-theme="olive"] #sidebar-upgrade-card p {
+    color: #4e6454 !important;
 }
 
 /* ==========================================================================
@@ -2230,4 +2271,97 @@ html.theme-ivory .sortir-stat-ready .stat-val,
 html.theme-olive .sortir-stat-ready .stat-val,
 html:not(.dark) .sortir-stat-ready .stat-val {
     color: var(--gold, #947049) !important;
+}
+
+/* ==========================================================================
+   SECTION PREMIUM ADD-ON LUXURY THEME HARMONIZATION
+   ========================================================================== */
+#admin-view #section-premium-addon .bg-gradient-to-br {
+    background: linear-gradient(135deg, var(--panel, #17181b), var(--panel2, #212226)) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.15)) !important;
+    box-shadow: var(--shadow, 0 24px 80px rgba(0, 0, 0, 0.35)) !important;
+}
+
+#admin-view #section-premium-addon h2,
+#admin-view #section-premium-addon h2 span:not(.text-transparent) {
+    color: var(--text, #f9f3ea) !important;
+}
+
+#admin-view #section-premium-addon p {
+    color: var(--muted2, #c5bdb1) !important;
+}
+
+#admin-view #section-premium-addon .grid>div {
+    background: var(--panel2, #212226) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.15)) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+}
+
+#admin-view #section-premium-addon .grid>div h3 {
+    color: var(--text, #f9f3ea) !important;
+}
+
+#admin-view #section-premium-addon .grid>div p {
+    color: var(--muted, #a8a39c) !important;
+}
+
+/* Price card at bottom of section-premium-addon */
+#admin-view #section-premium-addon .border-amber-100 {
+    background: var(--panel2, #212226) !important;
+    border-color: var(--stroke, rgba(239, 215, 174, 0.18)) !important;
+}
+
+#admin-view #section-premium-addon .border-amber-100 p {
+    color: var(--text, #f9f3ea) !important;
+}
+
+#admin-view #section-premium-addon .border-amber-100 p.text-amber-600 {
+    color: var(--gold, #dfba7b) !important;
+}
+
+#admin-view #section-premium-addon .border-amber-100 p.text-gray-400,
+#admin-view #section-premium-addon .border-amber-100 p.text-gray-400 span {
+    color: var(--muted2, #c5bdb1) !important;
+}
+
+/* Pricing tier option rows */
+#admin-view #section-premium-addon .border-amber-100 a {
+    background: var(--panel, #17181b) !important;
+    border-color: var(--stroke, rgba(239, 215, 174, 0.18)) !important;
+    color: var(--text, #f9f3ea) !important;
+}
+
+#admin-view #section-premium-addon .border-amber-100 a:hover {
+    border-color: var(--gold, #dfba7b) !important;
+}
+
+#admin-view #section-premium-addon .border-amber-100 a.bg-amber-50 {
+    background: linear-gradient(135deg, var(--panel, #17181b), var(--accentwash, rgba(223, 186, 123, 0.15))) !important;
+    border-color: var(--gold, #dfba7b) !important;
+    color: var(--text, #f9f3ea) !important;
+}
+
+/* Specific contrast hardening for Ivory and Olive light themes in section-premium-addon */
+[data-theme="ivory"] #section-premium-addon h2,
+html[data-theme="ivory"] #section-premium-addon h2,
+[data-theme="ivory"] #section-premium-addon .grid>div h3,
+html[data-theme="ivory"] #section-premium-addon .grid>div h3 {
+    color: #27231e !important;
+}
+
+[data-theme="ivory"] #section-premium-addon p,
+html[data-theme="ivory"] #section-premium-addon p {
+    color: #6d6256 !important;
+}
+
+[data-theme="olive"] #section-premium-addon h2,
+html[data-theme="olive"] #section-premium-addon h2,
+[data-theme="olive"] #section-premium-addon .grid>div h3,
+html[data-theme="olive"] #section-premium-addon .grid>div h3 {
+    color: #203327 !important;
+}
+
+[data-theme="olive"] #section-premium-addon p,
+html[data-theme="olive"] #section-premium-addon p {
+    color: #4e6454 !important;
 }

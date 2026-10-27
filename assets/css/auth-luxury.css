@@ -406,6 +406,66 @@
     color: #eab565 !important;
 }
 
+/* SweetAlert2 Comprehensive Theme & Contrast Harmonization */
+.swal2-popup .text-slate-800,
+.swal2-popup .text-slate-900,
+.swal2-popup .text-gray-900,
+.swal2-popup .text-gray-800 {
+    color: var(--text, #f4f0e9) !important;
+}
+
+.swal2-popup .text-slate-600,
+.swal2-popup .text-slate-700,
+.swal2-popup .text-gray-700,
+.swal2-popup .text-gray-600,
+.swal2-popup p {
+    color: var(--muted2, #c9c4bc) !important;
+}
+
+.swal2-popup .text-slate-400,
+.swal2-popup .text-slate-500,
+.swal2-popup .text-gray-500,
+.swal2-popup .text-gray-400 {
+    color: var(--muted, #a8a39c) !important;
+}
+
+.swal2-popup .bg-gray-50,
+.swal2-popup .bg-slate-50 {
+    background-color: var(--panel2, #212226) !important;
+    border-color: var(--stroke, rgba(223, 186, 123, 0.2)) !important;
+}
+
+.swal2-popup .border-b,
+.swal2-popup .border-gray-200,
+.swal2-popup .border-slate-200 {
+    border-color: var(--stroke, rgba(223, 186, 123, 0.15)) !important;
+}
+
+/* Modal action renewal / upsell cards inside SweetAlert */
+.swal2-popup a.bg-blue-50,
+.swal2-popup a.bg-indigo-50,
+.swal2-popup a.bg-purple-50,
+.swal2-popup a.bg-yellow-50 {
+    background: var(--panel2, #212226) !important;
+    border-color: var(--stroke, rgba(223, 186, 123, 0.22)) !important;
+    color: var(--text, #f4f0e9) !important;
+    transition: all 0.2s ease !important;
+}
+
+.swal2-popup a.bg-blue-50:hover,
+.swal2-popup a.bg-indigo-50:hover,
+.swal2-popup a.bg-purple-50:hover,
+.swal2-popup a.bg-yellow-50:hover {
+    border-color: var(--gold, #dfba7b) !important;
+    background: var(--accentwash, rgba(223, 186, 123, 0.12)) !important;
+    color: var(--gold, #dfba7b) !important;
+    transform: translateY(-1px);
+}
+
+.swal2-popup a i.fa-chevron-right {
+    color: var(--gold, #dfba7b) !important;
+}
+
 /* Light Theme Overrides for SweetAlert2 */
 [data-theme="ivory"] .swal2-popup,
 [data-theme="olive"] .swal2-popup,
@@ -431,4 +491,43 @@ html.theme-ivory .swal2-html-container,
 html.theme-olive .swal2-html-container,
 html:not(.dark) .swal2-html-container {
     color: var(--muted2, #6d6256) !important;
+}
+
+[data-theme="ivory"] .swal2-popup .text-slate-800,
+[data-theme="ivory"] .swal2-popup .text-slate-900,
+[data-theme="ivory"] .swal2-popup .text-gray-900,
+[data-theme="ivory"] .swal2-popup .text-gray-800 {
+    color: #27231e !important;
+}
+
+[data-theme="ivory"] .swal2-popup p,
+[data-theme="ivory"] .swal2-popup .text-slate-600,
+[data-theme="ivory"] .swal2-popup .text-slate-700 {
+    color: #6d6256 !important;
+}
+
+[data-theme="olive"] .swal2-popup .text-slate-800,
+[data-theme="olive"] .swal2-popup .text-slate-900,
+[data-theme="olive"] .swal2-popup .text-gray-900,
+[data-theme="olive"] .swal2-popup .text-gray-800 {
+    color: #203327 !important;
+}
+
+[data-theme="olive"] .swal2-popup p,
+[data-theme="olive"] .swal2-popup .text-slate-600,
+[data-theme="olive"] .swal2-popup .text-slate-700 {
+    color: #4e6454 !important;
+}
+
+[data-theme="ivory"] .swal2-popup a.bg-blue-50,
+[data-theme="ivory"] .swal2-popup a.bg-indigo-50,
+[data-theme="ivory"] .swal2-popup a.bg-purple-50,
+[data-theme="ivory"] .swal2-popup a.bg-yellow-50,
+[data-theme="olive"] .swal2-popup a.bg-blue-50,
+[data-theme="olive"] .swal2-popup a.bg-indigo-50,
+[data-theme="olive"] .swal2-popup a.bg-purple-50,
+[data-theme="olive"] .swal2-popup a.bg-yellow-50 {
+    background: var(--panel2, #f6f0e7) !important;
+    border-color: var(--stroke, rgba(65, 45, 21, 0.15)) !important;
+    color: var(--text, #27231e) !important;
 }
