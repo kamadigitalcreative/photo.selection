@@ -4840,7 +4840,7 @@
                 </div>
 
                 <p id="viewerCaption" class="text-white font-semibold text-sm tracking-wide"></p>
-                <span id="viewer-original-status" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-300 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5"><i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Memuat Original...</span></span>
+                <span id="viewer-original-status" class="hidden px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-md border border-white/10 items-center gap-1.5" style="display: none;"></span>
                 <div id="viewerDivider" class="w-px h-6 bg-white/20 hidden sm:block"></div>
                 <div id="viewerDirectNote"
                     class="hidden max-w-md px-3 py-1.5 bg-amber-500/20 border border-amber-400/40 rounded-xl text-amber-300 text-xs font-medium flex items-center gap-2">
@@ -11973,8 +11973,9 @@
 
             if (!origUrl || !fileId) {
                 if (statusEl) {
-                    statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
-                    statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span>';
+                    statusEl.className = 'hidden';
+                    statusEl.style.display = 'none';
+                    statusEl.innerHTML = '';
                 }
                 return;
             }
@@ -11993,10 +11994,12 @@
                 if (statusEl) {
                     if (isVerified) {
                         statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 backdrop-blur-md border border-emerald-500/30 hidden sm:flex items-center gap-1.5';
+                        statusEl.style.display = '';
                         statusEl.innerHTML = '<i class="fa-solid fa-circle-check text-xs text-emerald-400"></i> <span>Original 100%</span>';
                     } else {
-                        statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
-                        statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span>';
+                        statusEl.className = 'hidden';
+                        statusEl.style.display = 'none';
+                        statusEl.innerHTML = '';
                     }
                 }
                 if (typeof window !== 'undefined') {
@@ -12080,23 +12083,23 @@
                                     }
                                 } else {
                                     if (statusEl) {
-                                        statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
-                                        statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span>';
+                                        statusEl.className = 'hidden';
+                                        statusEl.style.display = 'none';
+                                        statusEl.innerHTML = '';
                                     }
                                 }
                             }
                         }
                     } else if (window.viewerLoadRequestId === reqId && statusEl) {
-                        statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
-                        statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span>';
+                        statusEl.className = 'hidden';
+                        statusEl.style.display = 'none';
+                        statusEl.innerHTML = '';
                     }
                 }).catch(function (err) {
                     if (statusEl && window.viewerLoadRequestId === reqId) {
-                        var errStatus = (err && err.status) || 0;
-                        var errCode = (err && err.code) || 'PREVIEW_FALLBACK';
-                        var badgeCode = errStatus ? (errStatus + ':' + errCode) : errCode;
-                        statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
-                        statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span><span class="text-[10px] text-amber-400/90 font-mono ml-1 px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">[' + badgeCode + ']</span>';
+                        statusEl.className = 'hidden';
+                        statusEl.style.display = 'none';
+                        statusEl.innerHTML = '';
                     }
                 });
                 return;
@@ -12179,7 +12182,7 @@
                                     prefetchNeighborOriginal(window.currentViewerIndex + 1);
                                 }
                             } else {
-                                // BUG 4 & 7 FIX: Decode failed -> purge from cache, revoke URL, truthful Mode Preview
+                                // BUG 4 & 7 FIX: Decode failed -> purge from cache, revoke URL, hide preview status
                                 originalBlobCache.delete(cacheKey);
                                 if (typeof verifiedOriginalKeys !== 'undefined') {
                                     verifiedOriginalKeys.delete(cacheKey);
@@ -12188,8 +12191,9 @@
                                     try { URL.revokeObjectURL(bUrl); } catch (_) { }
                                 }
                                 if (statusEl) {
-                                    statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
-                                    statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span>';
+                                    statusEl.className = 'hidden';
+                                    statusEl.style.display = 'none';
+                                    statusEl.innerHTML = '';
                                 }
                                 if (typeof window !== 'undefined') {
                                     window.__viewerDiagnostics = window.__viewerDiagnostics || {};
@@ -12204,8 +12208,9 @@
                             verifiedOriginalKeys.delete(cacheKey);
                         }
                         if (statusEl) {
-                            statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
-                            statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span>';
+                            statusEl.className = 'hidden';
+                            statusEl.style.display = 'none';
+                            statusEl.innerHTML = '';
                         }
                     }
                     return res;
@@ -12247,11 +12252,10 @@
                             error: err ? err.message : ''
                         });
                     }
-                    // Honest fallback: keep preview without claiming it is original, but display sanitized error code for developer observability
                     if (statusEl && window.viewerLoadRequestId === reqId) {
-                        statusEl.className = 'px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800/80 text-gray-400 backdrop-blur-md border border-white/10 hidden sm:flex items-center gap-1.5';
-                        var badgeCode = errStatus ? (errStatus + ':' + errCode) : errCode;
-                        statusEl.innerHTML = '<i class="fa-solid fa-eye text-xs"></i> <span>Mode Preview</span><span class="text-[10px] text-amber-400/90 font-mono ml-1 px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20" title="' + encodeURIComponent(badgeCode) + '">[' + badgeCode + ']</span>';
+                        statusEl.className = 'hidden';
+                        statusEl.style.display = 'none';
+                        statusEl.innerHTML = '';
                     }
                     throw err;
                 })
@@ -12303,6 +12307,7 @@
             var targetRawUrl = (targetItem.url !== undefined && targetItem.url !== null) ? String(targetItem.url) : rawUrl;
             var targetGridUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(targetRawUrl, 800) : targetRawUrl;
             var highResUrl = (targetItem && targetItem.highResUrl) ? targetItem.highResUrl : ((typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(targetRawUrl, 2048) : targetRawUrl);
+            var originalCdnUrl = (targetItem && targetItem.originalCdnUrl) ? targetItem.originalCdnUrl : ((targetRawUrl && targetRawUrl.includes('googleusercontent.com/d/')) ? targetRawUrl.replace(/=[sw]\d+(-[a-z0-9]+)?/i, '=s0') : '');
 
             // 1. Instant visual feedback from cached high-res, direct CDN, or cached grid thumbnail (0ms lag)
             var isHighResCdn = highResUrl && (highResUrl.includes('googleusercontent.com') || highResUrl.includes('drive.google.com'));
@@ -12312,6 +12317,8 @@
 
             if (cachedOriginalUrl) {
                 img.src = cachedOriginalUrl;
+            } else if (originalCdnUrl) {
+                img.src = originalCdnUrl;
             } else if (previewBlobCache.has(highResUrl)) {
                 img.src = previewBlobCache.get(highResUrl);
             } else if (isHighResCdn) {
@@ -12413,6 +12420,7 @@
 
             var nextGridUrl = (typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(rawNextUrl, 800) : rawNextUrl;
             var nextHighResUrl = (nextImg && nextImg.highResUrl) ? nextImg.highResUrl : ((typeof getAdaptivePreviewUrl === 'function') ? getAdaptivePreviewUrl(rawNextUrl, 2048) : rawNextUrl);
+            var nextOriginalCdnUrl = (nextImg && nextImg.originalCdnUrl) ? nextImg.originalCdnUrl : ((rawNextUrl && rawNextUrl.includes('googleusercontent.com/d/')) ? rawNextUrl.replace(/=[sw]\d+(-[a-z0-9]+)?/i, '=s0') : '');
 
             // 1. Instant visual feedback from cached authentic original, cached high-res or cached grid thumbnail
             var isNextHighResCdn = nextHighResUrl && (nextHighResUrl.includes('googleusercontent.com') || nextHighResUrl.includes('drive.google.com'));
@@ -12422,6 +12430,8 @@
 
             if (cachedNextOrigUrl) {
                 imgEl.src = cachedNextOrigUrl;
+            } else if (nextOriginalCdnUrl) {
+                imgEl.src = nextOriginalCdnUrl;
             } else if (previewBlobCache.has(nextHighResUrl)) {
                 imgEl.src = previewBlobCache.get(nextHighResUrl);
             } else if (isNextHighResCdn) {

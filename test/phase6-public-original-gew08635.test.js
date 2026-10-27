@@ -302,16 +302,16 @@ async function runRecoveryTestSuite() {
   );
 
   // --------------------------------------------------------------------------
-  // T08: Preview never falsely claims to be original
+  // T08: Preview never falsely claims to be original & suppresses Mode Preview error badge
   // --------------------------------------------------------------------------
-  const hasTruthfulFallbackBadge = appHtmlContent.includes("statusEl.innerHTML = '<i class=\"fa-solid fa-eye text-xs\"></i> <span>Mode Preview</span>") &&
-    appHtmlContent.includes("badgeCode");
+  const suppressesModePreviewBadge = !appHtmlContent.includes("Mode Preview") &&
+    appHtmlContent.includes("statusEl.className = 'hidden'");
 
   testCheck(
     'T08',
-    'Preview never falsely claims to be original (renders Mode Preview with error badge)',
-    hasTruthfulFallbackBadge,
-    'Viewer retains Mode Preview status badge on upstream original failure'
+    'Preview never falsely claims to be original & suppresses Mode Preview error badge',
+    suppressesModePreviewBadge,
+    'Viewer hides error badge and never renders Mode Preview text'
   );
 
   // --------------------------------------------------------------------------

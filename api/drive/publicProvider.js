@@ -265,6 +265,7 @@ class PublicDriveProvider {
 
         const directCdnUrl = `https://lh3.googleusercontent.com/d/${id}=w1000`;
         const directHighResUrl = `https://lh3.googleusercontent.com/d/${id}=s2048`;
+        const directOriginalCdnUrl = `https://lh3.googleusercontent.com/d/${id}=s0`;
         const gridPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&folderId=${encodeURIComponent(cleanFolderId)}&size=800&token=${encodeURIComponent(projectToken || '')}`;
         const highResPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&folderId=${encodeURIComponent(cleanFolderId)}&size=2048&token=${encodeURIComponent(projectToken || '')}`;
         const originalDlUrl = `/api/bridge?action=downloadOriginalFile&fileId=${id}&folderId=${encodeURIComponent(cleanFolderId)}&token=${encodeURIComponent(projectToken || '')}`;
@@ -279,6 +280,7 @@ class PublicDriveProvider {
             url: directCdnUrl,
             previewUrl: directCdnUrl,
             highResUrl: directHighResUrl,
+            originalCdnUrl: directOriginalCdnUrl,
             proxyUrl: gridPreviewUrl,
             proxyHighResUrl: highResPreviewUrl,
             originalUrl: originalDlUrl,
@@ -341,6 +343,7 @@ class PublicDriveProvider {
 
           const directCdnUrl = `https://lh3.googleusercontent.com/d/${id}=w1000`;
           const directHighResUrl = `https://lh3.googleusercontent.com/d/${id}=s2048`;
+          const directOriginalCdnUrl = `https://lh3.googleusercontent.com/d/${id}=s0`;
           const gridPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&folderId=${encodeURIComponent(cleanFolderId)}&size=800&token=${encodeURIComponent(projectToken || '')}`;
           const highResPreviewUrl = `/api/bridge?action=getPreviewImage&fileId=${id}&folderId=${encodeURIComponent(cleanFolderId)}&size=2048&token=${encodeURIComponent(projectToken || '')}`;
           const originalDlUrl = `/api/bridge?action=downloadOriginalFile&fileId=${id}&folderId=${encodeURIComponent(cleanFolderId)}&token=${encodeURIComponent(projectToken || '')}`;
@@ -355,6 +358,7 @@ class PublicDriveProvider {
               url: directCdnUrl,
               previewUrl: directCdnUrl,
               highResUrl: directHighResUrl,
+              originalCdnUrl: directOriginalCdnUrl,
               proxyUrl: gridPreviewUrl,
               proxyHighResUrl: highResPreviewUrl,
               originalUrl: originalDlUrl,
@@ -886,6 +890,29 @@ class PublicDriveProvider {
       let res = initialFetchResult.res;
 
       if (!res.ok) {
+        // Fallback: If Google Drive blocks unauthenticated uc?export=download (401/403),
+        // fetch the authentic original resolution stream from Google's public CDN (=s0).
+        if (res.status === 401 || res.status === 403) {
+          const cdnOriginalUrl = `https://lh3.googleusercontent.com/d/${cleanId}=s0`;
+          try {
+            const cdnHeaders = Object.assign({}, fetchHeaders);
+            delete cdnHeaders['Range'];
+            delete cdnHeaders['range'];
+            const cdnRes = await fetchImpl(cdnOriginalUrl, {
+              headers: cdnHeaders,
+              redirect: 'follow'
+            });
+            const cdnContentType = (cdnRes.headers && typeof cdnRes.headers.get === 'function' ? (cdnRes.headers.get('content-type') || '') : '').toLowerCase();
+            if (cdnRes.ok && (cdnContentType.startsWith('image/') || cdnContentType.includes('octet-stream'))) {
+              await safelyDiscardBody(res.body);
+              res = cdnRes;
+              contentType = cdnContentType;
+            }
+          } catch (_) { }
+        }
+      }
+
+      if (!res.ok) {
         await safelyDiscardBody(res.body);
         let errorCode = ERROR_CODES.GOOGLE_ORIGINAL_UPSTREAM_DENIED;
         let errorStatus = 502;
@@ -967,6 +994,25 @@ class PublicDriveProvider {
             }
           }
         }
+      }
+
+      // If the response is still HTML, attempt Google CDN original (=s0) before returning HTML wall error
+      if (contentType.includes('text/html')) {
+        const cdnOriginalUrl = `https://lh3.googleusercontent.com/d/${cleanId}=s0`;
+        try {
+          const cdnHeaders = Object.assign({}, fetchHeaders);
+          delete cdnHeaders['Range'];
+          delete cdnHeaders['range'];
+          const cdnRes = await fetchImpl(cdnOriginalUrl, {
+            headers: cdnHeaders,
+            redirect: 'follow'
+          });
+          const cdnContentType = (cdnRes.headers && typeof cdnRes.headers.get === 'function' ? (cdnRes.headers.get('content-type') || '') : '').toLowerCase();
+          if (cdnRes.ok && (cdnContentType.startsWith('image/') || cdnContentType.includes('octet-stream'))) {
+            res = cdnRes;
+            contentType = cdnContentType;
+          }
+        } catch (_) { }
       }
 
       // If the response is still HTML, Google is enforcing a download wall or rate limit
