@@ -4232,7 +4232,11 @@ async function handleDownloadOriginalFile(payload, req, res) {
       const errStatus = streamRes.status || 502;
       return error(res, streamRes.message, errStatus, {
         code: streamRes.code || 'GOOGLE_ORIGINAL_UPSTREAM_DENIED',
-        upstreamStatus: streamRes.upstreamStatus || streamRes.status || 502
+        upstreamStatus: streamRes.upstreamStatus || streamRes.status || 502,
+        upstreamCategory: streamRes.upstreamCategory || (streamRes.upstreamStatus === 403 ? 'GOOGLE_HTTP_FORBIDDEN' : (streamRes.code === 'GOOGLE_DOWNLOAD_HTML_WALL' ? 'GOOGLE_HTML_WALL' : 'GOOGLE_REFUSAL')),
+        timeToFailureMs: tStreamInit,
+        bytesReceived: 0,
+        filename: meta ? meta.name : ''
       });
     }
 

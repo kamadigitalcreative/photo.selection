@@ -29,27 +29,114 @@ body {
     scrollbar-width: none;
 }
 
-/* Phase 2: Watermark Dinamis */
-.has-watermark .photo-card:not(.is-folder)::after {
+/* Phase 2: Watermark Dinamis — Isolated to Photographic Media Region */
+.photo-media-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.photo-media-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Watermark strictly restricted to photographic media region, cut off above action bar and filename */
+.has-watermark .photo-card:not(.is-folder) .photo-media-wrapper::after,
+.has-watermark .photo-card:not(.is-folder):not(:has(.photo-media-wrapper))::after {
     content: "";
     position: absolute;
-    inset: 0;
-    pointer-events: none;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: var(--watermark-bottom-cutoff, 72px);
+    pointer-events: none !important;
     background-image: var(--watermark-bg);
     background-position: top left;
     background-repeat: repeat;
-    z-index: 100;
+    z-index: 2;
+    clip-path: inset(0 0 0 0);
+}
+
+@media (max-width: 640px) {
+    .has-watermark .photo-card:not(.is-folder) .photo-media-wrapper::after,
+    .has-watermark .photo-card:not(.is-folder):not(:has(.photo-media-wrapper))::after {
+        bottom: 56px;
+    }
+}
+
+/* Isolate info-overlay, filename, and action toolbar in elevated stacking context */
+.photo-card .info-overlay,
+#client-gallery-view .photo-card .info-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 25 !important;
+    pointer-events: none;
+}
+
+.photo-card .info-overlay * {
+    pointer-events: auto;
+}
+
+.photo-card .photo-card-name-row,
+#client-gallery-view .photo-card .photo-card-name-row {
+    position: relative;
+    z-index: 26 !important;
+}
+
+.photo-card .photo-card-action-row,
+#client-gallery-view .photo-card .photo-card-action-row {
+    position: relative;
+    z-index: 26 !important;
+}
+
+/* Prevent watermark showing through semitransparent buttons */
+.photo-card .btn-pilih-download,
+.photo-card .btn-direct-download,
+.photo-card .btn-pilih-foto,
+#client-gallery-view .photo-card .btn-pilih-foto,
+#client-gallery-view .photo-card .btn-pilih-download,
+#client-gallery-view .photo-card .btn-direct-download {
+    position: relative;
+    z-index: 27 !important;
+    isolation: isolate;
+}
+
+/* Badges elevated above watermark */
+.photo-card .number-badge,
+#client-gallery-view .photo-card .number-badge,
+.photo-card .check-badge,
+#client-gallery-view .photo-card .check-badge,
+.photo-card .heart-btn,
+#client-gallery-view .photo-card .heart-btn {
+    z-index: 30 !important;
+    pointer-events: auto !important;
+}
+
+/* Fullscreen viewer watermark containment */
+.has-watermark #viewerImageWrapper {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
 }
 
 .has-watermark #viewerImageWrapper::after {
     content: "";
     position: absolute;
     inset: 0;
-    pointer-events: none;
+    pointer-events: none !important;
     background-image: var(--watermark-bg);
     background-position: top left;
     background-repeat: repeat;
-    z-index: 100;
+    z-index: 2;
 }
 
 /* PREMIUM UI UPGRADES (Landing Page Match) */

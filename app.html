@@ -13204,7 +13204,10 @@
                             this.src = localPlaceholderSvg;
                         };
                     }
-                    card.appendChild(imgEl);
+                    var mediaWrap = document.createElement('div');
+                    mediaWrap.className = 'photo-media-wrapper';
+                    mediaWrap.appendChild(imgEl);
+                    card.appendChild(mediaWrap);
 
                     var overlay = document.createElement('div');
                     overlay.className = 'info-overlay';

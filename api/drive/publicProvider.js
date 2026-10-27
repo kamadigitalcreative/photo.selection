@@ -840,11 +840,16 @@ class PublicDriveProvider {
 
           if (!isAllowedGoogleDownloadUrl(nextUrl)) {
             await safelyDiscardBody(res.body);
+            let redirectHost = '';
+            try { redirectHost = new URL(nextUrl).hostname; } catch (_) {}
             return {
               error: {
                 success: false,
                 code: 'UNTRUSTED_DOWNLOAD_REDIRECT',
                 status: 502,
+                upstreamStatus: res.status,
+                upstreamCategory: 'GOOGLE_LOGIN_REDIRECT',
+                redirectHost: redirectHost,
                 message: 'Target redirect Google Drive mengarah ke host tidak terpercaya.'
               }
             };
@@ -900,11 +905,14 @@ class PublicDriveProvider {
           errorMsg = `Google Drive menolak pengunduhan publik berkas ini (HTTP ${res.status} Upstream Forbidden / Akses Ditolak oleh Google).`;
         }
 
+        let upstreamCat = res.status === 403 ? 'GOOGLE_HTTP_FORBIDDEN' : (res.status === 401 ? 'GOOGLE_HTTP_UNAUTHORIZED' : (res.status === 429 ? 'GOOGLE_RATE_LIMIT' : 'GOOGLE_UPSTREAM_NON_OK'));
         return {
           success: false,
           code: errorCode,
           status: errorStatus,
           upstreamStatus: res.status,
+          upstreamCategory: upstreamCat,
+          contentType: (res.headers && typeof res.headers.get === 'function' ? (res.headers.get('content-type') || '') : '').toLowerCase(),
           message: errorMsg
         };
       }
@@ -967,6 +975,9 @@ class PublicDriveProvider {
           success: false,
           code: ERROR_CODES.GOOGLE_DOWNLOAD_HTML_WALL,
           status: 502,
+          upstreamStatus: res.status || 200,
+          upstreamCategory: 'GOOGLE_HTML_INTERSTITIAL_WALL',
+          contentType: contentType,
           message: 'Google Drive membatasi pengunduhan langsung berkas ini tanpa otentikasi akun (Batas kuota publik / virus scan wall).'
         };
       }
