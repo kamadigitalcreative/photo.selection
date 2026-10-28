@@ -2706,7 +2706,7 @@ async function handleGetProjectForClient(payload, res) {
 
   if (ownerName) {
     try {
-      const owners = await supabaseQuery(`users?Username=eq.${encodeURIComponent(ownerName)}&select=*`);
+      const owners = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(ownerName)}&select=*`);
       if (owners && owners.length > 0) {
         const o = owners[0];
         const ownerPro = await getUserProEntitlement(ownerName);
@@ -2815,7 +2815,7 @@ async function handleVerifyClientPassword(payload, res) {
 
   if (ownerName) {
     try {
-      const owners = await supabaseQuery(`users?Username=eq.${encodeURIComponent(ownerName)}&select=*`);
+      const owners = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(ownerName)}&select=*`);
       if (owners && owners.length > 0) {
         const o = owners[0];
         const ownerPro = await getUserProEntitlement(ownerName);
