@@ -1879,6 +1879,7 @@ async function handleLogin(payload, res) {
     bankName: u.BankName || '',
     bankAccount: u.BankAccount || '',
     bankAccountName: u.BankAccountName || '',
+    theme: u.Theme || u.theme || 'noir',
     email: u.Email || '',
     nohp: u['No HP'] || '',
     paket: rawPaket || '1 Bulan',
@@ -2063,29 +2064,67 @@ async function handleGetGlobalBranding(payload, res) {
 async function handleSaveBrandSettings(payload, res) {
   const authUser = payload.authUser || {};
   const username = (authUser.username || payload.username || '').trim();
-  const brandName = cleanPlainString(payload.brandName || '', false);
-  const brandLogo = (payload.brandLogo || '').trim();
-  const watermarkUrl = (payload.watermarkUrl || '').trim();
-
   if (!username) return error(res, 'Username required');
-  if (brandName.length > 100) return error(res, 'Nama brand maksimal 100 karakter.');
 
-  if (brandLogo && !isSafeImageReference(brandLogo, 2 * 1024 * 1024)) {
-    return error(res, 'Format URL atau data gambar logo brand tidak valid.');
+  const updateBody = {};
+
+  if (payload.brandName !== undefined) {
+    const brandName = cleanPlainString(payload.brandName || '', false);
+    if (brandName.length > 100) return error(res, 'Nama brand maksimal 100 karakter.');
+    updateBody.BrandName = brandName;
   }
-  if (watermarkUrl && !isSafeImageReference(watermarkUrl, 2 * 1024 * 1024)) {
-    return error(res, 'Format URL atau data gambar watermark tidak valid.');
+
+  if (payload.brandLogo !== undefined) {
+    const brandLogo = (payload.brandLogo || '').trim();
+    if (brandLogo && !isSafeImageReference(brandLogo, 2 * 1024 * 1024)) {
+      return error(res, 'Format URL atau data gambar logo brand tidak valid.');
+    }
+    updateBody.BrandLogo = brandLogo;
   }
 
-  const updateBody = { BrandName: brandName, BrandLogo: brandLogo };
-  if (watermarkUrl !== undefined) updateBody.WatermarkUrl = watermarkUrl;
+  if (payload.watermarkUrl !== undefined) {
+    const watermarkUrl = (payload.watermarkUrl || '').trim();
+    if (watermarkUrl && !isSafeImageReference(watermarkUrl, 2 * 1024 * 1024)) {
+      return error(res, 'Format URL atau data gambar watermark tidak valid.');
+    }
+    updateBody.WatermarkUrl = watermarkUrl;
+  }
 
-  await supabaseQuery(`users?Username=eq.${encodeURIComponent(username)}`, {
-    method: 'PATCH',
-    body: updateBody
+  const rawTheme = String(payload.theme || '').toLowerCase().trim();
+  const VALID_THEMES = ['noir', 'ivory', 'sapphire', 'olive'];
+  if (rawTheme && VALID_THEMES.includes(rawTheme)) {
+    updateBody.Theme = rawTheme;
+  }
+
+  if (Object.keys(updateBody).length > 0) {
+    try {
+      await supabaseQuery(`users?Username=eq.${encodeURIComponent(username)}`, {
+        method: 'PATCH',
+        body: updateBody
+      });
+    } catch (patchErr) {
+      if (updateBody.Theme && String(patchErr && patchErr.message || '').toLowerCase().includes('theme')) {
+        console.warn('[THEME_SYNC] Column Theme may not exist in users table yet. Falling back:', patchErr.message);
+        delete updateBody.Theme;
+        if (Object.keys(updateBody).length > 0) {
+          await supabaseQuery(`users?Username=eq.${encodeURIComponent(username)}`, {
+            method: 'PATCH',
+            body: updateBody
+          });
+        }
+      } else {
+        throw patchErr;
+      }
+    }
+  }
+
+  return success(res, {
+    success: true,
+    brandName: updateBody.BrandName,
+    brandLogo: updateBody.BrandLogo,
+    theme: updateBody.Theme || rawTheme,
+    message: 'Settings saved'
   });
-
-  return success(res, { success: true, brandName, brandLogo, message: 'Settings saved' });
 }
 
 async function handleUploadBrandLogo(payload, res) {
@@ -2175,6 +2214,7 @@ async function handlePingUser(payload, res) {
         bankName: u.BankName || '',
         bankAccount: u.BankAccount || '',
         bankAccountName: u.BankAccountName || '',
+        theme: u.Theme || u.theme || 'noir',
         email: u.Email || '',
         nohp: u['No HP'] || '',
         paket: rawPaket || '1 Bulan',

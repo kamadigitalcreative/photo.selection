@@ -4980,6 +4980,23 @@
                         localStorage.setItem('ps_theme', theme);
                     }
                 } catch (e) { }
+
+                // Synchronize photographer theme to studio profile in cloud
+                if (currentUser && currentUser.username && (!currentUser.role || currentUser.role !== 'Admin')) {
+                    currentUser.theme = theme;
+                    try { if (typeof persistCurrentUser === 'function') persistCurrentUser(); } catch (e) { }
+                    var apiTarget = (typeof API_ENDPOINT !== 'undefined') ? API_ENDPOINT : '/api/bridge';
+                    fetch(apiTarget, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'saveBrandSettings',
+                            sessionId: (currentUser && currentUser.sessionId) ? currentUser.sessionId : '',
+                            username: currentUser.username,
+                            theme: theme
+                        })
+                    }).catch(function () { });
+                }
             }
 
             // 4. Synchronize all theme pickers and dropdowns in UI
@@ -7074,6 +7091,9 @@
                 }
                 if (currentUser.brandName) {
                     appBranding.name = currentUser.brandName;
+                }
+                if (currentUser.theme && (!currentUser.role || currentUser.role !== 'Admin')) {
+                    applyTheme(currentUser.theme, false);
                 }
                 if (typeof applyBranding === 'function') applyBranding();
 
@@ -9543,6 +9563,9 @@
             if (brandName) {
                 document.querySelectorAll('.brand-name-text').forEach(el => el.innerText = brandName);
             }
+
+            var currentActiveTheme = (typeof currentUser !== 'undefined' && currentUser && currentUser.theme) ? currentUser.theme : (localStorage.getItem('ps_theme') || 'noir');
+            if (typeof updateThemePickerUI === 'function') updateThemePickerUI(currentActiveTheme);
         }
 
         function saveSettings() {
@@ -9576,10 +9599,14 @@
                         body: JSON.stringify({ action: 'savePaymentSettings', sessionId: (currentUser && currentUser.sessionId) ? currentUser.sessionId : '', currentUser: currentUser, username: currentUser.username, bankName: bankName, bankAccount: bankAccount, bankAccountName: bankOwner })
                     }).catch(() => { });
 
+                    var currentTheme = (typeof currentUser !== 'undefined' && currentUser && currentUser.theme)
+                        ? currentUser.theme
+                        : (localStorage.getItem('ps_theme') || 'noir');
+
                     fetch(API_ENDPOINT, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'saveBrandSettings', sessionId: (currentUser && currentUser.sessionId) ? currentUser.sessionId : '', currentUser: currentUser, username: currentUser.username, brandName: brandName, brandLogo: logoUrl, watermarkUrl: watermarkUrl })
+                        body: JSON.stringify({ action: 'saveBrandSettings', sessionId: (currentUser && currentUser.sessionId) ? currentUser.sessionId : '', currentUser: currentUser, username: currentUser.username, brandName: brandName, brandLogo: logoUrl, watermarkUrl: watermarkUrl, theme: currentTheme })
                     }).catch(() => { });
                 }
             }
