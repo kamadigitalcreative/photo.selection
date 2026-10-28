@@ -358,11 +358,45 @@
 
                 <!-- Global search removed per user request to avoid duplication -->
 
-                <div class="flex items-center gap-2 sm:gap-4 ml-auto shrink-0 pl-3">
+                <div class="flex items-center gap-2 sm:gap-3 ml-auto shrink-0 pl-3">
+                    <!-- Language Selector (Header Dropdown) -->
+                    <div class="relative header-lang-container" id="headerLangContainer">
+                        <button id="btn-header-lang-toggle" type="button" onclick="toggleHeaderLangDropdown(event)"
+                            class="header-lang-btn h-9 px-2.5 sm:px-3 rounded-full flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer shadow-sm text-xs font-bold"
+                            title="Pilih Bahasa / Choose Language" aria-label="Pilih Bahasa / Choose Language" aria-haspopup="true" aria-expanded="false">
+                            <span class="header-lang-icon-wrap w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-globe header-lang-icon text-[11px] sm:text-xs"></i>
+                            </span>
+                            <span id="header-lang-current" class="header-lang-badge text-[11px] font-black uppercase tracking-wider">ID</span>
+                            <i class="fa-solid fa-chevron-down text-[8px] header-lang-chevron opacity-60 transition-transform duration-200" id="header-lang-chevron"></i>
+                        </button>
+                        <div id="headerLangDropdown"
+                            class="hidden absolute right-0 top-full mt-2 w-44 rounded-2xl shadow-2xl py-2 z-[9999] border backdrop-blur-md transition-all header-lang-dropdown">
+                            <div class="px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider opacity-60 header-lang-title" id="tx-header-lang-title">
+                                Bahasa / Language
+                            </div>
+                            <button type="button" class="header-lang-opt w-full px-3.5 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer" data-lang="id" onclick="selectAdminLanguage('id')">
+                                <span class="flex items-center gap-2">
+                                    <span class="text-sm">🇮🇩</span>
+                                    <span class="font-bold opt-label">Bahasa Indonesia</span>
+                                </span>
+                                <i class="fa-solid fa-check text-xs lang-check-id hidden"></i>
+                            </button>
+                            <button type="button" class="header-lang-opt w-full px-3.5 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer" data-lang="en" onclick="selectAdminLanguage('en')">
+                                <span class="flex items-center gap-2">
+                                    <span class="text-sm">🇬🇧</span>
+                                    <span class="font-bold opt-label">English</span>
+                                </span>
+                                <i class="fa-solid fa-check text-xs lang-check-en hidden"></i>
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Notification -->
-                    <button onclick="openModalNotification()"
-                        class="relative text-gray-500 hover:text-kama-800 w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors">
-                        <i class="fa-regular fa-bell text-lg"></i>
+                    <button onclick="openModalNotification()" id="btn-header-notif"
+                        class="relative header-notif-btn w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-colors cursor-pointer"
+                        title="Notifikasi">
+                        <i class="fa-regular fa-bell text-base sm:text-lg header-notif-bell"></i>
                         <span id="badge-global-notif"
                             class="absolute top-2 right-2.5 bg-red-500 w-2 h-2 rounded-full hidden"></span>
                     </button>
@@ -2083,36 +2117,6 @@
                                     <p id="tx-st-pro"
                                         class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-4">
                                         Fotografer PRO</p>
-                                </div>
-
-                                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                                        <h4 id="tx-st-pref" class="font-bold text-gray-800"><i
-                                                class="fa-solid fa-sliders mr-2 text-gray-400"></i> Preferensi Aplikasi
-                                        </h4>
-                                    </div>
-                                    <div class="p-6 space-y-5">
-                                        <div class="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
-                                            onclick="document.getElementById('settings-lang').click()">
-                                            <div class="flex items-center gap-3">
-                                                <div
-                                                    class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
-                                                    <i class="fa-solid fa-language text-lg"></i>
-                                                </div>
-                                                <div>
-                                                    <h5 id="tx-st-lang" class="font-bold text-sm text-gray-800">Bahasa
-                                                        Antarmuka</h5>
-                                                    <p id="tx-st-lang-desc" class="text-[11px] text-gray-500">Pilih
-                                                        bahasa untuk aplikasi.</p>
-                                                </div>
-                                            </div>
-                                            <select id="settings-lang"
-                                                class="bg-gray-100 border-none rounded-lg px-3 py-2 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-200 cursor-pointer">
-                                                <option value="id">Indonesia</option>
-                                                <option value="en">English</option>
-                                            </select>
-                                        </div>
-                                    </div>
                                 </div>
 
                                 <!-- Tampilan & Tema (Phase 5.6R Parity) -->
@@ -5221,9 +5225,72 @@
         }
 
         // --- FITUR BAHASA (MULTI-LANGUAGE) TERBARU ---
+        function toggleHeaderLangDropdown(e) {
+            if (e) e.stopPropagation();
+            var dd = document.getElementById('headerLangDropdown');
+            var btn = document.getElementById('btn-header-lang-toggle');
+            var chv = document.getElementById('header-lang-chevron');
+            if (!dd) return;
+            var isHidden = dd.classList.contains('hidden');
+            if (isHidden) {
+                dd.classList.remove('hidden');
+                if (btn) btn.setAttribute('aria-expanded', 'true');
+                if (chv) chv.classList.add('rotate-180');
+                var curLang = localStorage.getItem('ps_lang') || 'id';
+                updateHeaderLangDropdownUI(curLang);
+            } else {
+                dd.classList.add('hidden');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+                if (chv) chv.classList.remove('rotate-180');
+            }
+        }
+
+        function selectAdminLanguage(lang) {
+            if (lang !== 'en' && lang !== 'id') lang = 'id';
+            changeLanguage(lang);
+            var dd = document.getElementById('headerLangDropdown');
+            var btn = document.getElementById('btn-header-lang-toggle');
+            var chv = document.getElementById('header-lang-chevron');
+            if (dd) dd.classList.add('hidden');
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+            if (chv) chv.classList.remove('rotate-180');
+        }
+
+        function updateHeaderLangDropdownUI(lang) {
+            var curBadge = document.getElementById('header-lang-current');
+            if (curBadge) curBadge.innerText = String(lang || 'id').toUpperCase();
+            var optId = document.querySelector('.header-lang-opt[data-lang="id"]');
+            var optEn = document.querySelector('.header-lang-opt[data-lang="en"]');
+            var checkId = document.querySelector('.lang-check-id');
+            var checkEn = document.querySelector('.lang-check-en');
+            var isEn = (lang === 'en');
+
+            if (optId) {
+                if (!isEn) optId.classList.add('active');
+                else optId.classList.remove('active');
+            }
+            if (optEn) {
+                if (isEn) optEn.classList.add('active');
+                else optEn.classList.remove('active');
+            }
+            if (checkId) {
+                if (!isEn) checkId.classList.remove('hidden');
+                else checkId.classList.add('hidden');
+            }
+            if (checkEn) {
+                if (isEn) checkEn.classList.remove('hidden');
+                else checkEn.classList.add('hidden');
+            }
+            var title = document.getElementById('tx-header-lang-title');
+            if (title) title.innerText = isEn ? 'Language' : 'Pilihan Bahasa';
+        }
+
         function changeLanguage(lang) {
             localStorage.setItem('ps_lang', lang);
             applyLanguage(lang);
+            if (typeof updateHeaderLangDropdownUI === 'function') {
+                updateHeaderLangDropdownUI(lang);
+            }
             // Sinkronisasi ulang data tabel visual saat bahasa diubah
             if (typeof checkLoginState === 'function') checkLoginState();
             if (typeof loadDataProjects === 'function' && document.getElementById('section-projects').classList.contains('flex')) loadDataProjects();
@@ -5694,6 +5761,9 @@
             var dashSel = document.getElementById('dashLangSelector');
             if (authSel) authSel.value = lang;
             if (dashSel) dashSel.value = lang;
+            if (typeof updateHeaderLangDropdownUI === 'function') {
+                updateHeaderLangDropdownUI(lang);
+            }
 
             // 9. TAMBAHAN: DASHBOARD STATS & KELOLA TIM & LAPORAN
             setTx('#section-dashboard p.text-sm.text-gray-500', 'Ringkasan performa sistem Photo Selector Anda.', 'Overview of your Photo Selector system performance.');
@@ -9711,7 +9781,7 @@
             document.getElementById('settings-brand-name').value = brandName;
             document.getElementById('settings-logo-url').value = rawLogo || '';
             document.getElementById('settings-watermark-url').value = watermarkUrl;
-            document.getElementById('settings-lang').value = lang;
+            if (document.getElementById('settings-lang')) document.getElementById('settings-lang').value = lang;
 
             if (document.getElementById('settings-bank-name')) document.getElementById('settings-bank-name').value = bankName;
             if (document.getElementById('settings-bank-account')) document.getElementById('settings-bank-account').value = bankAccount;
@@ -9757,7 +9827,7 @@
             var watermarkUrl = document.getElementById('settings-watermark-url').value;
             var rawLogo = document.getElementById('settings-logo-url').value;
             var logoUrl = resolveDirectImageUrl(rawLogo);
-            var lang = document.getElementById('settings-lang').value;
+            var lang = document.getElementById('settings-lang') ? document.getElementById('settings-lang').value : (localStorage.getItem('ps_lang') || 'id');
 
             var bankName = document.getElementById('settings-bank-name') ? document.getElementById('settings-bank-name').value : '';
             var bankAccount = document.getElementById('settings-bank-account') ? document.getElementById('settings-bank-account').value : '';
@@ -14511,7 +14581,7 @@
             });
         }
 
-        // Global dropdown dismiss handler for client tools
+        // Global dropdown dismiss handler for client tools & admin header
         document.addEventListener('click', function (e) {
             var themeContainer = document.getElementById('clientThemeContainer');
             if (themeContainer && !themeContainer.contains(e.target)) {
@@ -14526,6 +14596,15 @@
                 if (ddL) ddL.classList.add('hidden');
                 var btnL = document.getElementById('btn-client-lang-toggle');
                 if (btnL) btnL.setAttribute('aria-expanded', 'false');
+            }
+            var headerLangContainer = document.getElementById('headerLangContainer');
+            if (headerLangContainer && !headerLangContainer.contains(e.target)) {
+                var ddH = document.getElementById('headerLangDropdown');
+                if (ddH) ddH.classList.add('hidden');
+                var btnH = document.getElementById('btn-header-lang-toggle');
+                if (btnH) btnH.setAttribute('aria-expanded', 'false');
+                var chvH = document.getElementById('header-lang-chevron');
+                if (chvH) chvH.classList.remove('rotate-180');
             }
         });
 

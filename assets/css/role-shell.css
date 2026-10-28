@@ -432,6 +432,120 @@ html:not(.dark) #admin-view header {
 }
 
 /* ==========================================================================
+   Header Language Switcher & Notification Controls (Theme-Adaptive)
+   ========================================================================== */
+#admin-view .header-lang-container {
+    position: relative;
+    user-select: none;
+}
+
+#admin-view .header-lang-btn {
+    background: var(--panel2, #1b1c1e) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.16)) !important;
+    color: var(--text, #f4f0e9) !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#admin-view .header-lang-btn:hover {
+    border-color: var(--gold, #dfba7b) !important;
+    background: var(--accentwash, rgba(223, 186, 123, 0.12)) !important;
+    color: var(--gold, #dfba7b) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+#admin-view .header-lang-btn .header-lang-icon-wrap {
+    background: var(--accentwash, rgba(223, 186, 123, 0.12));
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.15));
+    color: var(--gold, #dfba7b);
+    transition: all 0.25s ease;
+}
+
+#admin-view .header-lang-btn:hover .header-lang-icon-wrap {
+    transform: rotate(20deg) scale(1.08);
+    background: color-mix(in srgb, var(--gold, #dfba7b) 25%, transparent);
+}
+
+#admin-view .header-lang-badge {
+    color: var(--text, #f4f0e9) !important;
+}
+
+#admin-view .header-lang-btn:hover .header-lang-badge {
+    color: var(--gold, #dfba7b) !important;
+}
+
+#admin-view .header-lang-chevron {
+    color: var(--muted, #a8a39c);
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+#admin-view .header-lang-btn:hover .header-lang-chevron {
+    color: var(--gold, #dfba7b);
+}
+
+#admin-view .header-lang-dropdown {
+    background: var(--panel, #17181b) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.22)) !important;
+    color: var(--text, #f4f0e9) !important;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+}
+
+#admin-view .header-lang-title {
+    color: var(--muted, #a8a39c) !important;
+    border-bottom: 1px solid var(--stroke, rgba(239, 215, 174, 0.12)) !important;
+}
+
+#admin-view .header-lang-opt {
+    color: var(--text, #f4f0e9) !important;
+    border-radius: 8px;
+    margin: 2px 0;
+    transition: all 0.15s ease;
+}
+
+#admin-view .header-lang-opt:hover {
+    background: var(--accentwash, rgba(223, 186, 123, 0.12)) !important;
+    color: var(--gold, #dfba7b) !important;
+}
+
+#admin-view .header-lang-opt.active {
+    background: var(--accentwash, rgba(223, 186, 123, 0.18)) !important;
+    color: var(--gold, #dfba7b) !important;
+    font-weight: 700;
+}
+
+#admin-view .header-lang-opt.active .lang-check-id,
+#admin-view .header-lang-opt.active .lang-check-en {
+    display: inline-block !important;
+    color: var(--gold, #dfba7b);
+}
+
+/* Header Notification Button (Theme Adaptive) */
+#admin-view .header-notif-btn {
+    background: var(--panel2, #1b1c1e) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.16)) !important;
+    color: var(--text, #f4f0e9) !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#admin-view .header-notif-btn .header-notif-bell {
+    color: var(--text, #f4f0e9) !important;
+    transition: all 0.2s ease;
+}
+
+#admin-view .header-notif-btn:hover {
+    border-color: var(--gold, #dfba7b) !important;
+    background: var(--accentwash, rgba(223, 186, 123, 0.12)) !important;
+    color: var(--gold, #dfba7b) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+#admin-view .header-notif-btn:hover .header-notif-bell {
+    color: var(--gold, #dfba7b) !important;
+}
+
+
+/* ==========================================================================
    4. PHOTOGRAPHER WORKSPACE (#section-projects & #section-status)
    ========================================================================== */
 
