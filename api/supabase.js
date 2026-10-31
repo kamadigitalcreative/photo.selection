@@ -65,6 +65,54 @@ async function supabaseQuery(endpoint, options = {}) {
   return data;
 }
 
+const OFFICIAL_SYSTEM_UPDATES = [
+  {
+    ID: 'v8',
+    Judul: 'Pembaruan Besar Photo Selection V2.0',
+    Versi: 'V2.0',
+    Tanggal: '2026-10-31',
+    Pesan: 'Rilis akbar Photo Selection V2.0! Hadir dengan 4 tema mewah The Atelier, download instan ZIP & foto resolusi asli, proteksi watermark otomatis, kuota multi-kategori, dan sistem upsell cuan ekstra.',
+    Status: 'Active',
+    created_at: '2026-10-31T00:05:00.000Z'
+  },
+  {
+    ID: 'v9',
+    Judul: 'Koleksi 4 Tema Mewah (The Atelier)',
+    Versi: 'TEMA',
+    Tanggal: '2026-10-31',
+    Pesan: 'Nikmati 4 tema visual berkelas: Noir Champagne, Midnight Sapphire, Atelier Ivory, dan Olive Heritage dengan kontras tinggi dan tampilan memanjakan mata klien di HP & Desktop.',
+    Status: 'Active',
+    created_at: '2026-10-31T00:04:00.000Z'
+  },
+  {
+    ID: 'v10',
+    Judul: 'Download Foto Resolusi Penuh & Ekspor ZIP',
+    Versi: 'FITUR',
+    Tanggal: '2026-10-31',
+    Pesan: 'Klien kini dapat mengunduh foto pilihan mereka secara mandiri per foto resolusi asli langsung dari Google Drive, atau mengekspor seluruh foto terpilih ke dalam satu file ZIP ringkas tanpa ribet.',
+    Status: 'Active',
+    created_at: '2026-10-31T00:03:00.000Z'
+  },
+  {
+    ID: 'v11',
+    Judul: 'Fitur PRO: Watermark, Kategori & Upsell Extra',
+    Versi: 'PRO',
+    Tanggal: '2026-10-31',
+    Pesan: 'Maksimalkan cuan studio Anda! Atur kuota foto per kategori (Akad, Resepsi, dll), proteksi watermark otomatis, musik galeri (BGM), serta tagihan biaya ekstra foto otomatis ke WhatsApp klien.',
+    Status: 'Active',
+    created_at: '2026-10-31T00:02:00.000Z'
+  },
+  {
+    ID: 'v12',
+    Judul: 'Dukungan Bahasa Inggris & Optimasi Mobile',
+    Versi: 'UPDATE',
+    Tanggal: '2026-10-31',
+    Pesan: 'Galeri klien kini dapat beralih ke Bahasa Inggris (EN) dengan sekali klik. Navigasi mobile dioptimalkan di semua ukuran layar smartphone agar klien semakin nyaman memilih foto.',
+    Status: 'Active',
+    created_at: '2026-10-31T00:01:00.000Z'
+  }
+];
+
 // Phase 4.5 Security Constants
 const OTP_TTL_MS = 10 * 60 * 1000; // 10 menit
 const OTP_RESEND_COOLDOWN_MS = 60 * 1000; // 60 detik
@@ -964,7 +1012,8 @@ const ADMIN_ONLY_ACTIONS = new Set([
   'sendExpiryReminder',
   'deleteUser',
   'getDashboardStats',
-  'replyFeedback'
+  'replyFeedback',
+  'syncSystemUpdates'
 ]);
 
 async function handleLogout(payload, req, res) {
@@ -1768,6 +1817,7 @@ async function handler(req, res) {
       case 'getAllNotifications': return await handleGetAllNotifications(payload, res);
       case 'markFeedbackRead': return await handleMarkFeedbackRead(payload, res);
       case 'getSystemUpdates': return await handleGetSystemUpdates(payload, res);
+      case 'syncSystemUpdates': return await handleSyncSystemUpdates(payload, res);
       case 'syncBackground': return await handleSyncBackground(payload, res);
       case 'downloadOriginalFile': return await handleDownloadOriginalFile(payload, req, res);
       case 'getPreviewImage': return await handleGetPreviewImage(payload, req, res);
@@ -1800,6 +1850,11 @@ module.exports.verifyModernPassword = verifyModernPassword;
 module.exports.MAYAR_CATALOG = MAYAR_CATALOG;
 module.exports.resolveUserProEntitlement = resolveUserProEntitlement;
 module.exports.getUserProEntitlement = getUserProEntitlement;
+module.exports.getOrSyncSystemUpdates = getOrSyncSystemUpdates;
+module.exports.OFFICIAL_SYSTEM_UPDATES = OFFICIAL_SYSTEM_UPDATES;
+module.exports.handleGetSystemUpdates = handleGetSystemUpdates;
+module.exports.handleGetAllNotifications = handleGetAllNotifications;
+module.exports.handleSyncSystemUpdates = handleSyncSystemUpdates;
 
 // =========================================================================
 // CONTROLLERS
@@ -4671,14 +4726,86 @@ async function handleReplyFeedback(payload, res) {
   return success(res, { success: true, message: 'Balasan terkirim' });
 }
 
+let isSyncingUpdates = false;
+
+async function getOrSyncSystemUpdates(force = false) {
+  let rows = [];
+  try {
+    rows = await supabaseQuery('system_updates?Status=eq.Active&select=*&order=created_at.desc');
+  } catch (err) {
+    console.error('getOrSyncSystemUpdates query error:', err && err.message);
+  }
+
+  const legacyIds = ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7'];
+  const hasLegacy = Array.isArray(rows) && rows.some(r => legacyIds.includes(r.ID));
+  const hasV8 = Array.isArray(rows) && rows.some(r => r.ID === 'v8');
+
+  // Trigger automated synchronization whenever legacy rows are detected or V2.0 items missing
+  if ((force || hasLegacy || !hasV8) && !isSyncingUpdates) {
+    isSyncingUpdates = true;
+    try {
+      // 1. Delete legacy notifications from database
+      if (hasLegacy || force) {
+        await supabaseQuery(`system_updates?ID=in.(${legacyIds.join(',')})`, {
+          method: 'DELETE'
+        }).catch(async (delErr) => {
+          console.warn('system_updates DELETE fallback to PATCH:', delErr && delErr.message);
+          await supabaseQuery(`system_updates?ID=in.(${legacyIds.join(',')})`, {
+            method: 'PATCH',
+            body: { Status: 'Archived' }
+          }).catch(() => {});
+        });
+      }
+
+      // 2. Insert the 5 official V2.0 updates if missing
+      const existingIds = new Set((Array.isArray(rows) ? rows : []).map(r => r.ID));
+      for (const item of OFFICIAL_SYSTEM_UPDATES) {
+        if (!existingIds.has(item.ID) || force) {
+          await supabaseQuery('system_updates', {
+            method: 'POST',
+            body: {
+              ID: item.ID,
+              Judul: item.Judul,
+              Versi: item.Versi,
+              Tanggal: item.Tanggal,
+              Pesan: item.Pesan,
+              Status: item.Status,
+              created_at: item.created_at
+            }
+          }).catch(postErr => {
+            console.error(`Failed inserting system update ${item.ID}:`, postErr && postErr.message);
+          });
+        }
+      }
+
+      // 3. Re-query fresh rows
+      const freshRows = await supabaseQuery('system_updates?Status=eq.Active&select=*&order=created_at.desc').catch(() => null);
+      if (Array.isArray(freshRows) && freshRows.length > 0) {
+        rows = freshRows;
+      }
+    } catch (syncErr) {
+      console.error('System updates sync error:', syncErr && syncErr.message);
+    } finally {
+      isSyncingUpdates = false;
+    }
+  }
+
+  // Pure filter: NEVER leak legacy v1-v7 items into client responses
+  const filtered = (Array.isArray(rows) ? rows : []).filter(r => !legacyIds.includes(r.ID));
+  if (filtered.length > 0) {
+    return filtered;
+  }
+  return OFFICIAL_SYSTEM_UPDATES;
+}
+
 async function handleGetAllNotifications(payload, res) {
   const authUser = payload.authUser || {};
   let fbEndpoint = 'feedbacks?select=*&order=created_at.desc';
   if (authUser.role !== 'Admin') {
-    fbEndpoint = `feedbacks?Username=eq.${encodeURIComponent(authUser.username)}&select=*&order=created_at.desc`;
+    fbEndpoint = `feedbacks?Username=${encodeURIComponent(authUser.username)}&select=*&order=created_at.desc`;
   }
   const feedbacks = (await supabaseQuery(fbEndpoint)) || [];
-  const systemUpdates = (await supabaseQuery('system_updates?Status=eq.Active&select=*&order=created_at.desc')) || [];
+  const systemUpdates = await getOrSyncSystemUpdates();
 
   return success(res, { success: true, feedbacks, systemUpdates });
 }
@@ -4691,14 +4818,20 @@ async function handleMarkFeedbackRead(payload, res) {
       await supabaseQuery('feedbacks?StatusAdmin=eq.Unread', { method: 'PATCH', body: { StatusAdmin: 'Read' } }).catch(() => { });
     }
   } else if (authUser.username) {
-    await supabaseQuery(`feedbacks?Username=eq.${encodeURIComponent(authUser.username)}&StatusUser=eq.Unread`, { method: 'PATCH', body: { StatusUser: 'Read' } }).catch(() => { });
+    await supabaseQuery(`feedbacks?Username=${encodeURIComponent(authUser.username)}&StatusUser=eq.Unread`, { method: 'PATCH', body: { StatusUser: 'Read' } }).catch(() => { });
   }
   return success(res, { success: true, ok: true });
 }
 
 async function handleGetSystemUpdates(payload, res) {
-  const rows = await supabaseQuery('system_updates?Status=eq.Active&select=*&order=created_at.desc');
+  const rows = await getOrSyncSystemUpdates();
   return success(res, { success: true, data: rows || [] });
+}
+
+async function handleSyncSystemUpdates(payload, res) {
+  if (!requireAdmin(payload.authUser)) return error(res, 'Unauthorized', 403);
+  const rows = await getOrSyncSystemUpdates(true);
+  return success(res, { success: true, count: rows.length, data: rows });
 }
 
 async function handleSyncBackground(payload, res) {

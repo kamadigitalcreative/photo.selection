@@ -6745,7 +6745,11 @@
                 systemHtml = '<div class="text-center py-6 text-gray-400 text-xs italic bg-white rounded-xl border border-gray-100 shadow-sm mb-3"><i class="fa-solid fa-info-circle mb-1 block opacity-50"></i>Belum ada pengumuman sistem.</div>';
             } else {
                 systemDataCache.forEach(upd => {
-                    let dateStr = upd.Tanggal ? new Date(upd.Tanggal).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }) : '';
+                    let dateStr = '';
+                    if (upd.Tanggal) {
+                        let d = new Date(upd.Tanggal);
+                        dateStr = !isNaN(d.getTime()) ? d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }) : String(upd.Tanggal).split(' ')[0];
+                    }
                     systemHtml += `
                         <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 shadow-sm mb-3 cursor-default">
                             <div class="flex items-start gap-3">
