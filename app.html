@@ -8459,7 +8459,12 @@
                 if (dateInput) {
                     dateInput.disabled = false;
                     dateInput.classList.remove('opacity-50');
-                    var target = new Date();
+                    var baseDate = new Date();
+                    if (defaultDate && defaultDate !== 'Lifetime' && !isNaN(new Date(defaultDate).getTime())) {
+                        var parsedExp = new Date(defaultDate);
+                        if (parsedExp > baseDate) baseDate = parsedExp;
+                    }
+                    var target = new Date(baseDate);
                     target.setMonth(target.getMonth() + months);
                     var y = target.getFullYear();
                     var m = String(target.getMonth() + 1).padStart(2, '0');
@@ -8512,7 +8517,7 @@
                         const response = await fetch(API_ENDPOINT, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: routeAction, username: username, expiryValue: expValue, currentUser: currentUser })
+                            body: JSON.stringify({ action: routeAction, username: username, expiryValue: expValue, role: 'Photographer', currentUser: currentUser })
                         });
                         const res = await response.json();
                         endLoading();

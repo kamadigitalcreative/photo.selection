@@ -3743,9 +3743,23 @@ async function handleUpdateExpiry(payload, res) {
   const expiredAt = payload.expiredAt || payload.expiryValue;
   const paket = payload.paket || '1 Bulan';
 
+  // Automatically promote Demo accounts to Photographer role upon active subscription assignment
+  let newRole = payload.role;
+  if (!newRole) {
+    try {
+      const uRes = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(username)}&select=Role`);
+      if (uRes && uRes.length > 0 && uRes[0].Role === 'Demo') {
+        newRole = 'Photographer';
+      }
+    } catch (_) {}
+  }
+
+  const patchBody = { ExpiredAt: expiredAt, Paket: paket, Status: 'Active' };
+  if (newRole) patchBody.Role = newRole;
+
   await supabaseQuery(`users?Username=ilike.${encodeURIComponent(username)}`, {
     method: 'PATCH',
-    body: { ExpiredAt: expiredAt, Paket: paket, Status: 'Active' }
+    body: patchBody
   });
 
   return success(res, { success: true, message: 'Expiry updated' });
