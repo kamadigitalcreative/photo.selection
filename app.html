@@ -6654,14 +6654,68 @@
 
         // --- LOGIKA LONCENG NOTIFIKASI ---
         let currentNotifTab = 'all';
+        const DEFAULT_SYSTEM_UPDATES = [
+            {
+                ID: "v8",
+                Tanggal: "2026-10-31",
+                Judul: "Pembaruan Besar Photo Selection V2.0",
+                Pesan: "Rilis akbar Photo Selection V2.0! Hadir dengan 4 tema mewah The Atelier, download instan ZIP & foto resolusi asli, proteksi watermark otomatis, kuota multi-kategori, dan sistem upsell cuan ekstra.",
+                Versi: "V2.0",
+                Status: "Active"
+            },
+            {
+                ID: "v9",
+                Tanggal: "2026-10-31",
+                Judul: "Koleksi 4 Tema Mewah (The Atelier)",
+                Pesan: "Nikmati 4 tema visual berkelas: Noir Champagne, Midnight Sapphire, Atelier Ivory, dan Olive Heritage dengan kontras tinggi dan tampilan memanjakan mata klien di HP & Desktop.",
+                Versi: "TEMA",
+                Status: "Active"
+            },
+            {
+                ID: "v10",
+                Tanggal: "2026-10-31",
+                Judul: "Download Foto Resolusi Penuh & Ekspor ZIP",
+                Pesan: "Klien kini dapat mengunduh foto pilihan mereka secara mandiri per foto resolusi asli langsung dari Google Drive, atau mengekspor seluruh foto terpilih ke dalam satu file ZIP ringkas tanpa ribet.",
+                Versi: "FITUR",
+                Status: "Active"
+            },
+            {
+                ID: "v11",
+                Tanggal: "2026-10-31",
+                Judul: "Fitur PRO: Watermark, Kategori & Upsell Extra",
+                Pesan: "Maksimalkan cuan studio Anda! Atur kuota foto per kategori (Akad, Resepsi, dll), proteksi watermark otomatis, musik galeri (BGM), serta tagihan biaya ekstra foto otomatis ke WhatsApp klien.",
+                Versi: "PRO",
+                Status: "Active"
+            },
+            {
+                ID: "v12",
+                Tanggal: "2026-10-31",
+                Judul: "Dukungan Bahasa Inggris & Optimasi Mobile",
+                Pesan: "Galeri klien kini dapat beralih ke Bahasa Inggris (EN) dengan sekali klik. Navigasi mobile dioptimalkan di semua ukuran layar smartphone agar klien semakin nyaman memilih foto.",
+                Versi: "UPDATE",
+                Status: "Active"
+            }
+        ];
+
         let notifDataCache = [];
-        let systemDataCache = [];
+        let systemDataCache = (function() {
+            try {
+                var saved = localStorage.getItem('ps_cached_system_updates');
+                if (saved) {
+                    var parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                }
+            } catch (_) {}
+            return DEFAULT_SYSTEM_UPDATES;
+        })();
 
         function openModalNotification() {
             var modal = document.getElementById('modalNotification');
             var content = document.getElementById('modalNotifContent');
             if (modal) { modal.classList.remove('hidden'); void modal.offsetWidth; modal.classList.remove('opacity-0'); }
             if (content) content.classList.remove('scale-95');
+            // Render seketika 0 detik tanpa loading
+            renderNotifList();
             fetchNotifData();
         }
 
@@ -6699,40 +6753,54 @@
         }
 
         async function fetchNotifData() {
-            var container = document.getElementById('notif-container');
-
-            // --- TRIK INSTAN: Langsung tampilkan teks yang sudah ditarik di background (Loading 0 Detik!) ---
-            if (systemDataCache.length > 0 || notifDataCache.length > 0) {
-                renderNotifList();
-            } else {
-                container.innerHTML = '<div class="text-center py-8 text-gray-400 text-sm font-medium"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Memuat notifikasi...</div>';
-            }
+            // Render seketika jika belum ter-render
+            renderNotifList();
 
             try {
-                // Konfirmasi ke server di belakang layar agar data tetap akurat
-                const response = await fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getAllNotifications', currentUser: currentUser }) });
+                // Konfirmasi ke server di belakang layar secara senyap (zero loading block)
+                const userPayload = (typeof currentUser !== "undefined" && currentUser) ? currentUser : {};
+                const response = await fetch(API_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "getAllNotifications", currentUser: userPayload }) });
                 const res = await response.json();
 
-                if (res.status === 'success') {
+                if (res && res.status === "success" && res.data) {
                     notifDataCache = res.data.feedbacks || [];
-                    systemDataCache = res.data.systemUpdates || [];
+                    if (Array.isArray(res.data.systemUpdates) && res.data.systemUpdates.length > 0) {
+                        systemDataCache = res.data.systemUpdates;
+                        try { localStorage.setItem("ps_cached_system_updates", JSON.stringify(systemDataCache)); } catch (_) {}
+                    }
 
-                    // Simpan ID Pengumuman agar angka merah mati setelah dibaca
                     if (systemDataCache.length > 0) {
                         let latestSysId = systemDataCache[0].ID;
-                        localStorage.setItem('ps_last_sys_id', String(latestSysId));
+                        localStorage.setItem("ps_last_sys_id", String(latestSysId));
                     }
 
                     renderNotifList();
 
-                    fetch(API_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'markFeedbackRead', type: currentUser.role === 'Admin' ? 'admin' : 'user', currentUser: currentUser }) }).catch(() => { });
+                    if (userPayload && userPayload.username) {
+                        fetch(API_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "markFeedbackRead", type: userPayload.role === "Admin" ? "admin" : "user", currentUser: userPayload }) }).catch(() => { });
+                    }
 
-                    let gB = document.getElementById('badge-global-notif');
-                    if (gB) { gB.classList.add('hidden'); gB.style.display = 'none'; gB.innerText = '0'; }
+                    let gB = document.getElementById("badge-global-notif");
+                    if (gB) { gB.classList.add("hidden"); gB.style.display = "none"; gB.innerText = "0"; }
 
-                    lastNotifCount = notifDataCache.filter(r => (currentUser.role === 'Admin' ? r.StatusAdmin === 'Unread' : (r.Username === currentUser.username && r.StatusUser === 'Unread'))).length;
+                    if (userPayload && userPayload.role) {
+                        lastNotifCount = notifDataCache.filter(r => (userPayload.role === "Admin" ? r.StatusAdmin === "Unread" : (r.Username === userPayload.username && r.StatusUser === "Unread"))).length;
+                    }
+                } else {
+                    // Fallback jika belum login: ambil getSystemUpdates publik
+                    const sysRes = await fetch(API_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "getSystemUpdates" }) }).then(r => r.json()).catch(() => null);
+                    if (sysRes && sysRes.data) {
+                        const rawUpdates = sysRes.data.data || sysRes.data;
+                        if (Array.isArray(rawUpdates) && rawUpdates.length > 0) {
+                            systemDataCache = rawUpdates;
+                            try { localStorage.setItem("ps_cached_system_updates", JSON.stringify(systemDataCache)); } catch (_) {}
+                            renderNotifList();
+                        }
+                    }
                 }
-            } catch (e) { }
+            } catch (e) {
+                renderNotifList();
+            }
         }
 
         function renderNotifList() {

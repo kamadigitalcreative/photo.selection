@@ -1000,7 +1000,6 @@ const PROTECTED_ACCOUNT_ACTIONS = new Set([
   'submitFeedback',
   'getFeedbacks',
   'replyFeedback',
-  'getAllNotifications',
   'markFeedbackRead',
   'syncBackground'
 ]);
@@ -4727,8 +4726,15 @@ async function handleReplyFeedback(payload, res) {
 }
 
 let isSyncingUpdates = false;
+let cachedSystemUpdates = null;
+let lastSystemUpdatesFetch = 0;
+const SYSTEM_UPDATES_CACHE_TTL = 60000; // 60s in-memory cache
 
 async function getOrSyncSystemUpdates(force = false) {
+  const now = Date.now();
+  if (!force && cachedSystemUpdates && (now - lastSystemUpdatesFetch < SYSTEM_UPDATES_CACHE_TTL)) {
+    return cachedSystemUpdates;
+  }
   let rows = [];
   try {
     rows = await supabaseQuery('system_updates?Status=eq.Active&select=*&order=created_at.desc');
@@ -4792,19 +4798,22 @@ async function getOrSyncSystemUpdates(force = false) {
 
   // Pure filter: NEVER leak legacy v1-v7 items into client responses
   const filtered = (Array.isArray(rows) ? rows : []).filter(r => !legacyIds.includes(r.ID));
-  if (filtered.length > 0) {
-    return filtered;
-  }
-  return OFFICIAL_SYSTEM_UPDATES;
+  const result = (filtered.length > 0) ? filtered : OFFICIAL_SYSTEM_UPDATES;
+  cachedSystemUpdates = result;
+  lastSystemUpdatesFetch = now;
+  return result;
 }
 
 async function handleGetAllNotifications(payload, res) {
-  const authUser = payload.authUser || {};
-  let fbEndpoint = 'feedbacks?select=*&order=created_at.desc';
-  if (authUser.role !== 'Admin') {
-    fbEndpoint = `feedbacks?Username=${encodeURIComponent(authUser.username)}&select=*&order=created_at.desc`;
+  const authUser = payload.authUser || payload.currentUser || {};
+  let feedbacks = [];
+  if (authUser && authUser.username) {
+    let fbEndpoint = 'feedbacks?select=*&order=created_at.desc';
+    if (authUser.role !== 'Admin') {
+      fbEndpoint = `feedbacks?Username=${encodeURIComponent(authUser.username)}&select=*&order=created_at.desc`;
+    }
+    feedbacks = (await supabaseQuery(fbEndpoint)) || [];
   }
-  const feedbacks = (await supabaseQuery(fbEndpoint)) || [];
   const systemUpdates = await getOrSyncSystemUpdates();
 
   return success(res, { success: true, feedbacks, systemUpdates });
