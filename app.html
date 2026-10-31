@@ -8509,7 +8509,13 @@
 
             // 1. Tampilkan memori instan
             if (cachedProjects) {
-                if (!silent) renderProjectsTable(JSON.parse(cachedProjects));
+                if (!silent) {
+                    try {
+                        renderProjectsTable(JSON.parse(cachedProjects));
+                    } catch (e) {
+                        console.warn("Corrupt cached projects JSON:", e);
+                    }
+                }
             } else if (!silent) {
                 startLoading("Memuat Project...");
             }
@@ -8667,15 +8673,15 @@
                         dateStr = typeof escapeHTML === 'function' ? escapeHTML(String(rawDibuat)) : String(rawDibuat);
                     }
                 }
-                var rawName = row['Nama Client'] || '-';
+                var rawName = row['Nama Client'] || row.NamaClient || '-';
                 var safeHTMLName = typeof escapeHTML === 'function' ? escapeHTML(rawName) : rawName.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                var safePass = row['Password Client'] ? escapeHTML(String(row['Password Client'])) : "(tanpa password)";
+                var safePass = (row['Password Client'] || row.PasswordClient) ? escapeHTML(String(row['Password Client'] || row.PasswordClient)) : "(tanpa password)";
                 var safeJSName = rawName.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-                var maxFotoRaw = row['Max Foto'] || 0;
+                var maxFotoRaw = row['Max Foto'] !== undefined ? row['Max Foto'] : (row.MaxFoto !== undefined ? row.MaxFoto : 0);
                 var isUnlimited = parseInt(maxFotoRaw) >= 99999 || String(maxFotoRaw).toLowerCase() === 'unlimited';
                 var maxFoto = isUnlimited ? 999999 : (parseInt(maxFotoRaw) || 50);
-                var fotoTerpilih = parseInt(row['Foto Terpilih']) || 0;
+                var fotoTerpilih = parseInt(row['Foto Terpilih'] || row.FotoTerpilih || 0);
                 var displayMax = isUnlimited ? '∞' : maxFoto;
 
                 var statusClient = getComputedClientStatus(row);
@@ -9071,7 +9077,7 @@
             var project = window.lastProjectsData.find(function (p) { return p.ID === projectId; });
             if (!project) return;
 
-            var listJson = project['Daftar Pilihan'];
+            var listJson = project['Daftar Pilihan'] || project.DaftarPilihan || project.selectedFiles;
             var list = parseSelectedPhotosList(listJson);
 
             if (list.length === 0) {
@@ -11947,7 +11953,6 @@
                         if (playPromise !== undefined) {
                             playPromise.then(() => {
                                 var btnIcon = document.querySelector('#btn-toggle-bgm i');
-                                brainIcon = document.querySelector('#btn-toggle-bgm i');
                                 if (btnIcon) btnIcon.className = 'fa-solid fa-music animate-spin';
                                 var btn = document.getElementById('btn-toggle-bgm');
                                 if (btn) { btn.classList.remove('bg-gray-100', 'text-gray-500'); btn.classList.add('bg-pink-50', 'text-pink-500'); }
@@ -15494,10 +15499,15 @@
             var cachedStatus = localStorage.getItem(cacheKey);
 
             if (cachedStatus && !isSilent) {
-                rawStatusData = JSON.parse(cachedStatus);
+                try {
+                    rawStatusData = JSON.parse(cachedStatus);
+                } catch (e) {
+                    console.warn("Corrupt cached client status JSON:", e);
+                    rawStatusData = [];
+                }
                 if (typeof filterClientStatus === 'function' && document.getElementById('search-client-status') && document.getElementById('search-client-status').value) {
                     filterClientStatus();
-                } else {
+                } else if (rawStatusData && rawStatusData.length > 0) {
                     renderClientProgress(rawStatusData);
                 }
                 // Catatan: Tulisan "Syncing..." yang mengganggu sudah dihapus total
@@ -15564,7 +15574,7 @@
 
             data.forEach(function (row) {
                 var status = getComputedClientStatus(row);
-                var selected = parseInt(row['Foto Terpilih'] || 0);
+                var selected = parseInt(row['Foto Terpilih'] || row.FotoTerpilih || 0);
 
                 var badgeClass = ''; var iconClass = ''; var pulseIcon = '';
                 var isEn = localStorage.getItem('ps_lang') === 'en';
@@ -15614,7 +15624,7 @@
                     }
                 }
 
-                var maxRaw = row['Max Foto'];
+                var maxRaw = row['Max Foto'] !== undefined ? row['Max Foto'] : (row.MaxFoto !== undefined ? row.MaxFoto : 50);
                 var isUnlimited = parseInt(maxRaw) >= 99999 || String(maxRaw).toLowerCase() === 'unlimited';
                 var maxDisplay = isUnlimited ? '∞ (Unlimited)' : (parseInt(maxRaw) || 1);
                 var percent = 0;

@@ -378,7 +378,7 @@ async function sendEmailViaGAS({ to, subject, htmlBody, textBody }) {
   try {
     const res = await fetch(mailerUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
       body: JSON.stringify({
         to: to,
         subject: subject,
@@ -457,7 +457,9 @@ function buildAdminNewUserEmail({ nama, username, email, nohp, paket, status }) 
         </tr>
       </table>
       <p style="color: #64748b; font-size: 13px; margin: 20px 0;">
-        Silakan login ke sistem Photo Selector Anda untuk menyetujui (ACC) dan mengatur masa aktif akun tersebut.
+        ${isPending 
+          ? 'Silakan login ke sistem Photo Selector Anda untuk menyetujui (ACC) dan mengatur masa aktif akun tersebut.' 
+          : 'Akun Demo ini telah otomatis aktif selama 7 hari. Anda dapat memantau aktivitasnya di Dashboard Admin.'}
       </p>
       <div style="text-align: center; margin: 24px 0 10px 0;">
         <a href="${APP_URL}/login" style="background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; display: inline-block; font-size: 14px;">Buka Dashboard Admin</a>
@@ -2003,42 +2005,49 @@ async function handleRegister(payload, res) {
     } catch (e) { }
   }
 
-  // Kirim email notifikasi ke Admin & Fotografer pendaftar secara paralel dan pastikan tuntas sebelum fungsi serverless selesai
+  // Kirim email notifikasi ke Admin & Fotografer pendaftar secara berurutan dan pastikan tuntas sebelum fungsi serverless selesai
   try {
     const adminEmailSubject = isDemo
-      ? `Pendaftaran Akun Demo Baru - Photo Selection (${nama})`
+      ? `Pendaftaran Fotografer Baru - Photo Selection (${nama} - Akun Demo)`
       : `Pendaftaran Fotografer Baru - Photo Selection (${nama})`;
 
     const userEmailSubject = isDemo
-      ? `Selamat Datang di Photo Selection - Akun Demo Aktif 🎉`
+      ? `Selamat Datang di Photo Selection - Akun Demo Aktif`
       : `Pendaftaran Akun Berhasil - Photo Selection`;
 
-    await Promise.allSettled([
-      sendEmailViaGAS({
-        to: ADMIN_EMAIL,
-        subject: adminEmailSubject,
-        htmlBody: buildAdminNewUserEmail({
-          nama: nama,
-          username: username,
-          email: email,
-          nohp: nohp,
-          paket: paket,
-          status: initialStatus
-        })
-      }),
-      sendEmailViaGAS({
-        to: email,
-        subject: userEmailSubject,
-        htmlBody: buildPhotographerWelcomeEmail({
-          nama: nama,
-          username: username,
-          email: email,
-          paket: paket,
-          status: initialStatus,
-          paymentUrl: paymentUrl
-        })
+    // 1. Kirim notifikasi ke Admin terlebih dahulu agar selalu terekam di sistem admin
+    const adminSent = await sendEmailViaGAS({
+      to: ADMIN_EMAIL,
+      subject: adminEmailSubject,
+      htmlBody: buildAdminNewUserEmail({
+        nama: nama,
+        username: username,
+        email: email,
+        nohp: nohp,
+        paket: paket,
+        status: initialStatus
       })
-    ]);
+    });
+    if (!adminSent) {
+      console.warn('[MAILER] Notifikasi Admin gagal atau ditolak oleh mailer provider.');
+    }
+
+    // 2. Kirim email sambutan ke Fotografer
+    const userSent = await sendEmailViaGAS({
+      to: email,
+      subject: userEmailSubject,
+      htmlBody: buildPhotographerWelcomeEmail({
+        nama: nama,
+        username: username,
+        email: email,
+        paket: paket,
+        status: initialStatus,
+        paymentUrl: paymentUrl
+      })
+    });
+    if (!userSent) {
+      console.warn('[MAILER] Email sambutan Fotografer gagal atau ditolak oleh mailer provider.');
+    }
   } catch (mailErr) {
     console.error('[MAILER] Error saat pengiriman email pendaftaran:', mailErr);
   }
@@ -2245,15 +2254,15 @@ async function handleGetProjects(payload, res) {
   const rows = await supabaseQuery(endpoint);
 
   const formatted = (rows || []).map(p => {
-    let dp = p['Daftar Pilihan'] || [];
+    let dp = p['Daftar Pilihan'] || p.DaftarPilihan || p.daftar_pilihan || [];
     if (typeof dp === 'string') {
       try { dp = JSON.parse(dp); } catch (e) { dp = dp.split(',').map(s => s.trim()).filter(Boolean); }
     }
-    let nt = p.Notes || {};
+    let nt = p.Notes || p.notes || {};
     if (typeof nt === 'string') {
       try { nt = JSON.parse(nt); } catch (e) { }
     }
-    let kat = p.Kategori || [];
+    let kat = p.Kategori || p.kategori || p.categories || [];
     if (typeof kat === 'string') {
       try { kat = JSON.parse(kat); } catch (e) { }
     }
@@ -2618,17 +2627,17 @@ async function verifyClientGallerySession(clientAccessToken, project) {
 }
 
 function buildAuthorizedProjectData(p, ownerBrand, clientAccessToken) {
-  let dp = p['Daftar Pilihan'] || [];
+  let dp = p['Daftar Pilihan'] || p.DaftarPilihan || p.daftar_pilihan || [];
   if (typeof dp === 'string') {
     try { dp = JSON.parse(dp); } catch (e) { dp = dp.split(',').map(s => s.trim()).filter(Boolean); }
   }
 
-  let nt = p.Notes || {};
+  let nt = p.Notes || p.notes || {};
   if (typeof nt === 'string') {
     try { nt = JSON.parse(nt); } catch (e) { }
   }
 
-  let kat = p.Kategori || [];
+  let kat = p.Kategori || p.kategori || p.categories || [];
   if (typeof kat === 'string') {
     try { kat = JSON.parse(kat); } catch (e) { }
   }
@@ -3662,7 +3671,7 @@ async function handleApproveUser(payload, res) {
       if (u.Email) {
         await sendEmailViaGAS({
           to: u.Email,
-          subject: `Akun Photo Selection Anda Telah Aktif! 🎉`,
+          subject: `Akun Photo Selection Anda Telah Aktif!`,
           htmlBody: buildPhotographerActivatedEmail({
             nama: u.Nama || u.Username,
             username: u.Username,
@@ -4728,15 +4737,15 @@ async function handleSyncBackground(payload, res) {
   }
 
   const formatted = (projectsRows || []).map(p => {
-    let dp = p['Daftar Pilihan'] || [];
+    let dp = p['Daftar Pilihan'] || p.DaftarPilihan || p.daftar_pilihan || [];
     if (typeof dp === 'string') {
       try { dp = JSON.parse(dp); } catch (e) { dp = dp.split(',').map(s => s.trim()).filter(Boolean); }
     }
-    let nt = p.Notes || {};
+    let nt = p.Notes || p.notes || {};
     if (typeof nt === 'string') {
       try { nt = JSON.parse(nt); } catch (e) { }
     }
-    let kat = p.Kategori || [];
+    let kat = p.Kategori || p.kategori || p.categories || [];
     if (typeof kat === 'string') {
       try { kat = JSON.parse(kat); } catch (e) { }
     }
