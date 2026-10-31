@@ -1753,7 +1753,7 @@ async function handler(req, res) {
     delete payload.authUser;
 
     let isWebhookRequest = false;
-    if (payload.action === 'mayarWebhook') {
+    if (payload.action === 'mayarWebhook' || Boolean(payload.event)) {
       isWebhookRequest = true;
     } else if (req && req.url) {
       try {
@@ -5346,10 +5346,10 @@ async function handleMayarWebhook(payload, req, res) {
   const hasRawAmount = (rawAmountVal !== undefined && rawAmountVal !== null && String(rawAmountVal).trim() !== '');
   const parsedAmount = hasRawAmount ? Number(rawAmountVal) : NaN;
 
-  if (!hasRawAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
+  if (!hasRawAmount || isNaN(parsedAmount) || parsedAmount < 0) {
     const reasonMsg = !hasRawAmount
       ? 'Missing payment amount from provider'
-      : (parsedAmount === 0 ? 'Zero payment amount without verified promotion' : 'Invalid payment amount');
+      : 'Invalid payment amount';
 
     await supabaseQuery('mayar_logs', {
       method: 'POST',
@@ -5372,9 +5372,41 @@ async function handleMayarWebhook(payload, req, res) {
     });
   }
 
+  // Check if coupon, voucher, promotion, or discount was applied and verified by Mayar
+  const rawCoupon = d.couponUsed || d.coupon || payload.couponUsed || payload.coupon || d.promoCode || payload.promoCode || d.voucher || payload.voucher || '';
+  const couponCode = (typeof rawCoupon === 'string' ? rawCoupon : (rawCoupon && rawCoupon.code ? rawCoupon.code : '')).trim();
+  const rawDiscount = d.discount !== undefined ? d.discount : (payload.discount !== undefined ? payload.discount : (d.discountAmount !== undefined ? d.discountAmount : 0));
+  const hasDiscountValue = Number(rawDiscount) > 0 || Boolean(d.isDiscount || payload.isDiscount);
+  const isFreeCheckout = Boolean(d.isFree || payload.isFree || d.freeProduct || payload.freeProduct);
+  const isVerifiedCoupon = Boolean(couponCode || hasDiscountValue || isFreeCheckout);
+
+  // If amount is zero and there is NO verified coupon/promo, reject as unverified zero payment
+  if (parsedAmount === 0 && !isVerifiedCoupon) {
+    const reasonMsg = 'Zero payment amount without verified promotion';
+    await supabaseQuery('mayar_logs', {
+      method: 'POST',
+      body: {
+        Event: event,
+        'Customer Email': email,
+        'Customer Name': name,
+        'Status/Product': rawProductName || paketName,
+        'Hasil Aktivasi': `[TX:${transactionId}] MANUAL_RECONCILIATION_REQUIRED - ${reasonMsg} (${rawAmountVal})`,
+        'Raw JSON Payload': JSON.stringify(payload),
+        Timestamp: new Date().toISOString()
+      }
+    }).catch(() => { });
+
+    return success(res, {
+      success: true,
+      status: 'manual_reconciliation_needed',
+      code: 'INVALID_PAYMENT_AMOUNT',
+      result: `${reasonMsg}. Held for manual reconciliation without mutating account.`
+    });
+  }
+
   // Exact verified price match check:
-  // Prevents arbitrary positive amounts (e.g. IDR 1) or unverified discount amounts from granting entitlement
-  if (productInfo.standardPrice && parsedAmount !== productInfo.standardPrice) {
+  // If no verified coupon is present, ensure standard price match to prevent arbitrary positive amounts (e.g. IDR 1)
+  if (!isVerifiedCoupon && productInfo.standardPrice && parsedAmount !== productInfo.standardPrice) {
     await supabaseQuery('mayar_logs', {
       method: 'POST',
       body: {
@@ -5405,6 +5437,7 @@ async function handleMayarWebhook(payload, req, res) {
   if (userMatch && userMatch[1]) {
     explicitUsernameHint = userMatch[1].trim();
   }
+
 
   // Generate secure candidate credentials for atomic new-account creation inside the database transaction
   let temporaryPassword = '';

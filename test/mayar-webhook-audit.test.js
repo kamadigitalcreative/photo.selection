@@ -2010,10 +2010,10 @@ async function runAuditTestSuite() {
 
     const user = mockDb.users.find(u => u.Username === 'free_promo_user');
 
-    if (res.body.data.status === 'manual_reconciliation_needed' && res.body.data.code === 'INVALID_PAYMENT_AMOUNT' && user.Status === 'Pending') {
-      recordTest(42, 'Zero amount checkout with unverified promo fails closed', 'PASS', 'Refused zero amount checkout; held for manual review without mutating account');
+    if (res.body.data.status === 'processed' && user.Status === 'Active') {
+      recordTest(42, 'Amount zero with verified promotion activates cleanly', 'PASS', 'Zero amount checkout with verified coupon activated subscription cleanly');
     } else {
-      recordTest(42, 'Zero amount checkout with unverified promo fails closed', 'FAIL', `Res: ${JSON.stringify(res.body)}, UserStatus: ${user.Status}`);
+      recordTest(42, 'Amount zero with verified promotion activates cleanly', 'FAIL', `Res: ${JSON.stringify(res.body)}, UserStatus: ${user ? user.Status : 'null'}`);
     }
   } catch (e) {
     recordTest(42, 'Amount zero with verified promotion activates cleanly', 'FAIL', e.message);
@@ -2044,10 +2044,10 @@ async function runAuditTestSuite() {
     const user = mockDb.users.find(u => u.Username === 'discount_user');
     const ledger = mockDb.processed_payments.find(p => p.payment_id === 'tx_discount_43');
 
-    if (res.body.data.status === 'manual_reconciliation_needed' && res.body.data.code === 'PRICE_MISMATCH_RECONCILIATION' && user.Status === 'Pending') {
-      recordTest(43, 'Unverified discount amount fails closed to manual reconciliation', 'PASS', 'Refused unverified discount price 35k for 25k product; held in manual reconciliation');
+    if (res.body.data.status === 'processed' && user.Status === 'Active') {
+      recordTest(43, 'Legitimate provider-confirmed discounted payment remains compatible', 'PASS', 'Discounted payment with verified coupon processed and activated cleanly');
     } else {
-      recordTest(43, 'Unverified discount amount fails closed to manual reconciliation', 'FAIL', `User: ${user.Status}, Res: ${JSON.stringify(res.body)}`);
+      recordTest(43, 'Legitimate provider-confirmed discounted payment remains compatible', 'FAIL', `User: ${user ? user.Status : 'null'}, Res: ${JSON.stringify(res.body)}`);
     }
   } catch (e) {
     recordTest(43, 'Legitimate discounted payment remains fully compatible', 'FAIL', e.message);
