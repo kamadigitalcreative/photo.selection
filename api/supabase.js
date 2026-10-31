@@ -457,9 +457,7 @@ function buildAdminNewUserEmail({ nama, username, email, nohp, paket, status }) 
         </tr>
       </table>
       <p style="color: #64748b; font-size: 13px; margin: 20px 0;">
-        ${isPending 
-          ? 'Silakan login ke sistem Photo Selector Anda untuk menyetujui (ACC) dan mengatur masa aktif akun tersebut.' 
-          : 'Akun Demo ini telah otomatis aktif selama 7 hari. Anda dapat memantau aktivitasnya di Dashboard Admin.'}
+        Silakan login ke sistem Photo Selector Anda untuk menyetujui (ACC) dan mengatur masa aktif akun tersebut.
       </p>
       <div style="text-align: center; margin: 24px 0 10px 0;">
         <a href="${APP_URL}/login" style="background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; display: inline-block; font-size: 14px;">Buka Dashboard Admin</a>
@@ -2007,9 +2005,7 @@ async function handleRegister(payload, res) {
 
   // Kirim email notifikasi ke Admin & Fotografer pendaftar secara berurutan dan pastikan tuntas sebelum fungsi serverless selesai
   try {
-    const adminEmailSubject = isDemo
-      ? `Pendaftaran Fotografer Baru - Photo Selection (${nama} - Akun Demo)`
-      : `Pendaftaran Fotografer Baru - Photo Selection (${nama})`;
+    const adminEmailSubject = `Pendaftaran Fotografer Baru - Photo Selection (${nama})`;
 
     const userEmailSubject = isDemo
       ? `Selamat Datang di Photo Selection - Akun Demo Aktif`
