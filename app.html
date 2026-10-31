@@ -10021,23 +10021,30 @@
                 return;
             }
             if (typeof isDemoAccount === 'function' && isDemoAccount()) {
-                // Mengambil jumlah project secara real-time dari tabel visual dashboard
-                var projectRows = document.querySelectorAll('#projectTableBody tr');
-                var projectCount = projectRows.length;
-
-                // Jika baris kosong (ada teks "Belum ada project"), set hitungan ke 0
-                if (projectRows.length === 1 && projectRows[0].innerText.includes('Belum ada project')) {
-                    projectCount = 0;
+                var lifetimeCreated = Number((currentUser && (currentUser.projectCreated || currentUser.ProjectCreated)) || 0);
+                var activeProjectsCount = 0;
+                if (window.lastProjectsData && Array.isArray(window.lastProjectsData)) {
+                    activeProjectsCount = window.lastProjectsData.length;
+                } else if (typeof rawStatusData !== 'undefined' && Array.isArray(rawStatusData)) {
+                    activeProjectsCount = rawStatusData.length;
+                } else {
+                    var tbody = document.getElementById('projectTableBody');
+                    if (tbody && !tbody.innerText.includes('Belum Ada Project') && !tbody.innerText.includes('Belum ada project')) {
+                        activeProjectsCount = tbody.children.length;
+                    }
                 }
 
-                if (projectCount >= 1) {
+                if (lifetimeCreated >= 1 || activeProjectsCount >= 1) {
+                    var isEn = (document.getElementById('langSelector') && document.getElementById('langSelector').value === 'en') || (localStorage.getItem('ps_lang') === 'en');
                     Swal.fire({
                         icon: 'warning',
-                        title: 'Batas Demo Tercapai 🔒',
-                        html: 'Akun paket Demo Anda hanya diberikan kesempatan membuat maksimal <b>1 Project</b>.<br><br>Upgrade akun Anda ke Premium sekarang untuk menikmati fitur tanpa batasan project!',
+                        title: isEn ? 'Demo Limit Reached 🔒' : 'Batas Demo Tercapai 🔒',
+                        html: isEn
+                            ? 'Your Demo account is only allowed to create <b>1 Project</b> in total.<br><br>Upgrade your account to create unlimited projects!'
+                            : 'Akun paket Demo Anda hanya diberikan kesempatan membuat maksimal <b>1 Project</b>.<br><br>Upgrade akun Anda ke Premium sekarang untuk menikmati fitur tanpa batasan project!',
                         showCancelButton: true,
                         confirmButtonText: '🚀 Upgrade Premium',
-                        cancelButtonText: 'Nanti Saja',
+                        cancelButtonText: isEn ? 'Later' : 'Nanti Saja',
                         confirmButtonColor: '#4f46e5',
                         cancelButtonColor: '#64748b',
                         customClass: { popup: 'rounded-2xl border border-gray-100 shadow-2xl' }
@@ -10210,6 +10217,41 @@
 
         async function handleCreateProject(e) {
             e.preventDefault();
+            if (typeof isAccountExpired === 'function' && isAccountExpired()) {
+                showExpiredAlert();
+                return;
+            }
+            if (typeof isDemoAccount === 'function' && isDemoAccount()) {
+                var lifetimeCreated = Number((currentUser && (currentUser.projectCreated || currentUser.ProjectCreated)) || 0);
+                var activeProjectsCount = 0;
+                if (window.lastProjectsData && Array.isArray(window.lastProjectsData)) {
+                    activeProjectsCount = window.lastProjectsData.length;
+                } else if (typeof rawStatusData !== 'undefined' && Array.isArray(rawStatusData)) {
+                    activeProjectsCount = rawStatusData.length;
+                }
+                if (lifetimeCreated >= 1 || activeProjectsCount >= 1) {
+                    closeModalCreate();
+                    var isEn = (document.getElementById('langSelector') && document.getElementById('langSelector').value === 'en') || (localStorage.getItem('ps_lang') === 'en');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: isEn ? 'Demo Limit Reached 🔒' : 'Batas Demo Tercapai 🔒',
+                        html: isEn
+                            ? 'Your Demo account is only allowed to create <b>1 Project</b> in total.<br><br>Upgrade your account to create unlimited projects!'
+                            : 'Akun paket Demo Anda hanya diberikan kesempatan membuat maksimal <b>1 Project</b>.<br><br>Upgrade akun Anda ke Premium sekarang untuk menikmati fitur tanpa batasan project!',
+                        showCancelButton: true,
+                        confirmButtonText: '🚀 Upgrade Premium',
+                        cancelButtonText: isEn ? 'Later' : 'Nanti Saja',
+                        confirmButtonColor: '#4f46e5',
+                        cancelButtonColor: '#64748b',
+                        customClass: { popup: 'rounded-2xl border border-gray-100 shadow-2xl' }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            showDemoSubscribeAlert();
+                        }
+                    });
+                    return;
+                }
+            }
             var pNama = document.getElementById('p_nama');
             var pDrive = document.getElementById('p_drive');
 
@@ -10313,12 +10355,42 @@
                 setButtonState('btnCreate', false, 'Generate Link');
 
                 if (res.status === 'success' && res.data && res.data.success) {
+                    if (currentUser) {
+                        var curProj = Number(currentUser.projectCreated || currentUser.ProjectCreated || 0);
+                        currentUser.projectCreated = curProj + 1;
+                        currentUser.ProjectCreated = curProj + 1;
+                        if (typeof persistCurrentUser === 'function') {
+                            persistCurrentUser();
+                        } else if (typeof localStorage !== 'undefined') {
+                            localStorage.setItem('ps_user', JSON.stringify(currentUser));
+                        }
+                    }
                     closeModalCreate();
                     Swal.fire({ icon: 'success', title: 'Berhasil Dibuat', timer: 1500, showConfirmButton: false });
                     loadDataProjects();
                 } else {
                     var errorMsg = (res.data ? res.data.message : null) || res.message || 'Gagal membuat project.';
                     var isEn = localStorage.getItem('ps_lang') === 'en';
+                    var isDemoLimitError = (response && response.status === 403) && (errorMsg && (errorMsg.includes('Demo') || errorMsg.includes('Batas') || errorMsg.includes('maksimal 1 Project')));
+                    if (isDemoLimitError) {
+                        closeModalCreate();
+                        Swal.fire({
+                            icon: 'warning',
+                            title: isEn ? 'Demo Limit Reached 🔒' : 'Batas Demo Tercapai 🔒',
+                            html: errorMsg,
+                            showCancelButton: true,
+                            confirmButtonText: '🚀 Upgrade Premium',
+                            cancelButtonText: isEn ? 'Later' : 'Nanti Saja',
+                            confirmButtonColor: '#4f46e5',
+                            cancelButtonColor: '#64748b',
+                            customClass: { popup: 'rounded-2xl border border-gray-100 shadow-2xl' }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                showDemoSubscribeAlert();
+                            }
+                        });
+                        return;
+                    }
                     var isSessionError = res.code === 'INVALID_SESSION' || res.code === 'SESSION_EXPIRED' || res.code === 'SESSION_REQUIRED' ||
                         response.status === 401 ||
                         (errorMsg && (errorMsg.includes('Sesi staf') || errorMsg.includes('Sesi berakhir') || errorMsg.includes('Sesi tidak valid') || errorMsg.includes('Sesi Anda')));
@@ -10591,6 +10663,15 @@
                             const res = await response.json();
                             endLoading();
                             if (res.status === 'success' && res.data && res.data.success) {
+                                if (currentUser && isDemoAccount()) {
+                                    currentUser.projectCreated = Math.max(Number(currentUser.projectCreated || currentUser.ProjectCreated || 0), 1);
+                                    currentUser.ProjectCreated = currentUser.projectCreated;
+                                    if (typeof persistCurrentUser === 'function') {
+                                        persistCurrentUser();
+                                    } else if (typeof localStorage !== 'undefined') {
+                                        localStorage.setItem('ps_user', JSON.stringify(currentUser));
+                                    }
+                                }
                                 Swal.fire({ icon: 'success', title: 'Dihapus', timer: 1500, showConfirmButton: false });
                                 loadDataProjects();
                             } else {

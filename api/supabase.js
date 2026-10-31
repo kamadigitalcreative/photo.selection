@@ -968,8 +968,23 @@ async function verifyUserSession(payload, req) {
     bankName: u.BankName || '',
     bankAccount: u.BankAccount || '',
     bankAccountName: u.BankAccountName || '',
+    projectCreated: Number(u.ProjectCreated) || 0,
+    ProjectCreated: Number(u.ProjectCreated) || 0,
     rawUser: u
   };
+}
+
+function isDemoUser(user) {
+  if (!user) return false;
+  const role = String(user.role || user.Role || '').trim().toLowerCase();
+  if (role === 'admin') return false;
+  if (role === 'demo') return true;
+  const username = String(user.username || user.Username || '').trim().toLowerCase();
+  if (username === 'demo' || username === 'demo_user') return true;
+  const status = String(user.status || user.Status || '').trim().toUpperCase();
+  if (status === 'DEMO') return true;
+  const paket = String(user.paket || user.Paket || '').trim().toUpperCase();
+  return paket.includes('DEMO') || paket === 'FREE' || paket === 'FREE PLAN' || paket === '-';
 }
 
 function requireAdmin(authUser) {
@@ -1854,6 +1869,8 @@ module.exports.OFFICIAL_SYSTEM_UPDATES = OFFICIAL_SYSTEM_UPDATES;
 module.exports.handleGetSystemUpdates = handleGetSystemUpdates;
 module.exports.handleGetAllNotifications = handleGetAllNotifications;
 module.exports.handleSyncSystemUpdates = handleSyncSystemUpdates;
+module.exports.isDemoUser = isDemoUser;
+module.exports.handleCreateProject = handleCreateProject;
 
 // =========================================================================
 // CONTROLLERS
@@ -1921,6 +1938,22 @@ async function handleLogin(payload, res) {
   const rawPaket = u.Paket || '';
   const isPro = proStatus.isPro;
 
+  let projCreatedCount = Number(u.ProjectCreated) || 0;
+  if (isDemoUser(u) && projCreatedCount === 0) {
+    try {
+      const existingProjects = await supabaseQuery(`projects?Owner=ilike.${encodeURIComponent(uName)}&select=id`);
+      if (existingProjects && existingProjects.length > 0) {
+        projCreatedCount = existingProjects.length;
+        await supabaseQuery(`users?Username=ilike.${encodeURIComponent(uName)}`, {
+          method: 'PATCH',
+          body: { ProjectCreated: String(projCreatedCount) }
+        }).catch(() => {});
+      }
+    } catch (e) {
+      console.error('Error auto-syncing ProjectCreated during login:', e);
+    }
+  }
+
   const userData = {
     success: true,
     username: uName,
@@ -1938,6 +1971,8 @@ async function handleLogin(payload, res) {
     nohp: u['No HP'] || '',
     paket: rawPaket || '1 Bulan',
     expiredAt: u.ExpiredAt || 'Lifetime',
+    projectCreated: projCreatedCount,
+    ProjectCreated: projCreatedCount,
     isPremiumAddon: isPro,
     isProLifetime: proStatus.isLifetime,
     proExpiredAt: proStatus.expiresAt ? proStatus.expiresAt.substring(0, 10) : (proStatus.isLifetime ? 'Lifetime' : null),
@@ -2396,6 +2431,35 @@ async function handleCreateProject(payload, res) {
     return error(res, 'Sesi tidak valid atau telah berakhir. Silakan login kembali.', 401);
   }
 
+  const isDemo = isDemoUser(authUser) || isDemoUser(authUser.rawUser);
+  let dbUser = authUser.rawUser || null;
+  if (isDemo || !dbUser) {
+    try {
+      const userRows = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(username)}&select=*&limit=1`);
+      if (userRows && userRows.length > 0) {
+        dbUser = userRows[0];
+      }
+    } catch (e) {
+      console.error('Error fetching db user for project creation:', e);
+    }
+  }
+
+  const effectiveUser = dbUser || authUser;
+  if (isDemoUser(effectiveUser)) {
+    const lifetimeCount = Number(effectiveUser.ProjectCreated || 0);
+    let activeProjectsCount = 0;
+    try {
+      const existing = await supabaseQuery(`projects?Owner=ilike.${encodeURIComponent(username)}&select=id&limit=2`);
+      activeProjectsCount = Array.isArray(existing) ? existing.length : 0;
+    } catch (e) {
+      console.error('Error checking existing projects for demo limit:', e);
+    }
+
+    if (lifetimeCount >= 1 || activeProjectsCount >= 1) {
+      return error(res, 'Akun paket Demo Anda hanya diberikan kesempatan membuat maksimal 1 Project. Silakan upgrade ke paket berbayar untuk membuat project tanpa batasan.', 403);
+    }
+  }
+
   const clientName = cleanPlainString(d.namaClient || d.nama || d['Nama Client'] || '', false);
   if (!clientName) return error(res, 'Nama client wajib diisi.');
   if (clientName.length > 150) return error(res, 'Nama client maksimal 150 karakter.');
@@ -2551,6 +2615,17 @@ async function handleCreateProject(payload, res) {
   };
 
   await supabaseQuery('projects', { method: 'POST', body: newProject });
+
+  try {
+    const curCount = Number((effectiveUser && effectiveUser.ProjectCreated) || 0);
+    const nextCount = Math.max(curCount + 1, 1);
+    await supabaseQuery(`users?Username=ilike.${encodeURIComponent(username)}`, {
+      method: 'PATCH',
+      body: { ProjectCreated: String(nextCount) }
+    });
+  } catch (patchErr) {
+    console.error('Failed to update ProjectCreated lifetime counter:', patchErr);
+  }
 
   return success(res, {
     success: true,
@@ -3331,6 +3406,24 @@ async function handleDeleteProject(payload, res) {
   const idOrToken = (payload.id || payload.token || payload.projectId || '').trim();
   const project = await requireProjectAccess(payload.authUser, idOrToken, res);
   if (!project) return;
+
+  const owner = (project.Owner || (payload.authUser && payload.authUser.username) || '').trim();
+  if (owner) {
+    try {
+      const ownerRows = await supabaseQuery(`users?Username=ilike.${encodeURIComponent(owner)}&select=Username,ProjectCreated&limit=1`);
+      if (ownerRows && ownerRows.length > 0) {
+        const curCount = Number(ownerRows[0].ProjectCreated || 0);
+        if (curCount < 1) {
+          await supabaseQuery(`users?Username=ilike.${encodeURIComponent(owner)}`, {
+            method: 'PATCH',
+            body: { ProjectCreated: '1' }
+          });
+        }
+      }
+    } catch (e) {
+      console.error('Error ensuring ProjectCreated on deleteProject:', e);
+    }
+  }
 
   const filter = getProjectMutationFilter(project);
   await supabaseQuery(`projects?${filter}`, { method: 'DELETE' });
@@ -4978,6 +5071,15 @@ async function handleSyncBackground(payload, res) {
   }
   const isPro = proStatus.isPro;
 
+  let projCreatedCount = u ? (Number(u.ProjectCreated) || 0) : 0;
+  if (u && isDemoUser(u) && projCreatedCount === 0 && projectsRows && projectsRows.length > 0) {
+    projCreatedCount = projectsRows.length;
+    supabaseQuery(`users?Username=ilike.${encodeURIComponent(u.Username)}`, {
+      method: 'PATCH',
+      body: { ProjectCreated: String(projCreatedCount) }
+    }).catch(() => {});
+  }
+
   const userData = u ? {
     success: true,
     username: u.Username,
@@ -4994,6 +5096,8 @@ async function handleSyncBackground(payload, res) {
     nohp: u['No HP'] || '',
     paket: rawPaket || '1 Bulan',
     expiredAt: u.ExpiredAt || 'Lifetime',
+    projectCreated: projCreatedCount,
+    ProjectCreated: projCreatedCount,
     isPremiumAddon: isPro,
     isProLifetime: proStatus.isLifetime,
     proExpiredAt: proStatus.expiresAt ? proStatus.expiresAt.substring(0, 10) : (proStatus.isLifetime ? 'Lifetime' : null),
