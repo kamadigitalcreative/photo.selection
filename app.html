@@ -4597,7 +4597,7 @@
                 </p>
 
                 <div class="space-y-4">
-                    <button onclick="selectClientMode('selection')"
+                    <button id="btn-mode-selection" onclick="selectClientMode('selection')"
                         class="w-full bg-primary-50 hover:bg-primary-100 border border-primary-200 text-primary-700 p-4 rounded-2xl transition-all flex items-center gap-4 group cursor-pointer shadow-sm">
                         <div
                             class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-primary-600 group-hover:scale-110 transition-transform shrink-0">
@@ -4609,7 +4609,7 @@
                         </div>
                     </button>
 
-                    <button onclick="selectClientMode('download')"
+                    <button id="btn-mode-download" onclick="selectClientMode('download')"
                         class="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 p-4 rounded-2xl transition-all flex items-center gap-4 group cursor-pointer shadow-sm">
                         <div
                             class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-slate-600 group-hover:scale-110 transition-transform shrink-0">
@@ -11728,11 +11728,25 @@
                 if (window.deadlineInterval) clearInterval(window.deadlineInterval);
             }
 
-            var btnDownload = document.querySelector('#client-mode-view button[onclick="selectClientMode(\'download\')"]');
+            var btnPilih = document.getElementById('btn-mode-selection') || document.querySelector('#client-mode-view button[onclick*="selection"]');
+            var btnDownload = document.getElementById('btn-mode-download') || document.querySelector('#client-mode-view button[onclick*="download"]');
+            if (!clientState.isPilihActive) {
+                if (btnPilih) btnPilih.classList.add('hidden');
+            } else {
+                if (btnPilih) btnPilih.classList.remove('hidden');
+            }
             if (!clientState.isDownloadActive) {
                 if (btnDownload) btnDownload.classList.add('hidden');
             } else {
                 if (btnDownload) btnDownload.classList.remove('hidden');
+            }
+            var switchModeBtn = document.getElementById('btn-client-switch-mode');
+            if (switchModeBtn) {
+                if (!clientState.isPilihActive || !clientState.isDownloadActive) {
+                    switchModeBtn.classList.add('hidden');
+                } else {
+                    switchModeBtn.classList.remove('hidden');
+                }
             }
 
             var gMax = document.getElementById('gallery-max');
@@ -16592,6 +16606,14 @@
             endLoading();
             clientState.currentFolderId = extractDriveFolderId(clientState.driveLink) || clientState.driveLink;
             clientState.currentFolderName = clientState.namaClient;
+            if (clientState.isPilihActive === false && clientState.isDownloadActive === true) {
+                selectClientMode('download');
+                return;
+            }
+            if (clientState.isDownloadActive === false && clientState.isPilihActive === true) {
+                selectClientMode('selection');
+                return;
+            }
             showView('client-mode-view');
             if (clientState.currentFolderId && clientState.token) {
                 prefetchRootGalleryContent(clientState.currentFolderId, clientState.currentFolderName);
@@ -16608,6 +16630,15 @@
                 (clientState && (clientState.statusClient === 'Selesai' || clientState.statusClient === 'Menunggu Konfirmasi Pembayaran'));
 
             var isEn = localStorage.getItem('ps_lang') === 'en';
+            if (mode === 'selection' && clientState && clientState.isPilihActive === false) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: isEn ? 'Selection Disabled' : 'Akses Pilih Ditutup',
+                    text: isEn ? 'Photo selection has not been enabled for this gallery.' : 'Fitur pemilihan foto dinonaktifkan oleh fotografer.',
+                    confirmButtonColor: '#1e1e2d'
+                });
+                return;
+            }
             if (mode === 'download' && clientState && clientState.isDownloadActive === false) {
                 Swal.fire({
                     icon: 'warning',
@@ -16681,7 +16712,7 @@
                     var exists = clientState.downloadImages.some(function (sel) { return sel.name === imgData.name && sel.folder === clientState.currentFolderName; });
                     if (!exists) {
                         var origUrl = imgData.originalUrl || imgData.originalDownloadUrl || imgData.url;
-                        clientState.downloadImages.push({ name: imgData.name, folder: clientState.currentFolderName, url: origUrl, previewUrl: imgData.previewUrl || imgData.url });
+                        clientState.downloadImages.push({ id: imgData.id || '', name: imgData.name, folder: clientState.currentFolderName, url: origUrl, originalUrl: origUrl, previewUrl: imgData.previewUrl || imgData.url });
                     }
                 });
             } else {
@@ -17489,18 +17520,25 @@
             }
             // contentType.includes('text/html')
 
-            // Simpan berkas biner asli ke perangkat pengguna tanpa rekoneksi canvas atau recompression
-            if (typeof saveAs === 'function') {
-                saveAs(blob, cleanName);
-            } else {
+            // Simpan berkas biner asli ke perangkat pengguna secara universal (Desktop & Mobile iOS/Android)
+            try {
                 const blobUrl = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = blobUrl;
                 a.download = cleanName;
+                a.target = '_blank';
                 document.body.appendChild(a);
                 a.click();
-                document.body.removeChild(a);
-                setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 3000);
+                setTimeout(function () {
+                    try { document.body.removeChild(a); } catch (_) { }
+                    URL.revokeObjectURL(blobUrl);
+                }, 10000);
+            } catch (err) {
+                if (typeof saveAs === 'function') {
+                    saveAs(blob, cleanName);
+                } else {
+                    throw err;
+                }
             }
 
             return {
@@ -17679,7 +17717,7 @@
                         }
 
                         // Task B: Never package preview or missing originals
-                        var targetUrl = img.originalUrl || img.originalDownloadUrl;
+                        var targetUrl = img.originalUrl || img.originalDownloadUrl || img.url;
                         if (!targetUrl || img.isOriginalAvailable === false) {
                             if (img.url && !img.url.includes('=w') && !img.url.includes('/thumb/') && (img.url.startsWith('data:image/') || img.url.startsWith('/test/phase55-fixtures/'))) {
                                 targetUrl = img.url;
@@ -17779,17 +17817,24 @@
                 var zipBlob = await zip.generateAsync({ type: "blob", compression: "STORE" });
                 var zipName = generateClientZipFilename(clientState);
 
-                if (typeof saveAs === 'function') {
-                    saveAs(zipBlob, zipName);
-                } else {
+                try {
                     const blobUrl = URL.createObjectURL(zipBlob);
                     const a = document.createElement('a');
                     a.href = blobUrl;
                     a.download = zipName;
+                    a.target = '_blank';
                     document.body.appendChild(a);
                     a.click();
-                    document.body.removeChild(a);
-                    setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 5000);
+                    setTimeout(function () {
+                        try { document.body.removeChild(a); } catch (_) { }
+                        URL.revokeObjectURL(blobUrl);
+                    }, 10000);
+                } catch (saveZipErr) {
+                    if (typeof saveAs === 'function') {
+                        saveAs(zipBlob, zipName);
+                    } else {
+                        throw saveZipErr;
+                    }
                 }
 
                 Swal.fire({
