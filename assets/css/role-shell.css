@@ -3148,3 +3148,382 @@ html:not(.dark) #modalCreate input::placeholder {
     color: #82796c !important;
     opacity: 1 !important;
 }
+
+/* ==========================================================================
+   11. NOTIFICATION MODAL (#modalNotification) THEME ADAPTABILITY & HIGH CONTRAST
+   ========================================================================== */
+
+/* Base Modal Shell & Dialog Surface */
+#modalNotification {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+#modalNotifContent {
+    background-color: var(--panel, #17181b) !important;
+    border: 1px solid var(--stroke, rgba(223, 186, 123, 0.22)) !important;
+    color: var(--text, #f4f0e9) !important;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Modal Header */
+#modalNotifContent > div:first-child {
+    background-color: var(--panel, #17181b) !important;
+    border-bottom: 1px solid var(--stroke, rgba(239, 215, 174, 0.12)) !important;
+    color: var(--text, #f4f0e9) !important;
+}
+
+#modalNotifContent h3 {
+    font-family: var(--font-serif, 'Playfair Display', Georgia, serif) !important;
+    color: var(--text, #f4f0e9) !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.01em !important;
+}
+
+#modalNotifContent h3 i.fa-bell {
+    color: var(--gold, #dfba7b) !important;
+}
+
+#modalNotifContent button[onclick*="closeModalNotification"] {
+    background-color: var(--panel2, #212226) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.15)) !important;
+    color: var(--muted2, #c9c4bc) !important;
+    transition: all 0.2s ease !important;
+}
+
+#modalNotifContent button[onclick*="closeModalNotification"]:hover {
+    color: var(--state-danger, #ee7979) !important;
+    border-color: rgba(238, 121, 121, 0.4) !important;
+    background-color: rgba(238, 121, 121, 0.1) !important;
+}
+
+/* Tabs Navigation Bar */
+#modalNotifContent > div.flex.px-5.pt-3 {
+    background-color: var(--panel, #17181b) !important;
+    border-bottom: 1px solid var(--stroke, rgba(239, 215, 174, 0.12)) !important;
+}
+
+#modalNotifContent #ntab-all,
+#modalNotifContent #ntab-system,
+#modalNotifContent #ntab-feedback {
+    color: var(--muted, #a8a39c) !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.02em !important;
+    transition: all 0.2s ease !important;
+}
+
+#modalNotifContent #ntab-all:hover,
+#modalNotifContent #ntab-system:hover,
+#modalNotifContent #ntab-feedback:hover {
+    color: var(--text, #f4f0e9) !important;
+}
+
+#modalNotifContent .text-blue-600.border-blue-600,
+#modalNotifContent [id^="ntab-"].text-blue-600 {
+    color: var(--gold, #dfba7b) !important;
+    border-bottom-color: var(--gold, #dfba7b) !important;
+}
+
+/* Notification Container Canvas */
+#notif-container {
+    background-color: var(--bg, #0e0f10) !important;
+}
+
+/* System Notification Cards */
+#notif-container > div,
+#notif-container [class*="bg-blue-50"] {
+    background: var(--panel, #17181b) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.15)) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+    transition: transform 0.2s ease, border-color 0.2s ease !important;
+}
+
+#notif-container > div:hover,
+#notif-container [class*="bg-blue-50"]:hover {
+    border-color: var(--gold, #dfba7b) !important;
+}
+
+/* Rocket / Feature Icon Box */
+#notif-container .w-8.h-8.rounded-full {
+    background: rgba(223, 186, 123, 0.15) !important;
+    color: var(--gold, #dfba7b) !important;
+    border: 1px solid rgba(223, 186, 123, 0.3) !important;
+}
+
+/* Notification Card Title */
+#notif-container h4 {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    font-size: 14px !important;
+    letter-spacing: -0.01em !important;
+}
+
+/* Version / Category Badge */
+#notif-container span.bg-blue-600 {
+    background: linear-gradient(135deg, var(--gold, #dfba7b), #b99352) !important;
+    color: var(--goldtxt, #191511) !important;
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    border-radius: 5px !important;
+    padding: 2px 7px !important;
+    letter-spacing: 0.05em !important;
+}
+
+/* Notification Body Description — High Contrast Fix */
+#notif-container p.text-gray-500,
+#notif-container p {
+    color: #e2e8f0 !important;
+    font-size: 12.5px !important;
+    line-height: 1.55 !important;
+    font-weight: 450 !important;
+}
+
+/* Date Stamp */
+#notif-container span.text-gray-400,
+#notif-container span.uppercase {
+    color: var(--gold, #dfba7b) !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.12em !important;
+    opacity: 0.9 !important;
+}
+
+/* Feedback / Message Cards */
+#notif-container [onclick*="switchAdminTab"] {
+    background: var(--panel, #17181b) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.15)) !important;
+}
+
+#notif-container [onclick*="switchAdminTab"]:hover {
+    border-color: var(--gold, #dfba7b) !important;
+    transform: translateY(-1px) !important;
+}
+
+#notif-container [onclick*="switchAdminTab"] .w-8.h-8 {
+    background: var(--panel2, #212226) !important;
+    color: var(--gold, #dfba7b) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.15)) !important;
+}
+
+/* Unread Message Card Accent */
+#notif-container .bg-blue-50\\/80,
+#notif-container .border-blue-200 {
+    background: linear-gradient(135deg, var(--panel, #17181b), rgba(223, 186, 123, 0.08)) !important;
+    border-color: rgba(223, 186, 123, 0.4) !important;
+}
+
+/* Empty State / Loading State */
+#notif-container .text-center.py-6,
+#notif-container .text-center.py-8 {
+    background-color: var(--panel, #17181b) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.12)) !important;
+    color: var(--muted2, #c9c4bc) !important;
+}
+
+/* ==========================================================================
+   ADAPTIVE OVERRIDES: MIDNIGHT SAPPHIRE
+   ========================================================================== */
+
+[data-theme="sapphire"] #modalNotifContent h3 i.fa-bell {
+    color: #abc7fa !important;
+}
+
+[data-theme="sapphire"] #modalNotifContent .text-blue-600.border-blue-600,
+[data-theme="sapphire"] #modalNotifContent [id^="ntab-"].text-blue-600 {
+    color: #abc7fa !important;
+    border-bottom-color: #abc7fa !important;
+}
+
+[data-theme="sapphire"] #notif-container .w-8.h-8.rounded-full {
+    background: rgba(96, 165, 250, 0.18) !important;
+    color: #93c5fd !important;
+    border: 1px solid rgba(96, 165, 250, 0.35) !important;
+}
+
+[data-theme="sapphire"] #notif-container span.bg-blue-600 {
+    background: #2563eb !important;
+    color: #ffffff !important;
+}
+
+[data-theme="sapphire"] #notif-container span.text-gray-400,
+[data-theme="sapphire"] #notif-container span.uppercase {
+    color: #93c5fd !important;
+}
+
+/* ==========================================================================
+   ADAPTIVE OVERRIDES: ATELIER IVORY & OLIVE HERITAGE (LIGHT THEMES)
+   ========================================================================== */
+
+[data-theme="ivory"] #modalNotifContent,
+[data-theme="olive"] #modalNotifContent,
+html.theme-ivory #modalNotifContent,
+html.theme-olive #modalNotifContent,
+html:not(.dark) #modalNotifContent {
+    background-color: var(--panel, #fffdf9) !important;
+    border-color: var(--stroke, rgba(65, 45, 21, 0.18)) !important;
+    color: var(--text, #27231e) !important;
+    box-shadow: 0 20px 50px rgba(67, 50, 26, 0.12) !important;
+}
+
+[data-theme="ivory"] #modalNotifContent > div:first-child,
+[data-theme="olive"] #modalNotifContent > div:first-child,
+html.theme-ivory #modalNotifContent > div:first-child,
+html.theme-olive #modalNotifContent > div:first-child,
+html:not(.dark) #modalNotifContent > div:first-child {
+    background-color: var(--panel, #fffdf9) !important;
+    border-bottom-color: var(--stroke, rgba(65, 45, 21, 0.12)) !important;
+    color: var(--text, #27231e) !important;
+}
+
+[data-theme="ivory"] #modalNotifContent h3,
+[data-theme="olive"] #modalNotifContent h3,
+html:not(.dark) #modalNotifContent h3 {
+    color: var(--text, #27231e) !important;
+}
+
+[data-theme="ivory"] #modalNotifContent h3 i.fa-bell {
+    color: #947049 !important;
+}
+
+[data-theme="olive"] #modalNotifContent h3 i.fa-bell {
+    color: #4e6b53 !important;
+}
+
+[data-theme="ivory"] #modalNotifContent button[onclick*="closeModalNotification"],
+[data-theme="olive"] #modalNotifContent button[onclick*="closeModalNotification"],
+html:not(.dark) #modalNotifContent button[onclick*="closeModalNotification"] {
+    background-color: var(--panel2, #f6f0e7) !important;
+    border-color: var(--stroke, rgba(65, 45, 21, 0.15)) !important;
+    color: var(--text, #27231e) !important;
+}
+
+[data-theme="ivory"] #modalNotifContent > div.flex.px-5.pt-3,
+[data-theme="olive"] #modalNotifContent > div.flex.px-5.pt-3,
+html:not(.dark) #modalNotifContent > div.flex.px-5.pt-3 {
+    background-color: var(--panel, #fffdf9) !important;
+    border-bottom-color: var(--stroke, rgba(65, 45, 21, 0.12)) !important;
+}
+
+[data-theme="ivory"] #modalNotifContent #ntab-all,
+[data-theme="ivory"] #modalNotifContent #ntab-system,
+[data-theme="ivory"] #modalNotifContent #ntab-feedback {
+    color: #82796c !important;
+}
+
+[data-theme="olive"] #modalNotifContent #ntab-all,
+[data-theme="olive"] #modalNotifContent #ntab-system,
+[data-theme="olive"] #modalNotifContent #ntab-feedback {
+    color: #738276 !important;
+}
+
+[data-theme="ivory"] #modalNotifContent .text-blue-600.border-blue-600,
+[data-theme="ivory"] #modalNotifContent [id^="ntab-"].text-blue-600,
+html:not(.dark) #modalNotifContent .text-blue-600.border-blue-600 {
+    color: #947049 !important;
+    border-bottom-color: #947049 !important;
+}
+
+[data-theme="olive"] #modalNotifContent .text-blue-600.border-blue-600,
+[data-theme="olive"] #modalNotifContent [id^="ntab-"].text-blue-600 {
+    color: #4e6b53 !important;
+    border-bottom-color: #4e6b53 !important;
+}
+
+/* Light Theme Container Canvas */
+[data-theme="ivory"] #notif-container,
+[data-theme="olive"] #notif-container,
+html:not(.dark) #notif-container {
+    background-color: var(--bg, #f5f1e9) !important;
+}
+
+/* Light Theme Notification Cards */
+[data-theme="ivory"] #notif-container > div,
+[data-theme="ivory"] #notif-container [class*="bg-blue-50"],
+[data-theme="olive"] #notif-container > div,
+[data-theme="olive"] #notif-container [class*="bg-blue-50"],
+html:not(.dark) #notif-container > div,
+html:not(.dark) #notif-container [class*="bg-blue-50"] {
+    background: #ffffff !important;
+    border: 1px solid var(--stroke, rgba(65, 45, 21, 0.15)) !important;
+    box-shadow: 0 2px 8px rgba(67, 50, 26, 0.06) !important;
+}
+
+[data-theme="ivory"] #notif-container h4,
+[data-theme="olive"] #notif-container h4,
+html:not(.dark) #notif-container h4 {
+    color: #1a1714 !important;
+    font-weight: 800 !important;
+}
+
+[data-theme="ivory"] #notif-container p.text-gray-500,
+[data-theme="ivory"] #notif-container p,
+html:not(.dark) #notif-container p.text-gray-500,
+html:not(.dark) #notif-container p {
+    color: #4a3e31 !important;
+    font-weight: 500 !important;
+}
+
+[data-theme="olive"] #notif-container p.text-gray-500,
+[data-theme="olive"] #notif-container p {
+    color: #2e3d32 !important;
+    font-weight: 500 !important;
+}
+
+[data-theme="ivory"] #notif-container .w-8.h-8.rounded-full,
+html:not(.dark) #notif-container .w-8.h-8.rounded-full {
+    background: rgba(148, 112, 73, 0.12) !important;
+    color: #947049 !important;
+    border: 1px solid rgba(148, 112, 73, 0.25) !important;
+}
+
+[data-theme="olive"] #notif-container .w-8.h-8.rounded-full {
+    background: rgba(78, 107, 83, 0.12) !important;
+    color: #4e6b53 !important;
+    border: 1px solid rgba(78, 107, 83, 0.25) !important;
+}
+
+[data-theme="ivory"] #notif-container span.bg-blue-600,
+html:not(.dark) #notif-container span.bg-blue-600 {
+    background: #947049 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="olive"] #notif-container span.bg-blue-600 {
+    background: #4e6b53 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="ivory"] #notif-container span.text-gray-400,
+[data-theme="ivory"] #notif-container span.uppercase,
+html:not(.dark) #notif-container span.text-gray-400,
+html:not(.dark) #notif-container span.uppercase {
+    color: #8c765c !important;
+    font-weight: 700 !important;
+}
+
+[data-theme="olive"] #notif-container span.text-gray-400,
+[data-theme="olive"] #notif-container span.uppercase {
+    color: #5c7061 !important;
+    font-weight: 700 !important;
+}
+
+[data-theme="ivory"] #notif-container [onclick*="switchAdminTab"],
+[data-theme="olive"] #notif-container [onclick*="switchAdminTab"],
+html:not(.dark) #notif-container [onclick*="switchAdminTab"] {
+    background: #ffffff !important;
+    border: 1px solid var(--stroke, rgba(65, 45, 21, 0.15)) !important;
+}
+
+[data-theme="ivory"] #notif-container .text-center.py-6,
+[data-theme="ivory"] #notif-container .text-center.py-8,
+[data-theme="olive"] #notif-container .text-center.py-6,
+[data-theme="olive"] #notif-container .text-center.py-8,
+html:not(.dark) #notif-container .text-center.py-6,
+html:not(.dark) #notif-container .text-center.py-8 {
+    background-color: #ffffff !important;
+    border: 1px solid var(--stroke, rgba(65, 45, 21, 0.12)) !important;
+    color: var(--muted, #82796c) !important;
+}
