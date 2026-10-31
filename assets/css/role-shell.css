@@ -2479,3 +2479,672 @@ html[data-theme="olive"] #section-premium-addon .grid>div h3 {
 html[data-theme="olive"] #section-premium-addon p {
     color: #4e6454 !important;
 }
+
+/* ==========================================================================
+   10. CREATE PROJECT WIZARD MODAL (#modalCreate) THEME ADAPTABILITY & CONTRAST
+   ========================================================================== */
+
+/* Base Modal Shell & Dialog Surface */
+#modalCreate {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+#modalCreateContent {
+    background-color: var(--panel, #17181b) !important;
+    border: 1px solid var(--stroke, rgba(223, 186, 123, 0.22)) !important;
+    color: var(--text, #f4f0e9) !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Modal Header & Navigation */
+#modalCreateContent > div:first-child,
+#modalCreate .sm\\:rounded-t-2xl {
+    background-color: var(--panel, #17181b) !important;
+    border-bottom: 1px solid var(--stroke, rgba(239, 215, 174, 0.12)) !important;
+    color: var(--text, #f4f0e9) !important;
+}
+
+#modalCreate #lbl-create-title {
+    color: var(--text, #f4f0e9) !important;
+}
+
+#modalCreate #wizard-step-indicator {
+    color: var(--muted, #a8a39c) !important;
+}
+
+#modalCreate #btn-batal-create {
+    background-color: var(--panel2, #212226) !important;
+    border-color: var(--stroke, rgba(239, 215, 174, 0.15)) !important;
+    color: var(--muted2, #c9c4bc) !important;
+}
+
+#modalCreate #btn-batal-create:hover {
+    color: var(--state-danger, #ee7979) !important;
+    border-color: rgba(238, 121, 121, 0.4) !important;
+    background-color: rgba(238, 121, 121, 0.1) !important;
+}
+
+/* Stepper Navigation Tabs */
+#modalCreate .wizard-nav-item {
+    border-color: var(--stroke, rgba(239, 215, 174, 0.12)) !important;
+}
+
+#modalCreate .wizard-nav-item.border-primary-600,
+#modalCreate .wizard-nav-item .text-primary-700 {
+    border-color: var(--gold, #dfba7b) !important;
+    color: var(--gold, #dfba7b) !important;
+}
+
+#modalCreate .wizard-nav-item.border-green-500,
+#modalCreate .wizard-nav-item .text-green-600 {
+    border-color: var(--state-success, #49be88) !important;
+    color: var(--state-success, #49be88) !important;
+}
+
+#modalCreate .wizard-nav-item .text-gray-400 {
+    color: var(--muted, #a8a39c) !important;
+}
+
+/* Wizard Body Wrapper & Step Cards */
+#modalCreate .overflow-y-auto {
+    background-color: var(--bg, #0e0f10) !important;
+}
+
+#modalCreate .wizard-step > .bg-white {
+    background-color: var(--panel, #17181b) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.12)) !important;
+    color: var(--text, #f4f0e9) !important;
+}
+
+#modalCreate .wizard-step h4 {
+    color: var(--text, #f4f0e9) !important;
+}
+
+#modalCreate .wizard-step p {
+    color: var(--muted2, #c9c4bc) !important;
+}
+
+/* Step 1: Info Dasar Labels & Text */
+#modalCreate #tx-info-dasar {
+    color: var(--text, #f4f0e9) !important;
+}
+
+#modalCreate #lbl-p-name,
+#modalCreate #lbl-p-wa,
+#modalCreate #lbl-p-drive,
+#modalCreate #lbl-p-layout-select,
+#modalCreate #lbl-p-pass,
+#modalCreate #lbl-p-music,
+#modalCreate #tx-p-menu,
+#modalCreate #tx-p-masa {
+    color: var(--muted2, #c9c4bc) !important;
+}
+
+#modalCreate #tx-gdrive-desc {
+    color: var(--muted, #a8a39c) !important;
+}
+
+/* Step 2: Tampilan & BGM Music Box (Image 1 Fix) */
+#modalCreate #wrapper-card-bgm,
+#modalCreate [class*="bg-purple-50/30"],
+#modalCreate div.grid.grid-cols-1.sm\\:grid-cols-2.gap-4.items-center {
+    background: rgba(168, 85, 247, 0.08) !important;
+    border: 1px solid rgba(168, 85, 247, 0.28) !important;
+    border-radius: 12px !important;
+}
+
+#modalCreate #tx-p-music-up,
+#modalCreate #tx-p-music-link {
+    color: #e9d5ff !important;
+    font-weight: 700 !important;
+}
+
+#modalCreate #p_music_file {
+    background: var(--panel2, #212226) !important;
+    border: 1px solid rgba(168, 85, 247, 0.3) !important;
+    color: var(--muted2, #c9c4bc) !important;
+}
+
+#modalCreate #p_music_file::file-selector-button {
+    background: rgba(168, 85, 247, 0.22) !important;
+    color: #f3e8ff !important;
+    border: 1px solid rgba(168, 85, 247, 0.4) !important;
+}
+
+#modalCreate #p_music_url {
+    background: var(--panel2, #212226) !important;
+    border: 1px solid rgba(168, 85, 247, 0.3) !important;
+    color: var(--text, #f4f0e9) !important;
+}
+
+/* Step 3: Atur Kuota, Biaya & Waktu (Image 2 Fix) */
+#modalCreate #tx-p-kuota {
+    color: var(--text, #f4f0e9) !important;
+}
+
+/* Card 1: Batas Maksimal Foto */
+#modalCreate #wrapper-card-max,
+#modalCreate [class*="bg-yellow-50"] {
+    background: rgba(234, 179, 8, 0.08) !important;
+    border: 1px solid rgba(234, 179, 8, 0.3) !important;
+}
+
+#modalCreate #lbl-p-max {
+    color: #fde047 !important;
+    font-weight: 800 !important;
+}
+
+#modalCreate #p_max {
+    background: var(--panel2, #212226) !important;
+    border: 1px solid rgba(234, 179, 8, 0.35) !important;
+    color: #ffffff !important;
+}
+
+#modalCreate #wrapper-card-max .bg-white,
+#modalCreate [class*="bg-yellow-50"] .bg-white {
+    background: var(--panel, #17181b) !important;
+    border: 1px solid rgba(234, 179, 8, 0.25) !important;
+}
+
+#modalCreate .id-text-unlimit {
+    color: #fef08a !important;
+    font-weight: 700 !important;
+}
+
+/* Card 2: Biaya Ekstra per Foto */
+#modalCreate #wrapper-card-extra,
+#modalCreate [class*="bg-green-50"] {
+    background: rgba(34, 197, 94, 0.08) !important;
+    border: 1px solid rgba(34, 197, 94, 0.3) !important;
+}
+
+#modalCreate #lbl-p-extra {
+    color: #4ade80 !important;
+    font-weight: 800 !important;
+}
+
+#modalCreate #p_extra_price {
+    background: var(--panel2, #212226) !important;
+    border: 1px solid rgba(34, 197, 94, 0.35) !important;
+    color: #ffffff !important;
+}
+
+#modalCreate #tx-p-extra-desc {
+    color: #bbf7d0 !important;
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+    font-weight: 500 !important;
+}
+
+/* Card 3: Batas Waktu Klien */
+#modalCreate #wrapper-card-deadline,
+#modalCreate [class*="bg-red-50"] {
+    background: rgba(239, 68, 68, 0.08) !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+#modalCreate #lbl-p-deadline {
+    color: #f87171 !important;
+    font-weight: 800 !important;
+}
+
+#modalCreate #p_deadline {
+    background: var(--panel2, #212226) !important;
+    border: 1px solid rgba(239, 68, 68, 0.35) !important;
+    color: #ffffff !important;
+}
+
+#modalCreate #tx-p-deadline-desc {
+    color: #fecaca !important;
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+    font-weight: 500 !important;
+}
+
+/* Step 4: Kontrol Akses & Fitur Tambahan (Image 3 Fix) */
+#modalCreate #tx-p-kontrol {
+    color: var(--text, #f4f0e9) !important;
+}
+
+/* Switch Menu Items */
+#modalCreate #tx-p-pilih,
+#modalCreate #tx-p-down {
+    color: var(--text, #f4f0e9) !important;
+    font-weight: 700 !important;
+}
+
+#modalCreate #tx-p-pilih-desc,
+#modalCreate #tx-p-down-desc {
+    color: var(--muted2, #c9c4bc) !important;
+}
+
+/* Durasi Akses */
+#modalCreate #tx-p-masa-pilih,
+#modalCreate #tx-p-masa-down {
+    color: var(--muted2, #c9c4bc) !important;
+    font-weight: 600 !important;
+}
+
+/* Watermark Card */
+#modalCreate #wrapper-watermark,
+#modalCreate [onclick*="p_watermark"],
+#modalCreate [class*="bg-blue-50"] {
+    background: rgba(59, 130, 246, 0.1) !important;
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+}
+
+#modalCreate #wrapper-watermark:hover,
+#modalCreate [onclick*="p_watermark"]:hover,
+#modalCreate [class*="bg-blue-50"]:hover {
+    background: rgba(59, 130, 246, 0.15) !important;
+    border-color: rgba(59, 130, 246, 0.45) !important;
+}
+
+#modalCreate #wrapper-watermark .w-10.h-10,
+#modalCreate [onclick*="p_watermark"] .w-10.h-10,
+#modalCreate [class*="bg-blue-50"] .w-10.h-10 {
+    background: rgba(59, 130, 246, 0.22) !important;
+    border: 1px solid rgba(59, 130, 246, 0.4) !important;
+    color: #60a5fa !important;
+}
+
+#modalCreate #lbl-p-wm-title {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    font-size: 14px !important;
+}
+
+#modalCreate #lbl-p-wm-desc {
+    color: #bfdbfe !important;
+    font-weight: 500 !important;
+    font-size: 11px !important;
+}
+
+/* Multi-Kategori Card & Category Builder */
+#modalCreate #wrapper-multicategory {
+    background: rgba(168, 85, 247, 0.1) !important;
+    border: 1px solid rgba(168, 85, 247, 0.3) !important;
+}
+
+#modalCreate #wrapper-multicategory .w-10.h-10 {
+    background: rgba(168, 85, 247, 0.22) !important;
+    border: 1px solid rgba(168, 85, 247, 0.4) !important;
+    color: #c084fc !important;
+}
+
+#modalCreate #lbl-p-cat-title {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    font-size: 14px !important;
+}
+
+#modalCreate #lbl-p-cat-desc {
+    color: #e9d5ff !important;
+    font-weight: 500 !important;
+    font-size: 11px !important;
+}
+
+#modalCreate #category-builder {
+    border-top: 1px solid rgba(168, 85, 247, 0.25) !important;
+}
+
+#modalCreate #category-builder .cat-name,
+#modalCreate #category-builder .cat-max {
+    background: var(--panel2, #212226) !important;
+    border: 1px solid var(--stroke, #35363b) !important;
+    color: #ffffff !important;
+}
+
+#modalCreate #category-builder button[onclick*="addCategoryRow"] {
+    background: rgba(168, 85, 247, 0.2) !important;
+    color: #f3e8ff !important;
+    border: 1px solid rgba(168, 85, 247, 0.38) !important;
+    font-weight: 700 !important;
+}
+
+#modalCreate #category-builder button[onclick*="addCategoryRow"]:hover {
+    background: rgba(168, 85, 247, 0.3) !important;
+}
+
+/* Wizard Footer Controls */
+#modalCreate .sm\\:rounded-b-2xl {
+    background-color: var(--panel, #17181b) !important;
+    border-top: 1px solid var(--stroke, rgba(239, 215, 174, 0.12)) !important;
+}
+
+#modalCreate #btnWizardPrev,
+#modalCreate #btnWizardCancel {
+    background-color: var(--panel2, #212226) !important;
+    border: 1px solid var(--stroke, rgba(239, 215, 174, 0.15)) !important;
+    color: var(--text, #f4f0e9) !important;
+}
+
+#modalCreate #btnWizardPrev:hover,
+#modalCreate #btnWizardCancel:hover {
+    border-color: var(--gold, #dfba7b) !important;
+}
+
+/* Placeholder and Disabled Contrast */
+#modalCreate input::placeholder,
+#modalCreate textarea::placeholder {
+    color: var(--muted2, #c9c4bc) !important;
+    opacity: 1 !important;
+}
+
+#modalCreate input:disabled,
+#modalCreate select:disabled {
+    opacity: 0.85 !important;
+    cursor: not-allowed !important;
+}
+
+/* ==========================================================================
+   ADAPTIVE OVERRIDES: MIDNIGHT SAPPHIRE
+   ========================================================================== */
+
+[data-theme="sapphire"] #modalCreate .wizard-nav-item.border-primary-600,
+[data-theme="sapphire"] #modalCreate .wizard-nav-item .text-primary-700 {
+    border-color: #abc7fa !important;
+    color: #abc7fa !important;
+}
+
+/* ==========================================================================
+   ADAPTIVE OVERRIDES: ATELIER IVORY & OLIVE HERITAGE (LIGHT THEMES)
+   ========================================================================== */
+
+[data-theme="ivory"] #modalCreateContent,
+[data-theme="olive"] #modalCreateContent,
+html.theme-ivory #modalCreateContent,
+html.theme-olive #modalCreateContent,
+html:not(.dark) #modalCreateContent {
+    background-color: var(--panel, #fffdf9) !important;
+    border-color: var(--stroke, rgba(65, 45, 21, 0.18)) !important;
+    color: var(--text, #27231e) !important;
+}
+
+[data-theme="ivory"] #modalCreateContent > div:first-child,
+[data-theme="olive"] #modalCreateContent > div:first-child,
+html.theme-ivory #modalCreateContent > div:first-child,
+html.theme-olive #modalCreateContent > div:first-child,
+html:not(.dark) #modalCreateContent > div:first-child,
+[data-theme="ivory"] #modalCreate .sm\\:rounded-t-2xl,
+[data-theme="olive"] #modalCreate .sm\\:rounded-t-2xl,
+html:not(.dark) #modalCreate .sm\\:rounded-t-2xl {
+    background-color: var(--panel, #fffdf9) !important;
+    border-bottom-color: var(--stroke, rgba(65, 45, 21, 0.12)) !important;
+    color: var(--text, #27231e) !important;
+}
+
+[data-theme="ivory"] #modalCreate .overflow-y-auto,
+[data-theme="olive"] #modalCreate .overflow-y-auto,
+html:not(.dark) #modalCreate .overflow-y-auto {
+    background-color: var(--bg, #f5f1e9) !important;
+}
+
+[data-theme="ivory"] #modalCreate .wizard-step > .bg-white,
+[data-theme="olive"] #modalCreate .wizard-step > .bg-white,
+html:not(.dark) #modalCreate .wizard-step > .bg-white {
+    background-color: var(--panel, #fffdf9) !important;
+    border-color: var(--stroke, rgba(65, 45, 21, 0.12)) !important;
+    color: var(--text, #27231e) !important;
+}
+
+[data-theme="ivory"] #modalCreate #lbl-create-title,
+[data-theme="olive"] #modalCreate #lbl-create-title,
+html:not(.dark) #modalCreate #lbl-create-title,
+[data-theme="ivory"] #modalCreate .wizard-step h4,
+[data-theme="olive"] #modalCreate .wizard-step h4,
+html:not(.dark) #modalCreate .wizard-step h4 {
+    color: var(--text, #27231e) !important;
+}
+
+/* Light Theme Step 2: BGM Box */
+[data-theme="ivory"] #modalCreate #wrapper-card-bgm,
+[data-theme="olive"] #modalCreate #wrapper-card-bgm,
+[data-theme="ivory"] #modalCreate [class*="bg-purple-50/30"],
+[data-theme="olive"] #modalCreate [class*="bg-purple-50/30"],
+html:not(.dark) #modalCreate [class*="bg-purple-50/30"],
+[data-theme="ivory"] #modalCreate div.grid.grid-cols-1.sm\\:grid-cols-2.gap-4.items-center,
+[data-theme="olive"] #modalCreate div.grid.grid-cols-1.sm\\:grid-cols-2.gap-4.items-center,
+html:not(.dark) #modalCreate div.grid.grid-cols-1.sm\\:grid-cols-2.gap-4.items-center {
+    background: rgba(147, 51, 234, 0.06) !important;
+    border: 1px solid rgba(147, 51, 234, 0.2) !important;
+}
+
+[data-theme="ivory"] #modalCreate #tx-p-music-up,
+[data-theme="ivory"] #modalCreate #tx-p-music-link,
+[data-theme="olive"] #modalCreate #tx-p-music-up,
+[data-theme="olive"] #modalCreate #tx-p-music-link,
+html:not(.dark) #modalCreate #tx-p-music-up,
+html:not(.dark) #modalCreate #tx-p-music-link {
+    color: #6b21a8 !important;
+    font-weight: 700 !important;
+}
+
+[data-theme="ivory"] #modalCreate #p_music_file,
+[data-theme="olive"] #modalCreate #p_music_file,
+html:not(.dark) #modalCreate #p_music_file,
+[data-theme="ivory"] #modalCreate #p_music_url,
+[data-theme="olive"] #modalCreate #p_music_url,
+html:not(.dark) #modalCreate #p_music_url {
+    background: #ffffff !important;
+    border-color: rgba(147, 51, 234, 0.25) !important;
+    color: var(--text, #27231e) !important;
+}
+
+[data-theme="ivory"] #modalCreate #p_music_file::file-selector-button,
+[data-theme="olive"] #modalCreate #p_music_file::file-selector-button,
+html:not(.dark) #modalCreate #p_music_file::file-selector-button {
+    background: rgba(147, 51, 234, 0.12) !important;
+    color: #6b21a8 !important;
+    border: 1px solid rgba(147, 51, 234, 0.25) !important;
+}
+
+/* Light Theme Step 3: Quota Cards */
+[data-theme="ivory"] #modalCreate #wrapper-card-max,
+[data-theme="olive"] #modalCreate #wrapper-card-max,
+[data-theme="ivory"] #modalCreate [class*="bg-yellow-50"],
+[data-theme="olive"] #modalCreate [class*="bg-yellow-50"],
+html:not(.dark) #modalCreate [class*="bg-yellow-50"] {
+    background: rgba(234, 179, 8, 0.08) !important;
+    border: 1px solid rgba(161, 98, 7, 0.25) !important;
+}
+
+[data-theme="ivory"] #modalCreate #lbl-p-max,
+[data-theme="olive"] #modalCreate #lbl-p-max,
+html:not(.dark) #modalCreate #lbl-p-max {
+    color: #854d0e !important;
+    font-weight: 800 !important;
+}
+
+[data-theme="ivory"] #modalCreate #p_max,
+[data-theme="olive"] #modalCreate #p_max,
+html:not(.dark) #modalCreate #p_max,
+[data-theme="ivory"] #modalCreate [class*="bg-yellow-50"] .bg-white,
+[data-theme="olive"] #modalCreate [class*="bg-yellow-50"] .bg-white,
+html:not(.dark) #modalCreate [class*="bg-yellow-50"] .bg-white {
+    background: #ffffff !important;
+    border-color: rgba(161, 98, 7, 0.3) !important;
+    color: #27231e !important;
+}
+
+[data-theme="ivory"] #modalCreate .id-text-unlimit,
+[data-theme="olive"] #modalCreate .id-text-unlimit,
+html:not(.dark) #modalCreate .id-text-unlimit {
+    color: #713f12 !important;
+    font-weight: 700 !important;
+}
+
+[data-theme="ivory"] #modalCreate #wrapper-card-extra,
+[data-theme="olive"] #modalCreate #wrapper-card-extra,
+[data-theme="ivory"] #modalCreate [class*="bg-green-50"],
+[data-theme="olive"] #modalCreate [class*="bg-green-50"],
+html:not(.dark) #modalCreate [class*="bg-green-50"] {
+    background: rgba(34, 197, 94, 0.08) !important;
+    border: 1px solid rgba(21, 128, 61, 0.25) !important;
+}
+
+[data-theme="ivory"] #modalCreate #lbl-p-extra,
+[data-theme="olive"] #modalCreate #lbl-p-extra,
+html:not(.dark) #modalCreate #lbl-p-extra {
+    color: #166534 !important;
+    font-weight: 800 !important;
+}
+
+[data-theme="ivory"] #modalCreate #p_extra_price,
+[data-theme="olive"] #modalCreate #p_extra_price,
+html:not(.dark) #modalCreate #p_extra_price {
+    background: #ffffff !important;
+    border-color: rgba(21, 128, 61, 0.3) !important;
+    color: #27231e !important;
+}
+
+[data-theme="ivory"] #modalCreate #tx-p-extra-desc,
+[data-theme="olive"] #modalCreate #tx-p-extra-desc,
+html:not(.dark) #modalCreate #tx-p-extra-desc {
+    color: #14532d !important;
+    font-weight: 600 !important;
+}
+
+[data-theme="ivory"] #modalCreate #wrapper-card-deadline,
+[data-theme="olive"] #modalCreate #wrapper-card-deadline,
+[data-theme="ivory"] #modalCreate [class*="bg-red-50"],
+[data-theme="olive"] #modalCreate [class*="bg-red-50"],
+html:not(.dark) #modalCreate [class*="bg-red-50"] {
+    background: rgba(239, 68, 68, 0.08) !important;
+    border: 1px solid rgba(185, 28, 28, 0.25) !important;
+}
+
+[data-theme="ivory"] #modalCreate #lbl-p-deadline,
+[data-theme="olive"] #modalCreate #lbl-p-deadline,
+html:not(.dark) #modalCreate #lbl-p-deadline {
+    color: #991b1b !important;
+    font-weight: 800 !important;
+}
+
+[data-theme="ivory"] #modalCreate #p_deadline,
+[data-theme="olive"] #modalCreate #p_deadline,
+html:not(.dark) #modalCreate #p_deadline {
+    background: #ffffff !important;
+    border-color: rgba(185, 28, 28, 0.3) !important;
+    color: #27231e !important;
+}
+
+[data-theme="ivory"] #modalCreate #tx-p-deadline-desc,
+[data-theme="olive"] #modalCreate #tx-p-deadline-desc,
+html:not(.dark) #modalCreate #tx-p-deadline-desc {
+    color: #7f1d1d !important;
+    font-weight: 600 !important;
+}
+
+/* Light Theme Step 4: Watermark & Multi-Kategori Cards */
+[data-theme="ivory"] #modalCreate #wrapper-watermark,
+[data-theme="olive"] #modalCreate #wrapper-watermark,
+[data-theme="ivory"] #modalCreate [onclick*="p_watermark"],
+[data-theme="olive"] #modalCreate [onclick*="p_watermark"],
+[data-theme="ivory"] #modalCreate [class*="bg-blue-50"],
+[data-theme="olive"] #modalCreate [class*="bg-blue-50"],
+html:not(.dark) #modalCreate [class*="bg-blue-50"] {
+    background: rgba(59, 130, 246, 0.08) !important;
+    border: 1px solid rgba(37, 99, 235, 0.22) !important;
+}
+
+[data-theme="ivory"] #modalCreate #wrapper-watermark .w-10.h-10,
+[data-theme="olive"] #modalCreate #wrapper-watermark .w-10.h-10,
+[data-theme="ivory"] #modalCreate [onclick*="p_watermark"] .w-10.h-10,
+[data-theme="olive"] #modalCreate [onclick*="p_watermark"] .w-10.h-10,
+[data-theme="ivory"] #modalCreate [class*="bg-blue-50"] .w-10.h-10,
+[data-theme="olive"] #modalCreate [class*="bg-blue-50"] .w-10.h-10,
+html:not(.dark) #modalCreate [class*="bg-blue-50"] .w-10.h-10 {
+    background: rgba(59, 130, 246, 0.15) !important;
+    border: 1px solid rgba(37, 99, 235, 0.3) !important;
+    color: #1d4ed8 !important;
+}
+
+[data-theme="ivory"] #modalCreate #lbl-p-wm-title,
+[data-theme="olive"] #modalCreate #lbl-p-wm-title,
+html:not(.dark) #modalCreate #lbl-p-wm-title {
+    color: #1e3a8a !important;
+    font-weight: 800 !important;
+}
+
+[data-theme="ivory"] #modalCreate #lbl-p-wm-desc,
+[data-theme="olive"] #modalCreate #lbl-p-wm-desc,
+html:not(.dark) #modalCreate #lbl-p-wm-desc {
+    color: #1e40af !important;
+    font-weight: 600 !important;
+}
+
+[data-theme="ivory"] #modalCreate #wrapper-multicategory,
+[data-theme="olive"] #modalCreate #wrapper-multicategory,
+html:not(.dark) #modalCreate #wrapper-multicategory {
+    background: rgba(168, 85, 247, 0.08) !important;
+    border: 1px solid rgba(126, 34, 206, 0.22) !important;
+}
+
+[data-theme="ivory"] #modalCreate #wrapper-multicategory .w-10.h-10,
+[data-theme="olive"] #modalCreate #wrapper-multicategory .w-10.h-10,
+html:not(.dark) #modalCreate #wrapper-multicategory .w-10.h-10 {
+    background: rgba(168, 85, 247, 0.15) !important;
+    border: 1px solid rgba(126, 34, 206, 0.3) !important;
+    color: #6b21a8 !important;
+}
+
+[data-theme="ivory"] #modalCreate #lbl-p-cat-title,
+[data-theme="olive"] #modalCreate #lbl-p-cat-title,
+html:not(.dark) #modalCreate #lbl-p-cat-title {
+    color: #581c87 !important;
+    font-weight: 800 !important;
+}
+
+[data-theme="ivory"] #modalCreate #lbl-p-cat-desc,
+[data-theme="olive"] #modalCreate #lbl-p-cat-desc,
+html:not(.dark) #modalCreate #lbl-p-cat-desc {
+    color: #6b21a8 !important;
+    font-weight: 600 !important;
+}
+
+[data-theme="ivory"] #modalCreate #category-builder .cat-name,
+[data-theme="ivory"] #modalCreate #category-builder .cat-max,
+[data-theme="olive"] #modalCreate #category-builder .cat-name,
+[data-theme="olive"] #modalCreate #category-builder .cat-max,
+html:not(.dark) #modalCreate #category-builder .cat-name,
+html:not(.dark) #modalCreate #category-builder .cat-max {
+    background: #ffffff !important;
+    border: 1px solid rgba(126, 34, 206, 0.25) !important;
+    color: #27231e !important;
+}
+
+[data-theme="ivory"] #modalCreate #category-builder button[onclick*="addCategoryRow"],
+[data-theme="olive"] #modalCreate #category-builder button[onclick*="addCategoryRow"],
+html:not(.dark) #modalCreate #category-builder button[onclick*="addCategoryRow"] {
+    background: rgba(168, 85, 247, 0.12) !important;
+    color: #6b21a8 !important;
+    border: 1px solid rgba(126, 34, 206, 0.25) !important;
+    font-weight: 700 !important;
+}
+
+[data-theme="ivory"] #modalCreate .sm\\:rounded-b-2xl,
+[data-theme="olive"] #modalCreate .sm\\:rounded-b-2xl,
+html:not(.dark) #modalCreate .sm\\:rounded-b-2xl {
+    background-color: var(--panel, #fffdf9) !important;
+    border-top-color: var(--stroke, rgba(65, 45, 21, 0.12)) !important;
+}
+
+[data-theme="ivory"] #modalCreate #btnWizardPrev,
+[data-theme="ivory"] #modalCreate #btnWizardCancel,
+[data-theme="olive"] #modalCreate #btnWizardPrev,
+[data-theme="olive"] #modalCreate #btnWizardCancel,
+html:not(.dark) #modalCreate #btnWizardPrev,
+html:not(.dark) #modalCreate #btnWizardCancel {
+    background-color: var(--panel2, #f6f0e7) !important;
+    border-color: var(--stroke, rgba(65, 45, 21, 0.15)) !important;
+    color: var(--text, #27231e) !important;
+}
+
+[data-theme="ivory"] #modalCreate input::placeholder,
+[data-theme="olive"] #modalCreate input::placeholder,
+html:not(.dark) #modalCreate input::placeholder {
+    color: #82796c !important;
+    opacity: 1 !important;
+}
