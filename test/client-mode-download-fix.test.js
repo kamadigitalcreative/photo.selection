@@ -13,6 +13,7 @@ const checks = [
   { name: 'toggleSelectAllClient includes originalUrl and id', ok: html.includes("id: imgData.id || '', name: imgData.name, folder: clientState.currentFolderName, url: origUrl, originalUrl: origUrl") },
   { name: 'downloadSelectedAsZip fallback img.url', ok: html.includes("var targetUrl = img.originalUrl || img.originalDownloadUrl || img.url;") },
   { name: 'universal download target _blank for mobile iOS/Android', ok: html.includes("a.target = '_blank';") },
+  { name: 'fetchAuthorizedOriginalBlob declares response at function scope', ok: html.includes("var response = null;") && !html.includes("let response;") },
   { name: '12 script tags invariant', ok: (html.match(/<script\b[^>]*>/gi) || []).length === 12 }
 ];
 
@@ -31,7 +32,6 @@ if (!allOk) {
   console.error('❌ SOME CHECKS FAILED');
   process.exit(1);
 } else {
-  console.log('✅ ALL 10 CLIENT MODE & DOWNLOAD CHECKS PASSED!');
+  console.log('✅ ALL 11 CLIENT MODE & DOWNLOAD CHECKS PASSED!');
   console.log('================================================================');
 }
-

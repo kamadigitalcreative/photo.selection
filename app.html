@@ -16860,6 +16860,13 @@
 
             var cleanName = sanitizeDownloadFilename(filename);
             var blob = null;
+            var response = null;
+            var isChunkedRange = false;
+            var chunksArray = [];
+            var expectedTotalSize = 0;
+            var detectedContentType = 'application/octet-stream';
+            var tFetchStart = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+            var tFirstByte = tFetchStart;
 
             // 1. Ambil berkas: jika data URL (base64 fixture), konversi langsung tanpa fetch untuk mencegah pelanggaran CSP connect-src
             if (url.startsWith('data:')) {
@@ -16925,11 +16932,11 @@
                     resetActivityTimer(timeoutMs);
                 }
 
-                let response;
-                var isChunkedRange = false;
-                var chunksArray = [];
-                var expectedTotalSize = 0;
-                var detectedContentType = 'application/octet-stream';
+                response = null;
+                isChunkedRange = false;
+                chunksArray = [];
+                expectedTotalSize = 0;
+                detectedContentType = 'application/octet-stream';
 
                 try {
                     var fetchOpts = { headers: Object.assign({}, headers) };
@@ -16942,9 +16949,9 @@
                         fetchOpts.headers['Range'] = 'bytes=0-4194303'; // Initial <=4 MiB slice
                     }
 
-                    var tFetchStart = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+                    tFetchStart = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
                     response = await fetch(fetchUrl, fetchOpts);
-                    var tFirstByte = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+                    tFirstByte = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
                 } catch (netErr) {
                     if (timeoutId) {
                         clearTimeout(timeoutId);
