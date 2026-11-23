@@ -744,7 +744,8 @@ function isSafeAudioReference(value) {
   if (!value || typeof value !== 'string') return false;
   const trimmed = value.trim();
   if (isSafeHttpsUrl(trimmed)) return true;
-  if (trimmed.startsWith('data:audio/') && trimmed.length <= 4 * 1024 * 1024) {
+  if (trimmed.startsWith('/api/bridge?action=getProjectAudio') || trimmed.startsWith('/api/bridge?action=getAudioStream')) return true;
+  if (trimmed.startsWith('data:audio/') && trimmed.length <= 25 * 1024 * 1024) {
     return /^data:audio\/(mpeg|mp3|wav|ogg|aac|m4a|webm|mp4);base64,[A-Za-z0-9+/=]+$/.test(trimmed);
   }
   return false;
@@ -1021,6 +1022,7 @@ const PROTECTED_ACCOUNT_ACTIONS = new Set([
   'toggleProjectDownload',
   'updateProjectMaxFoto',
   'updateProjectMusic',
+  'uploadAudioChunk',
   'processPayment',
   'getDashboardStats',
   'submitFeedback',
@@ -1836,6 +1838,8 @@ async function handler(req, res) {
       case 'toggleProjectWatermark': return await handleToggleProjectWatermark(payload, res);
       case 'toggleProjectDownload': return await handleToggleProjectDownload(payload, res);
       case 'updateProjectMusic': return await handleUpdateProjectMusic(payload, res);
+      case 'uploadAudioChunk': return await handleUploadAudioChunk(payload, req, res);
+      case 'getProjectAudio': return await handleGetProjectAudio(payload, req, res);
       case 'updateProjectMaxFoto': return await handleUpdateProjectMaxFoto(payload, res);
       case 'processPayment': return await handleProcessPayment(payload, res);
       case 'getDashboardStats': return await handleGetDashboardStats(payload, res);
@@ -3526,6 +3530,125 @@ async function handleUpdateProjectMusic(payload, res) {
   });
 
   return success(res, { success: true, musicUrl: musicUrl }, 'Musik galeri berhasil diperbarui.');
+}
+
+const audioUploadSessions = new Map();
+
+async function uploadToSupabaseStorage(bucket, path, buffer, contentType) {
+  try {
+    await fetch(`${SUPABASE_URL}/storage/v1/bucket`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id: bucket, name: bucket, public: true })
+    });
+  } catch (_) {}
+
+  const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': contentType || 'audio/mpeg',
+      'x-upsert': 'true'
+    },
+    body: buffer
+  });
+
+  if (!uploadRes.ok) {
+    const errText = await uploadRes.text();
+    console.error('Supabase storage upload error:', errText);
+    return null;
+  }
+
+  return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`;
+}
+
+async function handleUploadAudioChunk(payload, req, res) {
+  const authUser = payload.authUser || {};
+  const projectId = String(payload.projectId || payload.id || '').trim();
+  const uploadId = String(payload.uploadId || '').trim();
+  const chunkIndex = parseInt(payload.chunkIndex, 10);
+  const totalChunks = parseInt(payload.totalChunks, 10);
+  const chunkData = String(payload.chunkData || '').trim();
+  const mimeType = String(payload.mimeType || 'audio/mpeg').trim();
+
+  if (!projectId || !uploadId || isNaN(chunkIndex) || isNaN(totalChunks) || !chunkData) {
+    return error(res, 'Parameter potongan audio tidak lengkap.', 400);
+  }
+
+  const project = await requireProjectAccess(authUser, projectId, res);
+  if (!project) return;
+
+  const userPro = await getUserProEntitlement(authUser.username);
+  if (!userPro.isPro) {
+    return error(res, 'Fitur Musik Galeri membutuhkan Add-On PRO yang aktif.', 403);
+  }
+
+  let session = audioUploadSessions.get(uploadId);
+  if (!session) {
+    session = {
+      projectId,
+      totalChunks,
+      mimeType,
+      chunks: new Map(),
+      timer: setTimeout(() => audioUploadSessions.delete(uploadId), 15 * 60 * 1000)
+    };
+    audioUploadSessions.set(uploadId, session);
+  }
+
+  try {
+    const chunkBuf = Buffer.from(chunkData, 'base64');
+    session.chunks.set(chunkIndex, chunkBuf);
+  } catch (e) {
+    return error(res, 'Gagal mendecode potongan audio.', 400);
+  }
+
+  if (session.chunks.size < totalChunks) {
+    return success(res, { success: true, chunkReceived: chunkIndex, remaining: totalChunks - session.chunks.size });
+  }
+
+  clearTimeout(session.timer);
+  audioUploadSessions.delete(uploadId);
+
+  const chunkBuffers = [];
+  for (let i = 0; i < totalChunks; i++) {
+    const buf = session.chunks.get(i);
+    if (!buf) {
+      return error(res, `Potongan audio index ${i} hilang. Harap coba unggah ulang.`, 400);
+    }
+    chunkBuffers.push(buf);
+  }
+  const fullAudioBuffer = Buffer.concat(chunkBuffers);
+
+  let publicUrl = null;
+  try {
+    publicUrl = await uploadToSupabaseStorage('project-audio', `${projectId}.mp3`, fullAudioBuffer, mimeType);
+  } catch (err) {
+    console.error('Storage upload error:', err.message);
+  }
+
+  const finalAudioUrl = publicUrl || `${APP_URL}/api/bridge?action=getProjectAudio&projectId=${encodeURIComponent(projectId)}`;
+
+  const filter = getProjectMutationFilter(project);
+  await supabaseQuery(`projects?${filter}`, {
+    method: 'PATCH',
+    body: { MusicUrl: finalAudioUrl, MusicURL: finalAudioUrl }
+  });
+
+  return success(res, { success: true, audioUrl: finalAudioUrl }, 'File musik berhasil diunggah dan disimpan.');
+}
+
+async function handleGetProjectAudio(payload, req, res) {
+  const projectId = String(payload.projectId || payload.id || (req && req.query && req.query.projectId) || '').trim();
+  if (!projectId) return error(res, 'Project ID wajib disertakan.', 400);
+
+  const storageUrl = `${SUPABASE_URL}/storage/v1/object/public/project-audio/${projectId}.mp3`;
+  res.writeHead(302, { 'Location': storageUrl });
+  return res.end();
 }
 
 async function handleToggleProjectDownload(payload, res) {
