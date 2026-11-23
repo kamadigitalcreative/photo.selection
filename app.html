@@ -4638,7 +4638,7 @@
                     title="Home">
                     <i class="fa-solid fa-house sm:mr-1.5"></i> <span class="hidden sm:inline">Home</span>
                 </button>
-                <button id="btn-client-switch-mode" onclick="showClientModeSelection()"
+                <button id="btn-client-switch-mode" onclick="if(event)event.stopPropagation();showClientModeSelection()"
                     class="btn-client-switch-mode mr-2 sm:mr-3 px-2.5 py-1.5 rounded-lg flex items-center justify-center shrink-0 shadow-sm text-xs font-semibold cursor-pointer"
                     title="Menu / Ganti Mode">
                     <i class="fa-solid fa-arrow-left-arrow-right mr-1.5"></i> <span id="tx-btn-switch-mode" class="inline">Ganti Mode</span>
@@ -9460,7 +9460,7 @@
             });
         }
 
-        async function uploadProjectAudioFile(file, projectId) {
+        async function uploadProjectAudioFile(file, projectId, onProgress) {
             var CHUNK_SIZE = 1.5 * 1024 * 1024; // 1.5 MB per chunk (well within Vercel limit)
             var totalChunks = Math.ceil(file.size / CHUNK_SIZE);
             var uploadSessionId = 'aud_' + projectId + '_' + Date.now();
@@ -9471,6 +9471,12 @@
                 var start = i * CHUNK_SIZE;
                 var end = Math.min(start + CHUNK_SIZE, file.size);
                 var chunk = file.slice(start, end);
+                
+                var percentBefore = Math.round((i / totalChunks) * 100);
+                if (typeof onProgress === 'function') {
+                    onProgress(percentBefore, i + 1, totalChunks, file.size);
+                }
+
                 var base64Data = await new Promise(function (resolve) {
                     var reader = new FileReader();
                     reader.onload = function (e) {
@@ -9479,8 +9485,6 @@
                     };
                     reader.readAsDataURL(chunk);
                 });
-
-                startLoading((isEn ? 'Uploading audio... ' : 'Mengunggah musik... ') + Math.round(((i + 1) / totalChunks) * 100) + '%');
 
                 var resp = await fetch(API_ENDPOINT, {
                     method: 'POST',
@@ -9501,6 +9505,11 @@
                 var resJson = await resp.json();
                 if (!resJson || resJson.status !== 'success') {
                     throw new Error((resJson && resJson.message) ? resJson.message : 'Gagal mengunggah potongan musik.');
+                }
+
+                var percentAfter = Math.round(((i + 1) / totalChunks) * 100);
+                if (typeof onProgress === 'function') {
+                    onProgress(percentAfter, i + 1, totalChunks, file.size);
                 }
 
                 if (i === totalChunks - 1) {
@@ -9554,35 +9563,98 @@
                 cancelButtonText: isEn ? 'Cancel' : 'Batal',
                 confirmButtonColor: '#7c3aed',
                 denyButtonColor: '#ef4444',
-                preConfirm: async function () {
+                preConfirm: function () {
                     var fileInput = document.getElementById('edit_p_music_file');
-                    if (fileInput && fileInput.files && fileInput.files.length > 0) {
-                        var file = fileInput.files[0];
-                        try {
-                            var uploadedAudioUrl = await uploadProjectAudioFile(file, projectId);
-                            return { musicUrl: uploadedAudioUrl, isNewUploaded: true };
-                        } catch (errUpload) {
-                            Swal.showValidationMessage(errUpload.message || (isEn ? 'Failed to upload music file' : 'Gagal mengunggah file musik'));
-                            return false;
-                        }
-                    }
-
-                    if (!currentMusic) {
+                    var file = fileInput && fileInput.files && fileInput.files.length > 0 ? fileInput.files[0] : null;
+                    if (!file && !currentMusic) {
                         Swal.showValidationMessage(isEn ? 'Please choose an audio file first.' : 'Silakan pilih file audio terlebih dahulu.');
                         return false;
                     }
-
-                    return { musicUrl: currentMusic, isNewUploaded: false };
+                    return { file: file, hasExisting: Boolean(currentMusic) };
                 }
             }).then(async function (result) {
                 if (result.isConfirmed) {
-                    endLoading();
-                    if (result.value && result.value.isNewUploaded) {
-                        Swal.fire({ icon: 'success', title: isEn ? 'Music Uploaded' : 'Musik Berhasil Diunggah & Disimpan', timer: 1500, showConfirmButton: false });
-                        loadDataProjects();
+                    var file = result.value ? result.value.file : null;
+                    if (!file) {
+                        Swal.fire({
+                            icon: 'info',
+                            title: isEn ? 'No Changes' : 'Tidak Ada Perubahan',
+                            text: isEn ? 'Existing music preserved.' : 'Musik yang sudah terpasang tetap digunakan.',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
                         return;
                     }
-                    Swal.fire({ icon: 'info', title: isEn ? 'No Changes' : 'Tidak Ada Perubahan', timer: 1200, showConfirmButton: false });
+
+                    var totalMb = (file.size / (1024 * 1024)).toFixed(1);
+                    var CHUNK_SIZE = 1.5 * 1024 * 1024;
+                    var estTotalChunks = Math.ceil(file.size / CHUNK_SIZE);
+
+                    Swal.fire({
+                        title: isEn ? 'Uploading Audio...' : 'Mengunggah Musik Galeri...',
+                        html: `
+                            <div class="space-y-4 my-2 text-left">
+                                <div class="flex items-center justify-between text-xs font-semibold text-gray-700">
+                                    <span id="audio-upload-status">${isEn ? 'Preparing upload...' : 'Menyiapkan proses unggah...'}</span>
+                                    <span id="audio-upload-percent" class="text-purple-600 font-bold">0%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
+                                    <div id="audio-upload-bar" class="bg-gradient-to-r from-purple-500 to-indigo-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                </div>
+                                <div class="flex items-center justify-between text-[11px] text-gray-500 font-medium">
+                                    <span id="audio-upload-detail">0.0 / ${totalMb} MB</span>
+                                    <span id="audio-upload-chunk">${isEn ? 'Part 0 / ' : 'Bagian 0 / '}${estTotalChunks}</span>
+                                </div>
+                                <div class="p-2.5 bg-purple-50 border border-purple-200 rounded-xl text-[11px] text-purple-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-cloud-arrow-up text-purple-600 shrink-0"></i>
+                                    <span>${isEn ? 'Uploading file directly to cloud storage. Please keep this window open...' : 'Mengunggah file musik ke cloud storage. Mohon jangan tutup jendela ini sampai 100%...'}</span>
+                                </div>
+                            </div>
+                        `,
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        didOpen: async function () {
+                            try {
+                                var uploadedAudioUrl = await uploadProjectAudioFile(file, projectId, function (percent, currentChunk, totalChunks, totalSize) {
+                                    var bar = document.getElementById('audio-upload-bar');
+                                    var pct = document.getElementById('audio-upload-percent');
+                                    var stat = document.getElementById('audio-upload-status');
+                                    var detail = document.getElementById('audio-upload-detail');
+                                    var chk = document.getElementById('audio-upload-chunk');
+                                    if (bar) bar.style.width = percent + '%';
+                                    if (pct) pct.innerText = percent + '%';
+                                    if (chk) chk.innerText = (isEn ? 'Part ' : 'Bagian ') + currentChunk + ' / ' + totalChunks;
+                                    if (detail) {
+                                        var currentMb = ((percent / 100) * (totalSize / (1024 * 1024))).toFixed(1);
+                                        detail.innerText = currentMb + ' / ' + (totalSize / (1024 * 1024)).toFixed(1) + ' MB';
+                                    }
+                                    if (stat) {
+                                        if (percent >= 100) {
+                                            stat.innerText = isEn ? 'Saving to Cloud Storage...' : 'Menyimpan ke Cloud Storage...';
+                                        } else {
+                                            stat.innerText = (isEn ? 'Uploading part ' : 'Mengunggah bagian ') + currentChunk + '...';
+                                        }
+                                    }
+                                });
+
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: isEn ? 'Music Uploaded!' : 'Musik Berhasil Disimpan!',
+                                    text: isEn ? 'Background music is now active on this project gallery.' : 'Musik latar belakang telah aktif untuk galeri project ini.',
+                                    confirmButtonColor: '#7c3aed'
+                                });
+                                loadDataProjects();
+                            } catch (errUpload) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: isEn ? 'Upload Failed' : 'Gagal Mengunggah',
+                                    text: errUpload.message || (isEn ? 'Failed to upload music file' : 'Gagal mengunggah file musik.'),
+                                    confirmButtonColor: '#7c3aed'
+                                });
+                            }
+                        }
+                    });
                 } else if (result.isDenied) {
                     startLoading(isEn ? 'Removing music...' : 'Menghapus musik...');
                     try {
@@ -12323,9 +12395,21 @@
             var bgmAudio = document.getElementById('bgm-audio');
             if (!bgmAudio) return;
 
+            var modeView = document.getElementById('client-mode-view');
+            if (modeView && !modeView.classList.contains('hidden')) {
+                return; // Strictly never play BGM when client mode view is active
+            }
+
             if (forceUserInitiated) {
                 delete bgmAudio.dataset.userPaused;
+                delete bgmAudio.dataset.modeStopped;
             }
+
+            if (bgmAudio.dataset.modeStopped === 'true' && !forceUserInitiated) {
+                return;
+            }
+
+            if (bgmAudio.dataset.userPaused === 'true' && !forceUserInitiated) return;
 
             if (!bgmAudio.src || bgmAudio.src === '' || bgmAudio.src.endsWith(window.location.pathname)) {
                 if (clientState && clientState.musicUrl) {
@@ -12341,7 +12425,6 @@
             }
 
             if (!bgmAudio.src || bgmAudio.src === '' || bgmAudio.src.endsWith(window.location.pathname)) return;
-            if (bgmAudio.dataset.userPaused === 'true') return;
 
             var playPromise = bgmAudio.play();
             if (playPromise !== undefined) {
@@ -12381,6 +12464,8 @@
         function stopClientBGM() {
             var bgmAudio = document.getElementById('bgm-audio');
             if (!bgmAudio) return;
+            bgmAudio.dataset.userPaused = 'true';
+            bgmAudio.dataset.modeStopped = 'true';
             bgmAudio.pause();
             try { bgmAudio.currentTime = 0; } catch (_) {}
             var btn = document.getElementById('btn-toggle-bgm');
@@ -12394,6 +12479,14 @@
         }
 
         function tryTriggerBGM() {
+            var modeView = document.getElementById('client-mode-view');
+            if (modeView && !modeView.classList.contains('hidden')) {
+                return;
+            }
+            var audio = document.getElementById('bgm-audio');
+            if (audio && (audio.dataset.userPaused === 'true' || audio.dataset.modeStopped === 'true')) {
+                return;
+            }
             playClientBGM(false);
         }
 
@@ -14599,8 +14692,12 @@
         // Fallback global interaction listeners to resume/start audio upon user gesture on mobile and desktop
         ['touchstart', 'touchend', 'pointerdown', 'click'].forEach(function (evtName) {
             document.addEventListener(evtName, function bgmInteractionListener() {
+                var modeView = document.getElementById('client-mode-view');
+                if (modeView && !modeView.classList.contains('hidden')) {
+                    return; // Strictly never auto-resume when in mode selection screen
+                }
                 var audio = document.getElementById('bgm-audio');
-                if (audio && audio.paused && audio.dataset.userPaused !== 'true' && clientState && clientState.musicUrl) {
+                if (audio && audio.paused && audio.dataset.userPaused !== 'true' && audio.dataset.modeStopped !== 'true' && clientState && clientState.musicUrl) {
                     tryTriggerBGM();
                 }
             }, { passive: true });
