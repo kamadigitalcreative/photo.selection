@@ -1020,6 +1020,7 @@ const PROTECTED_ACCOUNT_ACTIONS = new Set([
   'toggleProjectWatermark',
   'toggleProjectDownload',
   'updateProjectMaxFoto',
+  'updateProjectMusic',
   'processPayment',
   'getDashboardStats',
   'submitFeedback',
@@ -3512,7 +3513,8 @@ async function handleUpdateProjectMusic(payload, res) {
     }
   }
 
-  await supabaseQuery(`projects?or=(id.eq.${encodeURIComponent(projectId)},ID.eq.${encodeURIComponent(projectId)})`, {
+  const filter = getProjectMutationFilter(project);
+  await supabaseQuery(`projects?${filter}`, {
     method: 'PATCH',
     body: { MusicUrl: musicUrl, MusicURL: musicUrl }
   });
