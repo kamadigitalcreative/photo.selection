@@ -4954,6 +4954,9 @@
                 </div>
 
                 <p id="viewerCaption" class="text-white font-semibold text-sm tracking-wide"></p>
+                <span id="viewerSelectedBadge" class="hidden px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-circle-check"></i> <span id="tx-viewer-badge-selected">Terpilih</span>
+                </span>
                 <span id="viewer-original-status" class="hidden px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-md border border-white/10 items-center gap-1.5" style="display: none;"></span>
                 <div id="viewerDivider" class="w-px h-6 bg-white/20 hidden sm:block"></div>
                 <div id="viewerDirectNote"
@@ -12233,6 +12236,7 @@
                 if (clientState && clientState.musicUrl) {
                     var resolved = resolveClientAudioUrl(clientState.musicUrl);
                     if (resolved) {
+                        bgmAudio.dataset.loadedUrl = resolved;
                         bgmAudio.src = resolved;
                         bgmAudio.loop = true;
                         bgmAudio.preload = 'auto';
@@ -12253,6 +12257,7 @@
                         var icon = btn ? btn.querySelector('i') : null;
                         if (icon) icon.className = 'fa-solid fa-music animate-spin';
                         if (btn) {
+                            btn.classList.add('is-playing');
                             btn.classList.remove('bg-gray-100', 'text-gray-500');
                             btn.classList.add('bg-pink-50', 'text-pink-500');
                         }
@@ -12270,6 +12275,7 @@
 
             if (clientState.musicUrl && clientState.musicUrl.trim() !== '') {
                 bgmContainer.classList.remove('hidden');
+                bgmContainer.style.display = 'flex';
                 var resolvedUrl = resolveClientAudioUrl(clientState.musicUrl);
                 if (resolvedUrl && (!bgmAudio.src || bgmAudio.src === '' || bgmAudio.src.endsWith(window.location.pathname) || bgmAudio.dataset.loadedUrl !== resolvedUrl)) {
                     bgmAudio.dataset.loadedUrl = resolvedUrl;
@@ -12285,7 +12291,7 @@
                                              clientState.musicUrl.match(/[?&]id=([a-zA-Z0-9_\-]{15,128})/) ||
                                              clientState.musicUrl.match(/\/d\/([a-zA-Z0-9_\-]{15,128})/);
                             if (driveMatch && driveMatch[1]) {
-                                bgmAudio.src = 'https://docs.google.com/uc?export=download&id=' + driveMatch[1];
+                                bgmAudio.src = 'https://docs.google.com/uc?export=open&id=' + driveMatch[1];
                                 bgmAudio.load();
                                 tryTriggerBGM();
                             }
@@ -12296,6 +12302,7 @@
                 tryTriggerBGM();
             } else {
                 bgmContainer.classList.add('hidden');
+                bgmContainer.style.display = 'none';
                 bgmAudio.pause();
                 bgmAudio.src = '';
             }
@@ -13290,6 +13297,9 @@
             var isSubmitted = (typeof hasClientSubmitted !== 'undefined') ? hasClientSubmitted : false;
 
             var dlBtn = document.getElementById('viewerDirectDownloadBtn');
+            var selectedBadge = document.getElementById('viewerSelectedBadge');
+            var isEn = localStorage.getItem('ps_lang') === 'en';
+
             if (clientState.galleryMode === 'download') {
                 if (dlBtn) {
                     dlBtn.classList.remove('hidden');
@@ -13297,17 +13307,33 @@
                 }
                 btn.style.display = 'flex';
                 if (noteBtn) noteBtn.style.display = 'none';
+                if (selectedBadge) {
+                    selectedBadge.classList.add('hidden');
+                    selectedBadge.style.display = 'none';
+                }
                 var dIndex = clientState.downloadImages.findIndex(function (sel) {
-                    return sel.name === filename && sel.folder === clientState.currentFolderName;
+                    return (typeof isPhotoMatch === 'function')
+                        ? isPhotoMatch(sel, filename, folder || clientState.currentFolderName, activeImg ? activeImg.id : null)
+                        : (sel.name === filename && sel.folder === clientState.currentFolderName);
                 });
                 var isDownSelected = dIndex !== -1;
-                btn.innerHTML = isDownSelected
-                    ? '<i class="fa-solid fa-check mr-2"></i> ' + (localStorage.getItem('ps_lang') === 'en' ? 'Deselect' : 'Batal')
-                    : '<i class="fa-solid fa-cloud-arrow-down mr-2"></i> ' + (localStorage.getItem('ps_lang') === 'en' ? 'Select' : 'Pilih Unduh');
+                if (isDownSelected) {
+                    btn.classList.add('is-selected');
+                    btn.innerHTML = '<i class="fa-solid fa-circle-check text-base mr-2"></i> <span>' + (isEn ? 'Selected (Deselect)' : 'Dipilih (Batal)') + '</span>';
+                    btn.className = "is-selected px-6 py-2 rounded-xl font-bold text-sm transition-all shadow-[0_0_20px_rgba(16,185,129,0.6)] flex items-center gap-2 border-2 border-emerald-400 bg-emerald-600 text-white cursor-pointer";
+                } else {
+                    btn.classList.remove('is-selected');
+                    btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down mr-2"></i> <span>' + (isEn ? 'Select for Download' : 'Pilih Unduh') + '</span>';
+                    btn.className = "px-6 py-2 rounded-xl font-bold text-sm transition-all shadow-lg flex items-center gap-2 border cursor-pointer";
+                }
             } else if (isSubmitted) {
                 if (dlBtn) {
                     dlBtn.classList.add('hidden');
                     dlBtn.style.display = 'none';
+                }
+                if (selectedBadge) {
+                    selectedBadge.classList.add('hidden');
+                    selectedBadge.style.display = 'none';
                 }
                 btn.style.display = 'none';
                 if (noteBtn) noteBtn.style.display = 'none';
@@ -13319,22 +13345,35 @@
                 }
                 btn.style.display = 'flex';
                 if (noteBtn) noteBtn.style.display = 'flex';
-            }
 
-            // Fix akurasi cek foto saat pindah folder
-            var isSelected = clientState.selectedImages.some(function (sel) {
-                return sel.name === filename && (sel.folder === clientState.currentFolderName || !sel.folder || !clientState.currentFolderName);
-            });
+                // Fix akurasi cek foto saat pindah folder
+                var isSelected = clientState.selectedImages.some(function (sel) {
+                    return (typeof isPhotoMatch === 'function')
+                        ? isPhotoMatch(sel, filename, folder || clientState.currentFolderName, activeImg ? activeImg.id : null)
+                        : (sel.name === filename && (sel.folder === clientState.currentFolderName || !sel.folder || !clientState.currentFolderName));
+                });
 
-            var isEn = localStorage.getItem('ps_lang') === 'en';
-            if (isSelected) {
-                btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> <span>' + (isEn ? 'Deselect' : 'Batalkan Pilihan') + '</span>';
-                btn.className = "px-6 py-2 rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] flex items-center gap-2 border bg-green-500 border-green-400 text-white hover:bg-green-600";
-            } else {
-                btn.innerHTML = '<i class="fa-regular fa-square-check mr-2"></i> <span>' + (isEn ? 'Select Photo' : 'Pilih Foto') + '</span>';
-                btn.className = "px-6 py-2 rounded-xl font-bold text-sm transition-all shadow-lg flex items-center gap-2 border bg-white/20 border-white/40 text-white hover:bg-white/40";
-                if (document.getElementById('viewerNoteContainer')) {
-                    document.getElementById('viewerNoteContainer').classList.add('hidden');
+                if (isSelected) {
+                    btn.classList.add('is-selected');
+                    btn.innerHTML = '<i class="fa-solid fa-circle-check text-base mr-2"></i> <span>' + (isEn ? 'Selected (Deselect)' : 'Foto Terpilih (Batal)') + '</span>';
+                    btn.className = "is-selected px-6 py-2 rounded-xl font-bold text-sm transition-all shadow-[0_0_20px_rgba(16,185,129,0.6)] flex items-center gap-2 border-2 border-emerald-400 bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer";
+                    if (selectedBadge) {
+                        selectedBadge.classList.remove('hidden');
+                        selectedBadge.style.display = 'inline-flex';
+                        var badgeText = document.getElementById('tx-viewer-badge-selected');
+                        if (badgeText) badgeText.innerText = isEn ? 'Selected' : 'Terpilih';
+                    }
+                } else {
+                    btn.classList.remove('is-selected');
+                    btn.innerHTML = '<i class="fa-regular fa-square mr-2"></i> <span>' + (isEn ? 'Select Photo' : 'Pilih Foto') + '</span>';
+                    btn.className = "px-6 py-2 rounded-xl font-bold text-sm transition-all shadow-lg flex items-center gap-2 border cursor-pointer";
+                    if (selectedBadge) {
+                        selectedBadge.classList.add('hidden');
+                        selectedBadge.style.display = 'none';
+                    }
+                    if (document.getElementById('viewerNoteContainer')) {
+                        document.getElementById('viewerNoteContainer').classList.add('hidden');
+                    }
                 }
             }
 
@@ -14510,19 +14549,22 @@
                 audio.pause();
                 if (icon) icon.className = 'fa-solid fa-music';
                 if (btn) {
+                    btn.classList.remove('is-playing');
                     btn.classList.remove('bg-pink-50', 'text-pink-500');
                     btn.classList.add('bg-gray-100', 'text-gray-500');
                 }
             }
         };
 
-        // Fallback global interaction listener to resume audio if initially blocked by browser autoplay policy
-        document.addEventListener('click', function bgmInteractionListener() {
-            var audio = document.getElementById('bgm-audio');
-            if (audio && audio.dataset.pendingAutoplay === 'true') {
-                tryTriggerBGM();
-            }
-        }, { passive: true });
+        // Fallback global interaction listeners to resume/start audio upon user gesture on mobile and desktop
+        ['touchstart', 'touchend', 'pointerdown', 'click'].forEach(function (evtName) {
+            document.addEventListener(evtName, function bgmInteractionListener() {
+                var audio = document.getElementById('bgm-audio');
+                if (audio && audio.paused && audio.dataset.userPaused !== 'true' && clientState && clientState.musicUrl) {
+                    tryTriggerBGM();
+                }
+            }, { passive: true });
+        });
 
         function performSelectionData(cardElement, filename, url, category, btnPilih, isEn, fileId, folderName) {
             var targetFolder = folderName || clientState.currentFolderName || '';

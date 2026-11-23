@@ -4820,19 +4820,45 @@ async function handleGetAudioStream(payload, req, res) {
   }
 
   try {
-    const provider = getDriveProvider();
+    let provider = null;
+    try {
+      provider = getDriveProvider();
+    } catch (_) {
+      provider = null;
+    }
+
     const rangeHeader = req && req.headers ? req.headers['range'] : null;
     const streamOpts = rangeHeader ? { range: rangeHeader } : {};
-    const streamRes = await provider.fetchOriginalStream(fileId, streamOpts);
+    let streamRes = null;
+
+    if (provider && typeof provider.fetchOriginalStream === 'function') {
+      try {
+        streamRes = await provider.fetchOriginalStream(fileId, streamOpts);
+      } catch (_) {
+        streamRes = null;
+      }
+    }
 
     if (!streamRes || !streamRes.success) {
-      res.writeHead(302, { 'Location': `https://docs.google.com/uc?export=download&id=${encodeURIComponent(fileId)}` });
+      try {
+        const PublicDriveProvider = require('./drive/publicProvider');
+        const publicProvider = new PublicDriveProvider();
+        streamRes = await publicProvider.fetchOriginalStream(fileId, streamOpts);
+      } catch (_) {
+        streamRes = null;
+      }
+    }
+
+    if (!streamRes || !streamRes.success) {
+      // Fallback redirect with export=open to hint inline streaming instead of attachment download
+      res.writeHead(302, { 'Location': `https://docs.google.com/uc?export=open&id=${encodeURIComponent(fileId)}` });
       return res.end();
     }
 
-    const contentType = streamRes.contentType || 'audio/mpeg';
+    const contentType = (streamRes.contentType && streamRes.contentType.startsWith('audio/')) ? streamRes.contentType : 'audio/mpeg';
     const resHeaders = {
       'Content-Type': contentType,
+      'Content-Disposition': 'inline',
       'Accept-Ranges': 'bytes',
       'Cache-Control': 'public, max-age=86400',
       'X-Content-Type-Options': 'nosniff'
@@ -4849,7 +4875,7 @@ async function handleGetAudioStream(payload, req, res) {
 
     const nodeStream = toNodeReadable(streamRes.stream || streamRes.body);
     if (!nodeStream) {
-      res.writeHead(302, { 'Location': `https://docs.google.com/uc?export=download&id=${encodeURIComponent(fileId)}` });
+      res.writeHead(302, { 'Location': `https://docs.google.com/uc?export=open&id=${encodeURIComponent(fileId)}` });
       return res.end();
     }
 
@@ -4860,7 +4886,7 @@ async function handleGetAudioStream(payload, req, res) {
     });
   } catch (err) {
     console.error('Audio stream handler error:', err);
-    res.writeHead(302, { 'Location': `https://docs.google.com/uc?export=download&id=${encodeURIComponent(fileId)}` });
+    res.writeHead(302, { 'Location': `https://docs.google.com/uc?export=open&id=${encodeURIComponent(fileId)}` });
     return res.end();
   }
 }

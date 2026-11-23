@@ -1084,10 +1084,30 @@ html[data-theme="olive"] #client-gallery-view .banner-pulse-dot {
 }
 
 #imageViewerModal #viewerSelectBtn {
+    transition: all 0.25s ease !important;
+    font-weight: 700 !important;
+}
+
+#imageViewerModal #viewerSelectBtn:not(.is-selected) {
     background: linear-gradient(120deg, var(--goldhi, #ffdfaa), var(--gold, #dfba7b)) !important;
     color: var(--goldtxt, #22180e) !important;
     border: 1px solid rgba(255, 255, 255, 0.4) !important;
-    font-weight: 700;
+}
+
+#imageViewerModal #viewerSelectBtn.is-selected {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: #ffffff !important;
+    border: 2px solid #34d399 !important;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.65), 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+    transform: scale(1.02);
+}
+
+#bgm-player-container #btn-toggle-bgm {
+    transition: all 0.25s ease !important;
+}
+
+#bgm-player-container #btn-toggle-bgm.is-playing {
+    box-shadow: 0 0 12px rgba(236, 72, 153, 0.5) !important;
 }
 
 /* Category Selector Modal - Luxury Styling Across All 4 Themes (Task B) */
