@@ -12395,11 +12395,6 @@
             var bgmAudio = document.getElementById('bgm-audio');
             if (!bgmAudio) return;
 
-            var modeView = document.getElementById('client-mode-view');
-            if (modeView && !modeView.classList.contains('hidden')) {
-                return; // Strictly never play BGM when client mode view is active
-            }
-
             if (forceUserInitiated) {
                 delete bgmAudio.dataset.userPaused;
                 delete bgmAudio.dataset.modeStopped;
@@ -12410,6 +12405,11 @@
             }
 
             if (bgmAudio.dataset.userPaused === 'true' && !forceUserInitiated) return;
+
+            var modeView = document.getElementById('client-mode-view');
+            if (modeView && modeView.classList.contains('active') && !forceUserInitiated) {
+                return; // Strictly never auto-resume when client mode view is active
+            }
 
             if (!bgmAudio.src || bgmAudio.src === '' || bgmAudio.src.endsWith(window.location.pathname)) {
                 if (clientState && clientState.musicUrl) {
@@ -12438,7 +12438,7 @@
                         btn.classList.remove('bg-gray-100', 'text-gray-500');
                         btn.classList.add('bg-pink-50', 'text-pink-500');
                     }
-                }).catch(function () {
+                }).catch(function (err) {
                     bgmAudio.dataset.pendingAutoplay = 'true';
                 });
             }
@@ -12480,7 +12480,7 @@
 
         function tryTriggerBGM() {
             var modeView = document.getElementById('client-mode-view');
-            if (modeView && !modeView.classList.contains('hidden')) {
+            if (modeView && modeView.classList.contains('active')) {
                 return;
             }
             var audio = document.getElementById('bgm-audio');
@@ -14693,7 +14693,7 @@
         ['touchstart', 'touchend', 'pointerdown', 'click'].forEach(function (evtName) {
             document.addEventListener(evtName, function bgmInteractionListener() {
                 var modeView = document.getElementById('client-mode-view');
-                if (modeView && !modeView.classList.contains('hidden')) {
+                if (modeView && modeView.classList.contains('active')) {
                     return; // Strictly never auto-resume when in mode selection screen
                 }
                 var audio = document.getElementById('bgm-audio');
@@ -17206,9 +17206,6 @@
 
         function selectClientMode(mode) {
             clientState.galleryMode = mode;
-            if (mode === 'selection') {
-                playClientBGM(true);
-            }
 
             var modeSelection = document.getElementById('action-selection-mode');
             var modeDownload = document.getElementById('action-download-mode');
@@ -17242,6 +17239,7 @@
             var stepsContainer = document.querySelector('.client-simple-steps');
 
             if (mode === 'download') {
+                stopClientBGM();
                 if (modeSelection) modeSelection.classList.add('hidden');
                 if (modeDownload) modeDownload.classList.remove('hidden');
                 if (subtitle) subtitle.classList.add('hidden'); // Sembunyikan tulisan "Maksimal x foto"
@@ -17284,6 +17282,9 @@
             }
 
             fetchClientContent(clientState.currentFolderId, clientState.currentFolderName);
+            if (mode === 'selection') {
+                playClientBGM(true);
+            }
             updateClientCounterUI();
             if (isSubmitted) {
                 updateGalleryLock();
