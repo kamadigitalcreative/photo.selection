@@ -740,6 +740,16 @@ function isSafeHttpsUrl(value) {
   }
 }
 
+function isSafeAudioReference(value) {
+  if (!value || typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  if (isSafeHttpsUrl(trimmed)) return true;
+  if (trimmed.startsWith('data:audio/') && trimmed.length <= 4 * 1024 * 1024) {
+    return /^data:audio\/(mpeg|mp3|wav|ogg|aac|m4a|webm|mp4);base64,[A-Za-z0-9+/=]+$/.test(trimmed);
+  }
+  return false;
+}
+
 function estimateBase64DecodedBytes(base64Str) {
   if (typeof base64Str !== 'string') return 0;
   const commaIdx = base64Str.indexOf(',');
@@ -1818,6 +1828,7 @@ async function handler(req, res) {
       case 'reopenProject': return await handleReopenProject(payload, res);
       case 'toggleProjectWatermark': return await handleToggleProjectWatermark(payload, res);
       case 'toggleProjectDownload': return await handleToggleProjectDownload(payload, res);
+      case 'updateProjectMusic': return await handleUpdateProjectMusic(payload, res);
       case 'updateProjectMaxFoto': return await handleUpdateProjectMaxFoto(payload, res);
       case 'processPayment': return await handleProcessPayment(payload, res);
       case 'getDashboardStats': return await handleGetDashboardStats(payload, res);
@@ -2392,8 +2403,8 @@ async function handleGetProjects(payload, res) {
       UseWatermarkTiled: String(p.UseWatermarkTiled).toUpperCase() === 'TRUE',
       ClientLayout: p.ClientLayout || 'masonry',
       ExtraPrice: Number(p.ExtraPrice) || 0,
-      MusicUrl: p.MusicUrl || p.MusicURL || '',
-      MusicURL: p.MusicUrl || p.MusicURL || '',
+      MusicUrl: (p.MusicUrl && p.MusicUrl.startsWith('data:audio/')) ? 'custom_audio' : (p.MusicUrl || p.MusicURL || ''),
+      MusicURL: (p.MusicURL && p.MusicURL.startsWith('data:audio/')) ? 'custom_audio' : (p.MusicUrl || p.MusicURL || ''),
       AksesPilih: String(p.AksesPilih || p.Akses_Pilih).toUpperCase() !== 'FALSE',
       AksesDownload: String(p.AksesDownload || p.Akses_Download).toUpperCase() !== 'FALSE',
       'Akses_Pilih': String(p.AksesPilih || p.Akses_Pilih).toUpperCase() !== 'FALSE',
@@ -2519,8 +2530,8 @@ async function handleCreateProject(payload, res) {
   }
 
   const musicUrl = (d.musicUrl || d.music || '').trim();
-  if (musicUrl && !isSafeHttpsUrl(musicUrl)) {
-    return error(res, 'Music URL harus berupa link HTTPS yang valid.');
+  if (musicUrl && !isSafeAudioReference(musicUrl)) {
+    return error(res, 'Music URL harus berupa link HTTPS atau file audio yang valid.');
   }
 
   // Server-side enforcement of PRO features (Unified Entitlement Resolver):
@@ -3478,6 +3489,35 @@ async function handleToggleProjectWatermark(payload, res) {
   });
 
   return success(res, { success: true, newValue: newVal, message: 'Watermark berhasil diubah' });
+}
+
+async function handleUpdateProjectMusic(payload, res) {
+  const authUser = payload.authUser || {};
+  const projectId = (payload.projectId || payload.id || '').trim();
+  const musicUrl = (payload.musicUrl !== undefined ? payload.musicUrl : (payload.music || '')).trim();
+
+  if (!projectId) return error(res, 'Project ID wajib diisi.', 400);
+
+  const project = await requireProjectAccess(authUser, projectId, res);
+  if (!project) return;
+
+  if (musicUrl && !isSafeAudioReference(musicUrl)) {
+    return error(res, 'Format musik tidak valid. Gunakan URL HTTPS atau file audio MP3/WAV (maks 2.5 MB).', 400);
+  }
+
+  if (musicUrl) {
+    const userPro = await getUserProEntitlement(authUser.username);
+    if (!userPro.isPro) {
+      return error(res, 'Fitur Musik Galeri membutuhkan Add-On PRO yang aktif.', 403);
+    }
+  }
+
+  await supabaseQuery(`projects?or=(id.eq.${encodeURIComponent(projectId)},ID.eq.${encodeURIComponent(projectId)})`, {
+    method: 'PATCH',
+    body: { MusicUrl: musicUrl, MusicURL: musicUrl }
+  });
+
+  return success(res, { success: true, musicUrl: musicUrl }, 'Musik galeri berhasil diperbarui.');
 }
 
 async function handleToggleProjectDownload(payload, res) {
