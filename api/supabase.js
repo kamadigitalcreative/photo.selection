@@ -4771,6 +4771,12 @@ async function handleGetPreviewImage(payload, req, res) {
 
 async function handleGetAudioData(payload, res) {
   const musicUrl = (payload.musicUrl || payload.url || '').trim();
+  if (payload.fileId && typeof payload.fileId === 'string') {
+    const safeFileId = payload.fileId.replace(/[^a-zA-Z0-9_\-]/g, '');
+    if (safeFileId) {
+      return success(res, { success: true, url: `https://docs.google.com/uc?export=download&id=${safeFileId}` });
+    }
+  }
   if (musicUrl && !isSafeHttpsUrl(musicUrl)) {
     return error(res, 'URL audio tidak valid. Hanya URL HTTPS yang diizinkan.', 400);
   }

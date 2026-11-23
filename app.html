@@ -6096,6 +6096,21 @@
         var appBranding = { name: 'Kama Creative', logo: '' };
         var currentUser = null;
 
+        function getCleanCurrentUser(user) {
+            if (!user) return null;
+            return {
+                username: user.username || user.Username || '',
+                nama: user.nama || user.Nama || '',
+                role: user.role || user.Role || 'Photographer',
+                status: user.status || user.Status || 'Active',
+                paket: user.paket || user.Paket || '',
+                expiredAt: user.expiredAt || user.ExpiredAt || '',
+                sessionId: user.sessionId || user.SessionID || '',
+                projectCreated: Number(user.projectCreated || user.ProjectCreated || 0),
+                isPremiumAddon: Boolean(user.isPremiumAddon || user.isPro || user.proIsActive)
+            };
+        }
+
         function updateRenewPackageHeaderButton() {
             var btn = document.getElementById('btn-renew-package-header');
             if (!btn) return;
@@ -7336,7 +7351,7 @@
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'pingUser', currentUser: currentUser }),
+                    body: JSON.stringify({ action: 'pingUser', currentUser: getCleanCurrentUser(currentUser) }),
                     keepalive: true
                 });
                 const res = await response.json();
@@ -9509,7 +9524,7 @@
                         const response = await fetch(API_ENDPOINT, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'reopenProject', projectId: projectId, newMax: newMax, token: token, currentUser: currentUser })
+                            body: JSON.stringify({ action: 'reopenProject', projectId: projectId, newMax: newMax, token: token, currentUser: getCleanCurrentUser(currentUser) })
                         });
                         const res = await response.json();
                         endLoading();
@@ -9555,7 +9570,7 @@
                         const response = await fetch(API_ENDPOINT, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'processPayment', projectId: projectId, status: 'Selesai', token: token, currentUser: currentUser })
+                            body: JSON.stringify({ action: 'processPayment', projectId: projectId, status: 'Selesai', token: token, currentUser: getCleanCurrentUser(currentUser) })
                         });
                         const res = await response.json();
                         endLoading();
@@ -9642,7 +9657,7 @@
                         const response = await fetch(API_ENDPOINT, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'processPayment', projectId: projectId, status: 'Sedang Memilih', token: token, currentUser: currentUser })
+                            body: JSON.stringify({ action: 'processPayment', projectId: projectId, status: 'Sedang Memilih', token: token, currentUser: getCleanCurrentUser(currentUser) })
                         });
                         const res = await response.json();
                         endLoading();
@@ -10115,6 +10130,26 @@
                 inpMusicFile.disabled = !isPrem;
                 if (!isPrem) inpMusicFile.classList.add('pointer-events-none');
                 else inpMusicFile.classList.remove('pointer-events-none');
+                if (!inpMusicFile.dataset.boundChange) {
+                    inpMusicFile.dataset.boundChange = 'true';
+                    inpMusicFile.addEventListener('change', function () {
+                        if (this.files && this.files.length > 0) {
+                            var isEn = (document.getElementById('langSelector') && document.getElementById('langSelector').value === 'en') || (localStorage.getItem('ps_lang') === 'en');
+                            Swal.fire({
+                                icon: 'info',
+                                title: isEn ? 'Google Drive Link Recommended' : 'Gunakan Link Google Drive',
+                                html: isEn
+                                    ? 'To ensure fast loading and prevent server payload limits, please upload your audio to Google Drive and paste the shareable link in the <b>External MP3 Link</b> field below.'
+                                    : 'Agar musik dapat diputar lancar oleh klien tanpa kendala batas server hosting, silakan upload file musik Anda ke <b>Google Drive</b> lalu tempelkan link-nya pada kolom <b>Tempel Link MP3 Eksternal</b>.',
+                                confirmButtonText: 'OK',
+                                confirmButtonColor: '#7c3aed'
+                            });
+                            this.value = '';
+                            var linkEl = document.getElementById('p_music_url');
+                            if (linkEl) linkEl.focus();
+                        }
+                    });
+                }
             }
             if (inpMusicUrl) {
                 inpMusicUrl.disabled = !isPrem;
@@ -10312,27 +10347,20 @@
 
             var musicFileEl = document.getElementById('p_music_file');
             if (musicFileEl && musicFileEl.files && musicFileEl.files.length > 0) {
-                var file = musicFileEl.files[0];
-                var allowedAudioMimes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/mp4', 'audio/x-m4a', 'audio/ogg', 'audio/aac', 'audio/webm'];
-                var allowedAudioExts = ['.mp3', '.wav', '.m4a', '.ogg', '.aac', '.weba'];
-                var ext = (file.name && file.name.lastIndexOf('.') !== -1) ? file.name.substring(file.name.lastIndexOf('.')).toLowerCase() : '';
-                var isMimeValid = file.type && allowedAudioMimes.includes(file.type.toLowerCase());
-                var isExtValid = allowedAudioExts.includes(ext);
-                if (!isMimeValid && !isExtValid) {
-                    Swal.fire('Format Tidak Didukung', 'File audio harus berformat MP3, WAV, M4A, OGG, atau AAC.', 'warning');
-                    return;
-                }
-                if (file.size > 4 * 1024 * 1024) { // Max 4MB to prevent Apps Script payload limits
-                    Swal.fire('Ukuran Terlalu Besar', 'Maksimal ukuran file musik yang diupload langsung adalah 4 MB karena batasan server. Jika lagu Anda lebih besar, harap upload manual ke Google Drive Anda dan masukkan Link-nya di kolom bawah.', 'warning');
-                    return;
-                }
-                const base64Str = await new Promise((resolve) => {
-                    var reader = new FileReader();
-                    reader.onload = function (e) { resolve(e.target.result.split(',')[1]); };
-                    reader.readAsDataURL(file);
+                var isEn = (document.getElementById('langSelector') && document.getElementById('langSelector').value === 'en') || (localStorage.getItem('ps_lang') === 'en');
+                Swal.fire({
+                    icon: 'info',
+                    title: isEn ? 'Use Google Drive Link' : 'Gunakan Link Google Drive',
+                    html: isEn
+                        ? 'To protect server performance and prevent upload errors, please upload your audio to Google Drive and paste the shareable link in the <b>External MP3 Link</b> field below.'
+                        : 'Untuk menjaga stabilitas performa server dan mencegah kendala batas upload, silakan upload musik ke <b>Google Drive</b> Anda lalu masukkan link-nya pada kolom <b>Tempel Link MP3 Eksternal</b>.',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#7c3aed'
                 });
-                formData.musicBase64 = base64Str;
-                formData.musicFileName = file.name;
+                musicFileEl.value = '';
+                var inpLink = document.getElementById('p_music_url');
+                if (inpLink) inpLink.focus();
+                return;
             }
 
             setButtonState('btnCreate', true, 'Membuat Link...');
@@ -10346,11 +10374,22 @@
                         action: 'createProject',
                         sessionId: (currentUser && currentUser.sessionId) ? currentUser.sessionId : '',
                         formData: formData,
-                        currentUser: currentUser,
-                        appConfig: { brandName: appBranding.name, baseUrl: "https://ps.kamacreative.my.id" }
+                        currentUser: getCleanCurrentUser(currentUser),
+                        appConfig: { brandName: (appBranding && appBranding.name) || 'Photo Selection', baseUrl: "https://ps.kamacreative.my.id" }
                     })
                 });
-                const res = await response.json();
+
+                let res;
+                const rawText = await response.text();
+                try {
+                    res = JSON.parse(rawText);
+                } catch (parseErr) {
+                    var isEn = (document.getElementById('langSelector') && document.getElementById('langSelector').value === 'en') || (localStorage.getItem('ps_lang') === 'en');
+                    if (response.status === 413 || (rawText && rawText.includes('Entity Too Large'))) {
+                        throw new Error(isEn ? 'Data payload too large for the server. If using music, please use a Google Drive link.' : 'Ukuran data terlalu besar untuk diproses server. Harap gunakan link Google Drive untuk musik latar.');
+                    }
+                    throw new Error((isEn ? 'Server communication error (' : 'Gagal memproses respons server (') + response.status + '): ' + (rawText.substring(0, 100) || 'Unknown error'));
+                }
                 endLoading();
                 setButtonState('btnCreate', false, 'Generate Link');
 
@@ -10706,7 +10745,7 @@
                         const response = await fetch(API_ENDPOINT, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'updateClientPassword', id: id, newPassword: newPass, currentUser: currentUser })
+                            body: JSON.stringify({ action: 'updateClientPassword', id: id, newPassword: newPass, currentUser: getCleanCurrentUser(currentUser) })
                         });
                         const res = await response.json();
                         endLoading();
@@ -10763,7 +10802,7 @@
                         const response = await fetch(API_ENDPOINT, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'updateDeadline', id: id, newDeadline: newDeadline, currentUser: currentUser })
+                            body: JSON.stringify({ action: 'updateDeadline', id: id, newDeadline: newDeadline, currentUser: getCleanCurrentUser(currentUser) })
                         });
                         const res = await response.json();
                         endLoading();
@@ -15691,7 +15730,7 @@
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache, no-store, must-revalidate' },
-                    body: JSON.stringify({ action: 'getProjects', currentUser: currentUser, _timestamp: new Date().getTime() })
+                    body: JSON.stringify({ action: 'getProjects', currentUser: getCleanCurrentUser(currentUser), _timestamp: new Date().getTime() })
                 });
                 const res = await response.json();
                 if (!cachedStatus && !isSilent) endLoading();
@@ -16462,7 +16501,7 @@
                 const response = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'getFeedbacks', currentUser: currentUser })
+                    body: JSON.stringify({ action: 'getFeedbacks', currentUser: getCleanCurrentUser(currentUser) })
                 });
                 const res = await response.json();
                 if (!isSilent) endLoading();
@@ -18038,7 +18077,7 @@
             fetch(API_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'syncBackground', currentUser: currentUser })
+                body: JSON.stringify({ action: 'syncBackground', currentUser: getCleanCurrentUser(currentUser) })
             })
                 .then(function (r) { return r.json(); })
                 .then(function (res) {
