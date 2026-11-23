@@ -17239,7 +17239,6 @@
             var stepsContainer = document.querySelector('.client-simple-steps');
 
             if (mode === 'download') {
-                stopClientBGM();
                 if (modeSelection) modeSelection.classList.add('hidden');
                 if (modeDownload) modeDownload.classList.remove('hidden');
                 if (subtitle) subtitle.classList.add('hidden'); // Sembunyikan tulisan "Maksimal x foto"
@@ -17282,9 +17281,7 @@
             }
 
             fetchClientContent(clientState.currentFolderId, clientState.currentFolderName);
-            if (mode === 'selection') {
-                playClientBGM(true);
-            }
+            playClientBGM(true);
             updateClientCounterUI();
             if (isSubmitted) {
                 updateGalleryLock();
