@@ -1825,6 +1825,7 @@ async function handler(req, res) {
       case 'getDriveContent': return await handleGetDriveContent(payload, req, res);
       case 'getPhotos': return await handleGetDriveContent(payload, req, res);
       case 'getAudioData': return await handleGetAudioData(payload, res);
+      case 'getAudioStream': return await handleGetAudioStream(payload, req, res);
       case 'submitFeedback': return await handleSubmitFeedback(payload, res);
       case 'getFeedbacks': return await handleGetFeedbacks(payload, res);
       case 'replyFeedback': return await handleReplyFeedback(payload, res);
@@ -1849,6 +1850,7 @@ module.exports.handleGetPreviewImage = handleGetPreviewImage;
 module.exports.handleDownloadOriginalFile = handleDownloadOriginalFile;
 module.exports.handleUpdateClientStatus = handleUpdateClientStatus;
 module.exports.handleGetProjects = handleGetProjects;
+module.exports.handleGetAudioStream = handleGetAudioStream;
 module.exports.parseAndValidateOrigin = parseAndValidateOrigin;
 module.exports.getAllowedOrigins = getAllowedOrigins;
 module.exports.handleCors = handleCors;
@@ -4767,6 +4769,58 @@ async function handleGetPreviewImage(payload, req, res) {
       console.error('Preview stream error:', err.message);
     }
   });
+}
+
+async function handleGetAudioStream(payload, req, res) {
+  const fileId = String(payload.fileId || payload.id || '').trim();
+  if (!fileId || !/^[a-zA-Z0-9_\-]{10,128}$/.test(fileId)) {
+    return error(res, 'Parameter fileId tidak valid.', 400);
+  }
+
+  try {
+    const provider = getDriveProvider();
+    const rangeHeader = req && req.headers ? req.headers['range'] : null;
+    const streamOpts = rangeHeader ? { range: rangeHeader } : {};
+    const streamRes = await provider.fetchOriginalStream(fileId, streamOpts);
+
+    if (!streamRes || !streamRes.success) {
+      res.writeHead(302, { 'Location': `https://docs.google.com/uc?export=download&id=${encodeURIComponent(fileId)}` });
+      return res.end();
+    }
+
+    const contentType = streamRes.contentType || 'audio/mpeg';
+    const resHeaders = {
+      'Content-Type': contentType,
+      'Accept-Ranges': 'bytes',
+      'Cache-Control': 'public, max-age=86400',
+      'X-Content-Type-Options': 'nosniff'
+    };
+    if (streamRes.contentLength) {
+      resHeaders['Content-Length'] = streamRes.contentLength;
+    }
+    if (streamRes.contentRange) {
+      resHeaders['Content-Range'] = streamRes.contentRange;
+      res.writeHead(206, resHeaders);
+    } else {
+      res.writeHead(200, resHeaders);
+    }
+
+    const nodeStream = toNodeReadable(streamRes.stream || streamRes.body);
+    if (!nodeStream) {
+      res.writeHead(302, { 'Location': `https://docs.google.com/uc?export=download&id=${encodeURIComponent(fileId)}` });
+      return res.end();
+    }
+
+    pipeline(nodeStream, res, (err) => {
+      if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+        console.error('Audio stream pipeline error:', err.message);
+      }
+    });
+  } catch (err) {
+    console.error('Audio stream handler error:', err);
+    res.writeHead(302, { 'Location': `https://docs.google.com/uc?export=download&id=${encodeURIComponent(fileId)}` });
+    return res.end();
+  }
 }
 
 async function handleGetAudioData(payload, res) {

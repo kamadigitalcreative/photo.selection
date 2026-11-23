@@ -11854,6 +11854,7 @@
             clientState.clientLayout = projectData.clientLayout || 'masonry';
             clientState.extraPrice = projectData.extraPrice || 0;
             clientState.musicUrl = projectData.musicUrl || '';
+            setupClientBGM();
             clientState.bankName = projectData.bankName || '';
             clientState.bankAccount = projectData.bankAccount || '';
             clientState.bankAccountName = projectData.bankAccountName || '';
@@ -12079,6 +12080,99 @@
             }
         }
 
+        function resolveClientAudioUrl(musicUrl) {
+            if (!musicUrl || typeof musicUrl !== 'string') return '';
+            var trimmed = musicUrl.trim();
+            if (!trimmed) return '';
+
+            var driveMatch = trimmed.match(/\/file\/d\/([a-zA-Z0-9_\-]{15,128})/) ||
+                             trimmed.match(/[?&]id=([a-zA-Z0-9_\-]{15,128})/) ||
+                             trimmed.match(/\/d\/([a-zA-Z0-9_\-]{15,128})/);
+            if (driveMatch && driveMatch[1]) {
+                var fileId = driveMatch[1];
+                var api = (typeof API_ENDPOINT !== 'undefined') ? API_ENDPOINT : '/api/bridge';
+                return api + '?action=getAudioStream&fileId=' + encodeURIComponent(fileId);
+            }
+
+            return trimmed;
+        }
+
+        function tryTriggerBGM() {
+            var bgmAudio = document.getElementById('bgm-audio');
+            if (!bgmAudio) return;
+
+            if (!bgmAudio.src || bgmAudio.src === '' || bgmAudio.src.endsWith(window.location.pathname)) {
+                if (clientState && clientState.musicUrl) {
+                    var resolved = resolveClientAudioUrl(clientState.musicUrl);
+                    if (resolved) {
+                        bgmAudio.src = resolved;
+                        bgmAudio.loop = true;
+                        bgmAudio.preload = 'auto';
+                        bgmAudio.load();
+                    }
+                }
+            }
+
+            if (!bgmAudio.src || bgmAudio.src === '' || bgmAudio.src.endsWith(window.location.pathname)) return;
+            if (bgmAudio.dataset.userPaused === 'true') return;
+
+            if (bgmAudio.paused) {
+                var playPromise = bgmAudio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(function () {
+                        bgmAudio.dataset.pendingAutoplay = 'false';
+                        var btn = document.getElementById('btn-toggle-bgm');
+                        var icon = btn ? btn.querySelector('i') : null;
+                        if (icon) icon.className = 'fa-solid fa-music animate-spin';
+                        if (btn) {
+                            btn.classList.remove('bg-gray-100', 'text-gray-500');
+                            btn.classList.add('bg-pink-50', 'text-pink-500');
+                        }
+                    }).catch(function () {
+                        bgmAudio.dataset.pendingAutoplay = 'true';
+                    });
+                }
+            }
+        }
+
+        function setupClientBGM() {
+            var bgmContainer = document.getElementById('bgm-player-container');
+            var bgmAudio = document.getElementById('bgm-audio');
+            if (!bgmContainer || !bgmAudio) return;
+
+            if (clientState.musicUrl && clientState.musicUrl.trim() !== '') {
+                bgmContainer.classList.remove('hidden');
+                var resolvedUrl = resolveClientAudioUrl(clientState.musicUrl);
+                if (resolvedUrl && (!bgmAudio.src || bgmAudio.src === '' || bgmAudio.src.endsWith(window.location.pathname) || bgmAudio.dataset.loadedUrl !== resolvedUrl)) {
+                    bgmAudio.dataset.loadedUrl = resolvedUrl;
+                    bgmAudio.src = resolvedUrl;
+                    bgmAudio.loop = true;
+                    bgmAudio.preload = 'auto';
+                    bgmAudio.load();
+
+                    bgmAudio.onerror = function () {
+                        if (clientState.musicUrl && !bgmAudio.dataset.triedFallback) {
+                            bgmAudio.dataset.triedFallback = 'true';
+                            var driveMatch = clientState.musicUrl.match(/\/file\/d\/([a-zA-Z0-9_\-]{15,128})/) ||
+                                             clientState.musicUrl.match(/[?&]id=([a-zA-Z0-9_\-]{15,128})/) ||
+                                             clientState.musicUrl.match(/\/d\/([a-zA-Z0-9_\-]{15,128})/);
+                            if (driveMatch && driveMatch[1]) {
+                                bgmAudio.src = 'https://docs.google.com/uc?export=download&id=' + driveMatch[1];
+                                bgmAudio.load();
+                                tryTriggerBGM();
+                            }
+                        }
+                    };
+                }
+
+                tryTriggerBGM();
+            } else {
+                bgmContainer.classList.add('hidden');
+                bgmAudio.pause();
+                bgmAudio.src = '';
+            }
+        }
+
         async function fetchClientContent(folderId, folderName) {
             showView('client-gallery-view');
 
@@ -12131,51 +12225,7 @@
             }
 
             // SETUP BGM PLAYER
-            var bgmContainer = document.getElementById('bgm-player-container');
-            var bgmAudio = document.getElementById('bgm-audio');
-            if (clientState.musicUrl && clientState.musicUrl.trim() !== '') {
-                bgmContainer.classList.remove('hidden');
-                if (!bgmAudio.dataset.loaded) {
-                    bgmAudio.dataset.loaded = 'true';
-                    var finalAudioUrl = clientState.musicUrl;
-                    var urlParams = finalAudioUrl.match(/id=([-\w]{25,})/);
-                    if (urlParams && urlParams[1]) {
-                        fetch(API_ENDPOINT, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'getAudioData', fileId: urlParams[1] })
-                        }).then(res => res.json()).then(res => {
-                            if (res.status === 'success' && res.data && res.data.base64) {
-                                bgmAudio.src = 'data:' + (res.data.mimeType || 'audio/mpeg') + ';base64,' + res.data.base64;
-                                var playPromise = bgmAudio.play();
-                                if (playPromise !== undefined) {
-                                    playPromise.then(() => {
-                                        var btnIcon = document.querySelector('#btn-toggle-bgm i');
-                                        if (btnIcon) btnIcon.className = 'fa-solid fa-music animate-spin';
-                                        var btn = document.getElementById('btn-toggle-bgm');
-                                        if (btn) { btn.classList.remove('bg-gray-100', 'text-gray-500'); btn.classList.add('bg-pink-50', 'text-pink-500'); }
-                                    }).catch(() => { });
-                                }
-                            }
-                        }).catch(err => console.log('BGM load error:', err));
-                    } else {
-                        bgmAudio.src = finalAudioUrl;
-                        var playPromise = bgmAudio.play();
-                        if (playPromise !== undefined) {
-                            playPromise.then(() => {
-                                var btnIcon = document.querySelector('#btn-toggle-bgm i');
-                                if (btnIcon) btnIcon.className = 'fa-solid fa-music animate-spin';
-                                var btn = document.getElementById('btn-toggle-bgm');
-                                if (btn) { btn.classList.remove('bg-gray-100', 'text-gray-500'); btn.classList.add('bg-pink-50', 'text-pink-500'); }
-                            }).catch(() => { });
-                        }
-                    }
-                }
-            } else {
-                bgmContainer.classList.add('hidden');
-                bgmAudio.pause();
-                bgmAudio.src = '';
-            }
+            setupClientBGM();
 
             var btnBack = document.getElementById('btn-back-folder');
             if (btnBack) {
@@ -12316,6 +12366,7 @@
         }
 
         function openSubFolder(fId, fName) {
+            tryTriggerBGM();
             if (typeof cancelPendingThumbnailQueue === 'function') cancelPendingThumbnailQueue();
             clientState.folderHistory.push({ id: clientState.currentFolderId, name: clientState.currentFolderName });
             clientState.currentFolderId = fId;
@@ -12850,6 +12901,7 @@
 
         function openImageViewer(url, name, event, index, customList) {
             if (event) event.stopPropagation();
+            tryTriggerBGM();
 
             resetZoom(); // Wajib di-reset setiap kali foto baru dibuka
 
@@ -14282,36 +14334,67 @@
         window.toggleBGM = function () {
             var audio = document.getElementById('bgm-audio');
             var btn = document.getElementById('btn-toggle-bgm');
-            var icon = btn.querySelector('i');
-            if (audio.paused) {
-                if (!audio.src || audio.src === '' || audio.src.endsWith(window.location.pathname)) {
-                    Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Sedang memuat audio, harap tunggu...', timer: 2000, showConfirmButton: false });
-                    return;
+            var icon = btn ? btn.querySelector('i') : null;
+            if (!audio) return;
+
+            if (!audio.src || audio.src === '' || audio.src.endsWith(window.location.pathname)) {
+                if (clientState && clientState.musicUrl) {
+                    audio.src = resolveClientAudioUrl(clientState.musicUrl);
+                    audio.loop = true;
+                    audio.preload = 'auto';
+                    audio.load();
                 }
+            }
+
+            if (!audio.src || audio.src === '' || audio.src.endsWith(window.location.pathname)) {
+                var isEn = localStorage.getItem('ps_lang') === 'en';
+                Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: isEn ? 'No audio track set for this project.' : 'Tidak ada musik pada project ini.', timer: 2000, showConfirmButton: false });
+                return;
+            }
+
+            if (audio.paused) {
+                delete audio.dataset.userPaused;
+                audio.dataset.pendingAutoplay = 'false';
                 if (audio.readyState === 0) {
                     audio.load();
                 }
                 var playPromise = audio.play();
                 if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        icon.className = 'fa-solid fa-music animate-spin';
-                        btn.classList.remove('bg-gray-100', 'text-gray-500');
-                        btn.classList.add('bg-pink-50', 'text-pink-500');
-                    }).catch(error => {
+                    playPromise.then(function () {
+                        if (icon) icon.className = 'fa-solid fa-music animate-spin';
+                        if (btn) {
+                            btn.classList.remove('bg-gray-100', 'text-gray-500');
+                            btn.classList.add('bg-pink-50', 'text-pink-500');
+                        }
+                    }).catch(function (error) {
                         console.log('Audio play error:', error);
-                        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Gagal memutar musik: ' + error.message, timer: 3000, showConfirmButton: false });
-                        icon.className = 'fa-solid fa-music';
-                        btn.classList.remove('bg-pink-50', 'text-pink-500');
-                        btn.classList.add('bg-gray-100', 'text-gray-500');
+                        if (icon) icon.className = 'fa-solid fa-music';
+                        if (btn) {
+                            btn.classList.remove('bg-pink-50', 'text-pink-500');
+                            btn.classList.add('bg-gray-100', 'text-gray-500');
+                        }
+                        var isEn = localStorage.getItem('ps_lang') === 'en';
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: (isEn ? 'Failed to play audio: ' : 'Gagal memutar musik: ') + (error.message || ''), timer: 3000, showConfirmButton: false });
                     });
                 }
             } else {
+                audio.dataset.userPaused = 'true';
                 audio.pause();
-                icon.className = 'fa-solid fa-music';
-                btn.classList.remove('bg-pink-50', 'text-pink-500');
-                btn.classList.add('bg-gray-100', 'text-gray-500');
+                if (icon) icon.className = 'fa-solid fa-music';
+                if (btn) {
+                    btn.classList.remove('bg-pink-50', 'text-pink-500');
+                    btn.classList.add('bg-gray-100', 'text-gray-500');
+                }
             }
         };
+
+        // Fallback global interaction listener to resume audio if initially blocked by browser autoplay policy
+        document.addEventListener('click', function bgmInteractionListener() {
+            var audio = document.getElementById('bgm-audio');
+            if (audio && audio.dataset.pendingAutoplay === 'true') {
+                tryTriggerBGM();
+            }
+        }, { passive: true });
 
         function performSelectionData(cardElement, filename, url, category, btnPilih, isEn, fileId, folderName) {
             var targetFolder = folderName || clientState.currentFolderName || '';
@@ -16815,6 +16898,7 @@
 
         function selectClientMode(mode) {
             clientState.galleryMode = mode;
+            tryTriggerBGM();
 
             var modeSelection = document.getElementById('action-selection-mode');
             var modeDownload = document.getElementById('action-download-mode');
