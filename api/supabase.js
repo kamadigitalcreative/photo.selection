@@ -1751,6 +1751,12 @@ async function handler(req, res) {
       payload = {};
     }
 
+    if (req && req.query && typeof req.query === 'object') {
+      for (const [k, v] of Object.entries(req.query)) {
+        if (!payload[k]) payload[k] = v;
+      }
+    }
+
     if ((!payload.action) && req && req.url) {
       try {
         const u = new URL(req.url, 'http://localhost');
@@ -4814,7 +4820,7 @@ async function handleGetPreviewImage(payload, req, res) {
 }
 
 async function handleGetAudioStream(payload, req, res) {
-  const fileId = String(payload.fileId || payload.id || '').trim();
+  const fileId = String(payload.fileId || payload.id || (req && req.query && req.query.fileId) || '').trim();
   if (!fileId || !/^[a-zA-Z0-9_\-]{10,128}$/.test(fileId)) {
     return error(res, 'Parameter fileId tidak valid.', 400);
   }
