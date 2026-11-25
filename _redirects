@@ -1,6 +1,12 @@
 /login /app.html 200
 /register /app.html 200
 /app /app.html 200
+/collage /app.html 200
+/sortir-lokal /app.html 200
+/sortirlokal /app.html 200
+/settings /app.html 200
+/pengaturan /app.html 200
+/premium-addon /app.html 200
 /admin/* /app.html 200
 /projects/* /app.html 200
 /client/* /app.html 200
@@ -8,9 +14,3 @@
 /support/* /app.html 200
 /team/* /app.html 200
 /reports/* /app.html 200
-/collage /app.html 200
-/sortir-lokal /app.html 200
-/sortirlokal /app.html 200
-/settings /app.html 200
-/pengaturan /app.html 200
-/premium-addon /app.html 200

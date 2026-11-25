@@ -11,7 +11,7 @@ const { Readable } = require('stream');
 const { ERROR_CODES, SUPPORTED_IMAGE_MIMES, SUPPORTED_RAW_EXTENSIONS } = require('./types');
 const urlParser = require('./urlParser');
 
-const FIXTURES_DIR = path.resolve(__dirname, '..', '..', 'test', 'phase55-fixtures');
+const FIXTURES_DIR = (typeof __dirname !== 'undefined') ? path.resolve(__dirname, '..', '..', 'test', 'phase55-fixtures') : '';
 
 function generateSyntheticJpeg(sizeBytes, seed = 1) {
   const buf = Buffer.alloc(sizeBytes);
