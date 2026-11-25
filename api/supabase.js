@@ -29,7 +29,7 @@ function toNodeReadable(body) {
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jqptagcbkyxxqqmxqusf.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_TL_Et1x8IlEwxKASjF0K8Q_t72R3f_9';
 const LEGACY_KAMA_SALT = "KamaSecretSalt";
-const GAS_MAILER_URL = process.env.GAS_MAILER_URL || 'https://script.google.com/macros/s/AKfycbwzw3k--HOqHS0As2PCrz6m7c3VKqKlifdJVrb9Cy15ScvmHNB5lFFDNTRR5xfmzf4/exec';
+const GAS_MAILER_URL = process.env.GAS_MAILER_URL || process.env.GAS_URL || 'https://script.google.com/macros/s/AKfycbwzw3k--HOqHS0As2PCrz6m7c3VKqKlifdJVrb9Cy15ScvmHNB5lFFDNTRR5xfmzf4/exec';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'kamabalicreative@gmail.com';
 const APP_URL = process.env.APP_URL || 'https://ps.kamacreative.my.id';
 
@@ -418,7 +418,7 @@ async function sendMetaCAPIEvent(eventName, eventData = {}) {
 }
 
 async function sendEmailViaGAS({ to, subject, htmlBody, textBody }) {
-  const mailerUrl = process.env.GAS_MAILER_URL || GAS_MAILER_URL;
+  const mailerUrl = process.env.GAS_MAILER_URL || process.env.GAS_URL || GAS_MAILER_URL;
   if (!mailerUrl) {
     console.warn('[MAILER] GAS_MAILER_URL belum diatur di Environment Variables. Email tidak dapat dikirim.');
     return false;
