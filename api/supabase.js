@@ -33,11 +33,21 @@ const GAS_MAILER_URL = process.env.GAS_MAILER_URL || process.env.GAS_URL || 'htt
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'kamabalicreative@gmail.com';
 const APP_URL = process.env.APP_URL || 'https://ps.kamacreative.my.id';
 
+function getActiveSupabaseUrl() {
+  return (process.env && process.env.SUPABASE_URL) || SUPABASE_URL;
+}
+
+function getActiveSupabaseKey() {
+  return (process.env && (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY)) || SUPABASE_KEY;
+}
+
 async function supabaseQuery(endpoint, options = {}) {
-  const url = `${SUPABASE_URL}/rest/v1/${endpoint}`;
+  const activeUrl = getActiveSupabaseUrl();
+  const activeKey = getActiveSupabaseKey();
+  const url = `${activeUrl}/rest/v1/${endpoint}`;
   const headers = {
-    'apikey': SUPABASE_KEY,
-    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'apikey': activeKey,
+    'Authorization': `Bearer ${activeKey}`,
     'Content-Type': 'application/json',
     'Prefer': options.prefer || 'return=representation',
     ...(options.headers || {})
@@ -3535,23 +3545,25 @@ async function handleUpdateProjectMusic(payload, res) {
 const audioUploadSessions = new Map();
 
 async function uploadToSupabaseStorage(bucket, path, buffer, contentType) {
+  const activeUrl = getActiveSupabaseUrl();
+  const activeKey = getActiveSupabaseKey();
   try {
-    await fetch(`${SUPABASE_URL}/storage/v1/bucket`, {
+    await fetch(`${activeUrl}/storage/v1/bucket`, {
       method: 'POST',
       headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'apikey': activeKey,
+        'Authorization': `Bearer ${activeKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ id: bucket, name: bucket, public: true })
     });
   } catch (_) {}
 
-  const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, {
+  const uploadRes = await fetch(`${activeUrl}/storage/v1/object/${bucket}/${path}`, {
     method: 'POST',
     headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'apikey': activeKey,
+      'Authorization': `Bearer ${activeKey}`,
       'Content-Type': contentType || 'audio/mpeg',
       'x-upsert': 'true'
     },
@@ -3564,7 +3576,7 @@ async function uploadToSupabaseStorage(bucket, path, buffer, contentType) {
     return null;
   }
 
-  return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`;
+  return `${activeUrl}/storage/v1/object/public/${bucket}/${path}`;
 }
 
 async function handleUploadAudioChunk(payload, req, res) {
@@ -3646,7 +3658,7 @@ async function handleGetProjectAudio(payload, req, res) {
   const projectId = String(payload.projectId || payload.id || (req && req.query && req.query.projectId) || '').trim();
   if (!projectId) return error(res, 'Project ID wajib disertakan.', 400);
 
-  const storageUrl = `${SUPABASE_URL}/storage/v1/object/public/project-audio/${projectId}.mp3`;
+  const storageUrl = `${getActiveSupabaseUrl()}/storage/v1/object/public/project-audio/${projectId}.mp3`;
   res.writeHead(302, { 'Location': storageUrl });
   return res.end();
 }
