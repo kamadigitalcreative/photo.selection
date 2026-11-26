@@ -1,4 +1,4 @@
-# 📖 Panduan Lengkap & Narasi Tutorial: Photo Selection
+<!--  --># 📖 Panduan Lengkap & Narasi Tutorial: Photo Selection
 *(Panduan Alur Kerja Fotografer: Paket Langganan Bulanan)*
 
 Dokumen ini berisi **Naskah Voiceover Video Tutorial** dan **Panduan Langkah-demi-Langkah** lengkap mengenai cara menggunakan aplikasi **Photo Selection** dari awal pendaftaran, langganan bulanan, pembuatan proyek, hingga serah terima foto klien.
