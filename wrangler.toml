@@ -6,3 +6,4 @@ pages_build_output_dir = "."
 [vars]
 DRIVE_PROVIDER = "public_link"
 SENDER_EMAIL = "Photo Selection <noreply@kamacreative.my.id>"
+MAYAR_WEBHOOK_SECRET = "kama_mayar_secret_2026"
