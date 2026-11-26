@@ -32,6 +32,8 @@ const LEGACY_KAMA_SALT = "KamaSecretSalt";
 const GAS_MAILER_URL = process.env.GAS_MAILER_URL || process.env.GAS_URL || 'https://script.google.com/macros/s/AKfycbwzw3k--HOqHS0As2PCrz6m7c3VKqKlifdJVrb9Cy15ScvmHNB5lFFDNTRR5xfmzf4/exec';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'kamabalicreative@gmail.com';
 const APP_URL = process.env.APP_URL || 'https://ps.kamacreative.my.id';
+const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
+const SENDER_EMAIL = process.env.SENDER_EMAIL || 'Photo Selection <noreply@kamacreative.my.id>';
 
 function getActiveSupabaseUrl() {
   return (process.env && process.env.SUPABASE_URL) || SUPABASE_URL;
@@ -427,7 +429,55 @@ async function sendMetaCAPIEvent(eventName, eventData = {}) {
   }
 }
 
+async function sendEmailViaResend({ to, subject, htmlBody, textBody }) {
+  const apiKey = (process.env && process.env.RESEND_API_KEY) || RESEND_API_KEY;
+  if (!apiKey) return false;
+  try {
+    const fromAddress = (process.env && process.env.SENDER_EMAIL) || SENDER_EMAIL || 'Photo Selection <noreply@kamacreative.my.id>';
+    const recipientList = Array.isArray(to) ? to : [to];
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: fromAddress,
+        to: recipientList,
+        subject: subject,
+        html: htmlBody,
+        text: textBody || undefined
+      })
+    });
+    if (!res.ok) {
+      let errDetail = '';
+      try {
+        const errJson = await res.json();
+        errDetail = JSON.stringify(errJson);
+      } catch (_) {
+        errDetail = await res.text().catch(() => '');
+      }
+      console.warn('[MAILER:RESEND] Non-200 status:', res.status, errDetail);
+      return false;
+    }
+    const data = await res.json().catch(() => ({}));
+    console.log('[MAILER:RESEND] Email berhasil dikirim via Resend ke', to, 'ID:', data.id);
+    return true;
+  } catch (err) {
+    console.warn('[MAILER:RESEND] Error pengiriman Resend:', err && err.message ? err.message : err);
+    return false;
+  }
+}
+
 async function sendEmailViaGAS({ to, subject, htmlBody, textBody }) {
+  // 1. Prioritaskan pengiriman via Domain Resmi (Resend)
+  const resendSuccess = await sendEmailViaResend({ to, subject, htmlBody, textBody });
+  if (resendSuccess) {
+    return true;
+  }
+
+  // 2. Fallback cadangan ke Google Apps Script jika Resend gagal atau kuota harian habis
+  console.warn('[MAILER] Mencoba fallback cadangan via Google Apps Script...');
   const mailerUrl = process.env.GAS_MAILER_URL || process.env.GAS_URL || GAS_MAILER_URL;
   if (!mailerUrl) {
     console.warn('[MAILER] GAS_MAILER_URL belum diatur di Environment Variables. Email tidak dapat dikirim.');
