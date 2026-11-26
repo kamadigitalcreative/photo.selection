@@ -4063,10 +4063,11 @@ async function handleApproveUser(payload, res) {
   const username = (payload.username || '').trim();
   const expiredAt = payload.expiredAt || payload.expiryValue || 'Lifetime';
   const role = payload.role || 'Photographer';
+  const paket = payload.paket || (expiredAt === 'Lifetime' ? 'Lifetime' : '1 Bulan');
 
   await supabaseQuery(`users?Username=ilike.${encodeURIComponent(username)}`, {
     method: 'PATCH',
-    body: { Status: 'Active', ExpiredAt: expiredAt, Role: role }
+    body: { Status: 'Active', ExpiredAt: expiredAt, Role: role, Paket: paket }
   });
 
   // Kirim email aktivasi ke fotografer

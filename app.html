@@ -1091,6 +1091,9 @@
                                                 Username</th>
                                             <th
                                                 class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">
+                                                Paket Langganan</th>
+                                            <th
+                                                class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">
                                                 Status</th>
                                             <th
                                                 class="p-4 sm:px-6 font-semibold text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100 text-center">
@@ -5499,11 +5502,14 @@
 
             // Headers Table Admin
             var tblUserHeaders = document.querySelectorAll('#section-users thead th');
-            if (tblUserHeaders.length >= 4) {
-                tblUserHeaders[0].innerText = isEn ? 'Name & Studio' : 'Nama & Studio';
-                tblUserHeaders[1].innerText = isEn ? 'Role & Limit' : 'Role & Limit';
-                tblUserHeaders[2].innerText = isEn ? 'Status & Last Active' : 'Status & Terakhir Aktif';
-                tblUserHeaders[3].innerText = isEn ? 'Actions' : 'Aksi';
+            if (tblUserHeaders.length >= 7) {
+                tblUserHeaders[0].innerText = isEn ? 'Photographer Name' : 'Nama Fotografer';
+                tblUserHeaders[1].innerText = 'Username';
+                tblUserHeaders[2].innerText = isEn ? 'Subscription Plan' : 'Paket Langganan';
+                tblUserHeaders[3].innerText = 'Status';
+                tblUserHeaders[4].innerText = isEn ? 'Activity' : 'Aktivitas';
+                tblUserHeaders[5].innerText = isEn ? 'Active Until' : 'Masa Aktif';
+                tblUserHeaders[6].innerText = isEn ? 'Actions' : 'Aksi';
             }
             var tblFbHeaders = document.querySelectorAll('#section-admin-feedback thead th');
             if (tblFbHeaders.length >= 4) {
@@ -5824,13 +5830,14 @@
             setTx('#reg_paket option[value="Demo"]', 'Coba Gratis (Demo 1 Project)', 'Free Trial (Demo 1 Project)');
 
             var userTh = document.querySelectorAll('#section-users thead th');
-            if (userTh.length >= 6) {
+            if (userTh.length >= 7) {
                 userTh[0].innerText = isEn ? 'Photographer Name' : 'Nama Fotografer';
                 userTh[1].innerText = 'Username';
-                userTh[2].innerText = 'Status';
-                userTh[3].innerText = isEn ? 'Activity' : 'Aktivitas';
-                userTh[4].innerText = isEn ? 'Active Until' : 'Masa Aktif';
-                userTh[5].innerText = isEn ? 'Actions' : 'Aksi';
+                userTh[2].innerText = isEn ? 'Subscription Plan' : 'Paket Langganan';
+                userTh[3].innerText = 'Status';
+                userTh[4].innerText = isEn ? 'Activity' : 'Aktivitas';
+                userTh[5].innerText = isEn ? 'Active Until' : 'Masa Aktif';
+                userTh[6].innerText = isEn ? 'Actions' : 'Aksi';
             }
 
             setTx('#section-admin-feedback h2', 'Laporan Masuk', 'Incoming Reports');
@@ -8183,6 +8190,45 @@
             }
         }
 
+        function resolveUserPlanText(row) {
+            if (!row) return 'Demo';
+            var rawPaket = String(row.Paket || '').trim();
+            var role = String(row.Role || '').trim();
+            var exp = String(row.ExpiredAt || '').trim();
+
+            if (exp === 'Lifetime' || rawPaket.toLowerCase().includes('lifetime')) return 'Lifetime';
+            if (role.toLowerCase() === 'demo' || rawPaket.toLowerCase().includes('demo') || (row.Username && row.Username.toLowerCase().includes('demo'))) return 'Demo';
+            if (rawPaket.toLowerCase().includes('1 tahun') || rawPaket.toLowerCase().includes('12 bulan') || rawPaket.toLowerCase().includes('tahun')) return '1 Tahun';
+            if (rawPaket.toLowerCase().includes('6 bulan')) return '6 Bulan';
+            if (rawPaket.toLowerCase().includes('1 bulan') || rawPaket.toLowerCase().includes('bulan')) return '1 Bulan';
+            if (exp) return '1 Bulan';
+            return rawPaket || 'Demo';
+        }
+
+        function resolveUserPlanBadge(row, isEn) {
+            var planText = resolveUserPlanText(row);
+            var role = String((row && row.Role) || '').trim();
+            var isPro = (row && row.Akses_Watermark === 'TRUE') || role.toLowerCase() === 'pro';
+            var proBadge = isPro ? ' <span class="inline-flex items-center text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-[#dfba7b]/20 text-[#dfba7b] ml-1"><i class="fa-solid fa-crown text-[8px] mr-0.5"></i>PRO</span>' : '';
+
+            if (planText === 'Lifetime') {
+                return '<span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-md bg-[#dfba7b]/15 text-[#dfba7b] border border-[#dfba7b]/30 whitespace-nowrap"><i class="fa-solid fa-infinity text-[10px]"></i> Lifetime' + proBadge + '</span>';
+            }
+            if (planText === '1 Tahun') {
+                return '<span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-md bg-purple-500/15 text-purple-400 border border-purple-500/30 whitespace-nowrap"><i class="fa-solid fa-calendar-check text-[10px]"></i> ' + (isEn ? '1 Year' : '1 Tahun') + proBadge + '</span>';
+            }
+            if (planText === '6 Bulan') {
+                return '<span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-md bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 whitespace-nowrap"><i class="fa-solid fa-calendar-days text-[10px]"></i> ' + (isEn ? '6 Months' : '6 Bulan') + proBadge + '</span>';
+            }
+            if (planText === '1 Bulan') {
+                return '<span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-md bg-blue-500/15 text-blue-400 border border-blue-500/30 whitespace-nowrap"><i class="fa-solid fa-calendar text-[10px]"></i> ' + (isEn ? '1 Month' : '1 Bulan') + proBadge + '</span>';
+            }
+            if (planText === 'Demo') {
+                return '<span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/30 whitespace-nowrap"><i class="fa-solid fa-flask text-[10px]"></i> Demo</span>';
+            }
+            return '<span class="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-gray-500/15 text-gray-400 border border-gray-500/30 whitespace-nowrap">' + escapeHTML(planText) + '</span>';
+        }
+
         function filterUsersTable() {
             if (!window.allUsersData) return;
             var searchQuery = (document.getElementById('search-user-input') ? document.getElementById('search-user-input').value : '').toLowerCase().trim();
@@ -8200,8 +8246,8 @@
 
                 var matchPaket = true;
                 if (filterPaket !== 'Semua') {
-                    var rowPaket = row.Paket || (row.Role === 'Demo' ? 'Demo' : 'FREE PLAN');
-                    matchPaket = String(rowPaket).toLowerCase() === filterPaket.toLowerCase();
+                    var pText = resolveUserPlanText(row);
+                    matchPaket = pText.toLowerCase().includes(filterPaket.toLowerCase());
                 }
 
                 return matchSearch && matchPaket;
@@ -8294,12 +8340,13 @@
             tbody.innerHTML = '';
 
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-gray-400 italic">Belum ada fotografer terdaftar yang sesuai kriteria.</td></tr>'; return;
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center p-8 text-gray-400 italic">Belum ada fotografer terdaftar yang sesuai kriteria.</td></tr>'; return;
             }
 
             var isEn = localStorage.getItem('ps_lang') === 'en';
 
             data.forEach(function (row) {
+                var planBadge = resolveUserPlanBadge(row, isEn);
                 var expBadge = '-';
                 var isExpired = false;
 
@@ -8368,6 +8415,7 @@
                 tr.innerHTML =
                     '<td class="p-4 sm:px-6 font-bold text-[#f4f0e9]">' + escapeHTML(row.Nama || '-') + '</td>' +
                     '<td class="p-4 sm:px-6 text-xs font-mono text-[#c9c4bc]">@' + escapeHTML(row.Username || '-') + '</td>' +
+                    '<td class="p-4 sm:px-6">' + planBadge + '</td>' +
                     '<td class="p-4 sm:px-6">' + statusBadge + '</td>' +
                     '<td class="p-4 sm:px-6 text-center">' + onlineBadge + '</td>' +
                     '<td class="p-4 sm:px-6">' + expBadge + '</td>' +
@@ -8384,8 +8432,9 @@
                     var uName = row.Username;
                     var expVal = row.ExpiredAt || '';
                     var pendingState = isPending;
+                    var pVal = row.Paket || '';
                     actionBtnEl.onclick = function () {
-                        promptExpiry(uName, pendingState ? '' : expVal, pendingState);
+                        promptExpiry(uName, pendingState ? '' : expVal, pendingState, pVal);
                     };
                 }
                 var reminderBtnEl = tr.querySelector('.btn-user-reminder');
@@ -8447,7 +8496,7 @@
             });
         }
 
-        function promptExpiry(username, currentExpiry, isApproval) {
+        function promptExpiry(username, currentExpiry, isApproval, currentPaket) {
             var defaultDate = '';
             var isLifetime = false;
             if (currentExpiry === 'Lifetime') {
@@ -8463,17 +8512,25 @@
                 defaultDate = year + '-' + month + '-' + day;
             }
 
-            var titleStr = isApproval ? 'Approve & Set Masa Aktif' : 'Atur Masa Aktif';
+            var initialPaket = currentPaket || (isLifetime ? 'Lifetime' : '1 Bulan');
+            var titleStr = isApproval ? 'Approve & Set Masa Aktif' : 'Atur Masa Aktif & Paket';
 
             window.setExpiryPreset = function (months) {
                 var dateInput = document.getElementById('swal-exp-date');
                 var ltCheckbox = document.getElementById('swal-exp-lifetime');
+                var paketSelect = document.getElementById('swal-exp-paket');
                 if (months === 'lifetime') {
                     if (ltCheckbox) ltCheckbox.checked = true;
                     if (dateInput) { dateInput.disabled = true; dateInput.classList.add('opacity-50'); }
+                    if (paketSelect) paketSelect.value = 'Lifetime';
                     return;
                 }
                 if (ltCheckbox) ltCheckbox.checked = false;
+                if (paketSelect) {
+                    if (months === 1) paketSelect.value = '1 Bulan';
+                    else if (months === 6) paketSelect.value = '6 Bulan';
+                    else if (months === 12) paketSelect.value = '1 Tahun';
+                }
                 if (dateInput) {
                     dateInput.disabled = false;
                     dateInput.classList.remove('opacity-50');
@@ -8504,10 +8561,19 @@
                             <button type="button" onclick="setExpiryPreset('lifetime')" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors shadow-sm cursor-pointer">Lifetime</button>
                         </div>
 
+                        <label class="block text-xs font-semibold text-kama-800 uppercase mb-1">Paket Langganan</label>
+                        <select id="swal-exp-paket" class="w-full px-4 py-2.5 mb-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm font-medium transition-colors cursor-pointer">
+                            <option value="1 Bulan" ${initialPaket.includes('1 Bulan') ? 'selected' : ''}>Paket 1 Bulan</option>
+                            <option value="6 Bulan" ${initialPaket.includes('6 Bulan') ? 'selected' : ''}>Paket 6 Bulan</option>
+                            <option value="1 Tahun" ${initialPaket.includes('1 Tahun') || initialPaket.includes('Tahun') ? 'selected' : ''}>Paket 1 Tahun</option>
+                            <option value="Lifetime" ${initialPaket.includes('Lifetime') ? 'selected' : ''}>Paket Lifetime</option>
+                            <option value="Demo" ${initialPaket.includes('Demo') ? 'selected' : ''}>Akun Demo</option>
+                        </select>
+
                         <label class="block text-xs font-semibold text-kama-800 uppercase mb-1">Tanggal Berakhir</label>
                         <input type="date" id="swal-exp-date" value="${defaultDate}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-kama-800 outline-none text-sm font-medium transition-colors">
                         <div class="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center">
-                            <input type="checkbox" id="swal-exp-lifetime" ${isLifetime ? 'checked' : ''} class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer" onchange="document.getElementById('swal-exp-date').disabled = this.checked; if(this.checked) document.getElementById('swal-exp-date').classList.add('opacity-50'); else document.getElementById('swal-exp-date').classList.remove('opacity-50');">
+                            <input type="checkbox" id="swal-exp-lifetime" ${isLifetime ? 'checked' : ''} class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer" onchange="document.getElementById('swal-exp-date').disabled = this.checked; if(this.checked) { document.getElementById('swal-exp-date').classList.add('opacity-50'); if(document.getElementById('swal-exp-paket')) document.getElementById('swal-exp-paket').value = 'Lifetime'; } else { document.getElementById('swal-exp-date').classList.remove('opacity-50'); }">
                             <label for="swal-exp-lifetime" class="ml-3 text-sm font-semibold text-blue-800 cursor-pointer select-none">Berikan Akses Lifetime <span class="block text-xs font-normal text-blue-600 mt-0.5">Tidak akan pernah kedaluwarsa</span></label>
                         </div>
                     </div>
@@ -8522,20 +8588,23 @@
                 preConfirm: () => {
                     const isLt = document.getElementById('swal-exp-lifetime').checked;
                     const dVal = document.getElementById('swal-exp-date').value;
-                    if (isLt) return 'Lifetime';
+                    const pEl = document.getElementById('swal-exp-paket');
+                    const pVal = pEl ? pEl.value : (isLt ? 'Lifetime' : '1 Bulan');
+                    if (isLt) return { expiryValue: 'Lifetime', paket: 'Lifetime' };
                     if (!dVal) { Swal.showValidationMessage('Silakan pilih tanggal atau centang Lifetime'); return false; }
-                    return dVal;
+                    return { expiryValue: dVal, paket: pVal };
                 }
             }).then(async (result) => {
                 if (result.isConfirmed) {
-                    var expValue = result.value;
+                    var expValue = result.value.expiryValue;
+                    var paketVal = result.value.paket;
                     startLoading("Menyimpan...");
                     try {
                         let routeAction = isApproval ? 'approveUser' : 'updateExpiry';
                         const response = await fetch(API_ENDPOINT, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: routeAction, username: username, expiryValue: expValue, role: 'Photographer', currentUser: currentUser })
+                            body: JSON.stringify({ action: routeAction, username: username, expiryValue: expValue, paket: paketVal, role: (paketVal === 'Demo' ? 'Demo' : 'Photographer'), currentUser: currentUser })
                         });
                         const res = await response.json();
                         endLoading();
