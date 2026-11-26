@@ -1,5 +1,11 @@
 /login /app 200
 /register /app 200
+/dashboard /app 200
+/status /app 200
+/panduan /app 200
+/feedback /app 200
+/users /app 200
+/admin-feedback /app 200
 /collage /app 200
 /sortir-lokal /app 200
 /sortirlokal /app 200

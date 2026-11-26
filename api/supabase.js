@@ -1647,8 +1647,18 @@ function parseAndValidateOrigin(rawOrigin) {
 function getAllowedOrigins() {
   const allowed = new Set([
     'https://ps.kamacreative.my.id',
+    'https://photo-selection-6fu.pages.dev',
     'https://photo-selector.vercel.app'
   ]);
+
+  // Cloudflare Pages deployment URL
+  if (process.env.CF_PAGES_URL && typeof process.env.CF_PAGES_URL === 'string') {
+    const cfUrl = process.env.CF_PAGES_URL.trim();
+    if (cfUrl) {
+      const parsed = parseAndValidateOrigin(cfUrl.startsWith('http://') || cfUrl.startsWith('https://') ? cfUrl : `https://${cfUrl}`);
+      if (parsed) allowed.add(parsed);
+    }
+  }
 
   // Vercel deployment URL (Preview or Production deployment)
   if (process.env.VERCEL_URL && typeof process.env.VERCEL_URL === 'string') {
@@ -1720,7 +1730,13 @@ function handleCors(req, res) {
   const validatedOrigin = parseAndValidateOrigin(rawOrigin);
   const allowedOrigins = getAllowedOrigins();
 
-  if (validatedOrigin && allowedOrigins.has(validatedOrigin)) {
+  const isPagesDev = validatedOrigin && (
+    validatedOrigin === 'https://photo-selection-6fu.pages.dev' ||
+    /^https:\/\/[a-z0-9-]+\.photo-selection-6fu\.pages\.dev$/.test(validatedOrigin) ||
+    /^https:\/\/photo-selection-[a-z0-9]+\.pages\.dev$/.test(validatedOrigin)
+  );
+
+  if (validatedOrigin && (allowedOrigins.has(validatedOrigin) || isPagesDev)) {
     res.setHeader('Access-Control-Allow-Origin', validatedOrigin);
     res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-Client-Token, X-Project-Token');
