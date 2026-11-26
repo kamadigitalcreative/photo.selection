@@ -1,3 +1,5 @@
+import { PassThrough, Readable } from 'node:stream';
+
 if (typeof globalThis.__dirname === 'undefined') {
   globalThis.__dirname = '/';
 }
@@ -28,7 +30,8 @@ export async function handleRequest(context) {
       headers: {
         'Access-Control-Allow-Origin': request.headers.get('origin') || '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Token',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Token, Range',
+        'Access-Control-Expose-Headers': 'Content-Length, Content-Range, Content-Disposition',
         'Access-Control-Max-Age': '86400',
       }
     });
@@ -73,53 +76,75 @@ export async function handleRequest(context) {
     headers[k.toLowerCase()] = v;
   }
 
-  let statusCode = 200;
-  const resHeaders = new Headers();
-  let responseData = null;
+  // Create streamable mock response that supports both direct JSON/send and pipeline/streaming
+  const pt = new PassThrough();
+  pt.statusCode = 200;
+  pt.headersSent = false;
+  pt.resHeaders = new Headers();
+  pt.responseData = null;
+  pt.isStreaming = false;
 
-  const mockRes = {
-    status(code) {
-      statusCode = code;
-      return this;
-    },
-    setHeader(key, value) {
-      resHeaders.set(key, value);
-      return this;
-    },
-    getHeader(key) {
-      return resHeaders.get(key);
-    },
-    json(data) {
-      if (!resHeaders.has('content-type')) {
-        resHeaders.set('content-type', 'application/json');
+  pt.status = function(code) {
+    this.statusCode = code;
+    return this;
+  };
+
+  pt.setHeader = function(key, value) {
+    this.resHeaders.set(key, value);
+    return this;
+  };
+
+  pt.getHeader = function(key) {
+    return this.resHeaders.get(key);
+  };
+
+  pt.writeHead = function(code, headersObj) {
+    this.statusCode = code;
+    this.headersSent = true;
+    this.isStreaming = true;
+    if (headersObj && typeof headersObj === 'object') {
+      for (const [hk, hv] of Object.entries(headersObj)) {
+        this.resHeaders.set(hk, hv);
       }
-      responseData = JSON.stringify(data);
-      return this;
-    },
-    send(data) {
-      responseData = data;
-      return this;
-    },
-    end(data) {
-      if (data) responseData = data;
-      return this;
-    },
-    writeHead(code, headObj) {
-      statusCode = code;
-      if (headObj && typeof headObj === 'object') {
-        for (const [hk, hv] of Object.entries(headObj)) {
-          resHeaders.set(hk, hv);
-        }
-      }
-      return this;
-    },
-    redirect(statusOrUrl, maybeUrl) {
-      const redirectUrl = maybeUrl || statusOrUrl;
-      statusCode = typeof statusOrUrl === 'number' ? statusOrUrl : 302;
-      resHeaders.set('location', redirectUrl);
-      responseData = null;
-      return this;
     }
+    return this;
+  };
+
+  pt.json = function(data) {
+    this.headersSent = true;
+    this.isStreaming = false;
+    if (!this.resHeaders.has('content-type')) {
+      this.resHeaders.set('content-type', 'application/json');
+    }
+    this.responseData = JSON.stringify(data);
+    this.end();
+    return this;
+  };
+
+  pt.send = function(data) {
+    this.headersSent = true;
+    this.isStreaming = false;
+    this.responseData = data;
+    this.end();
+    return this;
+  };
+
+  pt.redirect = function(statusOrUrl, maybeUrl) {
+    this.headersSent = true;
+    this.isStreaming = false;
+    const redirectUrl = maybeUrl || statusOrUrl;
+    this.statusCode = typeof statusOrUrl === 'number' ? statusOrUrl : 302;
+    this.resHeaders.set('location', redirectUrl);
+    this.responseData = null;
+    this.end();
+    return this;
+  };
+
+  const originalWrite = pt.write.bind(pt);
+  pt.write = function(chunk, encoding, callback) {
+    this.headersSent = true;
+    this.isStreaming = true;
+    return originalWrite(chunk, encoding, callback);
   };
 
   const mockReq = {
@@ -133,18 +158,30 @@ export async function handleRequest(context) {
   };
 
   try {
-    await supabaseHandler(mockReq, mockRes);
+    await supabaseHandler(mockReq, pt);
   } catch (err) {
     console.error('Cloudflare Pages API Bridge Error:', err);
-    if (!responseData) {
-      statusCode = 500;
-      resHeaders.set('content-type', 'application/json');
-      responseData = JSON.stringify({ status: 'error', message: 'Internal Server Error' });
+    if (!pt.headersSent) {
+      pt.statusCode = 500;
+      pt.resHeaders.set('content-type', 'application/json');
+      return new Response(JSON.stringify({ status: 'error', message: 'Internal Server Error' }), {
+        status: 500,
+        headers: pt.resHeaders
+      });
     }
   }
 
-  return new Response(responseData, {
-    status: statusCode,
-    headers: resHeaders
+  // Return Web Response: either buffered string/JSON or Web ReadableStream for authentic file download
+  if (!pt.isStreaming && pt.responseData !== null) {
+    return new Response(pt.responseData, {
+      status: pt.statusCode,
+      headers: pt.resHeaders
+    });
+  }
+
+  // Streaming mode (file downloads, proxy thumbnails)
+  return new Response(Readable.toWeb(pt), {
+    status: pt.statusCode,
+    headers: pt.resHeaders
   });
 }
